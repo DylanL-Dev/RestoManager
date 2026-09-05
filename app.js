@@ -169,6 +169,14 @@ function configurerEvenements() {
     document
         .getElementById('closeServiceBtn')
         .addEventListener('click', cloturerService);
+
+    document
+        .getElementById('reservationSearch')
+        .addEventListener('input', rechercherReservation);
+
+    document
+        .getElementById('clearSearchBtn')
+        .addEventListener('click', effacerRecherche);
 }
 
 /* ==============================
@@ -516,6 +524,7 @@ function afficherReservations() {
         const card = document.createElement('div');
 
         card.className = 'reservation-card';
+        card.dataset.reservationId = reservation.id;
 
         const client =
             reservation.type === 'hotel'
@@ -835,6 +844,23 @@ function voirReservation(id) {
     `;
 
     document.getElementById('detailsModal').classList.remove('hidden');
+
+        const reservationElement = document.querySelector(
+        '[data-reservation-id="' + reservation.id + '"]'
+    );
+
+    if (reservationElement) {
+        reservationElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+        reservationElement.classList.add('reservation-highlight');
+
+        setTimeout(function () {
+            reservationElement.classList.remove('reservation-highlight');
+        }, 2500);
+    }
 }
 
 function cliquerTable(table) {
@@ -1013,4 +1039,98 @@ function escapeHTML(value) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/* ==============================
+   RECHERCHE RÉSERVATION
+============================== */
+
+function rechercherReservation() {
+    const searchInput = document.getElementById('reservationSearch');
+
+    const results = document.getElementById('searchResults');
+
+    const recherche = searchInput.value.trim().toLowerCase();
+
+    results.innerHTML = '';
+
+    if (!recherche) {
+        return;
+    }
+
+    const correspondances = reservations.filter(function (reservation) {
+        if (reservation.status === 'released') {
+            return false;
+        }
+
+        const client = String(reservation.client).toLowerCase();
+
+        return client.includes(recherche);
+    });
+
+    if (correspondances.length === 0) {
+        results.innerHTML = `
+            <div class="empty-message">
+                ❌ Aucune réservation trouvée.
+            </div>
+        `;
+
+        return;
+    }
+
+    correspondances.forEach(function (reservation) {
+        const client =
+            reservation.type === 'hotel'
+                ? '🏨 Chambre ' + escapeHTML(reservation.client)
+                : '👤 ' + escapeHTML(reservation.client);
+
+        const tables = reservation.tables
+            .map(function (table) {
+                return 'T' + table;
+            })
+            .join(', ');
+
+        const result = document.createElement('div');
+
+        result.className = 'search-result';
+
+        result.innerHTML = `
+            <div class="search-result-client">
+                ${client}
+            </div>
+
+            <div>
+                🕐 ${reservation.time}
+            </div>
+
+            <div>
+                👥 ${reservation.guests}
+                personne${reservation.guests > 1 ? 's' : ''}
+            </div>
+
+            <div>
+                🪑 <strong>${tables}</strong>
+            </div>
+
+            <div>
+                ${texteStatut(reservation.status)}
+            </div>
+
+            <button type="button">
+                👁️ Voir la réservation
+            </button>
+        `;
+
+        result.querySelector('button').addEventListener('click', function () {
+            voirReservation(reservation.id);
+        });
+
+        results.appendChild(result);
+    });
+}
+
+function effacerRecherche() {
+    document.getElementById('reservationSearch').value = '';
+
+    document.getElementById('searchResults').innerHTML = '';
 }

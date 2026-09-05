@@ -550,7 +550,6 @@ body {
 ================================ */
 
 @media (max-width: 900px) {
-
     .service-info {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -558,7 +557,6 @@ body {
     .tables-grid {
         grid-template-columns: repeat(4, 1fr);
     }
-
 }
 
 /* ================================
@@ -566,7 +564,6 @@ body {
 ================================ */
 
 @media (max-width: 600px) {
-
     .header {
         padding: 15px;
     }
@@ -644,7 +641,6 @@ body {
     .modal-content {
         padding: 15px;
     }
-
 }
 
 /* ================================
@@ -652,7 +648,6 @@ body {
 ================================ */
 
 @media (max-width: 380px) {
-
     .tables-grid {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -660,5 +655,138 @@ body {
     .table-selection {
         grid-template-columns: repeat(3, 1fr);
     }
+}
 
+/* ==============================
+   RECHERCHE RÉSERVATION
+============================== */
+
+.search-section {
+    margin-bottom: 20px;
+}
+
+.search-box {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+}
+
+.search-box input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #d9e2ec;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.search-results {
+    margin-top: 12px;
+}
+
+.search-result {
+    padding: 15px;
+    margin-bottom: 10px;
+    background: #ffffff;
+    border: 1px solid #d9e2ec;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.search-result-client {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.search-result > div {
+    margin: 4px 0;
+}
+
+.search-result button {
+    margin-top: 10px;
+    padding: 9px 13px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    background: #eef2f7;
+}
+
+.search-result button:hover {
+    background: #e2e8f0;
+}
+
+/* Adaptation smartphone */
+@media (max-width: 600px) {
+    .search-box {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-box .btn {
+        width: 100%;
+    }
+
+    .search-result {
+        padding: 13px;
+    }
+}
+
+/* ==============================
+   RÉSERVATION RECHERCHÉE
+============================== */
+
+.reservation-highlight {
+    position: relative;
+    border: 3px solid #2563eb !important;
+    background: #eff6ff !important;
+    box-shadow:
+        0 0 0 5px rgba(37, 99, 235, 0.2),
+        0 8px 25px rgba(37, 99, 235, 0.25) !important;
+    animation: reservationHighlight 2.5s ease;
+}
+
+.reservation-highlight::before {
+    content: '🔎 RÉSERVATION RECHERCHÉE';
+    display: block;
+    margin-bottom: 10px;
+    padding: 7px 10px;
+    background: #2563eb;
+    color: white;
+    border-radius: 7px;
+    font-weight: 700;
+    font-size: 13px;
+    text-align: center;
+}
+
+@keyframes reservationHighlight {
+    0% {
+        transform: scale(1.03);
+    }
+
+    20% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.02);
+    }
+
+    60% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
