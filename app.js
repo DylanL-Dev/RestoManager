@@ -1,22 +1,21 @@
-"use strict";
+'use strict';
 
 /* ==============================
    CONFIGURATION
 ============================== */
 
 const TABLES = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-    17, 18, 19, 20, 21, 22, 23, 24, 25
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25,
 ];
 
 const CAPACITY = {};
 
-TABLES.forEach(function(table) {
-    CAPACITY[table] = table === 25 ? 8 : 2;
+TABLES.forEach(function (table) {
+    CAPACITY[table] = table === 25 ? 10 : 2;
 });
 
-const STORAGE_RESERVATIONS = "restomanager_reservations";
-const STORAGE_HISTORY = "restomanager_history";
+const STORAGE_RESERVATIONS = 'restomanager_reservations';
+const STORAGE_HISTORY = 'restomanager_history';
 
 let reservations = loadData(STORAGE_RESERVATIONS, []);
 let history = loadData(STORAGE_HISTORY, []);
@@ -27,8 +26,7 @@ let editingId = null;
    DÉMARRAGE
 ============================== */
 
-document.addEventListener("DOMContentLoaded", function() {
-
+document.addEventListener('DOMContentLoaded', function () {
     setDefaultDateTime();
 
     afficherDateHeure();
@@ -51,37 +49,26 @@ document.addEventListener("DOMContentLoaded", function() {
 ============================== */
 
 function loadData(key, defaultValue) {
-
     try {
-
         const data = localStorage.getItem(key);
 
         if (data) {
             return JSON.parse(data);
         }
-
     } catch (error) {
-
-        console.error("Erreur stockage :", error);
+        console.error('Erreur stockage :', error);
     }
 
     return defaultValue;
 }
 
 function saveData(key, data) {
-
     try {
-
-        localStorage.setItem(
-            key,
-            JSON.stringify(data)
-        );
-
+        localStorage.setItem(key, JSON.stringify(data));
     } catch (error) {
+        console.error('Erreur sauvegarde :', error);
 
-        console.error("Erreur sauvegarde :", error);
-
-        alert("Impossible de sauvegarder les données.");
+        alert('Impossible de sauvegarder les données.');
     }
 }
 
@@ -90,75 +77,52 @@ function saveData(key, data) {
 ============================== */
 
 function getToday() {
-
     const date = new Date();
 
     const year = date.getFullYear();
 
-    const month = String(
-        date.getMonth() + 1
-    ).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, '0');
 
-    const day = String(
-        date.getDate()
-    ).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, '0');
 
-    return year + "-" + month + "-" + day;
+    return year + '-' + month + '-' + day;
 }
 
 function getCurrentTime() {
-
     const date = new Date();
 
-    const hours = String(
-        date.getHours()
-    ).padStart(2, "0");
+    const hours = String(date.getHours()).padStart(2, '0');
 
-    const minutes = String(
-        date.getMinutes()
-    ).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, '0');
 
-    return hours + ":" + minutes;
+    return hours + ':' + minutes;
 }
 
 function setDefaultDateTime() {
+    document.getElementById('reservationDate').value = getToday();
 
-    document.getElementById(
-        "reservationDate"
-    ).value = getToday();
-
-    document.getElementById(
-        "reservationTime"
-    ).value = getCurrentTime();
+    document.getElementById('reservationTime').value = getCurrentTime();
 }
 
 function afficherDateHeure() {
-
     const now = new Date();
 
-    document.getElementById(
-        "currentDate"
-    ).textContent =
-        now.toLocaleDateString("fr-FR");
+    document.getElementById('currentDate').textContent =
+        now.toLocaleDateString('fr-FR');
 
-    document.getElementById(
-        "currentTime"
-    ).textContent =
-        now.toLocaleTimeString(
-            "fr-FR",
-            {
-                hour: "2-digit",
-                minute: "2-digit"
-            }
-        );
+    document.getElementById('currentTime').textContent = now.toLocaleTimeString(
+        'fr-FR',
+        {
+            hour: '2-digit',
+            minute: '2-digit',
+        }
+    );
 }
 
 function formatDate(dateString) {
+    const date = new Date(dateString + 'T00:00:00');
 
-    const date =
-        new Date(dateString + "T00:00:00");
-
-    return date.toLocaleDateString("fr-FR");
+    return date.toLocaleDateString('fr-FR');
 }
 
 /* ==============================
@@ -166,79 +130,45 @@ function formatDate(dateString) {
 ============================== */
 
 function configurerEvenements() {
+    document
+        .getElementById('newReservationBtn')
+        .addEventListener('click', nouvelleReservation);
 
     document
-        .getElementById("newReservationBtn")
-        .addEventListener(
-            "click",
-            nouvelleReservation
-        );
+        .getElementById('closeModalBtn')
+        .addEventListener('click', fermerReservation);
 
     document
-        .getElementById("closeModalBtn")
-        .addEventListener(
-            "click",
-            fermerReservation
-        );
+        .getElementById('cancelReservationBtn')
+        .addEventListener('click', fermerReservation);
 
     document
-        .getElementById("cancelReservationBtn")
-        .addEventListener(
-            "click",
-            fermerReservation
-        );
+        .getElementById('clientType')
+        .addEventListener('change', changerTypeClient);
 
     document
-        .getElementById("clientType")
-        .addEventListener(
-            "change",
-            changerTypeClient
-        );
+        .getElementById('reservationForm')
+        .addEventListener('submit', enregistrerReservation);
 
     document
-        .getElementById("reservationForm")
-        .addEventListener(
-            "submit",
-            enregistrerReservation
-        );
+        .getElementById('historyBtn')
+        .addEventListener('click', afficherHistorique);
 
     document
-        .getElementById("historyBtn")
-        .addEventListener(
-            "click",
-            afficherHistorique
-        );
+        .getElementById('closeHistoryBtn')
+        .addEventListener('click', function () {
+            document.getElementById('historyModal').classList.add('hidden');
+        });
 
     document
-        .getElementById("closeHistoryBtn")
-        .addEventListener(
-            "click",
-            function() {
-
-                document
-                    .getElementById("historyModal")
-                    .classList.add("hidden");
-            }
-        );
+        .getElementById('closeDetailsBtn')
+        .addEventListener('click', function () {
+            document.getElementById('detailsModal').classList.add('hidden');
+        });
 
     document
-        .getElementById("closeDetailsBtn")
-        .addEventListener(
-            "click",
-            function() {
-
-                document
-                    .getElementById("detailsModal")
-                    .classList.add("hidden");
-            }
-        );
-
-    document
-        .getElementById("closeServiceBtn")
-        .addEventListener(
-            "click",
-            cloturerService
-        );
+        .getElementById('closeServiceBtn')
+        .addEventListener('click', cloturerService);
 }
 
 /* ==============================
@@ -246,37 +176,20 @@ function configurerEvenements() {
 ============================== */
 
 function changerTypeClient() {
+    const type = document.getElementById('clientType').value;
 
-    const type =
-        document.getElementById(
-            "clientType"
-        ).value;
+    const label = document.getElementById('clientLabel');
 
-    const label =
-        document.getElementById(
-            "clientLabel"
-        );
+    const input = document.getElementById('clientInfo');
 
-    const input =
-        document.getElementById(
-            "clientInfo"
-        );
+    if (type === 'hotel') {
+        label.textContent = 'Numéro de chambre';
 
-    if (type === "hotel") {
-
-        label.textContent =
-            "Numéro de chambre";
-
-        input.placeholder =
-            "Ex : 214";
-
+        input.placeholder = 'Ex : 214';
     } else {
+        label.textContent = 'Nom du client';
 
-        label.textContent =
-            "Nom du client";
-
-        input.placeholder =
-            "Ex : Mme Dupont";
+        input.placeholder = 'Ex : Mme Dupont';
     }
 }
 
@@ -285,59 +198,44 @@ function changerTypeClient() {
 ============================== */
 
 function getTableStatus(table) {
-
-    const reservation =
-        reservations.find(function(r) {
-
-            return (
-                r.tables.includes(table) &&
-                r.status !== "released"
-            );
-        });
+    const reservation = reservations.find(function (r) {
+        return r.tables.includes(table) && r.status !== 'released';
+    });
 
     if (!reservation) {
-        return "free";
+        return 'free';
     }
 
-    if (reservation.status === "occupied") {
-        return "occupied";
+    if (reservation.status === 'occupied') {
+        return 'occupied';
     }
 
-    return "reserved";
+    return 'reserved';
 }
 
 function texteStatut(status) {
-
-    if (status === "free") {
-        return "🟢 Libre";
+    if (status === 'free') {
+        return '🟢 Libre';
     }
 
-    if (status === "reserved") {
-        return "🟡 Réservée";
+    if (status === 'reserved') {
+        return '🟡 Réservée';
     }
 
-    return "🔴 Occupée";
+    return '🔴 Occupée';
 }
 
 function afficherTables() {
+    const grid = document.getElementById('tablesGrid');
 
-    const grid =
-        document.getElementById(
-            "tablesGrid"
-        );
+    grid.innerHTML = '';
 
-    grid.innerHTML = "";
+    TABLES.forEach(function (table) {
+        const status = getTableStatus(table);
 
-    TABLES.forEach(function(table) {
+        const element = document.createElement('div');
 
-        const status =
-            getTableStatus(table);
-
-        const element =
-            document.createElement("div");
-
-        element.className =
-            "table-card " + status;
+        element.className = 'table-card ' + status;
 
         element.innerHTML = `
             <div class="table-number">
@@ -345,7 +243,7 @@ function afficherTables() {
             </div>
 
             <div class="table-capacity">
-                ${CAPACITY[table]} place${CAPACITY[table] > 1 ? "s" : ""}
+                ${CAPACITY[table]} place${CAPACITY[table] > 1 ? 's' : ''}
             </div>
 
             <div class="table-status">
@@ -353,12 +251,9 @@ function afficherTables() {
             </div>
         `;
 
-        element.addEventListener(
-            "click",
-            function() {
-                cliquerTable(table);
-            }
-        );
+        element.addEventListener('click', function () {
+            cliquerTable(table);
+        });
 
         grid.appendChild(element);
     });
@@ -369,78 +264,47 @@ function afficherTables() {
 ============================== */
 
 function afficherSelectionTables(selected) {
-
     selected = selected || [];
 
-    const container =
-        document.getElementById(
-            "tableSelection"
-        );
+    const container = document.getElementById('tableSelection');
 
-    container.innerHTML = "";
+    container.innerHTML = '';
 
-    TABLES.forEach(function(table) {
+    TABLES.forEach(function (table) {
+        const element = document.createElement('div');
 
-        const element =
-            document.createElement("div");
-
-        element.className =
-            "table-option";
+        element.className = 'table-option';
 
         if (selected.includes(table)) {
-            element.classList.add("selected");
+            element.classList.add('selected');
         }
 
-        const status =
-            getTableStatus(table);
+        const status = getTableStatus(table);
 
-        if (
-            status !== "free" &&
-            !selected.includes(table)
-        ) {
-            element.classList.add("disabled");
+        if (status !== 'free' && !selected.includes(table)) {
+            element.classList.add('disabled');
         }
 
-        element.textContent =
-            "T" + table;
+        element.textContent = 'T' + table;
 
-        element.addEventListener(
-            "click",
-            function() {
-
-                if (
-                    element.classList.contains(
-                        "disabled"
-                    )
-                ) {
-                    return;
-                }
-
-                element.classList.toggle(
-                    "selected"
-                );
+        element.addEventListener('click', function () {
+            if (element.classList.contains('disabled')) {
+                return;
             }
-        );
+
+            element.classList.toggle('selected');
+        });
 
         container.appendChild(element);
     });
 }
 
 function getSelectedTables() {
+    const elements = document.querySelectorAll('#tableSelection .selected');
 
-    const elements =
-        document.querySelectorAll(
-            "#tableSelection .selected"
-        );
-
-    return Array.from(elements).map(
-        function(element) {
-
-            return Number(
-                element.textContent.substring(1)
-            );
-        }
-    );
+    return Array.from(elements).map(function (element) {
+        return Number(element.textContent.substring(1));
+    });
 }
 
 /* ==============================
@@ -448,20 +312,13 @@ function getSelectedTables() {
 ============================== */
 
 function nouvelleReservation() {
-
     editingId = null;
 
-    document
-        .getElementById("reservationForm")
-        .reset();
+    document.getElementById('reservationForm').reset();
 
-    document
-        .getElementById("clientType")
-        .value = "hotel";
+    document.getElementById('clientType').value = 'hotel';
 
-    document
-        .getElementById("reservationDuration")
-        .value = "90";
+    document.getElementById('reservationDuration').value = '90';
 
     setDefaultDateTime();
 
@@ -469,16 +326,11 @@ function nouvelleReservation() {
 
     afficherSelectionTables();
 
-    document
-        .getElementById("reservationModal")
-        .classList.remove("hidden");
+    document.getElementById('reservationModal').classList.remove('hidden');
 }
 
 function fermerReservation() {
-
-    document
-        .getElementById("reservationModal")
-        .classList.add("hidden");
+    document.getElementById('reservationModal').classList.add('hidden');
 
     editingId = null;
 }
@@ -488,136 +340,63 @@ function fermerReservation() {
 ============================== */
 
 function enregistrerReservation(event) {
-
     event.preventDefault();
 
-    const type =
-        document.getElementById(
-            "clientType"
-        ).value;
+    const type = document.getElementById('clientType').value;
 
-    const client =
-        document.getElementById(
-            "clientInfo"
-        ).value.trim();
+    const client = document.getElementById('clientInfo').value.trim();
 
-    const date =
-        document.getElementById(
-            "reservationDate"
-        ).value;
+    const date = document.getElementById('reservationDate').value;
 
-    const time =
-        document.getElementById(
-            "reservationTime"
-        ).value;
+    const time = document.getElementById('reservationTime').value;
 
-    const guests =
-        Number(
-            document.getElementById(
-                "guestNumber"
-            ).value
-        );
+    const guests = Number(document.getElementById('guestNumber').value);
 
-    const duration =
-        Number(
-            document.getElementById(
-                "reservationDuration"
-            ).value
-        );
+    const duration = Number(
+        document.getElementById('reservationDuration').value
+    );
 
-    const tables =
-        getSelectedTables();
+    const tables = getSelectedTables();
 
     if (!client) {
-
-        alert(
-            "Merci d'indiquer le client."
-        );
+        alert("Merci d'indiquer le client.");
 
         return;
     }
 
     if (!date || !time) {
-
-        alert(
-            "Merci d'indiquer la date et l'heure."
-        );
+        alert("Merci d'indiquer la date et l'heure.");
 
         return;
     }
 
     if (guests < 1) {
-
-        alert(
-            "Le nombre de personnes doit être supérieur à 0."
-        );
+        alert('Le nombre de personnes doit être supérieur à 0.');
 
         return;
     }
 
     if (tables.length === 0) {
-
-        alert(
-            "Merci de sélectionner au moins une table."
-        );
+        alert('Merci de sélectionner au moins une table.');
 
         return;
     }
 
-    const capacity =
-        tables.reduce(
-            function(total, table) {
-                return total + CAPACITY[table];
-            },
-            0
-        );
-
-    if (capacity < guests) {
-
-        alert(
-            "Capacité insuffisante.\n\n" +
-            "Clients : " + guests +
-            "\nCapacité : " + capacity
-        );
-
+    if (tables.includes(25) && guests > 10) {
+        alert('⚠️ La table 25 accepte au maximum 10 personnes.');
         return;
     }
-
-    if (
-        conflitReservation(
-            tables,
-            date,
-            time,
-            duration,
-            editingId
-        )
-    ) {
-
-        alert(
-            "⚠️ Une table sélectionnée est déjà réservée à cet horaire."
-        );
+    if (conflitReservation(tables, date, time, duration, editingId)) {
+        alert('⚠️ Une table sélectionnée est déjà réservée à cet horaire.');
 
         return;
     }
 
     if (editingId) {
-
-        modifierReservation(
-            type,
-            client,
-            date,
-            time,
-            guests,
-            duration,
-            tables
-        );
-
+        modifierReservation(type, client, date, time, guests, duration, tables);
     } else {
-
         reservations.push({
-
-            id:
-                Date.now().toString(),
+            id: Date.now().toString(),
 
             type: type,
 
@@ -633,17 +412,13 @@ function enregistrerReservation(event) {
 
             tables: tables,
 
-            status: "reserved",
+            status: 'reserved',
 
-            createdAt:
-                new Date().toISOString()
+            createdAt: new Date().toISOString(),
         });
     }
 
-    saveData(
-        STORAGE_RESERVATIONS,
-        reservations
-    );
+    saveData(STORAGE_RESERVATIONS, reservations);
 
     fermerReservation();
 
@@ -654,9 +429,7 @@ function enregistrerReservation(event) {
     mettreAJourCompteurs();
 
     alert(
-        editingId
-            ? "✅ Réservation modifiée."
-            : "✅ Réservation enregistrée."
+        editingId ? '✅ Réservation modifiée.' : '✅ Réservation enregistrée.'
     );
 
     editingId = null;
@@ -667,90 +440,49 @@ function enregistrerReservation(event) {
 ============================== */
 
 function timeToMinutes(date, time) {
+    const parts = time.split(':');
 
-    const parts =
-        time.split(":");
+    const hours = Number(parts[0]);
 
-    const hours =
-        Number(parts[0]);
+    const minutes = Number(parts[1]);
 
-    const minutes =
-        Number(parts[1]);
+    const base = new Date(date + 'T00:00:00');
 
-    const base =
-        new Date(
-            date + "T00:00:00"
-        );
-
-    return (
-        base.getTime() / 60000 +
-        hours * 60 +
-        minutes
-    );
+    return base.getTime() / 60000 + hours * 60 + minutes;
 }
 
-function conflitReservation(
-    tables,
-    date,
-    time,
-    duration,
-    ignoredId
-) {
+function conflitReservation(tables, date, time, duration, ignoredId) {
+    const start = timeToMinutes(date, time);
 
-    const start =
-        timeToMinutes(date, time);
+    const end = start + duration;
 
-    const end =
-        start + duration;
-
-    return reservations.some(
-        function(reservation) {
-
-            if (
-                reservation.id === ignoredId
-            ) {
-                return false;
-            }
-
-            if (
-                reservation.date !== date
-            ) {
-                return false;
-            }
-
-            if (
-                reservation.status === "released"
-            ) {
-                return false;
-            }
-
-            const sameTable =
-                reservation.tables.some(
-                    function(table) {
-                        return tables.includes(table);
-                    }
-                );
-
-            if (!sameTable) {
-                return false;
-            }
-
-            const otherStart =
-                timeToMinutes(
-                    reservation.date,
-                    reservation.time
-                );
-
-            const otherEnd =
-                otherStart +
-                Number(reservation.duration);
-
-            return (
-                start < otherEnd &&
-                end > otherStart
-            );
+    return reservations.some(function (reservation) {
+        if (reservation.id === ignoredId) {
+            return false;
         }
-    );
+
+        if (reservation.date !== date) {
+            return false;
+        }
+
+        if (reservation.status === 'released') {
+            return false;
+        }
+
+        const sameTable = reservation.tables.some(function (table) {
+            return tables.includes(table);
+        });
+
+        if (!sameTable) {
+            return false;
+        }
+
+        const otherStart = timeToMinutes(reservation.date, reservation.time);
+
+        const otherEnd = otherStart + Number(reservation.duration);
+
+        return start < otherEnd && end > otherStart;
+    });
 }
 
 /* ==============================
@@ -758,25 +490,19 @@ function conflitReservation(
 ============================== */
 
 function afficherReservations() {
+    const container = document.getElementById('reservationsList');
 
-    const container =
-        document.getElementById(
-            "reservationsList"
-        );
+    container.innerHTML = '';
 
-    container.innerHTML = "";
-
-    const todayReservations =
-        reservations
-            .filter(function(r) {
-                return r.date === getToday();
-            })
-            .sort(function(a, b) {
-                return a.time.localeCompare(b.time);
-            });
+    const todayReservations = reservations
+        .filter(function (r) {
+            return r.date === getToday();
+        })
+        .sort(function (a, b) {
+            return a.time.localeCompare(b.time);
+        });
 
     if (todayReservations.length === 0) {
-
         container.innerHTML = `
             <div class="empty-message">
                 Aucune réservation pour aujourd'hui.
@@ -786,51 +512,39 @@ function afficherReservations() {
         return;
     }
 
-    todayReservations.forEach(
-        function(reservation) {
+    todayReservations.forEach(function (reservation) {
+        const card = document.createElement('div');
 
-            const card =
-                document.createElement("div");
+        card.className = 'reservation-card';
 
-            card.className =
-                "reservation-card";
+        const client =
+            reservation.type === 'hotel'
+                ? '🏨 Chambre ' + escapeHTML(reservation.client)
+                : '👤 ' + escapeHTML(reservation.client);
 
-            const client =
-                reservation.type === "hotel"
-                    ? "🏨 Chambre " +
-                      escapeHTML(reservation.client)
-                    : "👤 " +
-                      escapeHTML(reservation.client);
+        let actions = '';
 
-            let actions = "";
-
-            if (
-                reservation.status === "reserved"
-            ) {
-
-                actions += `
+        if (reservation.status === 'reserved') {
+            actions += `
                     <button
                         class="btn-success"
                         onclick="clientArrive('${reservation.id}')">
                         👋 Client arrivé
                     </button>
                 `;
-            }
+        }
 
-            if (
-                reservation.status === "occupied"
-            ) {
-
-                actions += `
+        if (reservation.status === 'occupied') {
+            actions += `
                     <button
                         class="btn-success"
                         onclick="libererTables('${reservation.id}')">
                         🆓 Libérer les tables
                     </button>
                 `;
-            }
+        }
 
-            card.innerHTML = `
+        card.innerHTML = `
                 <div class="reservation-header">
 
                     <div>
@@ -845,27 +559,23 @@ function afficherReservations() {
 
                         <div class="reservation-info">
                             👥 ${reservation.guests}
-                            personne${reservation.guests > 1 ? "s" : ""}
+                            personne${reservation.guests > 1 ? 's' : ''}
                         </div>
 
                         <div class="reservation-info">
                             🪑
                             ${reservation.tables
-                                .map(function(t) {
-                                    return "T" + t;
+                                .map(function (t) {
+                                    return 'T' + t;
                                 })
-                                .join(", ")}
+                                .join(', ')}
                         </div>
 
                         <div class="reservation-info">
                             ⏱️
-                            ${formatDuration(
-                                reservation.duration
-                            )}
+                            ${formatDuration(reservation.duration)}
                             ·
-                            ${texteStatut(
-                                reservation.status
-                            )}
+                            ${texteStatut(reservation.status)}
                         </div>
 
                     </div>
@@ -894,9 +604,8 @@ function afficherReservations() {
                 </div>
             `;
 
-            container.appendChild(card);
-        }
-    );
+        container.appendChild(card);
+    });
 }
 
 /* ==============================
@@ -904,26 +613,19 @@ function afficherReservations() {
 ============================== */
 
 function clientArrive(id) {
-
-    const reservation =
-        reservations.find(function(r) {
-            return r.id === id;
-        });
+    const reservation = reservations.find(function (r) {
+        return r.id === id;
+    });
 
     if (!reservation) {
         return;
     }
 
-    reservation.status =
-        "occupied";
+    reservation.status = 'occupied';
 
-    reservation.arrivedAt =
-        new Date().toISOString();
+    reservation.arrivedAt = new Date().toISOString();
 
-    saveData(
-        STORAGE_RESERVATIONS,
-        reservations
-    );
+    saveData(STORAGE_RESERVATIONS, reservations);
 
     afficherTables();
     afficherReservations();
@@ -935,43 +637,29 @@ function clientArrive(id) {
 ============================== */
 
 function libererTables(id) {
-
-    const reservation =
-        reservations.find(function(r) {
-            return r.id === id;
-        });
+    const reservation = reservations.find(function (r) {
+        return r.id === id;
+    });
 
     if (!reservation) {
         return;
     }
 
-    const tables =
-        reservation.tables
-            .map(function(t) {
-                return "T" + t;
-            })
-            .join(", ");
+    const tables = reservation.tables
+        .map(function (t) {
+            return 'T' + t;
+        })
+        .join(', ');
 
-    if (
-        !confirm(
-            "Libérer les tables " +
-            tables +
-            " ?"
-        )
-    ) {
+    if (!confirm('Libérer les tables ' + tables + ' ?')) {
         return;
     }
 
-    reservation.status =
-        "released";
+    reservation.status = 'released';
 
-    reservation.releasedAt =
-        new Date().toISOString();
+    reservation.releasedAt = new Date().toISOString();
 
-    saveData(
-        STORAGE_RESERVATIONS,
-        reservations
-    );
+    saveData(STORAGE_RESERVATIONS, reservations);
 
     afficherTables();
     afficherReservations();
@@ -983,11 +671,9 @@ function libererTables(id) {
 ============================== */
 
 function modifierReservationDepuisListe(id) {
-
-    const reservation =
-        reservations.find(function(r) {
-            return r.id === id;
-        });
+    const reservation = reservations.find(function (r) {
+        return r.id === id;
+    });
 
     if (!reservation) {
         return;
@@ -995,39 +681,23 @@ function modifierReservationDepuisListe(id) {
 
     editingId = id;
 
-    document.getElementById(
-        "clientType"
-    ).value = reservation.type;
+    document.getElementById('clientType').value = reservation.type;
 
-    document.getElementById(
-        "clientInfo"
-    ).value = reservation.client;
+    document.getElementById('clientInfo').value = reservation.client;
 
-    document.getElementById(
-        "reservationDate"
-    ).value = reservation.date;
+    document.getElementById('reservationDate').value = reservation.date;
 
-    document.getElementById(
-        "reservationTime"
-    ).value = reservation.time;
+    document.getElementById('reservationTime').value = reservation.time;
 
-    document.getElementById(
-        "guestNumber"
-    ).value = reservation.guests;
+    document.getElementById('guestNumber').value = reservation.guests;
 
-    document.getElementById(
-        "reservationDuration"
-    ).value = reservation.duration;
+    document.getElementById('reservationDuration').value = reservation.duration;
 
     changerTypeClient();
 
-    afficherSelectionTables(
-        reservation.tables
-    );
+    afficherSelectionTables(reservation.tables);
 
-    document
-        .getElementById("reservationModal")
-        .classList.remove("hidden");
+    document.getElementById('reservationModal').classList.remove('hidden');
 }
 
 function modifierReservation(
@@ -1039,11 +709,9 @@ function modifierReservation(
     duration,
     tables
 ) {
-
-    const reservation =
-        reservations.find(function(r) {
-            return r.id === editingId;
-        });
+    const reservation = reservations.find(function (r) {
+        return r.id === editingId;
+    });
 
     if (!reservation) {
         return;
@@ -1063,24 +731,15 @@ function modifierReservation(
 ============================== */
 
 function supprimerReservation(id) {
-
-    if (
-        !confirm(
-            "Supprimer cette réservation ?"
-        )
-    ) {
+    if (!confirm('Supprimer cette réservation ?')) {
         return;
     }
 
-    reservations =
-        reservations.filter(function(r) {
-            return r.id !== id;
-        });
+    reservations = reservations.filter(function (r) {
+        return r.id !== id;
+    });
 
-    saveData(
-        STORAGE_RESERVATIONS,
-        reservations
-    );
+    saveData(STORAGE_RESERVATIONS, reservations);
 
     afficherTables();
     afficherReservations();
@@ -1092,26 +751,20 @@ function supprimerReservation(id) {
 ============================== */
 
 function voirReservation(id) {
-
-    const reservation =
-        reservations.find(function(r) {
-            return r.id === id;
-        });
+    const reservation = reservations.find(function (r) {
+        return r.id === id;
+    });
 
     if (!reservation) {
         return;
     }
 
     const client =
-        reservation.type === "hotel"
-            ? "🏨 Chambre " +
-              escapeHTML(reservation.client)
-            : "👤 " +
-              escapeHTML(reservation.client);
+        reservation.type === 'hotel'
+            ? '🏨 Chambre ' + escapeHTML(reservation.client)
+            : '👤 ' + escapeHTML(reservation.client);
 
-    document.getElementById(
-        "reservationDetails"
-    ).innerHTML = `
+    document.getElementById('reservationDetails').innerHTML = `
 
         <div class="detail-row">
             <div class="detail-label">
@@ -1155,10 +808,10 @@ function voirReservation(id) {
             </div>
             <div class="detail-value">
                 ${reservation.tables
-                    .map(function(t) {
-                        return "Table " + t;
+                    .map(function (t) {
+                        return 'Table ' + t;
                     })
-                    .join(", ")}
+                    .join(', ')}
             </div>
         </div>
 
@@ -1167,9 +820,7 @@ function voirReservation(id) {
                 Durée prévue
             </div>
             <div class="detail-value">
-                ${formatDuration(
-                    reservation.duration
-                )}
+                ${formatDuration(reservation.duration)}
             </div>
         </div>
 
@@ -1178,43 +829,26 @@ function voirReservation(id) {
                 Statut
             </div>
             <div class="detail-value">
-                ${texteStatut(
-                    reservation.status
-                )}
+                ${texteStatut(reservation.status)}
             </div>
         </div>
     `;
 
-    document
-        .getElementById("detailsModal")
-        .classList.remove("hidden");
+    document.getElementById('detailsModal').classList.remove('hidden');
 }
 
 function cliquerTable(table) {
-
-    const reservation =
-        reservations.find(function(r) {
-
-            return (
-                r.tables.includes(table) &&
-                r.status !== "released"
-            );
-        });
+    const reservation = reservations.find(function (r) {
+        return r.tables.includes(table) && r.status !== 'released';
+    });
 
     if (!reservation) {
-
-        alert(
-            "Table " +
-            table +
-            "\n\n🟢 Libre"
-        );
+        alert('Table ' + table + '\n\n🟢 Libre');
 
         return;
     }
 
-    voirReservation(
-        reservation.id
-    );
+    voirReservation(reservation.id);
 }
 
 /* ==============================
@@ -1222,43 +856,30 @@ function cliquerTable(table) {
 ============================== */
 
 function mettreAJourCompteurs() {
+    const list = reservations.filter(function (r) {
+        return r.date === getToday();
+    });
 
-    const list =
-        reservations.filter(function(r) {
-            return r.date === getToday();
-        });
+    document.getElementById('reservationCount').textContent = list.length;
 
-    document.getElementById(
-        "reservationCount"
-    ).textContent = list.length;
+    document.getElementById('guestCount').textContent = list.reduce(function (
+        total,
+        r
+    ) {
+        return total + Number(r.guests);
+    }, 0);
 
-    document.getElementById(
-        "guestCount"
-    ).textContent =
-        list.reduce(
-            function(total, r) {
-                return total + Number(r.guests);
-            },
-            0
-        );
+    const occupied = TABLES.filter(function (table) {
+        return getTableStatus(table) === 'occupied';
+    }).length;
 
-    const occupied =
-        TABLES.filter(function(table) {
-            return getTableStatus(table) === "occupied";
-        }).length;
+    const reserved = TABLES.filter(function (table) {
+        return getTableStatus(table) === 'reserved';
+    }).length;
 
-    const reserved =
-        TABLES.filter(function(table) {
-            return getTableStatus(table) === "reserved";
-        }).length;
+    document.getElementById('occupiedCount').textContent = occupied;
 
-    document.getElementById(
-        "occupiedCount"
-    ).textContent = occupied;
-
-    document.getElementById(
-        "freeCount"
-    ).textContent =
+    document.getElementById('freeCount').textContent =
         TABLES.length - occupied - reserved;
 }
 
@@ -1267,44 +888,30 @@ function mettreAJourCompteurs() {
 ============================== */
 
 function afficherHistorique() {
+    const container = document.getElementById('historyList');
 
-    const container =
-        document.getElementById(
-            "historyList"
-        );
-
-    container.innerHTML = "";
+    container.innerHTML = '';
 
     if (history.length === 0) {
-
         container.innerHTML = `
             <div class="empty-message">
                 Aucun historique disponible.
             </div>
         `;
-
     } else {
-
         history
             .slice()
-            .sort(function(a, b) {
+            .sort(function (a, b) {
                 return b.date.localeCompare(a.date);
             })
-            .forEach(function(day) {
+            .forEach(function (day) {
+                const element = document.createElement('div');
 
-                const element =
-                    document.createElement("div");
+                element.className = 'history-item';
 
-                element.className =
-                    "history-item";
-
-                const clients =
-                    day.reservations.reduce(
-                        function(total, r) {
-                            return total + Number(r.guests || 0);
-                        },
-                        0
-                    );
+                const clients = day.reservations.reduce(function (total, r) {
+                    return total + Number(r.guests || 0);
+                }, 0);
 
                 element.innerHTML = `
                     <strong>
@@ -1313,7 +920,7 @@ function afficherHistorique() {
 
                     <div>
                         ${day.reservations.length}
-                        réservation${day.reservations.length > 1 ? "s" : ""}
+                        réservation${day.reservations.length > 1 ? 's' : ''}
                     </div>
 
                     <div>
@@ -1325,9 +932,7 @@ function afficherHistorique() {
             });
     }
 
-    document
-        .getElementById("historyModal")
-        .classList.remove("hidden");
+    document.getElementById('historyModal').classList.remove('hidden');
 }
 
 /* ==============================
@@ -1335,66 +940,48 @@ function afficherHistorique() {
 ============================== */
 
 function cloturerService() {
-
-    const todayReservations =
-        reservations.filter(function(r) {
-            return r.date === getToday();
-        });
+    const todayReservations = reservations.filter(function (r) {
+        return r.date === getToday();
+    });
 
     if (todayReservations.length === 0) {
-
-        alert(
-            "Il n'y a aucune réservation aujourd'hui."
-        );
+        alert("Il n'y a aucune réservation aujourd'hui.");
 
         return;
     }
 
-    const confirmation =
-        confirm(
-            "Clôturer le service ?\n\n" +
-            "Les réservations du jour seront archivées " +
-            "et la salle sera remise à zéro.\n\n" +
+    const confirmation = confirm(
+        'Clôturer le service ?\n\n' +
+            'Les réservations du jour seront archivées ' +
+            'et la salle sera remise à zéro.\n\n' +
             "L'historique sera conservé."
-        );
+    );
 
     if (!confirmation) {
         return;
     }
 
     history.push({
-
         date: getToday(),
 
-        reservations:
-            todayReservations,
+        reservations: todayReservations,
 
-        closedAt:
-            new Date().toISOString()
+        closedAt: new Date().toISOString(),
     });
 
-    reservations =
-        reservations.filter(function(r) {
-            return r.date !== getToday();
-        });
+    reservations = reservations.filter(function (r) {
+        return r.date !== getToday();
+    });
 
-    saveData(
-        STORAGE_RESERVATIONS,
-        reservations
-    );
+    saveData(STORAGE_RESERVATIONS, reservations);
 
-    saveData(
-        STORAGE_HISTORY,
-        history
-    );
+    saveData(STORAGE_HISTORY, history);
 
     afficherTables();
     afficherReservations();
     mettreAJourCompteurs();
 
-    alert(
-        "✅ Service clôturé."
-    );
+    alert('✅ Service clôturé.');
 }
 
 /* ==============================
@@ -1402,20 +989,17 @@ function cloturerService() {
 ============================== */
 
 function formatDuration(minutes) {
-
     minutes = Number(minutes);
 
-    const hours =
-        Math.floor(minutes / 60);
+    const hours = Math.floor(minutes / 60);
 
-    const mins =
-        minutes % 60;
+    const mins = minutes % 60;
 
     if (mins === 0) {
-        return hours + " h";
+        return hours + ' h';
     }
 
-    return hours + " h " + mins + " min";
+    return hours + ' h ' + mins + ' min';
 }
 
 /* ==============================
@@ -1423,11 +1007,10 @@ function formatDuration(minutes) {
 ============================== */
 
 function escapeHTML(value) {
-
     return String(value)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
