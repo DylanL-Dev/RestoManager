@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>RestoManager</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- EN-TÊTE -->
+    <header class="header">
+        <div>
+            <h1>🍽️ RestoManager</h1>
+            <p>Gestion des réservations</p>
+        </div>
+
+        <div class="header-date">
+            <span id="currentDate">--/--/----</span>
+            <span id="currentTime">--:--</span>
+        </div>
+    </header>
+
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="container">
+
+        <!-- ACTIONS RAPIDES -->
+        <section class="actions">
+
+            <button id="newReservationBtn" class="btn btn-primary">
+                ➕ Nouvelle réservation
+            </button>
+
+            <button id="historyBtn" class="btn btn-secondary">
+                📋 Historique
+            </button>
+
+            <button id="closeServiceBtn" class="btn btn-danger">
+                🔒 Clôturer le service
+            </button>
+
+        </section>
+
+
+        <!-- INFORMATIONS DU SERVICE -->
+        <section class="service-info">
+
+            <div class="info-card">
+                <span>Réservations</span>
+                <strong id="reservationCount">0</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Clients attendus</span>
+                <strong id="guestCount">0</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Tables occupées</span>
+                <strong id="occupiedCount">0</strong>
+            </div>
+
+            <div class="info-card">
+                <span>Tables libres</span>
+                <strong id="freeCount">20</strong>
+            </div>
+
+        </section>
+
+
+        <!-- GRILLE DES TABLES -->
+        <section class="tables-section">
+
+            <div class="section-title">
+                <h2>🪑 Salle</h2>
+
+                <div class="legend">
+                    <span>
+                        <i class="legend-dot free"></i>
+                        Libre
+                    </span>
+
+                    <span>
+                        <i class="legend-dot reserved"></i>
+                        Réservée
+                    </span>
+
+                    <span>
+                        <i class="legend-dot occupied"></i>
+                        Occupée
+                    </span>
+                </div>
+            </div>
+
+
+            <div id="tablesGrid" class="tables-grid">
+                <!-- Les tables seront générées par app.js -->
+            </div>
+
+        </section>
+
+
+        <!-- LISTE DES RÉSERVATIONS -->
+        <section class="reservations-section">
+
+            <div class="section-title">
+                <h2>📅 Réservations du jour</h2>
+            </div>
+
+            <div id="reservationsList" class="reservations-list">
+
+                <div class="empty-message">
+                    Aucune réservation pour le moment.
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ============================= -->
+    <!-- FENÊTRE NOUVELLE RÉSERVATION -->
+    <!-- ============================= -->
+
+    <div id="reservationModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>➕ Nouvelle réservation</h2>
+
+                <button id="closeModalBtn" class="close-btn">
+                    ✕
+                </button>
+
+            </div>
+
+
+            <form id="reservationForm">
+
+                <!-- TYPE DE CLIENT -->
+                <div class="form-group">
+
+                    <label for="clientType">
+                        Type de client
+                    </label>
+
+                    <select id="clientType" required>
+
+                        <option value="hotel">
+                            🏨 Client hôtel
+                        </option>
+
+                        <option value="exterieur">
+                            👤 Client extérieur
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- IDENTIFICATION -->
+                <div class="form-group">
+
+                    <label id="clientLabel" for="clientInfo">
+                        Numéro de chambre
+                    </label>
+
+                    <input
+                        type="text"
+                        id="clientInfo"
+                        placeholder="Ex : 214"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- DATE -->
+                <div class="form-group">
+
+                    <label for="reservationDate">
+                        Date
+                    </label>
+
+                    <input
+                        type="date"
+                        id="reservationDate"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- HEURE -->
+                <div class="form-group">
+
+                    <label for="reservationTime">
+                        Heure d'arrivée
+                    </label>
+
+                    <input
+                        type="time"
+                        id="reservationTime"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- NOMBRE DE PERSONNES -->
+                <div class="form-group">
+
+                    <label for="guestNumber">
+                        Nombre de personnes
+                    </label>
+
+                    <input
+                        type="number"
+                        id="guestNumber"
+                        min="1"
+                        value="2"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- DURÉE -->
+                <div class="form-group">
+
+                    <label for="reservationDuration">
+                        Durée prévue
+                    </label>
+
+                    <select id="reservationDuration">
+
+                        <option value="60">
+                            1 heure
+                        </option>
+
+                        <option value="90" selected>
+                            1h30
+                        </option>
+
+                        <option value="120">
+                            2 heures
+                        </option>
+
+                        <option value="150">
+                            2h30
+                        </option>
+
+                        <option value="180">
+                            3 heures
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- TABLES -->
+                <div class="form-group">
+
+                    <label>
+                        Choisir la ou les tables
+                    </label>
+
+                    <div
+                        id="tableSelection"
+                        class="table-selection"
+                    >
+                        <!-- Généré par app.js -->
+                    </div>
+
+                    <small>
+                        💡 Plusieurs tables peuvent être sélectionnées
+                        pour les grands groupes.
+                    </small>
+
+                </div>
+
+
+                <!-- BOUTONS -->
+                <div class="form-actions">
+
+                    <button
+                        type="button"
+                        id="cancelReservationBtn"
+                        class="btn btn-secondary"
+                    >
+                        Annuler
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="btn btn-primary"
+                    >
+                        ✅ Enregistrer
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- FENÊTRE HISTORIQUE -->
+    <!-- ============================= -->
+
+    <div id="historyModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>📋 Historique</h2>
+
+                <button
+                    id="closeHistoryBtn"
+                    class="close-btn"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+            <div id="historyList">
+
+                <div class="empty-message">
+                    Aucun historique disponible.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ============================= -->
+    <!-- FENÊTRE DÉTAILS RÉSERVATION -->
+    <!-- ============================= -->
+
+    <div id="detailsModal" class="modal hidden">
+
+        <div class="modal-content">
+
+            <div class="modal-header">
+
+                <h2>📋 Réservation</h2>
+
+                <button
+                    id="closeDetailsBtn"
+                    class="close-btn"
+                >
+                    ✕
+                </button>
+
+            </div>
+
+            <div id="reservationDetails">
+                <!-- Généré par app.js -->
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="app.js"></script>
+
+</body>
+</html>

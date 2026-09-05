@@ -1,0 +1,664 @@
+/* ================================
+   RestoManager — Style général
+================================ */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --success: #16a34a;
+    --warning: #f59e0b;
+    --danger: #dc2626;
+    --dark: #1e293b;
+    --text: #334155;
+    --muted: #64748b;
+    --background: #f1f5f9;
+    --white: #ffffff;
+    --border: #e2e8f0;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: var(--background);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+/* ================================
+   EN-TÊTE
+================================ */
+
+.header {
+    background: var(--dark);
+    color: white;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.header h1 {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.header p {
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+.header-date {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-weight: bold;
+}
+
+#currentTime {
+    font-size: 20px;
+}
+
+/* ================================
+   CONTENEUR
+================================ */
+
+.container {
+    width: 100%;
+    max-width: 1400px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* ================================
+   BOUTONS
+================================ */
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    border: none;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn:active {
+    transform: scale(0.97);
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark);
+}
+
+.btn-secondary {
+    background: #64748b;
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+/* ================================
+   CARTES INFORMATIONS
+================================ */
+
+.service-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.info-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.info-card span {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.info-card strong {
+    font-size: 25px;
+    color: var(--dark);
+}
+
+/* ================================
+   TITRES DE SECTION
+================================ */
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.section-title h2 {
+    font-size: 21px;
+    color: var(--dark);
+}
+
+/* ================================
+   LÉGENDE
+================================ */
+
+.legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+}
+
+.legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.legend-dot.free {
+    background: var(--success);
+}
+
+.legend-dot.reserved {
+    background: var(--warning);
+}
+
+.legend-dot.occupied {
+    background: var(--danger);
+}
+
+/* ================================
+   GRILLE DES TABLES
+================================ */
+
+.tables-section {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.06);
+}
+
+.tables-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+}
+
+/* TABLE */
+
+.table-card {
+    min-height: 105px;
+    border-radius: 14px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    text-align: center;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+}
+
+.table-card:hover {
+    transform: translateY(-2px);
+}
+
+/* TABLE LIBRE */
+
+.table-card.free {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.table-card.free .table-number {
+    color: #166534;
+}
+
+/* TABLE RÉSERVÉE */
+
+.table-card.reserved {
+    background: #fef3c7;
+    border-color: #fbbf24;
+}
+
+.table-card.reserved .table-number {
+    color: #92400e;
+}
+
+/* TABLE OCCUPÉE */
+
+.table-card.occupied {
+    background: #fee2e2;
+    border-color: #fca5a5;
+}
+
+.table-card.occupied .table-number {
+    color: #991b1b;
+}
+
+/* TABLE SÉLECTIONNÉE */
+
+.table-card.selected {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* CONTENU TABLE */
+
+.table-number {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.table-capacity {
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.table-status {
+    font-size: 12px;
+    font-weight: bold;
+}
+
+/* ================================
+   RÉSERVATIONS
+================================ */
+
+.reservations-section {
+    background: white;
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 25px;
+    box-shadow: 0 2px 7px rgba(0, 0, 0, 0.06);
+}
+
+.reservations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.reservation-card {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 15px;
+    background: #f8fafc;
+}
+
+.reservation-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+}
+
+.reservation-time {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--dark);
+}
+
+.reservation-client {
+    font-weight: bold;
+    margin-top: 6px;
+}
+
+.reservation-info {
+    color: var(--muted);
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.reservation-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.reservation-actions button {
+    border: none;
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+/* ================================
+   MESSAGE VIDE
+================================ */
+
+.empty-message {
+    padding: 25px;
+    text-align: center;
+    color: var(--muted);
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+/* ================================
+   MODALES
+================================ */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.65);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    z-index: 1000;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.modal-header h2 {
+    color: var(--dark);
+}
+
+.close-btn {
+    border: none;
+    background: #f1f5f9;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* ================================
+   FORMULAIRE
+================================ */
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: bold;
+    color: var(--dark);
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: white;
+    font-size: 16px;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.form-group small {
+    display: block;
+    color: var(--muted);
+    margin-top: 7px;
+}
+
+/* ================================
+   SÉLECTION DES TABLES
+================================ */
+
+.table-selection {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.table-option {
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: 9px;
+    padding: 10px 5px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.table-option.selected {
+    background: #dbeafe;
+    border-color: var(--primary);
+    color: var(--primary-dark);
+}
+
+.table-option.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* ================================
+   ACTIONS FORMULAIRE
+================================ */
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* ================================
+   HISTORIQUE
+================================ */
+
+.history-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #f8fafc;
+}
+
+/* ================================
+   DÉTAILS RÉSERVATION
+================================ */
+
+.detail-row {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.detail-label {
+    color: var(--muted);
+    font-size: 13px;
+}
+
+.detail-value {
+    font-weight: bold;
+    margin-top: 3px;
+}
+
+/* ================================
+   RESPONSIVE — TABLETTE
+================================ */
+
+@media (max-width: 900px) {
+
+    .service-info {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .tables-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+}
+
+/* ================================
+   RESPONSIVE — TÉLÉPHONE
+================================ */
+
+@media (max-width: 600px) {
+
+    .header {
+        padding: 15px;
+    }
+
+    .header h1 {
+        font-size: 20px;
+    }
+
+    .header p {
+        font-size: 12px;
+    }
+
+    #currentTime {
+        font-size: 17px;
+    }
+
+    .container {
+        padding: 12px;
+    }
+
+    .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+    }
+
+    .btn {
+        width: 100%;
+    }
+
+    .service-info {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .info-card {
+        padding: 12px;
+    }
+
+    .info-card strong {
+        font-size: 22px;
+    }
+
+    .tables-section,
+    .reservations-section {
+        padding: 14px;
+    }
+
+    .section-title {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .tables-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .table-card {
+        min-height: 90px;
+        padding: 8px;
+    }
+
+    .table-number {
+        font-size: 21px;
+    }
+
+    .table-selection {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .modal-content {
+        padding: 15px;
+    }
+
+}
+
+/* ================================
+   PETIT TÉLÉPHONE
+================================ */
+
+@media (max-width: 380px) {
+
+    .tables-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .table-selection {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+}
