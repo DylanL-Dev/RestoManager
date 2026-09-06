@@ -367,20 +367,19 @@ function getSelectedTables() {
    NOUVELLE RÉSERVATION
 ============================== */
 
-function nouvelleReservation() {
+function nouvelleReservation(selectedTables) {
     editingId = null;
 
     document.getElementById('reservationForm').reset();
 
     document.getElementById('clientType').value = 'hotel';
-
     document.getElementById('reservationDuration').value = '90';
 
     setDefaultDateTime();
 
     changerTypeClient();
 
-    afficherSelectionTables();
+    afficherSelectionTables(selectedTables || []);
 
     document.getElementById('reservationModal').classList.remove('hidden');
 }
@@ -913,12 +912,13 @@ function voirReservation(id) {
 
 function cliquerTable(table) {
     const reservation = reservations.find(function (r) {
-        return r.tables.includes(table) && r.status !== 'released';
+        return r.date === getToday()
+            && r.tables.includes(table)
+            && r.status !== 'released';
     });
 
     if (!reservation) {
-        alert('Table ' + table + '\n\n🟢 Libre');
-
+        nouvelleReservation([table]);
         return;
     }
 
