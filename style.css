@@ -744,49 +744,97 @@ body {
 
 /* ==============================
    RÉSERVATION RECHERCHÉE
-============================== */
+   ============================== */
 
 .reservation-highlight {
     position: relative;
-    border: 3px solid #2563eb !important;
-    background: #eff6ff !important;
+    border: 3px solid #2563eb;
+    background: #eff6ff;
     box-shadow:
-        0 0 0 5px rgba(37, 99, 235, 0.2),
-        0 8px 25px rgba(37, 99, 235, 0.25) !important;
-    animation: reservationHighlight 2.5s ease;
+        0 0 0 5px rgba(37, 99, 235, 0.20),
+        0 8px 25px rgba(37, 99, 235, 0.25);
+    animation: reservationHighlight 6s cubic-bezier(.22, 1, .36, 1) forwards;
 }
+
+/* Bandeau RÉSERVATION RECHERCHÉE */
 
 .reservation-highlight::before {
     content: '🔎 RÉSERVATION RECHERCHÉE';
     display: block;
     margin-bottom: 10px;
-    padding: 7px 10px;
+    padding: 8px 12px;
     background: #2563eb;
     color: white;
-    border-radius: 7px;
+    border-radius: 10px;
     font-weight: 700;
     font-size: 13px;
     text-align: center;
+    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.30);
+    animation: reservationBadge 6s cubic-bezier(.22, 1, .36, 1) forwards;
 }
 
+/* Animation de la réservation */
+
 @keyframes reservationHighlight {
+
     0% {
-        transform: scale(1.03);
+        transform: scale(.97);
+        opacity: 0;
+        box-shadow:
+            0 0 0 0 rgba(37, 99, 235, 0),
+            0 0 0 rgba(37, 99, 235, 0);
     }
 
-    20% {
+    12% {
         transform: scale(1);
+        opacity: 1;
+        box-shadow:
+            0 0 0 5px rgba(37, 99, 235, 0.25),
+            0 8px 25px rgba(37, 99, 235, 0.35);
     }
 
-    40% {
-        transform: scale(1.02);
-    }
-
-    60% {
+    65% {
         transform: scale(1);
+        opacity: 1;
+        box-shadow:
+            0 0 0 3px rgba(37, 99, 235, 0.15),
+            0 6px 18px rgba(37, 99, 235, 0.20);
     }
 
     100% {
         transform: scale(1);
+        opacity: 1;
+        box-shadow:
+            0 0 0 0 rgba(37, 99, 235, 0),
+            0 0 0 rgba(37, 99, 235, 0);
+    }
+}
+
+/* Animation du bandeau */
+
+@keyframes reservationBadge {
+
+    0% {
+        opacity: 0;
+        transform: translateY(-6px) scale(.97);
+        box-shadow: 0 0 0 rgba(37, 99, 235, 0);
+    }
+
+    12% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: 0 4px 22px rgba(37, 99, 235, 0.40);
+    }
+
+    65% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.20);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        box-shadow: 0 0 0 rgba(37, 99, 235, 0);
     }
 }

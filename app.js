@@ -906,7 +906,7 @@ function voirReservation(id) {
 
         setTimeout(function () {
             reservationElement.classList.remove('reservation-highlight');
-        }, 2500);
+        }, 6000);
     }
 }
 
@@ -925,7 +925,6 @@ function voirReservation(id) {
 
     voirReservation(reservation.id);
 }
-
     
 /* ==============================
    COMPTEURS
