@@ -206,8 +206,11 @@ function changerTypeClient() {
 ============================== */
 
 function getTableStatus(table) {
-    const reservation = reservations.find(function (r) {
-        return r.tables.includes(table) && r.status !== 'released';
+    const reservation = reservations
+    .find(function (r) {
+        return r.date === getToday()
+            && r.tables.includes(table)
+            && r.status !== 'released';
     });
 
     if (!reservation) {
