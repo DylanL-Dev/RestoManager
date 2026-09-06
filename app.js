@@ -25,8 +25,53 @@ let editingId = null;
 /* ==============================
    DÉMARRAGE
 ============================== */
+function nettoyerAnciennesReservations() {
+    const today = getToday();
 
+    const anciennes = reservations.filter(function (r) {
+        return r.date < today;
+    });
+
+    if (anciennes.length === 0) {
+        return;
+    }
+
+    const datesDejaArchivees = new Set(
+        history.map(function (h) {
+            return h.date;
+        })
+    );
+
+    const groupes = {};
+
+    anciennes.forEach(function (r) {
+        if (!groupes[r.date]) {
+            groupes[r.date] = [];
+        }
+
+        groupes[r.date].push(r);
+    });
+
+    Object.keys(groupes).forEach(function (date) {
+        if (!datesDejaArchivees.has(date)) {
+            history.push({
+                date: date,
+                reservations: groupes[date],
+                closedAt: new Date().toISOString()
+            });
+        }
+    });
+
+    reservations = reservations.filter(function (r) {
+        return r.date >= today;
+    });
+
+    saveData(STORAGE_RESERVATIONS, reservations);
+    saveData(STORAGE_HISTORY, history);
+}
 document.addEventListener('DOMContentLoaded', function () {
+    nettoyerAnciennesReservations();
+
     setDefaultDateTime();
 
     afficherDateHeure();
