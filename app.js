@@ -910,12 +910,13 @@ function voirReservation(id) {
     }
 }
 
-function cliquerTable(table) {
-    const reservation = reservations.find(function (r) {
-        return r.date === getToday()
-            && r.tables.includes(table)
-            && r.status !== 'released';
-    });
+ function cliquerTable(table) {
+    const reservation = reservations
+        .find(function (r) {
+            return r.date === getToday()
+                && r.tables.includes(table)
+                && r.status !== 'released';
+        });
 
     if (!reservation) {
         nouvelleReservation([table]);
@@ -925,6 +926,7 @@ function cliquerTable(table) {
     voirReservation(reservation.id);
 }
 
+    
 /* ==============================
    COMPTEURS
 ============================== */
