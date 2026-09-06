@@ -176,8 +176,10 @@ function formatDate(dateString) {
 
 function configurerEvenements() {
     document
-        .getElementById('newReservationBtn')
-        .addEventListener('click', nouvelleReservation);
+    .getElementById('newReservationBtn')
+    .addEventListener('click', function () {
+        nouvelleReservation();
+    });
 
     document
         .getElementById('closeModalBtn')
