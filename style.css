@@ -125,7 +125,7 @@ body {
         gap: 9px;
     }
 
-    .header-logo img{
+    .header-logo img {
         width: 100px;
         height: 100px;
     }
@@ -833,9 +833,9 @@ body {
     border: 3px solid #2563eb;
     background: #eff6ff;
     box-shadow:
-        0 0 0 5px rgba(37, 99, 235, 0.20),
+        0 0 0 5px rgba(37, 99, 235, 0.2),
         0 8px 25px rgba(37, 99, 235, 0.25);
-    animation: reservationHighlight 6s cubic-bezier(.22, 1, .36, 1) forwards;
+    animation: reservationHighlight 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Bandeau RÉSERVATION RECHERCHÉE */
@@ -851,16 +851,15 @@ body {
     font-weight: 700;
     font-size: 13px;
     text-align: center;
-    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.30);
-    animation: reservationBadge 6s cubic-bezier(.22, 1, .36, 1) forwards;
+    box-shadow: 0 4px 18px rgba(37, 99, 235, 0.3);
+    animation: reservationBadge 6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Animation de la réservation */
 
 @keyframes reservationHighlight {
-
     0% {
-        transform: scale(.97);
+        transform: scale(0.97);
         opacity: 0;
         box-shadow:
             0 0 0 0 rgba(37, 99, 235, 0),
@@ -880,7 +879,7 @@ body {
         opacity: 1;
         box-shadow:
             0 0 0 3px rgba(37, 99, 235, 0.15),
-            0 6px 18px rgba(37, 99, 235, 0.20);
+            0 6px 18px rgba(37, 99, 235, 0.2);
     }
 
     100% {
@@ -895,23 +894,22 @@ body {
 /* Animation du bandeau */
 
 @keyframes reservationBadge {
-
     0% {
         opacity: 0;
-        transform: translateY(-6px) scale(.97);
+        transform: translateY(-6px) scale(0.97);
         box-shadow: 0 0 0 rgba(37, 99, 235, 0);
     }
 
     12% {
         opacity: 1;
         transform: translateY(0) scale(1);
-        box-shadow: 0 4px 22px rgba(37, 99, 235, 0.40);
+        box-shadow: 0 4px 22px rgba(37, 99, 235, 0.4);
     }
 
     65% {
         opacity: 1;
         transform: translateY(0) scale(1);
-        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.20);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.2);
     }
 
     100% {

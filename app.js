@@ -57,7 +57,7 @@ function nettoyerAnciennesReservations() {
             history.push({
                 date: date,
                 reservations: groupes[date],
-                closedAt: new Date().toISOString()
+                closedAt: new Date().toISOString(),
             });
         }
     });
@@ -176,10 +176,10 @@ function formatDate(dateString) {
 
 function configurerEvenements() {
     document
-    .getElementById('newReservationBtn')
-    .addEventListener('click', function () {
-        nouvelleReservation();
-    });
+        .getElementById('newReservationBtn')
+        .addEventListener('click', function () {
+            nouvelleReservation();
+        });
 
     document
         .getElementById('closeModalBtn')
@@ -253,11 +253,12 @@ function changerTypeClient() {
 ============================== */
 
 function getTableStatus(table) {
-    const reservation = reservations
-    .find(function (r) {
-        return r.date === getToday()
-            && r.tables.includes(table)
-            && r.status !== 'released';
+    const reservation = reservations.find(function (r) {
+        return (
+            r.date === getToday() &&
+            r.tables.includes(table) &&
+            r.status !== 'released'
+        );
     });
 
     if (!reservation) {
@@ -894,14 +895,14 @@ function voirReservation(id) {
 
     document.getElementById('detailsModal').classList.remove('hidden');
 
-        const reservationElement = document.querySelector(
+    const reservationElement = document.querySelector(
         '[data-reservation-id="' + reservation.id + '"]'
     );
 
     if (reservationElement) {
         reservationElement.scrollIntoView({
             behavior: 'smooth',
-            block: 'center'
+            block: 'center',
         });
 
         reservationElement.classList.add('reservation-highlight');
@@ -912,13 +913,14 @@ function voirReservation(id) {
     }
 }
 
- function cliquerTable(table) {
-    const reservation = reservations
-        .find(function (r) {
-            return r.date === getToday()
-                && r.tables.includes(table)
-                && r.status !== 'released';
-        });
+function cliquerTable(table) {
+    const reservation = reservations.find(function (r) {
+        return (
+            r.date === getToday() &&
+            r.tables.includes(table) &&
+            r.status !== 'released'
+        );
+    });
 
     if (!reservation) {
         nouvelleReservation([table]);
@@ -927,7 +929,7 @@ function voirReservation(id) {
 
     voirReservation(reservation.id);
 }
-    
+
 /* ==============================
    COMPTEURS
 ============================== */
