@@ -4,43 +4,55 @@
    CONFIGURATION
 ============================== */
 
-const TABLES = [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-];
-
-const CAPACITY = {};
-
-TABLES.forEach(function (table) {
-    CAPACITY[table] = table === 25 ? 10 : 2;
-});
+const TABLES = ReservationEngine.TABLES;
+const CAPACITY = ReservationEngine.CAPACITY;
+const STATUS = ReservationEngine.STATUS;
 
 const STORAGE_RESERVATIONS = 'restomanager_reservations';
 const STORAGE_HISTORY = 'restomanager_history';
 
-let reservations = loadData(STORAGE_RESERVATIONS, []);
-let history = loadData(STORAGE_HISTORY, []);
+let reservations = ReservationEngine.normalizeReservations(
+    loadData(STORAGE_RESERVATIONS, [])
+);
+let history = normalizeHistory(loadData(STORAGE_HISTORY, []));
 
 let editingId = null;
 
 /* ==============================
    DÉMARRAGE
 ============================== */
-function nettoyerAnciennesReservations() {
-    const today = getToday();
+function normalizeHistory(rawHistory) {
+    return Array.isArray(rawHistory)
+        ? rawHistory
+              .filter(function (day) {
+                  return day && typeof day.date === 'string';
+              })
+              .map(function (day) {
+                  return Object.assign({}, day, {
+                      reservations: ReservationEngine.normalizeReservations(
+                          day.reservations
+                      ),
+                  });
+              })
+        : [];
+}
 
+function getServiceDate() {
+    const date = new Date();
+    if (date.getHours() < 1) {
+        date.setDate(date.getDate() - 1);
+    }
+    return formatDateValue(date);
+}
+
+function archiveReservationsBefore(serviceDate) {
     const anciennes = reservations.filter(function (r) {
-        return r.date < today;
+        return r.date < serviceDate;
     });
 
     if (anciennes.length === 0) {
-        return;
+        return false;
     }
-
-    const datesDejaArchivees = new Set(
-        history.map(function (h) {
-            return h.date;
-        })
-    );
 
     const groupes = {};
 
@@ -53,23 +65,31 @@ function nettoyerAnciennesReservations() {
     });
 
     Object.keys(groupes).forEach(function (date) {
-        if (!datesDejaArchivees.has(date)) {
-            history.push({
-                date: date,
-                reservations: groupes[date],
-                closedAt: new Date().toISOString(),
-            });
+        const existing = history.find(function (day) { return day.date === date; });
+        if (existing) {
+            const ids = new Set(existing.reservations.map(function (r) { return r.id; }));
+            existing.reservations = existing.reservations.concat(
+                groupes[date].filter(function (r) { return !ids.has(r.id); })
+            );
+        } else {
+            history.push({ date: date, reservations: groupes[date], closedAt: new Date().toISOString() });
         }
     });
 
     reservations = reservations.filter(function (r) {
-        return r.date >= today;
+        return r.date >= serviceDate;
     });
 
     saveData(STORAGE_RESERVATIONS, reservations);
     saveData(STORAGE_HISTORY, history);
+    return true;
+}
+
+function nettoyerAnciennesReservations() {
+    return archiveReservationsBefore(getServiceDate());
 }
 document.addEventListener('DOMContentLoaded', function () {
+    saveNormalizedData();
     nettoyerAnciennesReservations();
 
     setDefaultDateTime();
@@ -87,6 +107,9 @@ document.addEventListener('DOMContentLoaded', function () {
     configurerEvenements();
 
     setInterval(afficherDateHeure, 1000);
+    setInterval(function () {
+        if (nettoyerAnciennesReservations()) refreshUI();
+    }, 60000);
 });
 
 /* ==============================
@@ -117,12 +140,28 @@ function saveData(key, data) {
     }
 }
 
+function saveNormalizedData() {
+    saveData(STORAGE_RESERVATIONS, reservations);
+    saveData(STORAGE_HISTORY, history);
+    return true;
+}
+
+function refreshUI() {
+    afficherTables();
+    afficherReservations();
+    mettreAJourCompteurs();
+    rechercherReservation();
+}
+
 /* ==============================
    DATE / HEURE
 ============================== */
 
 function getToday() {
-    const date = new Date();
+    return formatDateValue(new Date());
+}
+
+function formatDateValue(date) {
 
     const year = date.getFullYear();
 
@@ -224,6 +263,21 @@ function configurerEvenements() {
     document
         .getElementById('clearSearchBtn')
         .addEventListener('click', effacerRecherche);
+
+    document.getElementById('adminBtn').addEventListener('click', ouvrirAdministration);
+    document.getElementById('closeAdminBtn').addEventListener('click', fermerAdministration);
+    document.getElementById('adminSetupForm').addEventListener('submit', configurerAdministrateur);
+    document.getElementById('adminLoginForm').addEventListener('submit', connecterAdministrateur);
+    document.getElementById('adminLogoutBtn').addEventListener('click', deconnecterAdministrateur);
+    document.getElementById('changePinBtn').addEventListener('click', afficherChangementPin);
+    document.getElementById('changePinForm').addEventListener('submit', changerPinAdministrateur);
+    document.getElementById('resetTestDataBtn').addEventListener('click', reinitialiserDonneesTest);
+
+    ['reservationDate', 'reservationTime', 'reservationDuration'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', function () {
+            afficherSelectionTables(getSelectedTables());
+        });
+    });
 }
 
 /* ==============================
@@ -253,19 +307,19 @@ function changerTypeClient() {
 ============================== */
 
 function getTableStatus(table) {
-    const reservation = reservations.find(function (r) {
+    const tableReservations = reservations.filter(function (r) {
         return (
-            r.date === getToday() &&
+            r.date === getServiceDate() &&
             r.tables.includes(table) &&
-            r.status !== 'released'
+            ReservationEngine.isBlocking(r)
         );
     });
 
-    if (!reservation) {
+    if (tableReservations.length === 0) {
         return 'free';
     }
 
-    if (reservation.status === 'occupied') {
+    if (tableReservations.some(function (r) { return r.status === STATUS.SEATED; })) {
         return 'occupied';
     }
 
@@ -273,15 +327,13 @@ function getTableStatus(table) {
 }
 
 function texteStatut(status) {
-    if (status === 'free') {
-        return '🟢 Libre';
-    }
-
-    if (status === 'reserved') {
-        return '🟡 Réservée';
-    }
-
-    return '🔴 Occupée';
+    const labels = {
+        free: '🟢 Libre', reserved: '🟡 Réservée', confirmed: '🟡 Confirmée',
+        late: '🟠 En retard', arrived: '🟣 Arrivée', seated: '🔴 Installée',
+        occupied: '🔴 Occupée', completed: '⚪ Terminée', cancelled: '⚪ Annulée', no_show: '⚪ No-show',
+        released: '⚪ Libérée',
+    };
+    return labels[status] || '⚪ Inconnu';
 }
 
 function afficherTables() {
@@ -338,9 +390,10 @@ function afficherSelectionTables(selected) {
             element.classList.add('selected');
         }
 
-        const status = getTableStatus(table);
+        const draft = getReservationDraft(selected.concat([table]));
+        const validation = ReservationEngine.validate(draft, reservations, editingId);
 
-        if (status !== 'free' && !selected.includes(table)) {
+        if (!validation.valid && validation.conflict && !selected.includes(table)) {
             element.classList.add('disabled');
         }
 
@@ -364,6 +417,19 @@ function getSelectedTables() {
     return Array.from(elements).map(function (element) {
         return Number(element.textContent.substring(1));
     });
+}
+
+function getReservationDraft(tables) {
+    return {
+        id: editingId || '',
+        client: document.getElementById('clientInfo').value.trim() || 'temporaire',
+        date: document.getElementById('reservationDate').value,
+        time: document.getElementById('reservationTime').value,
+        guests: Number(document.getElementById('guestNumber').value) || 1,
+        duration: Number(document.getElementById('reservationDuration').value) || ReservationEngine.DEFAULT_DURATION,
+        tables: tables,
+        status: STATUS.RESERVED,
+    };
 }
 
 /* ==============================
@@ -440,13 +506,11 @@ function enregistrerReservation(event) {
         return;
     }
 
-    if (tables.includes(25) && guests > 10) {
-        alert('⚠️ La table 25 accepte au maximum 10 personnes.');
-        return;
-    }
-    if (conflitReservation(tables, date, time, duration, editingId)) {
-        alert('⚠️ Une table sélectionnée est déjà réservée à cet horaire.');
-
+    const candidate = { id: editingId || '', type: type, client: client, date: date, time: time,
+        guests: guests, duration: duration, tables: tables, status: STATUS.RESERVED };
+    const validation = ReservationEngine.validate(candidate, reservations, editingId);
+    if (!validation.valid) {
+        alert('⚠️ ' + validation.errors.join('\n'));
         return;
     }
 
@@ -470,7 +534,7 @@ function enregistrerReservation(event) {
 
             tables: tables,
 
-            status: 'reserved',
+            status: STATUS.RESERVED,
 
             createdAt: new Date().toISOString(),
         });
@@ -510,37 +574,8 @@ function timeToMinutes(date, time) {
 }
 
 function conflitReservation(tables, date, time, duration, ignoredId) {
-    const start = timeToMinutes(date, time);
-
-    const end = start + duration;
-
-    return reservations.some(function (reservation) {
-        if (reservation.id === ignoredId) {
-            return false;
-        }
-
-        if (reservation.date !== date) {
-            return false;
-        }
-
-        if (reservation.status === 'released') {
-            return false;
-        }
-
-        const sameTable = reservation.tables.some(function (table) {
-            return tables.includes(table);
-        });
-
-        if (!sameTable) {
-            return false;
-        }
-
-        const otherStart = timeToMinutes(reservation.date, reservation.time);
-
-        const otherEnd = otherStart + Number(reservation.duration);
-
-        return start < otherEnd && end > otherStart;
-    });
+    return !ReservationEngine.validate({ client: 'validation', date: date, time: time,
+        guests: 1, duration: duration, tables: tables, status: STATUS.RESERVED }, reservations, ignoredId).valid;
 }
 
 /* ==============================
@@ -554,7 +589,7 @@ function afficherReservations() {
 
     const todayReservations = reservations
         .filter(function (r) {
-            return r.date === getToday();
+            return r.date === getServiceDate();
         })
         .sort(function (a, b) {
             return a.time.localeCompare(b.time);
@@ -583,26 +618,37 @@ function afficherReservations() {
 
         let actions = '';
 
-        if (reservation.status === 'reserved') {
+        if ([STATUS.RESERVED, STATUS.CONFIRMED, STATUS.LATE].includes(reservation.status)) {
             actions += `
                     <button
                         class="btn-success"
                         onclick="clientArrive('${reservation.id}')">
                         👋 Client arrivé
                     </button>
+                    <button onclick="declarerRetard('${reservation.id}')">⏱️ Retard</button>
+                    <button onclick="declarerNoShow('${reservation.id}')">🚫 No-show</button>
                 `;
         }
 
-        if (reservation.status === 'occupied') {
+        if (reservation.status === STATUS.ARRIVED) {
+            actions += `<button class="btn-success" onclick="installerClient('${reservation.id}')">🪑 Installer</button>`;
+        }
+
+        if (reservation.status === STATUS.SEATED) {
             actions += `
                     <button
                         class="btn-success"
                         onclick="libererTables('${reservation.id}')">
                         🆓 Libérer les tables
                     </button>
+                    <button onclick="prolongerReservation('${reservation.id}')">⏱️ Prolonger</button>
                 `;
         }
 
+        const canCancel = [STATUS.RESERVED, STATUS.CONFIRMED, STATUS.LATE, STATUS.ARRIVED].includes(reservation.status);
+        const adminActions = AdminAuth.isAuthenticated()
+            ? `<button onclick="supprimerReservationDefinitivement('${reservation.id}')">🗑️ Supprimer définitivement</button>`
+            : '';
         card.innerHTML = `
                 <div class="reservation-header">
 
@@ -655,10 +701,11 @@ function afficherReservations() {
                         👁️ Détails
                     </button>
 
-                    <button
+                    ${canCancel ? `<button
                         onclick="supprimerReservation('${reservation.id}')">
-                        🗑️ Supprimer
-                    </button>
+                        🚫 Annuler
+                    </button>` : ''}
+                    ${adminActions}
 
                 </div>
             `;
@@ -672,6 +719,23 @@ function afficherReservations() {
 ============================== */
 
 function clientArrive(id) {
+    changerStatut(id, STATUS.ARRIVED);
+}
+
+function installerClient(id) {
+    changerStatut(id, STATUS.SEATED);
+}
+
+function declarerRetard(id) {
+    changerStatut(id, STATUS.LATE);
+}
+
+function declarerNoShow(id) {
+    if (!confirm('Déclarer ce client absent (no-show) et libérer ses tables ?')) return;
+    changerStatut(id, STATUS.NO_SHOW);
+}
+
+function changerStatut(id, status) {
     const reservation = reservations.find(function (r) {
         return r.id === id;
     });
@@ -680,15 +744,14 @@ function clientArrive(id) {
         return;
     }
 
-    reservation.status = 'occupied';
-
-    reservation.arrivedAt = new Date().toISOString();
-
+    const transition = ReservationEngine.transition(reservation, status);
+    if (!transition.valid) {
+        alert('⚠️ ' + transition.error);
+        return;
+    }
+    Object.assign(reservation, transition.reservation);
     saveData(STORAGE_RESERVATIONS, reservations);
-
-    afficherTables();
-    afficherReservations();
-    mettreAJourCompteurs();
+    refreshUI();
 }
 
 /* ==============================
@@ -714,15 +777,22 @@ function libererTables(id) {
         return;
     }
 
-    reservation.status = 'released';
+    changerStatut(id, STATUS.COMPLETED);
+}
 
-    reservation.releasedAt = new Date().toISOString();
-
+function prolongerReservation(id) {
+    const reservation = reservations.find(function (r) { return r.id === id; });
+    if (!reservation) return;
+    const value = prompt('Ajouter combien de minutes ? (ex. 30)', '30');
+    if (value === null) return;
+    const result = ReservationEngine.extend(reservation, Number(value), reservations);
+    if (!result.valid) {
+        alert('⚠️ ' + result.error);
+        return;
+    }
+    Object.assign(reservation, result.reservation, { extendedAt: new Date().toISOString() });
     saveData(STORAGE_RESERVATIONS, reservations);
-
-    afficherTables();
-    afficherReservations();
-    mettreAJourCompteurs();
+    refreshUI();
 }
 
 /* ==============================
@@ -790,19 +860,97 @@ function modifierReservation(
 ============================== */
 
 function supprimerReservation(id) {
-    if (!confirm('Supprimer cette réservation ?')) {
+    if (!confirm('Annuler cette réservation ? Elle restera dans l’historique du service.')) {
         return;
     }
+    changerStatut(id, STATUS.CANCELLED);
+}
 
-    reservations = reservations.filter(function (r) {
-        return r.id !== id;
-    });
-
+function supprimerReservationDefinitivement(id) {
+    try {
+        AdminAuth.requireSession();
+    } catch (error) {
+        alert('⚠️ ' + error.message);
+        return;
+    }
+    const reservation = reservations.find(function (r) { return r.id === id; });
+    if (!reservation) return;
+    if (!confirm('Supprimer définitivement cette réservation ? Cette action est irréversible.')) return;
+    if (!confirm('Confirmez la suppression définitive de ' + reservation.client + '.')) return;
+    reservations = reservations.filter(function (r) { return r.id !== id; });
     saveData(STORAGE_RESERVATIONS, reservations);
+    refreshUI();
+}
 
-    afficherTables();
-    afficherReservations();
-    mettreAJourCompteurs();
+/* ==============================
+   ADMINISTRATION LOCALE
+============================== */
+
+function setAdminView(view) {
+    ['adminSetupForm', 'adminLoginForm', 'adminPanel', 'changePinForm'].forEach(function (id) {
+        document.getElementById(id).classList.add('hidden');
+    });
+    if (view) document.getElementById(view).classList.remove('hidden');
+}
+
+function ouvrirAdministration() {
+    document.getElementById('adminModal').classList.remove('hidden');
+    if (AdminAuth.isAuthenticated()) setAdminView('adminPanel');
+    else if (AdminAuth.readConfig(localStorage)) setAdminView('adminLoginForm');
+    else setAdminView('adminSetupForm');
+}
+
+function fermerAdministration() {
+    document.getElementById('adminModal').classList.add('hidden');
+}
+
+async function configurerAdministrateur(event) {
+    event.preventDefault();
+    try {
+        await AdminAuth.configure(document.getElementById('adminPin').value,
+            document.getElementById('adminPinConfirmation').value, localStorage);
+        event.target.reset();
+        setAdminView('adminPanel');
+        refreshUI();
+    } catch (error) { alert('⚠️ ' + error.message); }
+}
+
+async function connecterAdministrateur(event) {
+    event.preventDefault();
+    const success = await AdminAuth.authenticate(document.getElementById('adminLoginPin').value, localStorage);
+    event.target.reset();
+    if (!success) { alert('⚠️ PIN administrateur incorrect.'); return; }
+    setAdminView('adminPanel');
+    refreshUI();
+}
+
+function deconnecterAdministrateur() {
+    AdminAuth.logout();
+    setAdminView('adminLoginForm');
+    refreshUI();
+}
+
+function afficherChangementPin() { setAdminView('changePinForm'); }
+
+async function changerPinAdministrateur(event) {
+    event.preventDefault();
+    try {
+        await AdminAuth.changePin(document.getElementById('currentAdminPin').value,
+            document.getElementById('newAdminPin').value,
+            document.getElementById('newAdminPinConfirmation').value, localStorage);
+        event.target.reset();
+        setAdminView('adminPanel');
+    } catch (error) { alert('⚠️ ' + error.message); }
+}
+
+function reinitialiserDonneesTest() {
+    try { AdminAuth.requireSession(); } catch (error) { alert('⚠️ ' + error.message); return; }
+    if (!confirm('Réinitialiser toutes les réservations et tout l’historique de test ?')) return;
+    if (!confirm('Confirmez : la configuration des tables sera conservée.')) return;
+    reservations = [];
+    history = [];
+    saveNormalizedData();
+    refreshUI();
 }
 
 /* ==============================
@@ -916,9 +1064,9 @@ function voirReservation(id) {
 function cliquerTable(table) {
     const reservation = reservations.find(function (r) {
         return (
-            r.date === getToday() &&
+            r.date === getServiceDate() &&
             r.tables.includes(table) &&
-            r.status !== 'released'
+            ReservationEngine.isBlocking(r)
         );
     });
 
@@ -936,7 +1084,7 @@ function cliquerTable(table) {
 
 function mettreAJourCompteurs() {
     const list = reservations.filter(function (r) {
-        return r.date === getToday();
+        return r.date === getServiceDate() && ReservationEngine.isBlocking(r);
     });
 
     document.getElementById('reservationCount').textContent = list.length;
@@ -1020,7 +1168,7 @@ function afficherHistorique() {
 
 function cloturerService() {
     const todayReservations = reservations.filter(function (r) {
-        return r.date === getToday();
+        return r.date === getServiceDate();
     });
 
     if (todayReservations.length === 0) {
@@ -1041,7 +1189,7 @@ function cloturerService() {
     }
 
     history.push({
-        date: getToday(),
+        date: getServiceDate(),
 
         reservations: todayReservations,
 
@@ -1049,7 +1197,7 @@ function cloturerService() {
     });
 
     reservations = reservations.filter(function (r) {
-        return r.date !== getToday();
+        return r.date !== getServiceDate();
     });
 
     saveData(STORAGE_RESERVATIONS, reservations);

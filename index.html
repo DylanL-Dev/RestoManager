@@ -43,6 +43,10 @@
                 <button id="closeServiceBtn" class="btn btn-danger">
                     🔒 Clôturer le service
                 </button>
+
+                <button id="adminBtn" class="btn btn-secondary">
+                    ⚙️ Administration
+                </button>
             </section>
 
             <!-- RECHERCHE RAPIDE -->
@@ -290,7 +294,40 @@
             </div>
         </div>
 
+        <div id="adminModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>⚙️ Administration</h2>
+                    <button id="closeAdminBtn" class="close-btn">✕</button>
+                </div>
+                <p class="admin-notice">Protection locale : elle ne remplace pas une authentification serveur.</p>
+                <form id="adminSetupForm" class="hidden">
+                    <div class="form-group"><label for="adminPin">Définir le PIN administrateur</label><input id="adminPin" type="password" minlength="6" autocomplete="new-password" required /></div>
+                    <div class="form-group"><label for="adminPinConfirmation">Confirmer le PIN</label><input id="adminPinConfirmation" type="password" minlength="6" autocomplete="new-password" required /></div>
+                    <button class="btn btn-primary" type="submit">Configurer l’administration</button>
+                </form>
+                <form id="adminLoginForm" class="hidden">
+                    <div class="form-group"><label for="adminLoginPin">PIN administrateur</label><input id="adminLoginPin" type="password" autocomplete="current-password" required /></div>
+                    <button class="btn btn-primary" type="submit">Ouvrir le mode administrateur</button>
+                </form>
+                <div id="adminPanel" class="hidden">
+                    <p>Mode administrateur actif pour cette page uniquement.</p>
+                    <button id="changePinBtn" class="btn btn-secondary" type="button">Modifier le PIN</button>
+                    <button id="resetTestDataBtn" class="btn btn-danger" type="button">Réinitialiser les données de test</button>
+                    <button id="adminLogoutBtn" class="btn btn-secondary" type="button">Quitter le mode administrateur</button>
+                </div>
+                <form id="changePinForm" class="hidden">
+                    <div class="form-group"><label for="currentAdminPin">PIN actuel</label><input id="currentAdminPin" type="password" required /></div>
+                    <div class="form-group"><label for="newAdminPin">Nouveau PIN</label><input id="newAdminPin" type="password" minlength="6" required /></div>
+                    <div class="form-group"><label for="newAdminPinConfirmation">Confirmer le nouveau PIN</label><input id="newAdminPinConfirmation" type="password" minlength="6" required /></div>
+                    <button class="btn btn-primary" type="submit">Enregistrer le nouveau PIN</button>
+                </form>
+            </div>
+        </div>
+
         <!-- JAVASCRIPT -->
-        <script src="app.js?v=2"></script>
+        <script src="reservation-engine.js?v=1"></script>
+        <script src="admin-auth.js?v=1"></script>
+        <script src="app.js?v=3"></script>
     </body>
 </html>
