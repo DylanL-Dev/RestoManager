@@ -1016,3 +1016,12 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
     .form-actions { flex-direction:row; } .form-actions .btn { flex:1; }
 }
 @media(prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+
+/* Zoom changes only the view, never stored table positions. */
+.zoom-toolbar { display:flex; gap:6px; align-items:center; margin-bottom:12px; }
+.zoom-toolbar button { border:1px solid var(--border); border-radius:9px; background:#fff; color:var(--dark); padding:8px 14px; cursor:pointer; }
+.zoom-toolbar output { min-width:64px; text-align:center; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
+#floorViewport { max-height:580px; touch-action:pan-x pan-y; overscroll-behavior:contain; }
+#floorStage { position:relative; overflow:hidden; }
+#floorStage .floor-canvas { min-width:0; transform-origin:top left; }
+@media(max-width:600px) { #floorViewport { max-height:65dvh; } }

@@ -49,6 +49,7 @@ afficherTables = function () {
         });
         button.addEventListener('pointermove', event => {
             if (!drag) return;
+            if (FloorZoom.isPinching()) { drag = null; moved = true; return; }
             const dx = event.clientX - drag.x, dy = event.clientY - drag.y;
             if (Math.abs(dx) + Math.abs(dy) < 6 && !moved) return;
             moved = true;
@@ -65,7 +66,7 @@ afficherTables = function () {
             button.style.left=table.x+'%'; button.style.top=table.y+'%';
         });
         button.addEventListener('click', () => {
-            if (moved) { moved = false; return; }
+            if (moved || FloorZoom.ignoreClick()) { moved = false; return; }
             if (editing) openTableEditor(table.id); else cliquerTable(table.number);
         });
         grid.append(button);

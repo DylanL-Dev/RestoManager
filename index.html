@@ -6,7 +6,7 @@
 
         <title>RestoManager</title>
 
-        <link rel="stylesheet" href="style.css?v=5" />
+        <link rel="stylesheet" href="style.css?v=6" />
     </head>
 
     <body>
@@ -114,9 +114,10 @@
 
                 <div class="floor-toolbar"><label for="roomSelect">Salle</label><select id="roomSelect"></select><span id="floorHint">Touchez une table pour ouvrir sa fiche.</span></div>
                 <div id="editorBar" class="editor-bar hidden"><span>Modification du plan</span><button id="addTableBtn" class="btn btn-secondary">+ Table</button><button id="resetPlanBtn" class="btn btn-secondary">Réorganiser</button><button id="savePlanBtn" class="btn btn-primary">Enregistrer</button><button id="cancelPlanBtn" class="btn btn-secondary">Annuler</button></div>
-                <div class="floor-scroll"><div id="tablesGrid" class="tables-grid floor-canvas">
+                <div class="zoom-toolbar" aria-label="Zoom du plan"><button id="zoomOutBtn" aria-label="Dézoomer">−</button><output id="zoomLevel" aria-live="polite">100 %</output><button id="zoomInBtn" aria-label="Zoomer">+</button><button id="zoomFitBtn">Vue complète</button></div>
+                <div id="floorViewport" class="floor-scroll"><div id="floorStage"><div id="tablesGrid" class="tables-grid floor-canvas">
                     <!-- Les tables seront générées par app.js -->
-                </div></div>
+                </div></div></div>
             </section>
 
             <!-- LISTE DES RÉSERVATIONS -->
@@ -314,7 +315,8 @@
         <script src="reservation-engine.js?v=1"></script>
         <script src="floor-plan.js?v=1"></script>
         <script src="app.js?v=5"></script>
-        <script src="service-ui.js?v=1"></script>
+        <script src="service-ui.js?v=2"></script>
+        <script src="floor-zoom.js?v=1"></script>
     </body>
 </html>
 
