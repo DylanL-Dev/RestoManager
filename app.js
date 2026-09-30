@@ -266,11 +266,6 @@ function configurerEvenements() {
 
     document.getElementById('adminBtn').addEventListener('click', ouvrirAdministration);
     document.getElementById('closeAdminBtn').addEventListener('click', fermerAdministration);
-    document.getElementById('adminSetupForm').addEventListener('submit', configurerAdministrateur);
-    document.getElementById('adminLoginForm').addEventListener('submit', connecterAdministrateur);
-    document.getElementById('adminLogoutBtn').addEventListener('click', deconnecterAdministrateur);
-    document.getElementById('changePinBtn').addEventListener('click', afficherChangementPin);
-    document.getElementById('changePinForm').addEventListener('submit', changerPinAdministrateur);
     document.getElementById('resetTestDataBtn').addEventListener('click', reinitialiserDonneesTest);
 
     ['reservationDate', 'reservationTime', 'reservationDuration'].forEach(function (id) {
@@ -397,7 +392,9 @@ function afficherSelectionTables(selected) {
             element.classList.add('disabled');
         }
 
-        element.textContent = 'T' + table;
+        const planTable = FloorPlan.get().tables.find(t => t.number === table);
+        const room = FloorPlan.get().rooms.find(r => r.id === planTable?.roomId);
+        element.textContent = FloorPlan.label(table) + (room && room.id !== 'main' ? ' · ' + room.name : '');
 
         element.addEventListener('click', function () {
             if (element.classList.contains('disabled')) {
@@ -646,9 +643,7 @@ function afficherReservations() {
         }
 
         const canCancel = [STATUS.RESERVED, STATUS.CONFIRMED, STATUS.LATE, STATUS.ARRIVED].includes(reservation.status);
-        const adminActions = AdminAuth.isAuthenticated()
-            ? `<button onclick="supprimerReservationDefinitivement('${reservation.id}')">🗑️ Supprimer définitivement</button>`
-            : '';
+        const managementActions = `<button onclick="supprimerReservationDefinitivement('${reservation.id}')">🗑️ Supprimer définitivement</button>`;
         card.innerHTML = `
                 <div class="reservation-header">
 
@@ -671,7 +666,7 @@ function afficherReservations() {
                             🪑
                             ${reservation.tables
                                 .map(function (t) {
-                                    return 'T' + t;
+                                    return FloorPlan.label(t);
                                 })
                                 .join(', ')}
                         </div>
@@ -705,7 +700,7 @@ function afficherReservations() {
                         onclick="supprimerReservation('${reservation.id}')">
                         🚫 Annuler
                     </button>` : ''}
-                    ${adminActions}
+                    ${managementActions}
 
                 </div>
             `;
@@ -769,7 +764,7 @@ function libererTables(id) {
 
     const tables = reservation.tables
         .map(function (t) {
-            return 'T' + t;
+            return FloorPlan.label(t);
         })
         .join(', ');
 
@@ -867,12 +862,6 @@ function supprimerReservation(id) {
 }
 
 function supprimerReservationDefinitivement(id) {
-    try {
-        AdminAuth.requireSession();
-    } catch (error) {
-        alert('⚠️ ' + error.message);
-        return;
-    }
     const reservation = reservations.find(function (r) { return r.id === id; });
     if (!reservation) return;
     if (!confirm('Supprimer définitivement cette réservation ? Cette action est irréversible.')) return;
@@ -883,68 +872,18 @@ function supprimerReservationDefinitivement(id) {
 }
 
 /* ==============================
-   ADMINISTRATION LOCALE
+   OUTILS DE GESTION
 ============================== */
-
-function setAdminView(view) {
-    ['adminSetupForm', 'adminLoginForm', 'adminPanel', 'changePinForm'].forEach(function (id) {
-        document.getElementById(id).classList.add('hidden');
-    });
-    if (view) document.getElementById(view).classList.remove('hidden');
-}
 
 function ouvrirAdministration() {
     document.getElementById('adminModal').classList.remove('hidden');
-    if (AdminAuth.isAuthenticated()) setAdminView('adminPanel');
-    else if (AdminAuth.readConfig(localStorage)) setAdminView('adminLoginForm');
-    else setAdminView('adminSetupForm');
 }
 
 function fermerAdministration() {
     document.getElementById('adminModal').classList.add('hidden');
 }
 
-async function configurerAdministrateur(event) {
-    event.preventDefault();
-    try {
-        await AdminAuth.configure(document.getElementById('adminPin').value,
-            document.getElementById('adminPinConfirmation').value, localStorage);
-        event.target.reset();
-        setAdminView('adminPanel');
-        refreshUI();
-    } catch (error) { alert('⚠️ ' + error.message); }
-}
-
-async function connecterAdministrateur(event) {
-    event.preventDefault();
-    const success = await AdminAuth.authenticate(document.getElementById('adminLoginPin').value, localStorage);
-    event.target.reset();
-    if (!success) { alert('⚠️ PIN administrateur incorrect.'); return; }
-    setAdminView('adminPanel');
-    refreshUI();
-}
-
-function deconnecterAdministrateur() {
-    AdminAuth.logout();
-    setAdminView('adminLoginForm');
-    refreshUI();
-}
-
-function afficherChangementPin() { setAdminView('changePinForm'); }
-
-async function changerPinAdministrateur(event) {
-    event.preventDefault();
-    try {
-        await AdminAuth.changePin(document.getElementById('currentAdminPin').value,
-            document.getElementById('newAdminPin').value,
-            document.getElementById('newAdminPinConfirmation').value, localStorage);
-        event.target.reset();
-        setAdminView('adminPanel');
-    } catch (error) { alert('⚠️ ' + error.message); }
-}
-
 function reinitialiserDonneesTest() {
-    try { AdminAuth.requireSession(); } catch (error) { alert('⚠️ ' + error.message); return; }
     if (!confirm('Réinitialiser toutes les réservations et tout l’historique de test ?')) return;
     if (!confirm('Confirmez : la configuration des tables sera conservée.')) return;
     reservations = [];
@@ -1016,7 +955,7 @@ function voirReservation(id) {
             <div class="detail-value">
                 ${reservation.tables
                     .map(function (t) {
-                        return 'Table ' + t;
+                        return 'Table ' + FloorPlan.label(t).slice(1);
                     })
                     .join(', ')}
             </div>
@@ -1287,7 +1226,7 @@ function rechercherReservation() {
 
         const tables = reservation.tables
             .map(function (table) {
-                return 'T' + table;
+                return FloorPlan.label(table);
             })
             .join(', ');
 
@@ -1335,3 +1274,4 @@ function effacerRecherche() {
 
     document.getElementById('searchResults').innerHTML = '';
 }
+

@@ -6,12 +6,13 @@
 
         <title>RestoManager</title>
 
-        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="style.css?v=8" />
     </head>
 
     <body>
         <!-- EN-TÊTE -->
         <header class="header">
+            <button id="menuBtn" class="icon-button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="serviceMenu">☰</button>
             <div class="header-brand">
                 <div class="header-logo">
                     <img src="asset/img/logo.png" alt="RestoManager" />
@@ -30,29 +31,19 @@
         </header>
         <!-- CONTENU PRINCIPAL -->
         <main class="container">
-            <!-- ACTIONS RAPIDES -->
-            <section class="actions">
-                <button id="newReservationBtn" class="btn btn-primary">
-                    ➕ Nouvelle réservation
-                </button>
-
-                <button id="historyBtn" class="btn btn-secondary">
-                    📋 Historique
-                </button>
-
-                <button id="closeServiceBtn" class="btn btn-danger">
-                    🔒 Clôturer le service
-                </button>
-
-                <button id="adminBtn" class="btn btn-secondary">
-                    ⚙️ Administration
-                </button>
-            </section>
-
+            <nav class="service-nav" aria-label="Vue du service">
+                <div class="view-tabs"><button id="planTab" class="active" aria-pressed="true">Plan de salle</button><button id="listTab" aria-pressed="false">Réservations</button></div>
+                <button id="newReservationBtn" class="btn btn-primary">+ Réservation</button>
+            </nav>
+            <div id="serviceMenu" class="service-menu hidden">
+                <button id="historyBtn">Historique</button>
+                <button id="adminBtn">Gestion du restaurant</button>
+                <button id="closeServiceBtn">Clôturer le service</button>
+            </div>
             <!-- RECHERCHE RAPIDE -->
             <section class="search-section">
                 <div class="section-title">
-                    <h2>🔎 Rechercher une réservation</h2>
+                    <h2>Retrouver un client</h2>
                 </div>
 
                 <div class="search-box">
@@ -68,7 +59,7 @@
                         id="clearSearchBtn"
                         class="btn btn-secondary"
                     >
-                        ✖ Effacer
+                        Effacer
                     </button>
                 </div>
 
@@ -101,7 +92,7 @@
             <!-- GRILLE DES TABLES -->
             <section class="tables-section">
                 <div class="section-title">
-                    <h2>🪑 Salle</h2>
+                    <div><p class="eyebrow">SERVICE EN COURS</p><h2>Plan de salle</h2></div>
 
                     <div class="legend">
                         <span>
@@ -121,13 +112,16 @@
                     </div>
                 </div>
 
-                <div id="tablesGrid" class="tables-grid">
+                <div class="floor-toolbar"><label for="roomSelect">Salle</label><select id="roomSelect"></select><span id="roomDimensionsLabel" class="room-dimensions"></span><span id="floorHint">Touchez une table pour ouvrir sa fiche.</span></div>
+                <p id="floorSpacingNotice" class="spacing-hint hidden" role="status"></p><div id="editorBar" class="editor-bar hidden"><span>Modification du plan</span><button id="addTableBtn" class="btn btn-secondary">+ Table</button><button id="addElementBtn" class="btn btn-secondary">+ Élément</button><button id="roomDimensionsBtn" class="btn btn-secondary">Dimensions et sol</button><button id="resetPlanBtn" class="btn btn-secondary">Réorganiser</button><button id="savePlanBtn" class="btn btn-primary">Enregistrer</button><button id="cancelPlanBtn" class="btn btn-secondary">Annuler</button></div>
+                <div class="zoom-toolbar" aria-label="Zoom du plan"><button id="zoomOutBtn" aria-label="Dézoomer">−</button><output id="zoomLevel" aria-live="polite">100 %</output><button id="zoomInBtn" aria-label="Zoomer">+</button><button id="zoomFitBtn">Vue complète</button></div>
+                <div id="floorViewport" class="floor-scroll"><div id="floorStage"><div id="tablesGrid" class="tables-grid floor-canvas">
                     <!-- Les tables seront générées par app.js -->
-                </div>
+                </div></div></div>
             </section>
 
             <!-- LISTE DES RÉSERVATIONS -->
-            <section class="reservations-section">
+            <section class="reservations-section hidden">
                 <div class="section-title">
                     <h2>📅 Réservations du jour</h2>
                 </div>
@@ -297,37 +291,37 @@
         <div id="adminModal" class="modal hidden">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h2>⚙️ Administration</h2>
+                    <h2>⚙️ Gestion</h2>
                     <button id="closeAdminBtn" class="close-btn">✕</button>
                 </div>
-                <p class="admin-notice">Protection locale : elle ne remplace pas une authentification serveur.</p>
-                <form id="adminSetupForm" class="hidden">
-                    <div class="form-group"><label for="adminPin">Définir le PIN administrateur</label><input id="adminPin" type="password" minlength="6" autocomplete="new-password" required /></div>
-                    <div class="form-group"><label for="adminPinConfirmation">Confirmer le PIN</label><input id="adminPinConfirmation" type="password" minlength="6" autocomplete="new-password" required /></div>
-                    <button class="btn btn-primary" type="submit">Configurer l’administration</button>
-                </form>
-                <form id="adminLoginForm" class="hidden">
-                    <div class="form-group"><label for="adminLoginPin">PIN administrateur</label><input id="adminLoginPin" type="password" autocomplete="current-password" required /></div>
-                    <button class="btn btn-primary" type="submit">Ouvrir le mode administrateur</button>
-                </form>
-                <div id="adminPanel" class="hidden">
-                    <p>Mode administrateur actif pour cette page uniquement.</p>
-                    <button id="changePinBtn" class="btn btn-secondary" type="button">Modifier le PIN</button>
+                <p class="management-intro">Organisez les salles et les tables de votre restaurant.</p>
+                <div id="adminPanel" class="management-actions">
+                    <button id="editPlanBtn" class="btn btn-primary">Modifier le plan de salle</button>
+                    <form id="roomForm" class="room-form"><label for="roomName">Nouvelle salle</label><input id="roomName" maxlength="60" required placeholder="Ex. Terrasse"><button class="btn btn-secondary">Créer la salle</button></form>
+                    <label for="manageRoomSelect">Gérer une salle</label><select id="manageRoomSelect"></select>
+                    <form id="renameRoomForm" class="room-form"><label for="renameRoomName">Nom de la salle</label><input id="renameRoomName" maxlength="60" required><button class="btn btn-secondary">Renommer</button></form>
+                    <button id="deleteRoomBtn" class="btn btn-secondary">Supprimer cette salle</button>
                     <button id="resetTestDataBtn" class="btn btn-danger" type="button">Réinitialiser les données de test</button>
-                    <button id="adminLogoutBtn" class="btn btn-secondary" type="button">Quitter le mode administrateur</button>
                 </div>
-                <form id="changePinForm" class="hidden">
-                    <div class="form-group"><label for="currentAdminPin">PIN actuel</label><input id="currentAdminPin" type="password" required /></div>
-                    <div class="form-group"><label for="newAdminPin">Nouveau PIN</label><input id="newAdminPin" type="password" minlength="6" required /></div>
-                    <div class="form-group"><label for="newAdminPinConfirmation">Confirmer le nouveau PIN</label><input id="newAdminPinConfirmation" type="password" minlength="6" required /></div>
-                    <button class="btn btn-primary" type="submit">Enregistrer le nouveau PIN</button>
-                </form>
             </div>
         </div>
 
+        <div id="tableEditModal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h2 id="tableEditTitle">Modifier la table</h2><button id="closeTableEditBtn" class="close-btn" aria-label="Fermer">✕</button></div>
+        <form id="tableEditForm"><div class="form-group"><label for="tableNumberInput">Numéro de table</label><input id="tableNumberInput" type="number" min="1" step="1" required></div>
+        <div class="form-group"><label for="tableLetterInput">Lettre</label><select id="tableLetterInput"><option value="">Aucune</option><option value="A">A</option><option value="B">B</option></select></div><div class="form-group"><label for="tableMinCapacityInput">Couverts minimum</label><div class="capacity-stepper"><button type="button" id="tableMinCapacityMinus" aria-label="Réduire les couverts">−</button><input id="tableMinCapacityInput" type="number" min="1" max="100" step="1" value="2" required><button type="button" id="tableMinCapacityPlus" aria-label="Augmenter les couverts">+</button></div></div><div class="form-group"><label for="tableCapacityInput">Couverts maximum</label><div class="capacity-stepper"><button type="button" id="tableCapacityMinus" aria-label="Réduire les couverts">−</button><input id="tableCapacityInput" type="number" min="1" max="100" step="1" required><button type="button" id="tableCapacityPlus" aria-label="Augmenter les couverts">+</button></div></div>
+        <div class="form-group"><label for="tableShapeInput">Forme</label><select id="tableShapeInput"><option value="square">Carrée</option><option value="round">Ronde</option><option value="rectangle">Rectangulaire</option><option value="bench">Banquette</option></select></div>
+        <div class="dimension-fields"><div class="form-group"><label for="tableWidthInput">Largeur (cm)</label><input id="tableWidthInput" type="number" min="10" step="1" required></div><div class="form-group"><label for="tableDepthInput">Profondeur (cm)</label><input id="tableDepthInput" type="number" min="10" step="1" required></div></div><div class="form-group"><label>Taille</label><div class="segmented-options"><button type="button" id="tableSizeSmall">Petite</button><button type="button" id="tableSizeMedium">Moyenne</button><button type="button" id="tableSizeLarge">Grande</button></div></div>
+ <div class="form-group"><label for="tableAngleInput">Angle (°)</label><input type="range" id="tableAngleRange" min="0" max="359" step="1" value="0" aria-label="Angle de rotation"><div class="angle-controls"><input id="tableAngleInput" type="number" min="0" max="359" step="1" value="0" required><button type="button" id="tableAngleMinus">−45°</button><button type="button" id="tableAnglePlus">+45°</button></div></div><div class="form-group"><label for="tableColorInput">Couleur</label><div class="color-palette"><button type="button" class="color-swatch" data-color="#604936" data-owner="table" style="--swatch:#604936" aria-label="Brun" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#732433" data-owner="table" style="--swatch:#732433" aria-label="Bordeaux" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#8a5a29" data-owner="table" style="--swatch:#8a5a29" aria-label="Ocre" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#28734f" data-owner="table" style="--swatch:#28734f" aria-label="Vert" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#28536d" data-owner="table" style="--swatch:#28536d" aria-label="Bleu" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#6c3187" data-owner="table" style="--swatch:#6c3187" aria-label="Violet" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#147879" data-owner="table" style="--swatch:#147879" aria-label="Turquoise" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#aa2556" data-owner="table" style="--swatch:#aa2556" aria-label="Rose" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#3b4553" data-owner="table" style="--swatch:#3b4553" aria-label="Ardoise" aria-pressed="false"></button><input type="color" id="tableColorInput" value="#8a5a29" aria-label="Couleur personnalisée"></div></div><button id="rotateTableBtn" class="btn btn-secondary" type="button">Tourner de 90°</button><p id="tableSpacingHint" class="spacing-hint" role="status"></p><p id="tableEditError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteTableBtn" type="button" class="btn btn-danger">Supprimer</button><button type="submit" class="btn btn-primary">Appliquer au brouillon</button></div></form></div></div>
+        <div id="roomDimensionsModal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h2>Dimensions et sol</h2><button id="closeDimensionsBtn" class="close-btn" aria-label="Fermer les dimensions">✕</button></div><p class="management-intro">Choisissez la largeur et la profondeur en mètres. Agrandir la salle conserve les positions et la taille du mobilier.</p><form id="roomDimensionsForm"><div class="form-group"><label>Sol de la salle</label><div class="floor-options"><button type="button" id="floorPlainBtn" class="floor-choice floor-plain" aria-pressed="false">Uni</button><button type="button" id="floorWoodBtn" class="floor-choice floor-wood" aria-pressed="false">Bois</button><button type="button" id="floorTileBtn" class="floor-choice floor-tile" aria-pressed="false">Carrelage</button><button type="button" id="floorStoneBtn" class="floor-choice floor-stone" aria-pressed="false">Pierre</button></div></div><div class="dimension-fields"><div class="form-group"><label for="roomWidthInput">Largeur (m)</label><input id="roomWidthInput" type="number" min="0.1" step="0.1" required></div><div class="form-group"><label for="roomDepthInput">Profondeur (m)</label><input id="roomDepthInput" type="number" min="0.1" step="0.1" required></div></div><p id="roomDimensionsError" class="form-error" role="alert"></p><button class="btn btn-primary">Appliquer au brouillon</button></form></div></div>
+        <div id="elementModal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h2 id="elementTitle">Ajouter un élément</h2><button id="closeElementBtn" class="close-btn" aria-label="Fermer l’élément">✕</button></div><form id="elementForm"><div class="form-group"><label for="elementTypeInput">Élément</label><select id="elementTypeInput"><option value="bar">Bar</option><option value="wall">Mur</option><option value="door">Porte</option><option value="window">Fenêtre</option><option value="pillar">Pilier</option><option value="plant">Plante</option><option value="kitchen">Cuisine</option><option value="toilets">Toilettes</option><option value="zone">Zone</option></select></div><div class="form-group"><label for="elementLabelInput">Nom sur le plan</label><input id="elementLabelInput" maxlength="60" required></div><div class="dimension-fields"><div class="form-group"><label for="elementWidthInput">Largeur (cm)</label><input id="elementWidthInput" type="number" min="10" step="1" required></div><div class="form-group"><label for="elementDepthInput">Profondeur (cm)</label><input id="elementDepthInput" type="number" min="10" step="1" required></div></div><div class="form-group"><label>Taille</label><div class="segmented-options"><button type="button" id="elementSizeSmall">Petite</button><button type="button" id="elementSizeMedium">Moyenne</button><button type="button" id="elementSizeLarge">Grande</button></div></div>
+ <div class="form-group"><label for="elementAngleInput">Angle (°)</label><input type="range" id="elementAngleRange" min="0" max="359" step="1" value="0" aria-label="Angle de rotation"><div class="angle-controls"><input id="elementAngleInput" type="number" min="0" max="359" step="1" value="0" required><button type="button" id="elementAngleMinus">−45°</button><button type="button" id="elementAnglePlus">+45°</button></div></div><div class="form-group"><label for="elementColorInput">Couleur</label><div class="color-palette"><button type="button" class="color-swatch" data-color="#604936" data-owner="element" style="--swatch:#604936" aria-label="Brun" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#732433" data-owner="element" style="--swatch:#732433" aria-label="Bordeaux" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#8a5a29" data-owner="element" style="--swatch:#8a5a29" aria-label="Ocre" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#28734f" data-owner="element" style="--swatch:#28734f" aria-label="Vert" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#28536d" data-owner="element" style="--swatch:#28536d" aria-label="Bleu" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#6c3187" data-owner="element" style="--swatch:#6c3187" aria-label="Violet" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#147879" data-owner="element" style="--swatch:#147879" aria-label="Turquoise" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#aa2556" data-owner="element" style="--swatch:#aa2556" aria-label="Rose" aria-pressed="false"></button><button type="button" class="color-swatch" data-color="#3b4553" data-owner="element" style="--swatch:#3b4553" aria-label="Ardoise" aria-pressed="false"></button><input type="color" id="elementColorInput" value="#8a5a29" aria-label="Couleur personnalisée"></div></div><button id="rotateElementBtn" type="button" class="btn btn-secondary">Tourner de 90°</button><p id="elementError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteElementBtn" type="button" class="btn btn-danger">Supprimer</button><button class="btn btn-primary">Appliquer au brouillon</button></div></form></div></div>
         <!-- JAVASCRIPT -->
         <script src="reservation-engine.js?v=1"></script>
-        <script src="admin-auth.js?v=1"></script>
-        <script src="app.js?v=3"></script>
+        <script src="floor-plan.js?v=3"></script>
+        <script src="app.js?v=6"></script>
+        <script src="floor-art.js?v=1"></script>
+        <script src="service-ui.js?v=4"></script>
+        <script src="floor-zoom.js?v=2"></script>
     </body>
 </html>
+
