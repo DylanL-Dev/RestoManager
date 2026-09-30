@@ -6,7 +6,7 @@
 
         <title>RestoManager</title>
 
-        <link rel="stylesheet" href="style.css?v=6" />
+        <link rel="stylesheet" href="style.css?v=7" />
     </head>
 
     <body>
@@ -112,8 +112,8 @@
                     </div>
                 </div>
 
-                <div class="floor-toolbar"><label for="roomSelect">Salle</label><select id="roomSelect"></select><span id="floorHint">Touchez une table pour ouvrir sa fiche.</span></div>
-                <div id="editorBar" class="editor-bar hidden"><span>Modification du plan</span><button id="addTableBtn" class="btn btn-secondary">+ Table</button><button id="resetPlanBtn" class="btn btn-secondary">Réorganiser</button><button id="savePlanBtn" class="btn btn-primary">Enregistrer</button><button id="cancelPlanBtn" class="btn btn-secondary">Annuler</button></div>
+                <div class="floor-toolbar"><label for="roomSelect">Salle</label><select id="roomSelect"></select><span id="roomDimensionsLabel" class="room-dimensions"></span><span id="floorHint">Touchez une table pour ouvrir sa fiche.</span></div>
+                <div id="editorBar" class="editor-bar hidden"><span>Modification du plan</span><button id="addTableBtn" class="btn btn-secondary">+ Table</button><button id="addElementBtn" class="btn btn-secondary">+ Élément</button><button id="roomDimensionsBtn" class="btn btn-secondary">Dimensions</button><button id="resetPlanBtn" class="btn btn-secondary">Réorganiser</button><button id="savePlanBtn" class="btn btn-primary">Enregistrer</button><button id="cancelPlanBtn" class="btn btn-secondary">Annuler</button></div>
                 <div class="zoom-toolbar" aria-label="Zoom du plan"><button id="zoomOutBtn" aria-label="Dézoomer">−</button><output id="zoomLevel" aria-live="polite">100 %</output><button id="zoomInBtn" aria-label="Zoomer">+</button><button id="zoomFitBtn">Vue complète</button></div>
                 <div id="floorViewport" class="floor-scroll"><div id="floorStage"><div id="tablesGrid" class="tables-grid floor-canvas">
                     <!-- Les tables seront générées par app.js -->
@@ -309,14 +309,16 @@
         <div id="tableEditModal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h2 id="tableEditTitle">Modifier la table</h2><button id="closeTableEditBtn" class="close-btn" aria-label="Fermer">✕</button></div>
         <form id="tableEditForm"><div class="form-group"><label for="tableNumberInput">Numéro de table</label><input id="tableNumberInput" type="number" min="1" step="1" required></div>
         <div class="form-group"><label for="tableCapacityInput">Places</label><input id="tableCapacityInput" type="number" min="1" max="100" step="1" required></div>
-        <div class="form-group"><label for="tableShapeInput">Forme</label><select id="tableShapeInput"><option value="square">Carrée</option><option value="round">Ronde</option><option value="rectangle">Rectangulaire</option></select></div>
-        <p id="tableEditError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteTableBtn" type="button" class="btn btn-danger">Supprimer</button><button type="submit" class="btn btn-primary">Appliquer au brouillon</button></div></form></div></div>
+        <div class="form-group"><label for="tableShapeInput">Forme</label><select id="tableShapeInput"><option value="square">Carrée</option><option value="round">Ronde</option><option value="rectangle">Rectangulaire</option><option value="bench">Banquette</option></select></div>
+        <div class="dimension-fields"><div class="form-group"><label for="tableWidthInput">Largeur (m)</label><input id="tableWidthInput" type="number" min="0.1" step="0.1" required></div><div class="form-group"><label for="tableDepthInput">Profondeur (m)</label><input id="tableDepthInput" type="number" min="0.1" step="0.1" required></div></div><button id="rotateTableBtn" class="btn btn-secondary" type="button">Tourner de 90°</button><p id="tableEditError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteTableBtn" type="button" class="btn btn-danger">Supprimer</button><button type="submit" class="btn btn-primary">Appliquer au brouillon</button></div></form></div></div>
+        <div id="roomDimensionsModal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h2>Dimensions de la salle</h2><button id="closeDimensionsBtn" class="close-btn" aria-label="Fermer les dimensions">✕</button></div><p class="management-intro">Choisissez la largeur et la profondeur en mètres. Agrandir la salle conserve les positions et la taille du mobilier.</p><form id="roomDimensionsForm"><div class="dimension-fields"><div class="form-group"><label for="roomWidthInput">Largeur (m)</label><input id="roomWidthInput" type="number" min="0.1" step="0.1" required></div><div class="form-group"><label for="roomDepthInput">Profondeur (m)</label><input id="roomDepthInput" type="number" min="0.1" step="0.1" required></div></div><p id="roomDimensionsError" class="form-error" role="alert"></p><button class="btn btn-primary">Appliquer au brouillon</button></form></div></div>
+        <div id="elementModal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h2 id="elementTitle">Ajouter un élément</h2><button id="closeElementBtn" class="close-btn" aria-label="Fermer l’élément">✕</button></div><form id="elementForm"><div class="form-group"><label for="elementTypeInput">Élément</label><select id="elementTypeInput"><option value="bar">Bar</option><option value="wall">Mur</option><option value="door">Porte</option><option value="window">Fenêtre</option><option value="pillar">Pilier</option><option value="plant">Plante</option><option value="kitchen">Cuisine</option><option value="toilets">Toilettes</option><option value="zone">Zone</option></select></div><div class="form-group"><label for="elementLabelInput">Nom sur le plan</label><input id="elementLabelInput" maxlength="60" required></div><div class="dimension-fields"><div class="form-group"><label for="elementWidthInput">Largeur (m)</label><input id="elementWidthInput" type="number" min="0.1" step="0.1" required></div><div class="form-group"><label for="elementDepthInput">Profondeur (m)</label><input id="elementDepthInput" type="number" min="0.1" step="0.1" required></div></div><button id="rotateElementBtn" type="button" class="btn btn-secondary">Tourner de 90°</button><p id="elementError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteElementBtn" type="button" class="btn btn-danger">Supprimer</button><button class="btn btn-primary">Appliquer au brouillon</button></div></form></div></div>
         <!-- JAVASCRIPT -->
         <script src="reservation-engine.js?v=1"></script>
-        <script src="floor-plan.js?v=1"></script>
+        <script src="floor-plan.js?v=2"></script>
         <script src="app.js?v=5"></script>
-        <script src="service-ui.js?v=2"></script>
-        <script src="floor-zoom.js?v=1"></script>
+        <script src="service-ui.js?v=3"></script>
+        <script src="floor-zoom.js?v=2"></script>
     </body>
 </html>
 
