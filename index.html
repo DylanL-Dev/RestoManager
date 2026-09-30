@@ -6,12 +6,13 @@
 
         <title>RestoManager</title>
 
-        <link rel="stylesheet" href="style.css" />
+        <link rel="stylesheet" href="style.css?v=5" />
     </head>
 
     <body>
         <!-- EN-TÊTE -->
         <header class="header">
+            <button id="menuBtn" class="icon-button" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="serviceMenu">☰</button>
             <div class="header-brand">
                 <div class="header-logo">
                     <img src="asset/img/logo.png" alt="RestoManager" />
@@ -30,29 +31,19 @@
         </header>
         <!-- CONTENU PRINCIPAL -->
         <main class="container">
-            <!-- ACTIONS RAPIDES -->
-            <section class="actions">
-                <button id="newReservationBtn" class="btn btn-primary">
-                    ➕ Nouvelle réservation
-                </button>
-
-                <button id="historyBtn" class="btn btn-secondary">
-                    📋 Historique
-                </button>
-
-                <button id="closeServiceBtn" class="btn btn-danger">
-                    🔒 Clôturer le service
-                </button>
-
-                <button id="adminBtn" class="btn btn-secondary">
-                    ⚙️ Gestion
-                </button>
-            </section>
-
+            <nav class="service-nav" aria-label="Vue du service">
+                <div class="view-tabs"><button id="planTab" class="active" aria-pressed="true">Plan de salle</button><button id="listTab" aria-pressed="false">Réservations</button></div>
+                <button id="newReservationBtn" class="btn btn-primary">+ Réservation</button>
+            </nav>
+            <div id="serviceMenu" class="service-menu hidden">
+                <button id="historyBtn">Historique</button>
+                <button id="adminBtn">Gestion du restaurant</button>
+                <button id="closeServiceBtn">Clôturer le service</button>
+            </div>
             <!-- RECHERCHE RAPIDE -->
             <section class="search-section">
                 <div class="section-title">
-                    <h2>🔎 Rechercher une réservation</h2>
+                    <h2>Retrouver un client</h2>
                 </div>
 
                 <div class="search-box">
@@ -68,7 +59,7 @@
                         id="clearSearchBtn"
                         class="btn btn-secondary"
                     >
-                        ✖ Effacer
+                        Effacer
                     </button>
                 </div>
 
@@ -101,7 +92,7 @@
             <!-- GRILLE DES TABLES -->
             <section class="tables-section">
                 <div class="section-title">
-                    <h2>🪑 Salle</h2>
+                    <div><p class="eyebrow">SERVICE EN COURS</p><h2>Plan de salle</h2></div>
 
                     <div class="legend">
                         <span>
@@ -121,13 +112,15 @@
                     </div>
                 </div>
 
-                <div id="tablesGrid" class="tables-grid">
+                <div class="floor-toolbar"><label for="roomSelect">Salle</label><select id="roomSelect"></select><span id="floorHint">Touchez une table pour ouvrir sa fiche.</span></div>
+                <div id="editorBar" class="editor-bar hidden"><span>Modification du plan</span><button id="addTableBtn" class="btn btn-secondary">+ Table</button><button id="resetPlanBtn" class="btn btn-secondary">Réorganiser</button><button id="savePlanBtn" class="btn btn-primary">Enregistrer</button><button id="cancelPlanBtn" class="btn btn-secondary">Annuler</button></div>
+                <div class="floor-scroll"><div id="tablesGrid" class="tables-grid floor-canvas">
                     <!-- Les tables seront générées par app.js -->
-                </div>
+                </div></div>
             </section>
 
             <!-- LISTE DES RÉSERVATIONS -->
-            <section class="reservations-section">
+            <section class="reservations-section hidden">
                 <div class="section-title">
                     <h2>📅 Réservations du jour</h2>
                 </div>
@@ -300,15 +293,28 @@
                     <h2>⚙️ Gestion</h2>
                     <button id="closeAdminBtn" class="close-btn">✕</button>
                 </div>
-                <p>Outils de conception accessibles à tous.</p>
-                <div id="adminPanel">
+                <p class="management-intro">Organisez les salles et les tables de votre restaurant.</p>
+                <div id="adminPanel" class="management-actions">
+                    <button id="editPlanBtn" class="btn btn-primary">Modifier le plan de salle</button>
+                    <form id="roomForm" class="room-form"><label for="roomName">Nouvelle salle</label><input id="roomName" maxlength="60" required placeholder="Ex. Terrasse"><button class="btn btn-secondary">Créer la salle</button></form>
+                    <label for="manageRoomSelect">Gérer une salle</label><select id="manageRoomSelect"></select>
+                    <form id="renameRoomForm" class="room-form"><label for="renameRoomName">Nom de la salle</label><input id="renameRoomName" maxlength="60" required><button class="btn btn-secondary">Renommer</button></form>
+                    <button id="deleteRoomBtn" class="btn btn-secondary">Supprimer cette salle</button>
                     <button id="resetTestDataBtn" class="btn btn-danger" type="button">Réinitialiser les données de test</button>
                 </div>
             </div>
         </div>
 
+        <div id="tableEditModal" class="modal hidden"><div class="modal-content"><div class="modal-header"><h2 id="tableEditTitle">Modifier la table</h2><button id="closeTableEditBtn" class="close-btn" aria-label="Fermer">✕</button></div>
+        <form id="tableEditForm"><div class="form-group"><label for="tableNumberInput">Numéro de table</label><input id="tableNumberInput" type="number" min="1" step="1" required></div>
+        <div class="form-group"><label for="tableCapacityInput">Places</label><input id="tableCapacityInput" type="number" min="1" max="100" step="1" required></div>
+        <div class="form-group"><label for="tableShapeInput">Forme</label><select id="tableShapeInput"><option value="square">Carrée</option><option value="round">Ronde</option><option value="rectangle">Rectangulaire</option></select></div>
+        <p id="tableEditError" class="form-error" role="alert"></p><div class="form-actions"><button id="deleteTableBtn" type="button" class="btn btn-danger">Supprimer</button><button type="submit" class="btn btn-primary">Appliquer au brouillon</button></div></form></div></div>
         <!-- JAVASCRIPT -->
         <script src="reservation-engine.js?v=1"></script>
-        <script src="app.js?v=4"></script>
+        <script src="floor-plan.js?v=1"></script>
+        <script src="app.js?v=5"></script>
+        <script src="service-ui.js?v=1"></script>
     </body>
 </html>
+

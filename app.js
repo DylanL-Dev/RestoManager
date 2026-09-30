@@ -392,7 +392,9 @@ function afficherSelectionTables(selected) {
             element.classList.add('disabled');
         }
 
-        element.textContent = 'T' + table;
+        const planTable = FloorPlan.get().tables.find(t => t.number === table);
+        const room = FloorPlan.get().rooms.find(r => r.id === planTable?.roomId);
+        element.textContent = 'T' + table + (room && room.id !== 'main' ? ' · ' + room.name : '');
 
         element.addEventListener('click', function () {
             if (element.classList.contains('disabled')) {
@@ -1272,3 +1274,4 @@ function effacerRecherche() {
 
     document.getElementById('searchResults').innerHTML = '';
 }
+
