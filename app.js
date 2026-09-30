@@ -394,7 +394,7 @@ function afficherSelectionTables(selected) {
 
         const planTable = FloorPlan.get().tables.find(t => t.number === table);
         const room = FloorPlan.get().rooms.find(r => r.id === planTable?.roomId);
-        element.textContent = 'T' + table + (room && room.id !== 'main' ? ' · ' + room.name : '');
+        element.textContent = FloorPlan.label(table) + (room && room.id !== 'main' ? ' · ' + room.name : '');
 
         element.addEventListener('click', function () {
             if (element.classList.contains('disabled')) {
@@ -666,7 +666,7 @@ function afficherReservations() {
                             🪑
                             ${reservation.tables
                                 .map(function (t) {
-                                    return 'T' + t;
+                                    return FloorPlan.label(t);
                                 })
                                 .join(', ')}
                         </div>
@@ -764,7 +764,7 @@ function libererTables(id) {
 
     const tables = reservation.tables
         .map(function (t) {
-            return 'T' + t;
+            return FloorPlan.label(t);
         })
         .join(', ');
 
@@ -955,7 +955,7 @@ function voirReservation(id) {
             <div class="detail-value">
                 ${reservation.tables
                     .map(function (t) {
-                        return 'Table ' + t;
+                        return 'Table ' + FloorPlan.label(t).slice(1);
                     })
                     .join(', ')}
             </div>
@@ -1226,7 +1226,7 @@ function rechercherReservation() {
 
         const tables = reservation.tables
             .map(function (table) {
-                return 'T' + table;
+                return FloorPlan.label(table);
             })
             .join(', ');
 

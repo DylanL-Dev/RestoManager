@@ -1048,3 +1048,51 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 .element-toilets { background:#e6e2ed; border-color:#aaa0bd; }
 .element-zone { background:#dfeee42e; border:2px dashed #9bb8a4; }
 #floorViewport.panning { cursor:grabbing; user-select:none; }
+
+/* Furniture drawings and room finishes */
+#floorStage .table-card,#floorStage .floor-element { background:transparent; border:0; box-shadow:none; border-radius:0; overflow:visible; }
+.furniture-art { position:absolute; left:50%; top:50%; display:block; pointer-events:none; }
+.furniture-art svg { width:100%; height:100%; display:block; overflow:visible; }
+.furniture-top { fill:color-mix(in srgb,var(--furniture-color) 18%,#fff); stroke:var(--furniture-color); stroke-width:3; }
+.furniture-chair { fill:color-mix(in srgb,var(--furniture-color) 65%,#fff); stroke:var(--furniture-color); stroke-width:2; }
+.furniture-line { fill:none; stroke:var(--furniture-color); stroke-width:2; }
+.furniture-line.heavy { stroke-width:5; stroke-linecap:round; }
+.furniture-solid { fill:var(--furniture-color); }
+.furniture-detail { fill:none; stroke:#ffffff75; stroke-width:2; }
+.furniture-door { fill:color-mix(in srgb,var(--furniture-color) 12%,transparent); stroke:var(--furniture-color); stroke-width:2; stroke-dasharray:6 4; }
+.plant-pot { fill:#f2e6ce; stroke:var(--furniture-color); stroke-width:3; }
+.furniture-zone { fill:color-mix(in srgb,var(--furniture-color) 8%,transparent); stroke:var(--furniture-color); stroke-width:2; stroke-dasharray:6 4; }
+.furniture-label { position:absolute; inset:25% 12%; display:flex; flex-direction:column; align-items:center; justify-content:center; pointer-events:none; gap:1px; background:#ffffffbc; border-radius:5px; line-height:1.15; }
+#floorStage .table-number { color:#27372f; font-size:13px; }
+#floorStage .table-capacity { color:#40524a; font-size:8px; max-width:100%; }
+#floorStage .table-status { color:#537462; font-size:8px; }
+#floorStage .reserved .furniture-label { background:#fff0cbe6; box-shadow:0 0 0 1px #cf9a2c; }
+#floorStage .occupied .furniture-label { background:#eee2f8ed; box-shadow:0 0 0 1px #9a70b7; }
+#floorStage .reserved .table-status { color:#946511; }
+#floorStage .occupied .table-status { color:#764a95; }
+.floor-canvas.editing .table-card:hover,.floor-canvas.editing .floor-element:hover { outline:2px solid #b78b42; outline-offset:3px; }
+.floor-canvas .close-spacing::after { content:''; position:absolute; inset:-3px; border:1px dashed #cb952d; border-radius:6px; pointer-events:none; }
+.element-label { position:absolute; left:10%; right:10%; top:50%; transform:translateY(-50%); color:#26382e; font-size:10px; text-align:center; pointer-events:none; background:#ffffffb8; border-radius:3px; padding:1px; }
+.element-wall .element-label,.element-window .element-label,.element-door .element-label,.element-pillar .element-label,.element-plant .element-label { display:none; }
+.segmented-options,.angle-controls { display:flex; align-items:center; gap:8px; }
+.segmented-options button,.angle-controls button { flex:1; min-width:0; padding:9px 10px; border:1px solid var(--border); background:#fff; color:var(--dark); border-radius:10px; cursor:pointer; }
+.segmented-options button:active { background:#e5f0e9; }
+.angle-controls input { width:90px; }
+.form-group input[type=range] { padding:0; border:0; accent-color:var(--primary); margin-bottom:8px; }
+.color-palette { display:flex; gap:8px; flex-wrap:wrap; }
+.color-swatch { width:42px; min-height:42px; border:3px solid transparent; border-radius:10px; background:var(--swatch); cursor:pointer; }
+.color-swatch[aria-pressed=true] { outline:2px solid var(--dark); outline-offset:2px; border-color:white; }
+.form-group input[type=color] { width:44px; height:44px; padding:3px; cursor:pointer; }
+.floor-options { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.floor-choice { min-height:64px; border:2px solid var(--border); border-radius:12px; padding:8px 4px; color:#3a4b42; font-weight:600; cursor:pointer; }
+.floor-choice[aria-pressed=true] { border-color:var(--primary); box-shadow:0 0 0 2px #16756620; }
+#floorStage .floor-canvas.floor-plain,.floor-choice.floor-plain { background-color:#faf9f6; background-image:linear-gradient(#c6c3b62b 1px,transparent 1px),linear-gradient(90deg,#c6c3b62b 1px,transparent 1px); background-size:48px 48px; }
+#floorStage .floor-canvas.floor-wood,.floor-choice.floor-wood { background-color:#e7d4b3; background-image:repeating-linear-gradient(90deg,#b88d5429 0 1px,transparent 1px 5px,#fff2ce44 5px 8px),linear-gradient(90deg,#ab80465e 1px,transparent 1px),linear-gradient(#ab804640 1px,transparent 1px); background-size:auto,24px 96px,96px 96px; }
+#floorStage .floor-canvas.floor-tile,.floor-choice.floor-tile { background-color:#e5e8e3; background-image:linear-gradient(#ffffffb0 2px,transparent 2px),linear-gradient(90deg,#ffffffb0 2px,transparent 2px),conic-gradient(#edf0ec 25%,#d9dfd9 0 50%,#edf0ec 0 75%,#d9dfd9 0); background-size:48px 48px,48px 48px,96px 96px; }
+#floorStage .floor-canvas.floor-stone,.floor-choice.floor-stone { background-color:#cac8c0; background-image:linear-gradient(#f1efe8 2px,transparent 2px),linear-gradient(90deg,#f1efe8 2px,transparent 2px),linear-gradient(35deg,#8f918329,transparent 55%,#f4f0db55); background-size:72px 48px,72px 48px,96px 76px; }
+.spacing-hint { margin-bottom:12px; padding:12px; border:1px solid #e2c46d; border-radius:10px; background:#fffae8; color:#906922; font-size:12px; line-height:1.5; }
+.spacing-hint:empty { display:none; }
+@media(max-width:600px) { .floor-options { gap:5px; } .floor-choice { font-size:12px; } .color-swatch { width:38px;min-height:38px; } }
+.capacity-stepper { display:flex; align-items:center; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
+.capacity-stepper input { border:0; text-align:center; min-width:0; }
+.capacity-stepper button { border:0; background:#f0f5f2; min-width:44px; font-size:22px; color:var(--primary-dark); cursor:pointer; }
