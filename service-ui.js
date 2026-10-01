@@ -98,6 +98,7 @@ afficherTables = function () {
     const grid = el('tablesGrid'); grid.replaceChildren();
     const editing = !!floorDraft;
     grid.classList.toggle('editing', editing); el('editorBar').classList.toggle('hidden', !editing);
+    el('rotationSnapToggle').classList.toggle('hidden', !editing);
     el('floorHint').textContent = editing ? 'Glissez pour déplacer. Touchez pour modifier.' : 'Touchez une table pour ouvrir sa fiche.';
     plan.tables.filter(t => t.roomId === floorRoom).forEach(table => {
         const status = getTableStatus(table.number);
