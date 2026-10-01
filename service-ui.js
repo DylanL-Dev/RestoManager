@@ -53,6 +53,27 @@ function addRotationHandle(button,table){
     handle.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.stopPropagation();event.preventDefault();if(rotateFloorTable(table,(table.angle||0)+(event.key==='ArrowRight'?1:-1)*(snapFloorRotation?45:5)))paint();});
     button.append(handle);
 }
+function resizeFloorItem(item,factor,initial=item){
+    const room=currentPlan().rooms.find(r=>r.id===item.roomId),box=FloorPlan.bounds(initial);
+    const min=Math.max(.1/initial.width,.1/initial.depth);
+    const max=Math.min((room.width-initial.x*room.width/100)/box.width,(room.depth-initial.y*room.depth/100)/box.depth);
+    if(max<min)return false;
+    factor=Math.max(min,Math.min(max,factor));
+    const candidate={...item,width:initial.width*factor,depth:initial.depth*factor};
+    if(!FloorPlan.inside(currentPlan(),candidate))return false;
+    Object.assign(item,candidate);return true;
+}
+function addResizeHandle(button,item){
+    const handle=document.createElement('span');handle.className='resize-handle';handle.textContent='↘';handle.setAttribute('role','button');handle.setAttribute('tabindex','0');handle.setAttribute('aria-label',item.number!==undefined?'Redimensionner la table '+item.number:'Redimensionner '+item.label);
+    let gesture=null;
+    const paint=()=>{placeFloorItem(button,item);button.querySelector('.furniture-art').outerHTML=furnitureMarkup(item);handle.setAttribute('aria-valuetext',Math.round(item.width*100)+' × '+Math.round(item.depth*100)+' cm');};
+    handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();if(event.button!==0)return;const rect=button.getBoundingClientRect();gesture={initial:{...item},x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};handle.setPointerCapture(event.pointerId);});
+    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorItem(item,factor,g.initial))paint();});
+    ['pointerup','pointercancel'].forEach(name=>handle.addEventListener(name,event=>{event.stopPropagation();gesture=null;}));
+    handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
+    handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();if(resizeFloorItem(item,['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05))paint();});
+    button.append(handle);
+}
 function furnitureMarkup(item) {
     if(item.type==='zone')return '<span class="furniture-art zone-art" style="width:100%;height:100%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg)"></span>';
     return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.render(item)+'</span>';
@@ -97,7 +118,7 @@ afficherTables = function () {
     const editing = !!floorDraft;
     grid.classList.toggle('editing', editing); el('editorBar').classList.toggle('hidden', !editing);
     el('rotationSnapToggle').classList.toggle('hidden', !editing);
-    el('floorHint').textContent = editing ? 'Glissez pour déplacer. Touchez pour modifier.' : 'Touchez une table pour ouvrir sa fiche.';
+    el('floorHint').textContent = editing ? 'Glissez pour déplacer. Tirez ↘ pour changer la taille. Touchez pour modifier.' : 'Touchez une table pour ouvrir sa fiche.';
     plan.tables.filter(t => t.roomId === floorRoom).forEach(table => {
         const status = getTableStatus(table.number);
         const button = document.createElement('button'); button.type = 'button';
@@ -111,14 +132,14 @@ afficherTables = function () {
         button.classList.toggle('close-spacing',editing&&FloorPlan.nearby(plan,table).length>0);
         button.setAttribute('aria-label', 'Table ' + table.number + ', ' + table.capacity + ' places, ' + (r ? texteStatut(r.status) + ', ' + client : 'libre'));
         bindFloorItem(button, table, () => { if (floorDraft) openTableEditor(table.id); else cliquerTable(table.number); });
-        if(editing)addRotationHandle(button,table);
+        if(editing){addRotationHandle(button,table);addResizeHandle(button,table);}
         grid.append(button);
     });
     plan.elements.filter(item=>item.roomId===floorRoom).forEach(item=> {
         const button=document.createElement('button');button.type='button';button.className='floor-element element-'+item.type;
         button.innerHTML=furnitureMarkup(item)+'<span class="element-label">'+escapeHTML(item.label)+'</span>';button.setAttribute('aria-label',item.label+', '+item.width+' × '+item.depth+' mètres');
         placeFloorItem(button,item);
-        if(editing){bindFloorItem(button,item,()=>openElementEditor(item.id));addRotationHandle(button,item);}
+        if(editing){bindFloorItem(button,item,()=>openElementEditor(item.id));addRotationHandle(button,item);addResizeHandle(button,item);}
         else { button.disabled=true; }
         grid.append(button);
     });

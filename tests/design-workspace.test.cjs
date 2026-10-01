@@ -117,3 +117,24 @@ for(const type of ['bar','buffet','reception','sofa','chair','plant','lamp','wal
 run('floorDraft=null;afficherTables()');assert(node('rotationSnapToggle').classes.has('hidden'));
 run('startFloorEdit()');assert(!node('rotationSnapToggle').classes.has('hidden'));
 console.log('PASS: structural furniture at five orientations and editing-only rotation control.');
+
+run("floorDraft=FloorPlan.get();floorRoom='main';");
+const resizeStart=run("({...floorDraft.tables[0]})");
+assert(run('resizeFloorItem(floorDraft.tables[0],1.3)'));
+assert(Math.abs(run('floorDraft.tables[0].width')-resizeStart.width*1.3)<1e-9);
+assert.equal(run('floorDraft.tables[0].x'),resizeStart.x);
+assert.equal(run('floorDraft.tables[0].capacity'),resizeStart.capacity);
+assert(run('resizeFloorItem(floorDraft.tables[0],.7)'));
+assert(run('resizeFloorItem(floorDraft.tables[0],1000)'));
+assert(run('FloorPlan.inside(floorDraft,floorDraft.tables[0])'));
+run("floorDraft=FloorPlan.get();afficherTables()");
+const sizeHandle=node('tablesGrid').children[0].children.find(n=>n.className==='resize-handle');
+assert(sizeHandle);
+const gestureWidth=run('floorDraft.tables[0].width');
+sizeHandle.fire('pointerdown',{button:0,clientX:100,clientY:100,pointerId:1,stopPropagation(){}});
+sizeHandle.fire('pointermove',{clientX:158,clientY:158,stopPropagation(){}});
+sizeHandle.fire('pointerup',{stopPropagation(){}});
+assert(Math.abs(run('floorDraft.tables[0].width')-gestureWidth*1.1)<1e-9);
+run('floorDraft=null;afficherTables()');
+assert(!node('tablesGrid').children[0].children.some(n=>n.className==='resize-handle'));
+console.log('PASS: direct resize gesture, proportional dimensions, room limits, capacity preservation and editing-only handles.');
