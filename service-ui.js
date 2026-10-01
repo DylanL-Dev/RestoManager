@@ -118,6 +118,24 @@ function moveFloorGroup(items,origins,dx,dy){
     items.forEach((t,i)=>{t.x=origins[i].x+dx;t.y=origins[i].y+dy;});
     for(const button of el('tablesGrid').children){const item=items.find(t=>t.id===button.getAttribute('data-floor-id'));if(item)placeFloorItem(button,item);}
 }
+let alignmentEnabled=true;
+let alignmentGuides=[];
+function hideAlignmentGuides(){alignmentGuides.forEach(g=>g.classList.add('hidden'));}
+function snapFloorGroup(items,origins,dx,dy,rect){
+    const plan=currentPlan(),room=plan.rooms.find(r=>r.id===floorRoom),ids=new Set(items.map(t=>t.id));
+    const boxes=items.map((t,i)=>{const b=FloorPlan.bounds(t);return {x:origins[i].x,y:origins[i].y,w:b.width/room.width*100,h:b.depth/room.depth*100};});
+    const left=Math.min(...boxes.map(b=>b.x)),top=Math.min(...boxes.map(b=>b.y));
+    const right=Math.max(...boxes.map(b=>b.x+b.w)),bottom=Math.max(...boxes.map(b=>b.y+b.h));
+    const targets=[[0,50,100],[0,50,100]];
+    plan.tables.concat(plan.elements).filter(t=>t.roomId===floorRoom&&!ids.has(t.id)).forEach(t=>{const b=FloorPlan.bounds(t),w=b.width/room.width*100,h=b.depth/room.depth*100;targets[0].push(t.x,t.x+w/2,t.x+w);targets[1].push(t.y,t.y+h/2,t.y+h);});
+    const find=(anchors,lines,threshold,delta,min,max)=>{let best=null;for(const line of lines)for(const a of anchors){const correction=line-a-delta;if(Math.abs(correction)<=threshold&&delta+correction>=min-1e-8&&delta+correction<=max+1e-8&&(!best||Math.abs(correction)<Math.abs(best.correction)))best={correction,line};}return best;};
+    const sx=find([left,(left+right)/2,right],targets[0],7/rect.width*100,dx,-left,100-right);
+    const sy=find([top,(top+bottom)/2,bottom],targets[1],7/rect.height*100,dy,-top,100-bottom);
+    return {dx:dx+(sx?.correction||0),dy:dy+(sy?.correction||0),x:sx?.line,y:sy?.line};
+}
+function showAlignmentGuides(snap){
+    alignmentGuides.forEach((g,i)=>{const value=i?snap.y:snap.x;g.classList.toggle('hidden',value===undefined);g.style[i?'top':'left']=value+'%';});
+}
 function bindFloorItem(button,item,onClick) {
     button.setAttribute('data-floor-id',item.id);
     const grid=el('tablesGrid');let drag=null,moved=false;
@@ -129,11 +147,13 @@ function bindFloorItem(button,item,onClick) {
         drag={x:event.clientX,y:event.clientY,items,origins:items.map(t=>({x:t.x,y:t.y})),rect:grid.getBoundingClientRect()};button.setPointerCapture(event.pointerId);
     });
     button.addEventListener('pointermove',event=>{
-        if(!drag)return;if(FloorZoom.isPinching()){drag=null;moved=true;return;}
+        if(!drag)return;if(FloorZoom.isPinching()){drag=null;moved=true;hideAlignmentGuides();return;}
         const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)<6&&!moved)return;moved=true;
-        moveFloorGroup(drag.items,drag.origins,dx/drag.rect.width*100,dy/drag.rect.height*100);
+        const rawX=dx/drag.rect.width*100,rawY=dy/drag.rect.height*100;
+        const snap=alignmentEnabled&&!event.altKey?snapFloorGroup(drag.items,drag.origins,rawX,rawY,drag.rect):{dx:rawX,dy:rawY};
+        moveFloorGroup(drag.items,drag.origins,snap.dx,snap.dy);showAlignmentGuides(snap);
     });
-    button.addEventListener('pointerup',()=>{drag=null;});button.addEventListener('pointercancel',()=>{drag=null;moved=true;});
+    button.addEventListener('pointerup',()=>{drag=null;hideAlignmentGuides();});button.addEventListener('pointercancel',()=>{drag=null;moved=true;hideAlignmentGuides();});
     button.addEventListener('keydown',event=>{
         if(!floorDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();
         const room=currentPlan().rooms.find(r=>r.id===item.roomId),items=floorSelection.has(item.id)?selectedRoomItems():[item];
@@ -186,6 +206,7 @@ afficherTables = function () {
         else { button.disabled=true; }
         grid.append(button);
     });
+    alignmentGuides=[0,1].map(i=>{const guide=document.createElement('span');guide.className='alignment-guide '+(i?'horizontal':'vertical')+' hidden';guide.setAttribute('aria-hidden','true');grid.append(guide);return guide;});
     refreshFloorSelection();
     const room=plan.rooms.find(r=>r.id===floorRoom);
     el('roomDimensionsLabel').textContent=room.width+' × '+room.depth+' m';
@@ -195,7 +216,7 @@ afficherTables = function () {
     el('floorSpacingNotice').textContent=pairs+' rapprochement'+(pairs>1?'s':'')+' de tables à moins de 90 cm. Vérifiez les passages.';
     el('floorSpacingNotice').classList.toggle('hidden',!editing||!pairs);
     FloorZoom.updateRoom(plan,floorRoom);
-    if (!grid.children.length) { const message = document.createElement('p'); message.className = 'floor-empty'; message.textContent = editing ? 'Cette salle est vide. Ajoutez une table.' : 'Aucune table dans cette salle.'; grid.append(message); }
+    if (!plan.tables.some(t=>t.roomId===floorRoom)&&!plan.elements.some(t=>t.roomId===floorRoom)) { const message = document.createElement('p'); message.className = 'floor-empty'; message.textContent = editing ? 'Cette salle est vide. Ajoutez une table.' : 'Aucune table dans cette salle.'; grid.append(message); }
 };
 function openTableEditor(id) {
     selectedFloorTable = id;
@@ -216,6 +237,7 @@ const originalOpenManagement = ouvrirAdministration;
 ouvrirAdministration = function() { roomOptions(); originalOpenManagement(); };
 document.addEventListener('DOMContentLoaded', () => {
     roomOptions(); afficherTables();
+    el('alignmentToggle').addEventListener('click',()=>{alignmentEnabled=!alignmentEnabled;el('alignmentToggle').setAttribute('aria-pressed',String(alignmentEnabled));hideAlignmentGuides();});
     el('multiSelectBtn').addEventListener('click',()=>{multiSelectMode=!multiSelectMode;if(!multiSelectMode)floorSelection.clear();refreshFloorSelection();});
     el('selectAllFloorBtn').addEventListener('click',()=>{currentPlan().tables.concat(currentPlan().elements).filter(t=>t.roomId===floorRoom).forEach(t=>floorSelection.add(t.id));refreshFloorSelection();});
     el('clearFloorSelectionBtn').addEventListener('click',()=>{floorSelection.clear();refreshFloorSelection();});

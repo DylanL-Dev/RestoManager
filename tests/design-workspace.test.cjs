@@ -15,7 +15,7 @@ const sections={'.tables-section':new Node(),'.reservations-section':new Node()}
 const context={console,structuredClone,Date,Set,Math,crypto:require('node:crypto').webcrypto,setTimeout(){},setInterval(){},alert:m=>alerts.push(m),confirm:()=>confirms,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},document:{getElementById:id=>{assert(nodes.has(id),'Missing HTML element '+id);return nodes.get(id)},createElement:()=>new Node(),addEventListener:(e,fn)=>{if(e==='DOMContentLoaded')ready.push(fn)},querySelector:s=>sections[s]||null,querySelectorAll:()=>[]},window:{addEventListener(){}}};
 vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-3d.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
 for(const fn of ready)fn();const run=s=>vm.runInContext(s,context);const node=id=>nodes.get(id);
-assert.equal(node('tablesGrid').children.length,1);assert.equal(run('TABLES.length'),1);assert.equal(run('CAPACITY[1]'),2);
+assert.equal(node('tablesGrid').children.filter(n=>n.getAttribute('data-table-number')).length,1);assert.equal(run('TABLES.length'),1);assert.equal(run('CAPACITY[1]'),2);
 node('editPlanBtn').fire('click');node('addTableBtn').fire('click');node('tableNumberInput').value='26';node('tableCapacityInput').value='4';node('tableShapeInput').value='round';node('tableEditForm').fire('submit');assert.equal(run('floorDraft.tables.length'),2);assert.equal(run('TABLES.length'),1);
 node('savePlanBtn').fire('click');assert.equal(run('TABLES.length'),2);assert.equal(run('CAPACITY[26]'),4);
 assert.equal(run("ReservationEngine.validate({client:'Test',type:'exterieur',date:'2026-10-01',time:'19:00',duration:90,guests:4,tables:[26]},[]).valid"),true);
@@ -175,3 +175,14 @@ assert(run(`(()=>{const a=selectedRoomItems();return resizeFloorGroup(a,a.map(t=
 assert.equal(run('floorDraft.tables[0].width'),.75);
 assert(run(`(()=>{const a=selectedRoomItems();resizeFloorGroup(a,a.map(t=>({...t})),1000);return a.every(t=>FloorPlan.inside(floorDraft,t));})()`));
 console.log('PASS: group resize pointer gesture, shared scale, spacing, rotations and room bounds.');
+run(`floorDraft={version:3,rooms:[{id:'main',name:'Test',width:10,depth:10,floor:'plain'}],tables:[],elements:[FloorPlan.itemOptions({id:'snap-a',roomId:'main',type:'bar',label:'A',width:1,depth:1,x:10,y:10}),FloorPlan.itemOptions({id:'snap-b',roomId:'main',type:'bar',label:'B',width:1,depth:1,x:40,y:40})]};floorRoom='main';`);
+let snapped=run(`snapFloorGroup([floorDraft.elements[0]],[{x:10,y:10}],29.4,18,{width:1000,height:1000})`);
+assert.equal(snapped.dx,30);assert([40,45,50].includes(snapped.x));
+assert.equal(snapped.dy,18);assert.equal(snapped.y,undefined);
+snapped=run(`snapFloorGroup([floorDraft.elements[0]],[{x:10,y:10}],29.4,18,{width:2000,height:2000})`);
+assert.equal(snapped.dx,29.4);assert.equal(snapped.x,undefined);
+snapped=run(`snapFloorGroup([floorDraft.elements[0]],[{x:10,y:10}],34.6,18,{width:1000,height:1000})`);
+assert.equal(snapped.dx,35);
+run('showAlignmentGuides({x:50,y:50})');assert(run('alignmentGuides.every(g=>!g.classList.contains("hidden"))'));
+run('hideAlignmentGuides()');assert(run('alignmentGuides.every(g=>g.classList.contains("hidden"))'));
+console.log('PASS: edge and centre snapping, screen-space threshold across zoom levels, and guide cleanup.');

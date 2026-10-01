@@ -1224,3 +1224,8 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 .catalog-item { box-shadow:0 2px 5px #29473608; }
 
 #floorStage.multi-select .group-selected .resize-handle { display:flex; background:#167d67; color:white; border-color:white; }
+
+.alignment-guide { position:absolute; pointer-events:none; z-index:8; background:#c04da4; }
+.alignment-guide.vertical { top:0; bottom:0; width:1px; }
+.alignment-guide.horizontal { left:0; right:0; height:1px; }
+#alignmentToggle[aria-pressed=true] { background:#e6f2ec; border-color:#368970; color:#195a48; }
