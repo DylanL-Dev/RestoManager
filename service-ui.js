@@ -157,7 +157,7 @@ function openTableEditor(id) {
     selectedFloorTable = id;
     const table = floorDraft.tables.find(t => t.id === id);
     el('tableEditTitle').textContent = table ? 'Modifier T' + table.number : 'Ajouter une table';
-    el('tableNumberInput').value = table ? table.number : Math.max(25, ...floorDraft.tables.map(t => t.number)) + 1;
+    el('tableNumberInput').value = table ? table.number : Math.max(0, ...floorDraft.tables.map(t => t.number)) + 1;
     el('tableCapacityInput').value = table ? table.capacity : 2;
     el('tableMinCapacityInput').value=table?table.capacityMin:2;el('tableLetterInput').value=table?table.letter:'';
     setEditorOptions('table',table);el('tableSpacingHint').textContent=table?spacingDescription(floorDraft,table):'';
@@ -190,6 +190,16 @@ document.addEventListener('DOMContentLoaded', () => {
             FloorPlan.save(floorDraft); floorDraft = null; roomOptions(); refreshUI(); } catch (error) { alert(error.message); }
     });
     el('cancelPlanBtn').addEventListener('click', () => { if (!confirm('Abandonner les modifications du plan ?')) return; floorDraft = null; roomOptions(); refreshUI(); });
+    el('startSimplePlanBtn').addEventListener('click',()=>{
+        const tables=floorDraft.tables.filter(t=>t.roomId===floorRoom);
+        const keep=tables[0];
+        if(tables.slice(1).some(t=>referencedTable(t.number)))return alert('Une table à retirer est liée à une réservation ou à l’historique. Conservez-la ou créez une nouvelle salle.');
+        if(!confirm('Repartir avec une seule table dans cette salle ? Les autres tables et les éléments seront retirés du brouillon. Vous pourrez annuler avant d’enregistrer.'))return;
+        floorDraft.tables=floorDraft.tables.filter(t=>t.roomId!==floorRoom||t.id===keep?.id);
+        floorDraft.elements=floorDraft.elements.filter(t=>t.roomId!==floorRoom);
+        if(!keep){const number=Math.max(0,...floorDraft.tables.map(t=>t.number))+1;const table=FloorPlan.tableOptions({id:crypto.randomUUID(),number,roomId:floorRoom,capacity:2,shape:'square',width:1.2,depth:1.2,x:0,y:0});const spot=FloorPlan.freeSpot(floorDraft,table);if(spot)floorDraft.tables.push({...table,...spot});}
+        afficherTables();
+    });
     el('resetPlanBtn').addEventListener('click', () => {
         if (!confirm('Réorganiser les positions des tables de cette salle dans le brouillon ?')) return;
         const candidate=structuredClone(floorDraft);

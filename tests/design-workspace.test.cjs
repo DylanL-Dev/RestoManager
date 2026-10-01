@@ -15,9 +15,9 @@ const sections={'.tables-section':new Node(),'.reservations-section':new Node()}
 const context={console,structuredClone,Date,Set,Math,crypto:require('node:crypto').webcrypto,setTimeout(){},setInterval(){},alert:m=>alerts.push(m),confirm:()=>confirms,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},document:{getElementById:id=>{assert(nodes.has(id),'Missing HTML element '+id);return nodes.get(id)},createElement:()=>new Node(),addEventListener:(e,fn)=>{if(e==='DOMContentLoaded')ready.push(fn)},querySelector:s=>sections[s]||null,querySelectorAll:()=>[]},window:{addEventListener(){}}};
 vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-3d.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
 for(const fn of ready)fn();const run=s=>vm.runInContext(s,context);const node=id=>nodes.get(id);
-assert.equal(node('tablesGrid').children.length,21);assert.equal(run('TABLES.length'),21);assert.equal(run('CAPACITY[25]'),10);
-node('editPlanBtn').fire('click');node('addTableBtn').fire('click');node('tableNumberInput').value='26';node('tableCapacityInput').value='4';node('tableShapeInput').value='round';node('tableEditForm').fire('submit');assert.equal(run('floorDraft.tables.length'),22);assert.equal(run('TABLES.length'),21);
-node('savePlanBtn').fire('click');assert.equal(run('TABLES.length'),22);assert.equal(run('CAPACITY[26]'),4);
+assert.equal(node('tablesGrid').children.length,1);assert.equal(run('TABLES.length'),1);assert.equal(run('CAPACITY[1]'),2);
+node('editPlanBtn').fire('click');node('addTableBtn').fire('click');node('tableNumberInput').value='26';node('tableCapacityInput').value='4';node('tableShapeInput').value='round';node('tableEditForm').fire('submit');assert.equal(run('floorDraft.tables.length'),2);assert.equal(run('TABLES.length'),1);
+node('savePlanBtn').fire('click');assert.equal(run('TABLES.length'),2);assert.equal(run('CAPACITY[26]'),4);
 assert.equal(run("ReservationEngine.validate({client:'Test',type:'exterieur',date:'2026-10-01',time:'19:00',duration:90,guests:4,tables:[26]},[]).valid"),true);
 run("reservations=[{id:'protected',tables:[26],status:'reserved',guests:4,date:'2026-10-01',time:'19:00',duration:90,type:'hotel',client:'214'}]");node('editPlanBtn').fire('click');run("openTableEditor(floorDraft.tables.find(t=>t.number===26).id)");node('deleteTableBtn').fire('click');assert.match(node('tableEditError').textContent,/liée/);node('tableCapacityInput').value='2';node('tableEditForm').fire('submit');assert.match(node('tableEditError').textContent,/insuffisante/);
 node('cancelPlanBtn').fire('click');assert.equal(run('floorDraft'),null);assert.equal(run('CAPACITY[26]'),4);
@@ -50,7 +50,7 @@ run('afficherTables()');assert.match(node('roomDimensionsLabel').textContent,/60
 node('zoomFitBtn').fire('click');assert(run('FloorZoom.getScale()')<0.4);
 node('addElementBtn').fire('click');node('elementTypeInput').value='bar';node('elementTypeInput').fire('change');node('elementForm').fire('submit');assert.equal(run('floorDraft.elements.length'),1);
 node('rotateElementBtn').fire('click');assert.equal(Number(node('elementWidthInput').value),300);assert.equal(Number(node('elementAngleInput').value),90);
-node('savePlanBtn').fire('click');assert.equal(run('FloorPlan.get().elements.length'),1);assert.equal(run('TABLES.length'),22);
+node('savePlanBtn').fire('click');assert.equal(run('FloorPlan.get().elements.length'),1);assert.equal(run('TABLES.length'),2);
 run('startFloorEdit()');assert.throws(()=>run("FloorPlan.resizeRoom(floorDraft,'main',1,1)"),/trop petite/);assert.equal(run("floorDraft.rooms.find(r=>r.id==='main').width"),60);
 // Large layouts no longer stop at 25 grid slots.
 assert(run(`(() => { const p={version:3,rooms:[{id:'main',name:'Large',width:60,depth:60,floor:'plain'}],tables:[],elements:[]};for(let i=0;i<50;i++){const t=FloorPlan.tableOptions({id:'t'+i,number:i+1,roomId:'main',shape:'square',capacity:2,width:1,depth:1,x:0,y:0});const spot=FloorPlan.freeSpot(p,t);if(!spot)return false;Object.assign(t,spot);p.tables.push(t);}return FloorPlan.valid(p)&&p.tables.length===50;})()`));
@@ -92,7 +92,7 @@ actions.children[0].fire('click');assert.equal(run('reservations[0].status'),'ar
 actions=node('tableServiceContent').children[2];assert(!actions.children[1].disabled);actions.children[1].fire('click');assert.equal(run('reservations[0].status'),'seated');
 confirms=false;node('tableServiceContent').children[2].children[2].fire('click');assert.equal(run('reservations[0].status'),'seated');
 confirms=true;node('tableServiceContent').children[2].children[2].fire('click');assert.equal(run('reservations[0].status'),'completed');assert.equal(run('tableServiceReservations(1)[0].id'),'service-next');
-run('cliquerTable(2)');assert.match(node('tableServiceContent').children[1].textContent,/Aucune réservation/);
+run('cliquerTable(26)');assert.match(node('tableServiceContent').children[1].textContent,/Aucune réservation/);
 node('tableServiceContent').children[2].fire('click');assert.equal(run('serviceTableNumber'),null);assert(!node('reservationModal').classes.has('hidden'));
 console.log('PASS: service sheet, arrivals, seating, confirmed release, next booking and free-table booking.');
 assert(run(`(()=>{const p=FloorPlan.get();const spot=FloorPlan.freeSpot(p,{roomId:'main',width:.5,depth:.5,angle:0});p.elements.push(FloorPlan.itemOptions({id:'lamp-test',type:'lamp',label:'Lampe',roomId:'main',width:.5,depth:.5,...spot}));return FloorPlan.valid(p);})()`));
@@ -138,3 +138,9 @@ assert(Math.abs(run('floorDraft.tables[0].width')-gestureWidth*1.1)<1e-9);
 run('floorDraft=null;afficherTables()');
 assert(!node('tablesGrid').children[0].children.some(n=>n.className==='resize-handle'));
 console.log('PASS: direct resize gesture, proportional dimensions, room limits, capacity preservation and editing-only handles.');
+run("floorDraft=FloorPlan.get();floorRoom='main';reservations=[];history=[]");
+const simpleSavedCount=run('FloorPlan.get().tables.length');
+confirms=false;node('startSimplePlanBtn').fire('click');assert.equal(run('floorDraft.tables.length'),simpleSavedCount);
+confirms=true;node('startSimplePlanBtn').fire('click');assert.equal(run("floorDraft.tables.filter(t=>t.roomId==='main').length"),1);assert.equal(run('FloorPlan.get().tables.length'),simpleSavedCount);
+node('addTableBtn').fire('click');assert.equal(Number(node('tableNumberInput').value),2);
+console.log('PASS: single-table defaults, reversible one-table restart and progressive numbering.');

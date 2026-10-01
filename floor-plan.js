@@ -49,7 +49,7 @@ const FloorPlan = (() => {
     function nearby(plan,table){return plan.tables.filter(t=>t.id!==table.id&&t.roomId===table.roomId).map(t=>({table:t,gap:gap(plan,table,t)})).filter(p=>p.gap<0.9-1e-7);}
     function defaults() {
         return { version:3, rooms:[{id:'main',name:'Salle principale',width:12,depth:12,floor:'plain'}], elements:[],
-            tables:ReservationEngine.TABLES.map((number,i) => tableOptions({id:'table-'+number,number,roomId:'main',capacity:ReservationEngine.CAPACITY[number],shape:number===25?'rectangle':'square',width:number===25?2:1.2,depth:1.2,x:3+(i%5)*20,y:3+Math.floor(i/5)*20})) };
+            tables:[tableOptions({id:'table-1',number:1,roomId:'main',capacity:2,shape:'square',width:1.2,depth:1.2,x:45,y:45})] };
     }
     function migrate(raw) {
         if(!raw)return raw;
