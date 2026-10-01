@@ -18,14 +18,39 @@ const Floor3D=(()=>{
    face(top,[0,1,0],color);for(let i=0;i<segments;i++){const j=(i+1)%segments,a=(i+.5)*2*Math.PI/segments;face([bottom[i],bottom[j],top[j],top[i]],[Math.cos(a),0,Math.sin(a)],color);}
   };
   const w=item.width||1.2,d=item.depth||1.2,tw=w*.62,td=d*.60,ty=.70*Math.min(1,w/1.2,d/1.2),count=Math.min(12,item.capacity||2);
+  // Structural pieces use the same vertical axis, camera and lighting as tables.
+  if(item.type){
+   const metal='#b09a68',cream='#e5ddcb',dark='#354b43';
+   const cabinet=(height=.9)=>{box(0,height/2,0,w*.94,height,d*.88,wood);box(0,height+.035,0,w,.07,d,cream);for(let i=0;i<Math.max(2,Math.ceil(w/.6));i++){const n=Math.max(2,Math.ceil(w/.6)),x=-w*.47+(i+.5)*w*.94/n;box(x,height*.48,d*.445,w*.94/n-.018,height*.82,.012,wood);box(x,height*.65,d*.46,.09,.014,.015,metal);}};
+   const armchair=(width=w,depth=d)=>{box(0,.23,0,width*.74,.35,depth*.7,green);box(0,.43,0,width*.7,.12,depth*.65,'#51806b');box(0,.63,-depth*.34,width*.8,.5,depth*.16,green);for(const x of [-width*.39,width*.39])box(x,.48,0,width*.13,.28,depth*.78,green);for(const x of [-width*.3,width*.3])for(const z of [-depth*.28,depth*.28])box(x,.08,z,.035,.16,.035,leg);};
+   switch(item.type){
+    case 'bar': cabinet(1.05);box(0,.22,d*.48,w*.95,.04,.045,metal);break;
+    case 'buffet': cabinet();for(const x of [-w*.28,0,w*.28]){box(x,.965,0,w*.2,.055,d*.55,'#b8c0bc');box(x,1.01,-d*.16,w*.2,.045,.03,metal);}break;
+    case 'reception': cabinet(1);box(-w*.22,1.15,0,w*.22,.22,.045,dark);box(-w*.22,1.03,.07,w*.25,.02,.13,dark);break;
+    case 'sofa': armchair();for(let i=1;i<3;i++)box(-w*.35+i*w*.7/3,.495,0,.012,.005,d*.62,'#2b5947');break;
+    case 'chair': armchair();break;
+    case 'plant': cylinder(0,.17,0,Math.min(w,d)*.25,.34,'#c59b74');cylinder(0,.345,0,Math.min(w,d)*.23,.02,'#514335');box(0,.55,0,.035,.5,.035,leg);for(let i=0;i<9;i++){const a=i*2.4,r=Math.min(w,d)*(.18+.12*(i%2)),y=.5+i*.05;const start=faces.length;box(0,y,0,.09,.035,r*1.7,i%2?'#49805a':'#2e6545');for(let j=start;j<faces.length;j++){faces[j].points=faces[j].points.map(p=>{const q=rotate(p,a);return [q[0]+Math.sin(a)*r*.45,q[1],q[2]+Math.cos(a)*r*.45];});faces[j].normal=rotate(faces[j].normal,a);}}break;
+    case 'lamp': cylinder(0,.025,0,Math.min(w,d)*.27,.05,dark);cylinder(0,.72,0,.018,1.4,metal,12);cylinder(0,1.32,0,Math.min(w,d)*.46,.32,cream);cylinder(0,1.49,0,Math.min(w,d)*.43,.018,'#f5ead0');break;
+    case 'wall': box(0,.6,0,w,1.2,d,cream);box(0,.055,d*.51,w,.11,.025,'#b7a78b');break;
+    case 'pillar': box(0,.65,0,w*.85,1.3,d*.85,cream);box(0,.06,0,w,.12,d,'#b7a78b');box(0,1.29,0,w,.08,d,'#eee6d7');break;
+    case 'door': for(const x of [-w*.46,w*.46])box(x,.65,0,w*.08,1.3,d,leg);box(0,1.27,0,w,.08,d,leg);box(-w*.03,.62,0,w*.82,1.2,d*.35,wood);cylinder(w*.28,.61,d*.3,.025,.06,metal,12);break;
+    case 'window': box(0,.75,0,w,1.15,d,'#689eab');for(const x of [-w*.47,0,w*.47])box(x,.75,d*.55,.035,1.2,.035,cream);for(const y of [.17,.75,1.33])box(0,y,d*.55,w,.035,.035,cream);break;
+    case 'kitchen': cabinet();for(const x of [-w*.28,0])for(const z of [-d*.2,d*.2])cylinder(x,.955,z,Math.min(w*.12,d*.15),.018,dark);box(w*.28,.95,0,w*.24,.04,d*.58,'#9eaaa8');box(w*.28,1.06,-d*.24,.025,.23,.025,metal);break;
+    case 'toilets': box(0,.05,0,w,.1,d,'#dcd9cc');for(const x of [-w*.27,w*.27]){box(x,.38,-d*.23,w*.24,.6,d*.24,'#f3eee2');cylinder(x,.28,d*.05,Math.min(w*.15,d*.2),.4,'#eee9de');cylinder(x,.49,d*.05,Math.min(w*.12,d*.16),.025,'#a4b6b1');}break;
+    default: return [];
+   }
+   return faces;
+  }
   if(item.shape==='round')cylinder(0,ty,0,Math.min(tw,td)/2,.075,wood,36);else box(0,ty,0,tw,.075,td,wood);
   const lh=ty-.05;for(const x of [-tw*.39,tw*.39])for(const z of [-td*.38,td*.38])box(x,lh/2,z,.05,lh,.05,leg);
   // Subtle grain strips live on the horizontal tabletop and rotate with it.
   if(item.shape!=='round')for(let i=1;i<8;i++)box(-tw/2+i*tw/8,ty+.039,0,.006,.001,td*.93,'#bf9968');
   function chair(x,z,a,benchWidth){
    const start=faces.length,cw=benchWidth||Math.min(w,d)*.23,cd=Math.min(w,d)*.21,sy=ty*.58;
-   box(0,sy,0,cw,.10,cd,green);box(0,sy+.19,-cd*.46,cw,.32,.06,green);
-   box(0,sy+.35,-cd*.46,cw,.035,.065,'#8b9c71');
+   box(0,sy,0,cw,.10,cd,green);box(0,sy+.065,0,cw*.9,.055,cd*.9,'#51806b');box(0,sy+.19,-cd*.46,cw,.32,.06,green);
+   box(0,sy+.35,-cd*.46,cw,.025,.065,'#b09a68');
+   for(const x of [-cw*.47,cw*.47])box(x,sy+.1,0,.025,.15,cd*.85,green);
+   for(const x of [-cw*.25,0,cw*.25])box(x,sy+.19,-cd*.425,.008,.24,.008,'#2e604b');
    for(const lx of [-cw*.35,cw*.35])for(const lz of [-cd*.35,cd*.35])box(lx,sy/2,lz,.025,sy,.025,leg);
    for(let i=start;i<faces.length;i++){faces[i].points=faces[i].points.map(p=>{const q=rotate(p,a);return [q[0]+x,q[1],q[2]+z];});faces[i].normal=rotate(faces[i].normal,a);}
   }
@@ -34,11 +59,15 @@ const Floor3D=(()=>{
   else if(item.shape==='square'&&count<=4){[[0,-d*.38,0],[0,d*.38,Math.PI],[-w*.38,0,-Math.PI/2],[w*.38,0,Math.PI/2]].slice(0,count).forEach(p=>chair(...p));}
   else{for(let i=0;i<count;i++){const row=i%2,col=Math.floor(i/2),cols=Math.ceil(count/2);chair(-tw*.42+(col+.5)*tw*.84/cols,row?d*.38:-d*.38,row?Math.PI:0);}}
   const pr=Math.min(tw,td)*.09;
-  for(const z of [-td*.29,td*.29]){cylinder(0,ty+.048,z,pr,.015,'#f1eee0');cylinder(0,ty+.057,z,pr*.75,.004,'#fffaf0');}
+  const settings=Math.min(count,10);
+  for(let i=0;i<settings;i++){let x,z;if(item.shape==='round'){const a=i*2*Math.PI/settings;x=Math.sin(a)*tw*.31;z=Math.cos(a)*td*.31;}else{const cols=Math.ceil(settings/2);x=-tw*.42+(Math.floor(i/2)+.5)*tw*.84/cols;z=(i%2?1:-1)*td*.29;}
+   cylinder(x,ty+.048,z,pr,.015,'#f1eee0');cylinder(x,ty+.057,z,pr*.75,.004,'#fffaf0');box(x+pr*1.5,ty+.049,z,.018,.003,pr*1.5,'#c5c9c0');box(x-pr*1.5,ty+.049,z,.022,.003,pr*1.5,'#c5c9c0');cylinder(x+pr,ty+.075,z-pr*1.5,pr*.25,.045,'#bbc9bd',12);
+  }
+  if(count>=4){cylinder(0,ty+.08,0,pr*.4,.08,'#c1a079');for(const x of [-pr*.2,0,pr*.2])box(x,ty+.145,0,pr*.3,.065,pr*.65,green);}
   return faces;
  }
  function render(item){
-  const key=JSON.stringify([item.width,item.depth,item.angle,item.shape,item.capacity,item.color]);if(cache.has(key))return cache.get(key);
+  const key=JSON.stringify([item.type,item.width,item.depth,item.angle,item.shape,item.capacity,item.color]);if(cache.has(key))return cache.get(key);
   const a=(item.angle||0)*Math.PI/180;
   const visible=model(item).map(f=>({...f,points:f.points.map(p=>rotate(p,a)),normal:rotate(f.normal,a)})).filter(f=>dot(f.normal,camera)>.00001);
   visible.sort((a,b)=>a.points.reduce((s,p)=>s+dot(p,camera),0)/a.points.length-b.points.reduce((s,p)=>s+dot(p,camera),0)/b.points.length);

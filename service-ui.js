@@ -44,7 +44,7 @@ function rotateFloorTable(table,angle){
     Object.assign(table,candidate);return true;
 }
 function addRotationHandle(button,table){
-    const handle=document.createElement('span');handle.className='rotation-handle';handle.textContent='↻';handle.setAttribute('role','button');handle.setAttribute('tabindex','0');handle.setAttribute('aria-label','Tourner la table '+table.number);
+    const handle=document.createElement('span');handle.className='rotation-handle';handle.textContent='↻';handle.setAttribute('role','button');handle.setAttribute('tabindex','0');handle.setAttribute('aria-label',table.number!==undefined?'Tourner la table '+table.number:'Tourner '+table.label);
     let gesture=null;
     const paint=()=>{placeFloorItem(button,table);button.querySelector('.furniture-art').outerHTML=furnitureMarkup(table);};
     handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();const rect=button.getBoundingClientRect();gesture={angle:table.angle||0,x:rect.left+rect.width/2,y:rect.top+rect.height/2};gesture.start=Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x);handle.setPointerCapture(event.pointerId);});
@@ -55,7 +55,7 @@ function addRotationHandle(button,table){
     button.append(handle);
 }
 function furnitureMarkup(item) {
-    if(useTable3D&&item.number!==undefined)return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.render(item)+'</span>';
+    if(useTable3D&&(item.number!==undefined||item.type!=='zone'))return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.render(item)+'</span>';
     const box=FloorPlan.bounds(item),width=item.width/box.width*100,height=item.depth/box.depth*100;
     return '<span class="furniture-art" style="width:'+width+'%;height:'+height+'%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg);--furniture-color:'+item.color+'">'+FurnitureAssets.render(item)+'</span>';
 }
@@ -120,7 +120,7 @@ afficherTables = function () {
         const button=document.createElement('button');button.type='button';button.className='floor-element element-'+item.type;
         button.innerHTML=furnitureMarkup(item)+'<span class="element-label">'+escapeHTML(item.label)+'</span>';button.setAttribute('aria-label',item.label+', '+item.width+' × '+item.depth+' mètres');
         placeFloorItem(button,item);
-        if(editing)bindFloorItem(button,item,()=>openElementEditor(item.id));
+        if(editing){bindFloorItem(button,item,()=>openElementEditor(item.id));addRotationHandle(button,item);}
         else { button.disabled=true; }
         grid.append(button);
     });

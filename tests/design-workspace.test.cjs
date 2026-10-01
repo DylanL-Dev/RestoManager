@@ -114,3 +114,12 @@ run('afficherTables()');assert.match(node('tablesGrid').children[0].innerHTML,/g
 node('table3DToggle').fire('click');assert.match(node('tablesGrid').children[0].innerHTML,/furniture-sprite/);
 node('rotationSnapToggle').fire('click');assert.equal(run('snapFloorRotation'),false);
 console.log('PASS: vertical-axis 3D rotation, fixed lighting, floor-centre preservation, renderer switch and free rotation.');
+for(const type of ['bar','buffet','reception','sofa','chair','plant','lamp','wall','pillar','door','window','kitchen','toilets']) {
+    for(const angle of [0,45,90,180,270]) {
+        const svg=run(`Floor3D.render({type:'${type}',width:1.2,depth:.8,angle:${angle},color:'#ad814f'})`);
+        assert.match(svg,/<polygon/);assert.doesNotMatch(svg,/NaN|Infinity/);
+    }
+}
+run('floorDraft=null;afficherTables()');assert(node('rotationSnapToggle').classes.has('hidden'));
+run('startFloorEdit()');assert(!node('rotationSnapToggle').classes.has('hidden'));
+console.log('PASS: structural furniture at five orientations and editing-only rotation control.');
