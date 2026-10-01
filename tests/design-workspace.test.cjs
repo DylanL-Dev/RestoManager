@@ -147,7 +147,7 @@ console.log('PASS: single-table defaults, reversible one-table restart and progr
 // Advance past the earlier pinch suppression interval before testing fresh clicks.
 context.Date=class extends Date { static now(){return Date.now()+1000;} };
 // A mixed selection moves as a rigid group, including against room edges.
-run(`floorDraft=FloorPlan.get();floorRoom='main';multiSelectMode=false;floorSelection.clear();floorDraft.tables[0].x=10;floorDraft.tables[0].y=10;floorDraft.elements.push(FloorPlan.itemOptions({id:'group-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:35,y:25,angle:45}));afficherTables();`);
+run(`floorDraft=FloorPlan.get();floorRoom='main';alignmentEnabled=false;multiSelectMode=false;floorSelection.clear();floorDraft.tables[0].x=10;floorDraft.tables[0].y=10;floorDraft.elements.push(FloorPlan.itemOptions({id:'group-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:35,y:25,angle:45}));afficherTables();`);
 node('multiSelectBtn').fire('click');
 const firstGroupTable=node('tablesGrid').children.find(n=>n.getAttribute('data-table-number')==='1');
 const groupPlant=node('tablesGrid').children.find(n=>n.getAttribute('data-floor-id')==='group-plant');
@@ -186,3 +186,19 @@ assert.equal(snapped.dx,35);
 run('showAlignmentGuides({x:50,y:50})');assert(run('alignmentGuides.every(g=>!g.classList.contains("hidden"))'));
 run('hideAlignmentGuides()');assert(run('alignmentGuides.every(g=>g.classList.contains("hidden"))'));
 console.log('PASS: edge and centre snapping, screen-space threshold across zoom levels, and guide cleanup.');
+
+run("floorDraft={version:3,rooms:[{id:'main',name:'Test',width:20,depth:20,floor:'plain'}],tables:[],elements:[]};floorRoom='main';FloorZoom.updateRoom(floorDraft,floorRoom);FloorZoom.setScale(2)");
+node('floorViewport').scrollLeft=600;node('floorViewport').scrollTop=400;
+let central=run("visibleFurnitureSpot({roomId:'main',width:1,depth:1,angle:0})");
+assert(Math.abs(central.x-((600+node('floorViewport').clientWidth/2)/1920*100-2.5))<1e-9);
+assert(Math.abs(central.y-((400+node('floorViewport').clientHeight/2)/1920*100-2.5))<1e-9);
+run(`floorDraft.elements.push(FloorPlan.itemOptions({id:'last-bar',roomId:'main',type:'bar',label:'Bar',width:6,depth:1.6,x:0,y:0}));rememberAddedFurniture(floorDraft.elements[0]);`);
+assert.deepEqual(Array.from(run("suggestedFurnitureSize('chair')")),[1.1,1.1]);
+assert.deepEqual(Array.from(run('suggestedFurnitureSize()')),[2.4,2.4]);
+run('floorDraft.elements[0].width=3;floorDraft.elements[0].depth=.8');
+assert.deepEqual(Array.from(run('suggestedFurnitureSize()')),[1.2,1.2]);
+run(`floorDraft.elements.push(FloorPlan.itemOptions({id:'obstacle',roomId:'main',type:'chair',label:'Chaise',width:1,depth:1,x:${central.x},y:${central.y}}))`);
+const nearbySpot=run("visibleFurnitureSpot({roomId:'main',width:1,depth:1,angle:0})");
+assert(Math.hypot(nearbySpot.x-central.x,nearbySpot.y-central.y)>0);
+assert(run(`!FloorPlan.overlaps(floorDraft,{roomId:'main',width:1,depth:1,angle:0,x:${nearbySpot.x},y:${nearbySpot.y}},floorDraft.elements[1])`));
+console.log('PASS: visible-centre placement after zoom/pan, nearby vacancy and inherited furniture scale.');
