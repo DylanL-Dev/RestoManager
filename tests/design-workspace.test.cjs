@@ -13,7 +13,7 @@ class Node {
 const html=fs.readFileSync('index.html','utf8');const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Node()]));
 const sections={'.tables-section':new Node(),'.reservations-section':new Node()}; const ready=[];const data=new Map();let confirms=true,alerts=[];
 const context={console,structuredClone,Date,Set,Math,crypto:require('node:crypto').webcrypto,setTimeout(){},setInterval(){},alert:m=>alerts.push(m),confirm:()=>confirms,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},document:{getElementById:id=>{assert(nodes.has(id),'Missing HTML element '+id);return nodes.get(id)},createElement:()=>new Node(),addEventListener:(e,fn)=>{if(e==='DOMContentLoaded')ready.push(fn)},querySelector:s=>sections[s]||null,querySelectorAll:()=>[]},window:{addEventListener(){}}};
-vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-art.js','furniture-assets.js','floor-3d.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
+vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-3d.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
 for(const fn of ready)fn();const run=s=>vm.runInContext(s,context);const node=id=>nodes.get(id);
 assert.equal(node('tablesGrid').children.length,21);assert.equal(run('TABLES.length'),21);assert.equal(run('CAPACITY[25]'),10);
 node('editPlanBtn').fire('click');node('addTableBtn').fire('click');node('tableNumberInput').value='26';node('tableCapacityInput').value='4';node('tableShapeInput').value='round';node('tableEditForm').fire('submit');assert.equal(run('floorDraft.tables.length'),22);assert.equal(run('TABLES.length'),21);
@@ -80,7 +80,6 @@ node('tableShapeInput').value='bench';node('tableSizeMedium').fire('click');asse
 assert(run(`(()=>{const p={rooms:[{id:'main',width:10,depth:10}]};const t={id:'a',roomId:'main',x:90,y:0,width:2,depth:1,angle:90};return FloorPlan.inside(p,t)&&!FloorPlan.inside(p,{...t,x:91});})()`));
 assert(run(`(()=>{const a={id:'a',roomId:'main',x:0,y:0,width:1,depth:1,angle:0},b={...a,id:'b',x:19};const p={rooms:[{id:'main',width:10,depth:10}],tables:[a,b]};if(Math.abs(FloorPlan.gap(p,a,b)-0.9)>1e-8||FloorPlan.nearby(p,a).length)return false;b.x=18;return FloorPlan.nearby(p,a).length===1;})()`));
 assert(run(`(()=>{const p={version:2,rooms:[{id:'main',name:'Saved',width:12,depth:8}],tables:[],elements:[{id:'bar',type:'bar',label:'Bar',roomId:'main',x:0,y:0,width:3,depth:0.8}]};const m=FloorPlan.migrate(p);return FloorPlan.valid(m)&&m.version===3&&m.rooms[0].floor==='plain'&&m.elements[0].angle===0;})()`));
-assert.match(run("FloorArt.render({number:1,shape:'round',capacity:4})"),/furniture-chair/);assert.match(run("FloorArt.render({type:'plant'})"),/plant-pot/);
 console.log('PASS: floor rendering classes/persistence/cancel, cm sizes, colours, angle, suffix, min/max, presets, rotated bounds, 90 cm spacing, v2 migration and vector art.');
 
 // A table click opens its service sheet, never immediately opens a booking form.
@@ -96,13 +95,9 @@ confirms=true;node('tableServiceContent').children[2].children[2].fire('click');
 run('cliquerTable(2)');assert.match(node('tableServiceContent').children[1].textContent,/Aucune réservation/);
 node('tableServiceContent').children[2].fire('click');assert.equal(run('serviceTableNumber'),null);assert(!node('reservationModal').classes.has('hidden'));
 console.log('PASS: service sheet, arrivals, seating, confirmed release, next booking and free-table booking.');
-assert.equal(run("FurnitureAssets.key({number:1,shape:'square',capacity:2,color:'#8a5a29'})"),'table-square-2');
-assert.equal(run("FurnitureAssets.key({number:1,shape:'square',capacity:3,color:'#8a5a29'})"),null);
-assert.equal(run("FurnitureAssets.key({number:1,shape:'round',capacity:4,color:'#28734f'})"),null);
-assert.match(run("FurnitureAssets.render({type:'lamp',color:'#8a5a29'})"),/lamp.webp/);
 assert(run(`(()=>{const p=FloorPlan.get();const spot=FloorPlan.freeSpot(p,{roomId:'main',width:.5,depth:.5,angle:0});p.elements.push(FloorPlan.itemOptions({id:'lamp-test',type:'lamp',label:'Lampe',roomId:'main',width:.5,depth:.5,...spot}));return FloorPlan.valid(p);})()`));
 assert.equal(node('furnitureCatalog').children.length,14);
-console.log('PASS: raster selection, exact seating counts, custom-colour fallback, new furniture types and visual catalog.');
+console.log('PASS: furniture types and visual catalog.');
 // Rotating genuine geometry must preserve heights and the physical floor centre.
 assert(run(`(()=>{const p=[.5,.7,.2],r=Floor3D.rotate(p,Math.PI/2);return r[1]===p[1]&&Math.abs(r[0]-.2)<1e-9&&Math.abs(r[2]+.5)<1e-9;})()`));
 assert.notEqual(run("Floor3D.shade('#ad814f',[0,0,1])"),run("Floor3D.shade('#ad814f',[1,0,0])"));
@@ -111,9 +106,8 @@ const rotationCentre=run(`(()=>{const t=floorDraft.tables[0],b=FloorPlan.bounds(
 assert(run('rotateFloorTable(floorDraft.tables[0],90)'));
 assert(run(`(()=>{const t=floorDraft.tables[0],b=FloorPlan.bounds(t),r=floorDraft.rooms[0];return Math.abs(t.x*r.width/100+b.width/2-${rotationCentre[0]})<1e-9&&Math.abs(t.y*r.depth/100+b.depth/2-${rotationCentre[1]})<1e-9;})()`));
 run('afficherTables()');assert.match(node('tablesGrid').children[0].innerHTML,/geometry-3d/);
-node('table3DToggle').fire('click');assert.match(node('tablesGrid').children[0].innerHTML,/furniture-sprite/);
 node('rotationSnapToggle').fire('click');assert.equal(run('snapFloorRotation'),false);
-console.log('PASS: vertical-axis 3D rotation, fixed lighting, floor-centre preservation, renderer switch and free rotation.');
+console.log('PASS: vertical-axis 3D rotation, fixed lighting, floor-centre preservation, free rotation.');
 for(const type of ['bar','buffet','reception','sofa','chair','plant','lamp','wall','pillar','door','window','kitchen','toilets']) {
     for(const angle of [0,45,90,180,270]) {
         const svg=run(`Floor3D.render({type:'${type}',width:1.2,depth:.8,angle:${angle},color:'#ad814f'})`);

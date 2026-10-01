@@ -33,7 +33,6 @@ function placeFloorItem(button,item) {
     const size=FloorPlan.sizePercent(currentPlan(),item);
     button.style.left=item.x+'%';button.style.top=item.y+'%';button.style.width=size.width+'%';button.style.height=size.height+'%';
 }
-let useTable3D=true;
 let snapFloorRotation=true;
 function rotateFloorTable(table,angle){
     const room=currentPlan().rooms.find(r=>r.id===table.roomId),before=FloorPlan.bounds(table);
@@ -55,9 +54,8 @@ function addRotationHandle(button,table){
     button.append(handle);
 }
 function furnitureMarkup(item) {
-    if(useTable3D&&(item.number!==undefined||item.type!=='zone'))return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.render(item)+'</span>';
-    const box=FloorPlan.bounds(item),width=item.width/box.width*100,height=item.depth/box.depth*100;
-    return '<span class="furniture-art" style="width:'+width+'%;height:'+height+'%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg);--furniture-color:'+item.color+'">'+FurnitureAssets.render(item)+'</span>';
+    if(item.type==='zone')return '<span class="furniture-art zone-art" style="width:100%;height:100%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg)"></span>';
+    return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.render(item)+'</span>';
 }
 function setEditorAngle(prefix,value){const angle=((Math.round(Number(value)||0)%360)+360)%360;el(prefix+'AngleInput').value=angle;el(prefix+'AngleRange').value=angle;}
 function setEditorColor(prefix,color){el(prefix+'ColorInput').value=color;document.querySelectorAll('[data-owner="'+prefix+'"]').forEach(button=>button.setAttribute('aria-pressed',String(button.getAttribute('data-color')===color)));}
@@ -154,8 +152,7 @@ ouvrirAdministration = function() { roomOptions(); originalOpenManagement(); };
 document.addEventListener('DOMContentLoaded', () => {
     roomOptions(); afficherTables();
     el('rotationSnapToggle').addEventListener('click',()=>{snapFloorRotation=!snapFloorRotation;el('rotationSnapToggle').setAttribute('aria-pressed',String(snapFloorRotation));el('rotationSnapToggle').textContent=snapFloorRotation?'Rotation : 45°':'Rotation libre';});
-    el('table3DToggle').addEventListener('click',()=>{useTable3D=!useTable3D;el('table3DToggle').setAttribute('aria-pressed',String(useTable3D));afficherTables();});
-    Object.entries(elementPresets).forEach(([type,preset])=>{const button=document.createElement('button');button.type='button';button.className='catalog-item';button.innerHTML=(type==='zone'?'<span class="catalog-zone">▧</span>':'<img src="assets/furniture/'+type+'.webp" alt="" loading="lazy">')+'<span>'+preset[0]+'</span>';button.addEventListener('click',()=>{el('elementTypeInput').value=type;setElementDefaults();});el('furnitureCatalog').append(button);});
+    Object.entries(elementPresets).forEach(([type,preset])=>{const button=document.createElement('button');button.type='button';button.className='catalog-item';button.innerHTML=(type==='zone'?'<span class="catalog-zone">▧</span>':'<span class="catalog-preview">'+Floor3D.render({type,width:preset[1],depth:preset[2],angle:25})+'</span>')+'<span>'+preset[0]+'</span>';button.addEventListener('click',()=>{el('elementTypeInput').value=type;setElementDefaults();});el('furnitureCatalog').append(button);});
     el('menuBtn').addEventListener('click', () => { const open = el('serviceMenu').classList.toggle('hidden') === false; el('menuBtn').setAttribute('aria-expanded', String(open)); });
     el('serviceMenu').addEventListener('click', event => { if (event.target.closest('button')) { el('serviceMenu').classList.add('hidden'); el('menuBtn').setAttribute('aria-expanded', 'false'); } });
     el('planTab').addEventListener('click', () => setServiceView('plan')); el('listTab').addEventListener('click', () => setServiceView('list'));

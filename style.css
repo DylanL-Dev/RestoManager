@@ -1030,7 +1030,7 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
     .zoom-toolbar button { min-width:0; min-height:44px; padding:8px; overflow-wrap:anywhere; }
     .zoom-toolbar output { min-width:0; }
     #zoomFitBtn { grid-column:1 / -1; }
-    #rotationSnapToggle, #table3DToggle { grid-column:1 / -1; }
+    #rotationSnapToggle { grid-column:1 / -1; }
 }
 
 /* Physical floor dimensions, furniture and structural elements */
@@ -1183,18 +1183,14 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 #floorStage .table-capacity,#floorStage .table-status { font-size:7px; }
 
 /* Transparent rendered furniture sprites keep the same editable footprint. */
-.furniture-sprite { display:block; width:100%; height:100%; object-fit:contain; pointer-events:none; user-select:none; filter:drop-shadow(1px 3px 2px #251a1640); }
-.furniture-fallback { width:100%; height:100%; }
 #floorStage .element-lamp .element-label,#floorStage .element-chair .element-label { top:94%; font-size:8px; }
 .furniture-catalog { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin:0 0 20px; }
 .catalog-item { min-height:94px; border:1px solid #dfdfd1; border-radius:12px; background:#f6f3eb; padding:6px; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; color:#273e34; font-size:11px; cursor:pointer; }
-.catalog-item img { width:100%; height:64px; object-fit:contain; }
+.catalog-preview { width:100%; height:64px; object-fit:contain; }
 .catalog-item:hover,.catalog-item:focus-visible { outline:2px solid #198367; background:#e8f1e8; }
 .catalog-zone { font-size:36px; }
 @media(max-width:380px){.furniture-catalog{grid-template-columns:repeat(3,minmax(0,1fr));}}
 .material-note { color:#68756b; font-size:12px; line-height:1.4; margin:4px 0 12px; }
-.sprite-viewport { display:block; position:relative; width:100%; height:100%; overflow:hidden; pointer-events:none; }
-.sprite-viewport .furniture-sprite { position:absolute; max-width:none; object-fit:fill; }
 
 /* Pilot 3D tables: geometry rotates, the camera and labels do not. */
 .geometry-3d { filter:drop-shadow(1px 3px 2px #30271c40); }
@@ -1204,8 +1200,10 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 #floorStage .furniture-label::before { content:''; position:absolute; left:-3px; top:50%; width:5px; height:5px; background:#28a268; border-radius:50%; transform:translateY(-50%); }
 #floorStage .reserved .furniture-label::before { background:#d99b21; }
 #floorStage .occupied .furniture-label::before { background:#9671b0; }
-#table3DToggle[aria-pressed=true] { background:#e1f0e8; border-color:#388565; color:#195d43; }
 .rotation-handle { position:absolute; top:-16px; right:-14px; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border-radius:50%; background:#fff; border:1px solid #217d61; color:#176d51; box-shadow:0 2px 4px #0003; font-size:17px; cursor:grab; touch-action:none; z-index:4; }
 .rotation-handle:focus-visible { outline:2px solid #1b9472; outline-offset:2px; }
 .floor-canvas.editing .table-card .rotation-handle { opacity:.7; }
 .floor-canvas.editing .table-card:hover .rotation-handle { opacity:1; }
+
+.catalog-preview svg { width:100%; height:100%; }
+.zone-art { border:2px dashed #789583; background:#adcdb533; box-sizing:border-box; }
