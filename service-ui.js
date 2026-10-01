@@ -35,7 +35,7 @@ function placeFloorItem(button,item) {
 }
 function furnitureMarkup(item) {
     const box=FloorPlan.bounds(item),width=item.width/box.width*100,height=item.depth/box.depth*100;
-    return '<span class="furniture-art" style="width:'+width+'%;height:'+height+'%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg);--furniture-color:'+item.color+'">'+FloorArt.render(item)+'</span>';
+    return '<span class="furniture-art" style="width:'+width+'%;height:'+height+'%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg);--furniture-color:'+item.color+'">'+FurnitureAssets.render(item)+'</span>';
 }
 function setEditorAngle(prefix,value){const angle=((Math.round(Number(value)||0)%360)+360)%360;el(prefix+'AngleInput').value=angle;el(prefix+'AngleRange').value=angle;}
 function setEditorColor(prefix,color){el(prefix+'ColorInput').value=color;document.querySelectorAll('[data-owner="'+prefix+'"]').forEach(button=>button.setAttribute('aria-pressed',String(button.getAttribute('data-color')===color)));}
@@ -62,7 +62,7 @@ function bindFloorItem(button,item,onClick) {
     button.addEventListener('click',()=>{if(moved||FloorZoom.ignoreClick()){moved=false;return;}onClick();});
 }
 function swapDimensions(widthId,depthId){const width=el(widthId).value;el(widthId).value=el(depthId).value;el(depthId).value=width;}
-const elementPresets={bar:['Bar',3,0.8],wall:['Mur',3,0.2],door:['Porte',1,1],window:['Fenêtre',1.5,0.2],pillar:['Pilier',0.5,0.5],plant:['Plante',0.6,0.6],kitchen:['Cuisine',3,2],toilets:['Toilettes',2,1.5],zone:['Zone',3,2]};
+const elementPresets={bar:['Bar',3,0.8],wall:['Mur',3,0.2],door:['Porte',1,1],window:['Fenêtre',1.5,0.2],pillar:['Pilier',0.5,0.5],plant:['Plante',0.6,0.6],kitchen:['Cuisine',3,2],toilets:['Toilettes',2,1.5],zone:['Zone',3,2],lamp:['Lampe sur pied',0.5,0.5],chair:['Chaise',0.55,0.55],buffet:['Buffet',2.5,0.8],reception:['Accueil',1.2,0.8],sofa:['Canapé',2,0.85]};
 function setElementDefaults(){const preset=elementPresets[el('elementTypeInput').value];el('elementLabelInput').value=preset[0];el('elementWidthInput').value=Math.round(preset[1]*100);el('elementDepthInput').value=Math.round(preset[2]*100);setEditorColor('element',{plant:'#28734f',window:'#28536d',wall:'#3b4553',toilets:'#6c3187'}[el('elementTypeInput').value]||'#8a5a29');}
 function openElementEditor(id){
     selectedFloorElement=id;const item=floorDraft.elements.find(t=>t.id===id);el('elementTitle').textContent=item?'Modifier '+item.label:'Ajouter un élément';
@@ -129,6 +129,7 @@ const originalOpenManagement = ouvrirAdministration;
 ouvrirAdministration = function() { roomOptions(); originalOpenManagement(); };
 document.addEventListener('DOMContentLoaded', () => {
     roomOptions(); afficherTables();
+    Object.entries(elementPresets).forEach(([type,preset])=>{const button=document.createElement('button');button.type='button';button.className='catalog-item';button.innerHTML=(type==='zone'?'<span class="catalog-zone">▧</span>':'<img src="assets/furniture/'+type+'.webp" alt="" loading="lazy">')+'<span>'+preset[0]+'</span>';button.addEventListener('click',()=>{el('elementTypeInput').value=type;setElementDefaults();});el('furnitureCatalog').append(button);});
     el('menuBtn').addEventListener('click', () => { const open = el('serviceMenu').classList.toggle('hidden') === false; el('menuBtn').setAttribute('aria-expanded', String(open)); });
     el('serviceMenu').addEventListener('click', event => { if (event.target.closest('button')) { el('serviceMenu').classList.add('hidden'); el('menuBtn').setAttribute('aria-expanded', 'false'); } });
     el('planTab').addEventListener('click', () => setServiceView('plan')); el('listTab').addEventListener('click', () => setServiceView('list'));
@@ -199,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el('rotateTableBtn').addEventListener('click',()=>setEditorAngle('table',Number(el('tableAngleInput').value)+90));
     el('addElementBtn').addEventListener('click',()=>openElementEditor(null));
     el('closeElementBtn').addEventListener('click',()=>el('elementModal').classList.add('hidden'));
-    el('elementTypeInput').addEventListener('change',()=>{if(!selectedFloorElement)setElementDefaults();});
+    el('elementTypeInput').addEventListener('change',()=>{setElementDefaults();});
     el('rotateElementBtn').addEventListener('click',()=>setEditorAngle('element',Number(el('elementAngleInput').value)+90));
     el('elementForm').addEventListener('submit',event=>{
         event.preventDefault();const old=floorDraft.elements.find(t=>t.id===selectedFloorElement);

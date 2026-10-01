@@ -4,7 +4,7 @@
 // Retain the storage key so existing layouts migrate without being discarded.
 const FloorPlan = (() => {
     const key = 'restomanager_floor_plan_v1';
-    const elementTypes = ['bar','wall','door','window','pillar','plant','kitchen','toilets','zone'];
+    const elementTypes = ['bar','wall','door','window','pillar','plant','kitchen','toilets','zone','lamp','chair','buffet','reception','sofa'];
     const positive = n => Number.isFinite(n) && n > 0;
     function roomFor(plan, item) { return plan.rooms.find(r => r.id === item.roomId); }
     const floors=['plain','wood','tile','stone'];
