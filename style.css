@@ -1096,3 +1096,34 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 .capacity-stepper { display:flex; align-items:center; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
 .capacity-stepper input { border:0; text-align:center; min-width:0; }
 .capacity-stepper button { border:0; background:#f0f5f2; min-width:44px; font-size:22px; color:var(--primary-dark); cursor:pointer; }
+
+/* Mission 3: material furniture and tactile table service sheet. */
+.wood-base { fill:color-mix(in srgb,var(--furniture-color) 75%,#e8c799); }
+.wood-grain { fill:none; stroke:#362313; stroke-opacity:.23; stroke-width:.7; }
+.wood-highlight { fill:none; stroke:#fff3d3; stroke-opacity:.24; stroke-width:.8; }
+.furniture-top { stroke:color-mix(in srgb,var(--furniture-color) 75%,#211b15); stroke-width:1.5; filter:drop-shadow(0 2px 2px #20160d66); }
+.furniture-chair { fill:color-mix(in srgb,var(--furniture-color) 20%,#254c3f); stroke:#203a32; stroke-width:1; filter:drop-shadow(0 2px 2px #14281f70); }
+.chair-cushion { fill:#557265; stroke:#ffffff30; stroke-width:.6; }
+.furniture-line { stroke:color-mix(in srgb,var(--furniture-color) 65%,#211b15); stroke-width:1; opacity:.65; }
+.element-plant .furniture-solid { fill:var(--furniture-color); stroke:#1b4933; stroke-width:1; filter:drop-shadow(1px 2px 1px #112c2470); }
+.plant-pot { fill:#b68a61; stroke:#63462e; stroke-width:2; filter:drop-shadow(0 3px 2px #20160d55); }
+#floorStage .floor-canvas.floor-wood,.floor-choice.floor-wood { background-color:#95734f; background-image:repeating-linear-gradient(0deg,#30201645 0 1px,transparent 1px 35px,#f1d4a530 35px 36px),repeating-linear-gradient(90deg,transparent 0 118px,#35271955 118px 120px),repeating-linear-gradient(2deg,#deb99012 0 1px,transparent 1px 5px),linear-gradient(110deg,#cba77b40,#4a35282a); background-size:auto,240px 72px,auto,auto; }
+#floorStage .floor-canvas.floor-tile { background-color:#ede6da; background-image:linear-gradient(90deg,#b1a798 1px,transparent 1px),linear-gradient(#b1a798 1px,transparent 1px),linear-gradient(135deg,#ffffff45,#b6ac9b22); background-size:48px 48px,48px 48px,96px 96px; }
+#floorStage .floor-canvas.floor-stone { background-color:#b9b6ac; background-image:linear-gradient(90deg,#77786f66 1px,transparent 1px),linear-gradient(#77786f66 1px,transparent 1px),repeating-linear-gradient(25deg,#ffffff16 0 2px,transparent 2px 9px); background-size:96px 48px,96px 48px,auto; }
+#floorStage .furniture-label { background:#ffffffe0; box-shadow:0 1px 4px #34271b33; border-radius:8px; }
+#floorStage .service-selected .furniture-art { filter:drop-shadow(0 0 3px #19d4a3) drop-shadow(0 0 5px #19d4a3); }
+#floorStage .table-card:focus-visible { outline:3px solid #159577; outline-offset:3px; }
+.table-service-sheet { max-width:520px; }
+.service-room { color:#65766f; margin:0 0 14px; }
+.service-status { display:inline-block; color:#117859; background:#e0f4ea; border:1px solid #a1d9c4; border-radius:24px; padding:6px 14px; margin:0 0 18px; font-weight:600; }
+.service-booking { border:1px solid #e1e7e3; border-radius:16px; padding:18px; margin-bottom:18px; background:#fafcfb; }
+.service-booking h3 { margin:0 0 14px; font-size:16px; }
+.service-booking strong { font-size:21px; }
+.service-booking p { color:#68766f; margin:8px 0 0; }
+.service-actions { display:grid; gap:10px; margin-bottom:16px; }
+.service-edit-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px 0; border-top:1px solid #e2e8e4; }
+#tableServiceContent > .btn { width:100%; margin:8px 0; text-align:left; }
+#tableServiceContent .btn { min-height:48px; border-radius:12px; }
+#tableServiceContent .btn:disabled { opacity:.45; cursor:default; }
+.service-empty { color:#64766c; line-height:1.6; margin:8px 0 24px; }
+@media(max-width:600px) { #tableServiceModal { align-items:flex-end; padding:0; } .table-service-sheet { width:100%; border-radius:24px 24px 0 0; margin:0; padding-bottom:max(24px,env(safe-area-inset-bottom)); } }

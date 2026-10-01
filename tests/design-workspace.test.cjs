@@ -1,19 +1,19 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 class Node {
- constructor(){this.clientWidth=580;this.clientHeight=580;this.scrollLeft=0;this.scrollTop=0;this.value='';this.children=[];this.events={};this.attributes={};this.style={};this.classes=new Set();this.classList={add:(...cs)=>cs.forEach(c=>this.classes.add(c)),remove:(...cs)=>cs.forEach(c=>this.classes.delete(c)),contains:c=>this.classes.has(c),toggle:(c,force)=>{const yes=force===undefined?!this.classes.has(c):force;yes?this.classes.add(c):this.classes.delete(c);return yes}};}
+ constructor(){this.dataset={};this.clientWidth=580;this.clientHeight=580;this.scrollLeft=0;this.scrollTop=0;this.value='';this.children=[];this.events={};this.attributes={};this.style={};this.classes=new Set();this.classList={add:(...cs)=>cs.forEach(c=>this.classes.add(c)),remove:(...cs)=>cs.forEach(c=>this.classes.delete(c)),contains:c=>this.classes.has(c),toggle:(c,force)=>{const yes=force===undefined?!this.classes.has(c):force;yes?this.classes.add(c):this.classes.delete(c);return yes}};}
  addEventListener(name,fn){(this.events[name] ||= []).push(fn)}
  fire(name,event={}){for(const fn of this.events[name]||[])fn({preventDefault(){},target:this,...event})}
  append(n){this.children.push(n)} appendChild(n){this.append(n)} replaceChildren(...nodes){this.children=nodes}
  getBoundingClientRect(){return {left:0,top:0,width:580,height:580}}
  setPointerCapture(){} closest(){return null}
- setAttribute(k,v){this.attributes[k]=v} focus(){} reset(){this.value=''}
+ getAttribute(k){return this.attributes[k]} scrollIntoView(){} setAttribute(k,v){this.attributes[k]=v} focus(){} reset(){this.value=''}
  querySelector(){return new Node()} querySelectorAll(){return []}
  set innerHTML(value){this.html=value;this.children=[]} get innerHTML(){return this.html||''}
 }
 const html=fs.readFileSync('index.html','utf8');const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Node()]));
 const sections={'.tables-section':new Node(),'.reservations-section':new Node()}; const ready=[];const data=new Map();let confirms=true,alerts=[];
 const context={console,structuredClone,Date,Set,Math,crypto:require('node:crypto').webcrypto,setTimeout(){},setInterval(){},alert:m=>alerts.push(m),confirm:()=>confirms,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},document:{getElementById:id=>{assert(nodes.has(id),'Missing HTML element '+id);return nodes.get(id)},createElement:()=>new Node(),addEventListener:(e,fn)=>{if(e==='DOMContentLoaded')ready.push(fn)},querySelector:s=>sections[s]||null,querySelectorAll:()=>[]},window:{addEventListener(){}}};
-vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-art.js','service-ui.js','floor-zoom.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
+vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-art.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
 for(const fn of ready)fn();const run=s=>vm.runInContext(s,context);const node=id=>nodes.get(id);
 assert.equal(node('tablesGrid').children.length,21);assert.equal(run('TABLES.length'),21);assert.equal(run('CAPACITY[25]'),10);
 node('editPlanBtn').fire('click');node('addTableBtn').fire('click');node('tableNumberInput').value='26';node('tableCapacityInput').value='4';node('tableShapeInput').value='round';node('tableEditForm').fire('submit');assert.equal(run('floorDraft.tables.length'),22);assert.equal(run('TABLES.length'),21);
@@ -82,3 +82,17 @@ assert(run(`(()=>{const a={id:'a',roomId:'main',x:0,y:0,width:1,depth:1,angle:0}
 assert(run(`(()=>{const p={version:2,rooms:[{id:'main',name:'Saved',width:12,depth:8}],tables:[],elements:[{id:'bar',type:'bar',label:'Bar',roomId:'main',x:0,y:0,width:3,depth:0.8}]};const m=FloorPlan.migrate(p);return FloorPlan.valid(m)&&m.version===3&&m.rooms[0].floor==='plain'&&m.elements[0].angle===0;})()`));
 assert.match(run("FloorArt.render({number:1,shape:'round',capacity:4})"),/furniture-chair/);assert.match(run("FloorArt.render({type:'plant'})"),/plant-pot/);
 console.log('PASS: floor rendering classes/persistence/cancel, cm sizes, colours, angle, suffix, min/max, presets, rotated bounds, 90 cm spacing, v2 migration and vector art.');
+
+// A table click opens its service sheet, never immediately opens a booking form.
+run("floorDraft=null;floorRoom='main';reservations=[{id:'service-first',tables:[1],status:STATUS.RESERVED,guests:2,date:getServiceDate(),time:'19:00',duration:90,type:'hotel',client:'214'},{id:'service-next',tables:[1],status:STATUS.RESERVED,guests:2,date:getServiceDate(),time:'20:30',duration:60,type:'exterieur',client:'Martin'}];cliquerTable(1)");
+assert.equal(run('serviceTableNumber'),1);assert(!node('tableServiceModal').classes.has('hidden'));
+assert.equal(run('tableServiceReservations(1)[0].id'),'service-first');
+assert.equal(run('serviceEndTime(reservations[0])'),'20:30');
+let actions=node('tableServiceContent').children[2];assert(!actions.children[0].disabled);assert(actions.children[1].disabled);
+actions.children[0].fire('click');assert.equal(run('reservations[0].status'),'arrived');
+actions=node('tableServiceContent').children[2];assert(!actions.children[1].disabled);actions.children[1].fire('click');assert.equal(run('reservations[0].status'),'seated');
+confirms=false;node('tableServiceContent').children[2].children[2].fire('click');assert.equal(run('reservations[0].status'),'seated');
+confirms=true;node('tableServiceContent').children[2].children[2].fire('click');assert.equal(run('reservations[0].status'),'completed');assert.equal(run('tableServiceReservations(1)[0].id'),'service-next');
+run('cliquerTable(2)');assert.match(node('tableServiceContent').children[1].textContent,/Aucune réservation/);
+node('tableServiceContent').children[2].fire('click');assert.equal(run('serviceTableNumber'),null);assert(!node('reservationModal').classes.has('hidden'));
+console.log('PASS: service sheet, arrivals, seating, confirmed release, next booking and free-table booking.');

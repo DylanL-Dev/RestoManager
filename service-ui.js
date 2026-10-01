@@ -81,6 +81,8 @@ afficherTables = function () {
         const status = getTableStatus(table.number);
         const button = document.createElement('button'); button.type = 'button';
         button.className = 'table-card ' + status + ' shape-' + table.shape;
+        button.setAttribute('data-table-number',String(table.number));
+        button.classList.toggle('service-selected',typeof serviceTableNumber!=='undefined'&&serviceTableNumber===table.number);
         placeFloorItem(button, table);
         const r = reservations.filter(r => r.date === getServiceDate() && r.tables.includes(table.number) && ReservationEngine.isBlocking(r)).sort((a,b) => (b.status === STATUS.SEATED) - (a.status === STATUS.SEATED) || a.time.localeCompare(b.time))[0];
         const client = r ? (r.type === 'hotel' ? 'Ch. ' : '') + r.client : (table.capacityMin===table.capacity?table.capacity:table.capacityMin+'–'+table.capacity)+' places';

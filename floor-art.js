@@ -1,7 +1,8 @@
 'use strict';
 // Original vector drawings for RestoManager, with a consistent overhead style.
 const FloorArt = (() => {
-    const chair=(x,y,angle=0)=>`<g transform="translate(${x} ${y}) rotate(${angle})"><rect class="furniture-chair" x="-8" y="-5" width="16" height="10" rx="4"/><path class="furniture-line" d="M-5 -2H5"/></g>`;
+    let serial=0;
+    const chair=(x,y,angle=0)=>`<g transform="translate(${x} ${y}) rotate(${angle})"><rect class="furniture-chair" x="-8" y="-5" width="16" height="10" rx="4"/><rect class="chair-cushion" x="-6" y="-3" width="12" height="7" rx="3"/><path class="furniture-line" d="M-5 -2H5"/></g>`;
     function table(item){
         const count=Math.min(12,item.capacity),chairs=[];
         if(item.shape==='round'){
@@ -25,7 +26,12 @@ const FloorArt = (() => {
         toilets:'<rect class="furniture-top" x="3" y="3" width="94" height="94" rx="8"/><path class="furniture-line" d="M50 10V90"/><circle class="furniture-solid" cx="28" cy="27" r="7"/><circle class="furniture-solid" cx="73" cy="27" r="7"/><path class="furniture-line heavy" d="M28 42V77M17 52H39M18 82L28 67L38 82M73 43V78M62 54H84M64 82L73 67L82 82"/>',
         zone:'<rect class="furniture-zone" x="3" y="3" width="94" height="94" rx="5"/>'
     };
-    function svg(content){return '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+content+'</svg>';}
+    function svg(content){
+        const id='wood-'+(++serial);
+        const defs='<defs><pattern id="'+id+'" width="19" height="100" patternUnits="userSpaceOnUse"><rect width="19" height="100" class="wood-base"/><path class="wood-grain" d="M3 0Q8 24 3 50T3 100M11 0Q6 35 11 60T11 100M17 0V100"/><path class="wood-highlight" d="M5 0Q10 24 5 50T5 100"/></pattern></defs>';
+        content=content.replace(/class="furniture-top"/g,'class="furniture-top" style="fill:url(#'+id+')"');
+        return '<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+defs+content+'</svg>';
+    }
     function render(item){return item.number!==undefined?table(item):svg(drawings[item.type]||drawings.zone);}
     return {render};
 })();
