@@ -1210,3 +1210,15 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 
 .resize-handle { position:absolute; right:-12px; bottom:-12px; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:8px; background:#fff; border:1px solid #217d61; color:#176d51; box-shadow:0 2px 4px #0003; font-size:20px; cursor:nwse-resize; touch-action:none; z-index:5; }
 .resize-handle:focus-visible { outline:2px solid #1b9472; outline-offset:2px; }
+
+/* Group editing: consistent selection halos and readable furniture captions. */
+.selection-tools { display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:12px; margin:0 0 12px; background:#edf6f1; border:1px solid #a9cbbc; border-radius:14px; }
+.selection-tools button { min-height:44px; padding:8px 12px; border:1px solid #bad4c7; border-radius:9px; background:white; color:#225e4d; cursor:pointer; }
+.selection-tools p { width:100%; margin:0; color:#476458; font-size:13px; }
+#multiSelectBtn[aria-pressed=true] { background:#167d67; color:white; }
+#floorStage .group-selected { outline:2px solid #168970; outline-offset:5px; border-radius:9px; background:#31ac861a; box-shadow:0 0 0 5px #31ac8612; z-index:3; }
+#floorStage.multi-select .rotation-handle,#floorStage.multi-select .resize-handle { display:none; }
+#floorStage .element-label { top:100%; left:50%; right:auto; transform:translateX(-50%); width:max-content; max-width:130px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:2px 6px; border-radius:6px; font-size:9px; line-height:1.3; background:#fffcf2ee; box-shadow:0 1px 3px #0002; }
+#floorStage .element-lamp .element-label,#floorStage .element-chair .element-label,#floorStage .element-plant .element-label { top:100%; font-size:9px; }
+#floorViewport { background:#f7f5ee; box-shadow:inset 0 2px 8px #37483c0a; }
+.catalog-item { box-shadow:0 2px 5px #29473608; }

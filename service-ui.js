@@ -83,24 +83,51 @@ function setEditorColor(prefix,color){el(prefix+'ColorInput').value=color;docume
 function setEditorOptions(prefix,item){setEditorAngle(prefix,item?.angle||0);setEditorColor(prefix,item?.color||'#8a5a29');}
 function setFloorChoice(floor){roomFloorChoice=floor;['plain','wood','tile','stone'].forEach(key=>el('floor'+key[0].toUpperCase()+key.slice(1)+'Btn').setAttribute('aria-pressed',String(floor===key)));}
 function spacingDescription(plan,table){const nearby=FloorPlan.nearby(plan,table);return nearby.length?'Espace à vérifier : moins de 90 cm de '+nearby.map(p=>'T'+p.table.number+(p.table.letter||'')+' ('+Math.round(p.gap*100)+' cm)').join(', ')+'.':'';}
+let multiSelectMode=false;
+const floorSelection=new Set();
+function selectedRoomItems(){return currentPlan().tables.concat(currentPlan().elements).filter(t=>t.roomId===floorRoom&&floorSelection.has(t.id));}
+function refreshFloorSelection(){
+    const items=currentPlan().tables.concat(currentPlan().elements).filter(t=>t.roomId===floorRoom);
+    for(const id of floorSelection)if(!floorDraft||!items.some(t=>t.id===id))floorSelection.delete(id);
+    for(const button of el('tablesGrid').children){const selected=floorSelection.has(button.getAttribute('data-floor-id'));button.classList.toggle('group-selected',selected);if(multiSelectMode)button.setAttribute('aria-pressed',String(selected));}
+    el('multiSelectBtn').setAttribute('aria-pressed',String(multiSelectMode));
+    el('selectionCount').textContent=floorSelection.size+' sélectionné'+(floorSelection.size>1?'s':'');
+    el('selectionTools').classList.toggle('hidden',!floorDraft||!multiSelectMode);
+    el('tablesGrid').classList.toggle('multi-select',multiSelectMode&&!!floorDraft);
+}
+function moveFloorGroup(items,origins,dx,dy){
+    const room=currentPlan().rooms.find(r=>r.id===floorRoom);
+    let minX=-Infinity,maxX=Infinity,minY=-Infinity,maxY=Infinity;
+    items.forEach((t,i)=>{const box=FloorPlan.bounds(t),p=origins[i];minX=Math.max(minX,-p.x);minY=Math.max(minY,-p.y);maxX=Math.min(maxX,100-box.width/room.width*100-p.x);maxY=Math.min(maxY,100-box.depth/room.depth*100-p.y);});
+    dx=Math.max(minX,Math.min(maxX,dx));dy=Math.max(minY,Math.min(maxY,dy));
+    items.forEach((t,i)=>{t.x=origins[i].x+dx;t.y=origins[i].y+dy;});
+    for(const button of el('tablesGrid').children){const item=items.find(t=>t.id===button.getAttribute('data-floor-id'));if(item)placeFloorItem(button,item);}
+}
 function bindFloorItem(button,item,onClick) {
+    button.setAttribute('data-floor-id',item.id);
     const grid=el('tablesGrid');let drag=null,moved=false;
-    const move=(x,y)=>{const size=FloorPlan.sizePercent(currentPlan(),item);item.x=Math.max(0,Math.min(100-size.width,x));item.y=Math.max(0,Math.min(100-size.height,y));placeFloorItem(button,item);};
     button.addEventListener('pointerdown',event=>{
-        if(!floorDraft||event.button!==0)return;const rect=grid.getBoundingClientRect();drag={x:event.clientX,y:event.clientY,tx:item.x,ty:item.y,rect};moved=false;button.setPointerCapture(event.pointerId);
+        moved=false;
+        if(!floorDraft||event.button!==0||event.shiftKey||event.ctrlKey||event.metaKey)return;
+        if(multiSelectMode&&!floorSelection.has(item.id))return;
+        const items=floorSelection.has(item.id)?selectedRoomItems():[item];
+        drag={x:event.clientX,y:event.clientY,items,origins:items.map(t=>({x:t.x,y:t.y})),rect:grid.getBoundingClientRect()};button.setPointerCapture(event.pointerId);
     });
     button.addEventListener('pointermove',event=>{
         if(!drag)return;if(FloorZoom.isPinching()){drag=null;moved=true;return;}
         const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)<6&&!moved)return;moved=true;
-        move(drag.tx+dx/drag.rect.width*100,drag.ty+dy/drag.rect.height*100);
+        moveFloorGroup(drag.items,drag.origins,dx/drag.rect.width*100,dy/drag.rect.height*100);
     });
-    button.addEventListener('pointerup',()=>{drag=null;});button.addEventListener('pointercancel',()=>{drag=null;});
+    button.addEventListener('pointerup',()=>{drag=null;});button.addEventListener('pointercancel',()=>{drag=null;moved=true;});
     button.addEventListener('keydown',event=>{
         if(!floorDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();
-        const room=currentPlan().rooms.find(r=>r.id===item.roomId);
-        move(item.x+(event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0)*10/room.width,item.y+(event.key==='ArrowDown'?1:event.key==='ArrowUp'?-1:0)*10/room.depth);
+        const room=currentPlan().rooms.find(r=>r.id===item.roomId),items=floorSelection.has(item.id)?selectedRoomItems():[item];
+        moveFloorGroup(items,items.map(t=>({x:t.x,y:t.y})),(event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0)*10/room.width,(event.key==='ArrowDown'?1:event.key==='ArrowUp'?-1:0)*10/room.depth);
     });
-    button.addEventListener('click',()=>{if(moved||FloorZoom.ignoreClick()){moved=false;return;}onClick();});
+    button.addEventListener('click',event=>{if(moved||FloorZoom.ignoreClick()){moved=false;return;}
+        if(floorDraft&&(multiSelectMode||event.shiftKey||event.ctrlKey||event.metaKey)){multiSelectMode=true;floorSelection.has(item.id)?floorSelection.delete(item.id):floorSelection.add(item.id);refreshFloorSelection();return;}
+        onClick();
+    });
 }
 function swapDimensions(widthId,depthId){const width=el(widthId).value;el(widthId).value=el(depthId).value;el(depthId).value=width;}
 const elementPresets={bar:['Bar',3,0.8],wall:['Mur',3,0.2],door:['Porte',1,1],window:['Fenêtre',1.5,0.2],pillar:['Pilier',0.5,0.5],plant:['Plante',0.6,0.6],kitchen:['Cuisine',3,2],toilets:['Toilettes',2,1.5],zone:['Zone',3,2],lamp:['Lampe sur pied',0.5,0.5],chair:['Chaise',0.55,0.55],buffet:['Buffet',2.5,0.8],reception:['Accueil',1.2,0.8],sofa:['Canapé',2,0.85]};
@@ -116,6 +143,7 @@ afficherTables = function () {
     const plan=currentPlan();
     const grid = el('tablesGrid'); grid.replaceChildren();
     const editing = !!floorDraft;
+    if(!editing){multiSelectMode=false;floorSelection.clear();}
     grid.classList.toggle('editing', editing); el('editorBar').classList.toggle('hidden', !editing);
     el('rotationSnapToggle').classList.toggle('hidden', !editing);
     el('floorHint').textContent = editing ? 'Glissez pour déplacer. Tirez ↘ pour changer la taille. Touchez pour modifier.' : 'Touchez une table pour ouvrir sa fiche.';
@@ -143,6 +171,7 @@ afficherTables = function () {
         else { button.disabled=true; }
         grid.append(button);
     });
+    refreshFloorSelection();
     const room=plan.rooms.find(r=>r.id===floorRoom);
     el('roomDimensionsLabel').textContent=room.width+' × '+room.depth+' m';
     ['plain','wood','tile','stone'].forEach(key=>grid.classList.toggle('floor-'+key,room.floor===key));
@@ -172,6 +201,9 @@ const originalOpenManagement = ouvrirAdministration;
 ouvrirAdministration = function() { roomOptions(); originalOpenManagement(); };
 document.addEventListener('DOMContentLoaded', () => {
     roomOptions(); afficherTables();
+    el('multiSelectBtn').addEventListener('click',()=>{multiSelectMode=!multiSelectMode;if(!multiSelectMode)floorSelection.clear();refreshFloorSelection();});
+    el('selectAllFloorBtn').addEventListener('click',()=>{currentPlan().tables.concat(currentPlan().elements).filter(t=>t.roomId===floorRoom).forEach(t=>floorSelection.add(t.id));refreshFloorSelection();});
+    el('clearFloorSelectionBtn').addEventListener('click',()=>{floorSelection.clear();refreshFloorSelection();});
     el('rotationSnapToggle').addEventListener('click',()=>{snapFloorRotation=!snapFloorRotation;el('rotationSnapToggle').setAttribute('aria-pressed',String(snapFloorRotation));el('rotationSnapToggle').textContent=snapFloorRotation?'Rotation : 45°':'Rotation libre';});
     Object.entries(elementPresets).forEach(([type,preset])=>{const button=document.createElement('button');button.type='button';button.className='catalog-item';button.innerHTML=(type==='zone'?'<span class="catalog-zone">▧</span>':'<span class="catalog-preview">'+Floor3D.render({type,width:preset[1],depth:preset[2],angle:25})+'</span>')+'<span>'+preset[0]+'</span>';button.addEventListener('click',()=>{el('elementTypeInput').value=type;setElementDefaults();});el('furnitureCatalog').append(button);});
     el('menuBtn').addEventListener('click', () => { const open = el('serviceMenu').classList.toggle('hidden') === false; el('menuBtn').setAttribute('aria-expanded', String(open)); });

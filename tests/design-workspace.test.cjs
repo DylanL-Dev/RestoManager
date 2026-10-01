@@ -144,3 +144,21 @@ confirms=false;node('startSimplePlanBtn').fire('click');assert.equal(run('floorD
 confirms=true;node('startSimplePlanBtn').fire('click');assert.equal(run("floorDraft.tables.filter(t=>t.roomId==='main').length"),1);assert.equal(run('FloorPlan.get().tables.length'),simpleSavedCount);
 node('addTableBtn').fire('click');assert.equal(Number(node('tableNumberInput').value),2);
 console.log('PASS: single-table defaults, reversible one-table restart and progressive numbering.');
+// Advance past the earlier pinch suppression interval before testing fresh clicks.
+context.Date=class extends Date { static now(){return Date.now()+1000;} };
+// A mixed selection moves as a rigid group, including against room edges.
+run(`floorDraft=FloorPlan.get();floorRoom='main';multiSelectMode=false;floorSelection.clear();floorDraft.tables[0].x=10;floorDraft.tables[0].y=10;floorDraft.elements.push(FloorPlan.itemOptions({id:'group-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:35,y:25,angle:45}));afficherTables();`);
+node('multiSelectBtn').fire('click');
+const firstGroupTable=node('tablesGrid').children.find(n=>n.getAttribute('data-table-number')==='1');
+const groupPlant=node('tablesGrid').children.find(n=>n.getAttribute('data-floor-id')==='group-plant');
+firstGroupTable.fire('click');groupPlant.fire('click');assert.equal(run('floorSelection.size'),2);
+assert(firstGroupTable.classes.has('group-selected'));assert(groupPlant.classes.has('group-selected'));
+firstGroupTable.fire('pointerdown',{button:0,clientX:100,clientY:100,pointerId:4});
+firstGroupTable.fire('pointermove',{clientX:158,clientY:158});firstGroupTable.fire('pointerup');firstGroupTable.fire('click');
+assert.equal(run('floorDraft.tables[0].x'),20);assert.equal(run("floorDraft.elements.find(t=>t.id==='group-plant').x"),45);assert.equal(run('floorSelection.size'),2);
+run(`(()=>{const items=selectedRoomItems();moveFloorGroup(items,items.map(t=>({x:t.x,y:t.y})),1000,1000);})()`);
+assert(run("selectedRoomItems().every(t=>FloorPlan.inside(floorDraft,t))"));
+assert(Math.abs(run("floorDraft.elements.find(t=>t.id==='group-plant').x-floorDraft.tables[0].x")-25)<1e-9);
+confirms=true;node('cancelPlanBtn').fire('click');assert.equal(run('floorSelection.size'),0);assert.equal(run('multiSelectMode'),false);
+assert(!run("FloorPlan.get().elements.some(t=>t.id==='group-plant')"));
+console.log('PASS: mixed multi-selection, pointer group drag, preserved spacing, room boundary clamp and cancel.');
