@@ -63,15 +63,30 @@ function resizeFloorItem(item,factor,initial=item){
     if(!FloorPlan.inside(currentPlan(),candidate))return false;
     Object.assign(item,candidate);return true;
 }
+function resizeFloorGroup(items,initials,factor){
+    if(!items.length||!Number.isFinite(factor))return false;
+    const room=currentPlan().rooms.find(r=>r.id===items[0].roomId);
+    const x=Math.min(...initials.map(t=>t.x)),y=Math.min(...initials.map(t=>t.y));
+    const width=Math.max(...initials.map(t=>(t.x-x)*room.width/100+FloorPlan.bounds(t).width));
+    const depth=Math.max(...initials.map(t=>(t.y-y)*room.depth/100+FloorPlan.bounds(t).depth));
+    const min=Math.max(...initials.map(t=>Math.max(.1/t.width,.1/t.depth)));
+    const max=Math.min((room.width-x*room.width/100)/width,(room.depth-y*room.depth/100)/depth);
+    if(max<min)return false;
+    factor=Math.max(min,Math.min(max,factor));
+    const candidates=initials.map(t=>({...t,x:x+(t.x-x)*factor,y:y+(t.y-y)*factor,width:t.width*factor,depth:t.depth*factor}));
+    if(!candidates.every(t=>FloorPlan.inside(currentPlan(),t)))return false;
+    items.forEach((t,i)=>Object.assign(t,candidates[i]));return true;
+}
 function addResizeHandle(button,item){
     const handle=document.createElement('span');handle.className='resize-handle';handle.textContent='↘';handle.setAttribute('role','button');handle.setAttribute('tabindex','0');handle.setAttribute('aria-label',item.number!==undefined?'Redimensionner la table '+item.number:'Redimensionner '+item.label);
     let gesture=null;
-    const paint=()=>{placeFloorItem(button,item);button.querySelector('.furniture-art').outerHTML=furnitureMarkup(item);handle.setAttribute('aria-valuetext',Math.round(item.width*100)+' × '+Math.round(item.depth*100)+' cm');};
-    handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();if(event.button!==0)return;const rect=button.getBoundingClientRect();gesture={initial:{...item},x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};handle.setPointerCapture(event.pointerId);});
-    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorItem(item,factor,g.initial))paint();});
+    const targets=()=>multiSelectMode&&floorSelection.has(item.id)?selectedRoomItems():[item];
+    const paint=()=>{for(const child of el('tablesGrid').children){const t=targets().find(t=>t.id===child.getAttribute('data-floor-id'));if(t){placeFloorItem(child,t);child.querySelector('.furniture-art').outerHTML=furnitureMarkup(t);}}};
+    handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();if(event.button!==0)return;const rect=button.getBoundingClientRect();gesture={items:targets(),initials:targets().map(t=>({...t})),x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};handle.setPointerCapture(event.pointerId);});
+    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorGroup(g.items,g.initials,factor))paint();});
     ['pointerup','pointercancel'].forEach(name=>handle.addEventListener(name,event=>{event.stopPropagation();gesture=null;}));
     handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
-    handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();if(resizeFloorItem(item,['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05))paint();});
+    handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();const items=targets();if(resizeFloorGroup(items,items.map(t=>({...t})),['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05))paint();});
     button.append(handle);
 }
 function furnitureMarkup(item) {

@@ -162,3 +162,16 @@ assert(Math.abs(run("floorDraft.elements.find(t=>t.id==='group-plant').x-floorDr
 confirms=true;node('cancelPlanBtn').fire('click');assert.equal(run('floorSelection.size'),0);assert.equal(run('multiSelectMode'),false);
 assert(!run("FloorPlan.get().elements.some(t=>t.id==='group-plant')"));
 console.log('PASS: mixed multi-selection, pointer group drag, preserved spacing, room boundary clamp and cancel.');
+run(`floorDraft=FloorPlan.get();floorRoom='main';multiSelectMode=true;floorSelection.clear();Object.assign(floorDraft.tables[0],{x:10,y:10,width:1,depth:1,angle:45});floorDraft.elements.push(FloorPlan.itemOptions({id:'scale-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:30,y:25,angle:90}));floorSelection.add(floorDraft.tables[0].id);floorSelection.add('scale-plant');afficherTables();`);
+const scaleHandle=node('tablesGrid').children[0].children.find(n=>n.className==='resize-handle');
+scaleHandle.fire('pointerdown',{button:0,clientX:0,clientY:0,pointerId:2,stopPropagation(){}});
+scaleHandle.fire('pointermove',{clientX:290,clientY:290,stopPropagation(){}});
+scaleHandle.fire('pointerup',{stopPropagation(){}});
+assert.equal(run('floorDraft.tables[0].width'),1.5);
+assert(Math.abs(run("floorDraft.elements.find(t=>t.id==='scale-plant').width")-.9)<1e-9);
+assert.equal(run("floorDraft.elements.find(t=>t.id==='scale-plant').x"),40);
+assert.equal(run('floorDraft.tables[0].angle'),45);
+assert(run(`(()=>{const a=selectedRoomItems();return resizeFloorGroup(a,a.map(t=>({...t})),.5);})()`));
+assert.equal(run('floorDraft.tables[0].width'),.75);
+assert(run(`(()=>{const a=selectedRoomItems();resizeFloorGroup(a,a.map(t=>({...t})),1000);return a.every(t=>FloorPlan.inside(floorDraft,t));})()`));
+console.log('PASS: group resize pointer gesture, shared scale, spacing, rotations and room bounds.');

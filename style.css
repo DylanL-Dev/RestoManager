@@ -1222,3 +1222,5 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 #floorStage .element-lamp .element-label,#floorStage .element-chair .element-label,#floorStage .element-plant .element-label { top:100%; font-size:9px; }
 #floorViewport { background:#f7f5ee; box-shadow:inset 0 2px 8px #37483c0a; }
 .catalog-item { box-shadow:0 2px 5px #29473608; }
+
+#floorStage.multi-select .group-selected .resize-handle { display:flex; background:#167d67; color:white; border-color:white; }
