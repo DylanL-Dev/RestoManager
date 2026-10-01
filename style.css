@@ -1018,13 +1018,20 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 @media(prefers-reduced-motion:reduce) { * { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
 
 /* Zoom changes only the view, never stored table positions. */
-.zoom-toolbar { display:flex; gap:6px; align-items:center; margin-bottom:12px; }
+.zoom-toolbar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; max-width:100%; min-width:0; margin-bottom:12px; }
 .zoom-toolbar button { border:1px solid var(--border); border-radius:9px; background:#fff; color:var(--dark); padding:8px 14px; cursor:pointer; }
 .zoom-toolbar output { min-width:64px; text-align:center; font-size:13px; color:var(--muted); font-variant-numeric:tabular-nums; }
 #floorViewport { max-height:580px; touch-action:pan-x pan-y; overscroll-behavior:contain; }
 #floorStage { position:relative; overflow:hidden; }
 #floorStage .floor-canvas { min-width:0; transform-origin:top left; }
-@media(max-width:600px) { #floorViewport { max-height:65dvh; } }
+@media(max-width:600px) {
+    #floorViewport { max-height:65dvh; max-width:100%; min-width:0; }
+    .zoom-toolbar { display:grid; grid-template-columns:44px minmax(0,1fr) 44px; }
+    .zoom-toolbar button { min-width:0; min-height:44px; padding:8px; overflow-wrap:anywhere; }
+    .zoom-toolbar output { min-width:0; }
+    #zoomFitBtn { grid-column:1 / -1; }
+    #rotationSnapToggle, #table3DToggle { grid-column:1 / -1; }
+}
 
 /* Physical floor dimensions, furniture and structural elements */
 .dimension-fields { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
