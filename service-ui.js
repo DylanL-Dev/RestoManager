@@ -33,7 +33,29 @@ function placeFloorItem(button,item) {
     const size=FloorPlan.sizePercent(currentPlan(),item);
     button.style.left=item.x+'%';button.style.top=item.y+'%';button.style.width=size.width+'%';button.style.height=size.height+'%';
 }
+let useTable3D=true;
+let snapFloorRotation=true;
+function rotateFloorTable(table,angle){
+    const room=currentPlan().rooms.find(r=>r.id===table.roomId),before=FloorPlan.bounds(table);
+    const candidate={...table,angle:((Math.round(angle)%360)+360)%360},after=FloorPlan.bounds(candidate);
+    candidate.x+=((before.width-after.width)/2)/room.width*100;
+    candidate.y+=((before.depth-after.depth)/2)/room.depth*100;
+    if(!FloorPlan.inside(currentPlan(),candidate))return false;
+    Object.assign(table,candidate);return true;
+}
+function addRotationHandle(button,table){
+    const handle=document.createElement('span');handle.className='rotation-handle';handle.textContent='↻';handle.setAttribute('role','button');handle.setAttribute('tabindex','0');handle.setAttribute('aria-label','Tourner la table '+table.number);
+    let gesture=null;
+    const paint=()=>{placeFloorItem(button,table);button.querySelector('.furniture-art').outerHTML=furnitureMarkup(table);};
+    handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();const rect=button.getBoundingClientRect();gesture={angle:table.angle||0,x:rect.left+rect.width/2,y:rect.top+rect.height/2};gesture.start=Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x);handle.setPointerCapture(event.pointerId);});
+    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const delta=(Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x)-gesture.start)*180/Math.PI;let angle=gesture.angle+delta;if(snapFloorRotation)angle=Math.round(angle/45)*45;if(rotateFloorTable(table,angle))paint();});
+    handle.addEventListener('pointerup',event=>{event.stopPropagation();gesture=null;});handle.addEventListener('pointercancel',()=>{gesture=null;});
+    handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
+    handle.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.stopPropagation();event.preventDefault();if(rotateFloorTable(table,(table.angle||0)+(event.key==='ArrowRight'?1:-1)*(snapFloorRotation?45:5)))paint();});
+    button.append(handle);
+}
 function furnitureMarkup(item) {
+    if(useTable3D&&item.number!==undefined)return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.render(item)+'</span>';
     const box=FloorPlan.bounds(item),width=item.width/box.width*100,height=item.depth/box.depth*100;
     return '<span class="furniture-art" style="width:'+width+'%;height:'+height+'%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg);--furniture-color:'+item.color+'">'+FurnitureAssets.render(item)+'</span>';
 }
@@ -90,6 +112,7 @@ afficherTables = function () {
         button.classList.toggle('close-spacing',editing&&FloorPlan.nearby(plan,table).length>0);
         button.setAttribute('aria-label', 'Table ' + table.number + ', ' + table.capacity + ' places, ' + (r ? texteStatut(r.status) + ', ' + client : 'libre'));
         bindFloorItem(button, table, () => { if (floorDraft) openTableEditor(table.id); else cliquerTable(table.number); });
+        if(editing)addRotationHandle(button,table);
         grid.append(button);
     });
     plan.elements.filter(item=>item.roomId===floorRoom).forEach(item=> {
@@ -129,6 +152,8 @@ const originalOpenManagement = ouvrirAdministration;
 ouvrirAdministration = function() { roomOptions(); originalOpenManagement(); };
 document.addEventListener('DOMContentLoaded', () => {
     roomOptions(); afficherTables();
+    el('rotationSnapToggle').addEventListener('click',()=>{snapFloorRotation=!snapFloorRotation;el('rotationSnapToggle').setAttribute('aria-pressed',String(snapFloorRotation));el('rotationSnapToggle').textContent=snapFloorRotation?'Rotation : 45°':'Rotation libre';});
+    el('table3DToggle').addEventListener('click',()=>{useTable3D=!useTable3D;el('table3DToggle').setAttribute('aria-pressed',String(useTable3D));afficherTables();});
     Object.entries(elementPresets).forEach(([type,preset])=>{const button=document.createElement('button');button.type='button';button.className='catalog-item';button.innerHTML=(type==='zone'?'<span class="catalog-zone">▧</span>':'<img src="assets/furniture/'+type+'.webp" alt="" loading="lazy">')+'<span>'+preset[0]+'</span>';button.addEventListener('click',()=>{el('elementTypeInput').value=type;setElementDefaults();});el('furnitureCatalog').append(button);});
     el('menuBtn').addEventListener('click', () => { const open = el('serviceMenu').classList.toggle('hidden') === false; el('menuBtn').setAttribute('aria-expanded', String(open)); });
     el('serviceMenu').addEventListener('click', event => { if (event.target.closest('button')) { el('serviceMenu').classList.add('hidden'); el('menuBtn').setAttribute('aria-expanded', 'false'); } });

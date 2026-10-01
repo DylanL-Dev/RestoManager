@@ -13,7 +13,7 @@ class Node {
 const html=fs.readFileSync('index.html','utf8');const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Node()]));
 const sections={'.tables-section':new Node(),'.reservations-section':new Node()}; const ready=[];const data=new Map();let confirms=true,alerts=[];
 const context={console,structuredClone,Date,Set,Math,crypto:require('node:crypto').webcrypto,setTimeout(){},setInterval(){},alert:m=>alerts.push(m),confirm:()=>confirms,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},document:{getElementById:id=>{assert(nodes.has(id),'Missing HTML element '+id);return nodes.get(id)},createElement:()=>new Node(),addEventListener:(e,fn)=>{if(e==='DOMContentLoaded')ready.push(fn)},querySelector:s=>sections[s]||null,querySelectorAll:()=>[]},window:{addEventListener(){}}};
-vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-art.js','furniture-assets.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
+vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-art.js','furniture-assets.js','floor-3d.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
 for(const fn of ready)fn();const run=s=>vm.runInContext(s,context);const node=id=>nodes.get(id);
 assert.equal(node('tablesGrid').children.length,21);assert.equal(run('TABLES.length'),21);assert.equal(run('CAPACITY[25]'),10);
 node('editPlanBtn').fire('click');node('addTableBtn').fire('click');node('tableNumberInput').value='26';node('tableCapacityInput').value='4';node('tableShapeInput').value='round';node('tableEditForm').fire('submit');assert.equal(run('floorDraft.tables.length'),22);assert.equal(run('TABLES.length'),21);
@@ -103,3 +103,14 @@ assert.match(run("FurnitureAssets.render({type:'lamp',color:'#8a5a29'})"),/lamp.
 assert(run(`(()=>{const p=FloorPlan.get();const spot=FloorPlan.freeSpot(p,{roomId:'main',width:.5,depth:.5,angle:0});p.elements.push(FloorPlan.itemOptions({id:'lamp-test',type:'lamp',label:'Lampe',roomId:'main',width:.5,depth:.5,...spot}));return FloorPlan.valid(p);})()`));
 assert.equal(node('furnitureCatalog').children.length,14);
 console.log('PASS: raster selection, exact seating counts, custom-colour fallback, new furniture types and visual catalog.');
+// Rotating genuine geometry must preserve heights and the physical floor centre.
+assert(run(`(()=>{const p=[.5,.7,.2],r=Floor3D.rotate(p,Math.PI/2);return r[1]===p[1]&&Math.abs(r[0]-.2)<1e-9&&Math.abs(r[2]+.5)<1e-9;})()`));
+assert.notEqual(run("Floor3D.shade('#ad814f',[0,0,1])"),run("Floor3D.shade('#ad814f',[1,0,0])"));
+run("floorDraft=FloorPlan.get();floorRoom='main';");
+const rotationCentre=run(`(()=>{const t=floorDraft.tables[0],b=FloorPlan.bounds(t),r=floorDraft.rooms[0];return [t.x*r.width/100+b.width/2,t.y*r.depth/100+b.depth/2];})()`);
+assert(run('rotateFloorTable(floorDraft.tables[0],90)'));
+assert(run(`(()=>{const t=floorDraft.tables[0],b=FloorPlan.bounds(t),r=floorDraft.rooms[0];return Math.abs(t.x*r.width/100+b.width/2-${rotationCentre[0]})<1e-9&&Math.abs(t.y*r.depth/100+b.depth/2-${rotationCentre[1]})<1e-9;})()`));
+run('afficherTables()');assert.match(node('tablesGrid').children[0].innerHTML,/geometry-3d/);
+node('table3DToggle').fire('click');assert.match(node('tablesGrid').children[0].innerHTML,/furniture-sprite/);
+node('rotationSnapToggle').fire('click');assert.equal(run('snapFloorRotation'),false);
+console.log('PASS: vertical-axis 3D rotation, fixed lighting, floor-centre preservation, renderer switch and free rotation.');
