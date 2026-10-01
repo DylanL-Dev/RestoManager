@@ -1127,3 +1127,50 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 #tableServiceContent .btn:disabled { opacity:.45; cursor:default; }
 .service-empty { color:#64766c; line-height:1.6; margin:8px 0 24px; }
 @media(max-width:600px) { #tableServiceModal { align-items:flex-end; padding:0; } .table-service-sheet { width:100%; border-radius:24px 24px 0 0; margin:0; padding-bottom:max(24px,env(safe-area-inset-bottom)); } }
+
+/* Sculpted furniture: raised surfaces, upholstery and warm metal details. */
+.ground-shadow { fill:#211c13; opacity:.22; filter:blur(3px); }
+.furniture-shadow { fill:#18271e; opacity:.3; filter:blur(1.5px); }
+.table-edge { fill:color-mix(in srgb,var(--furniture-color) 60%,#352315); stroke:#51351f; stroke-width:1; }
+.table-legs { stroke:#463224; stroke-width:5; stroke-linecap:round; }
+.volume-art .furniture-top { stroke:#e5c9a080; stroke-width:1; filter:drop-shadow(1px 2px 1px #281a1355); }
+.chair-frame { fill:#253d32; stroke:#17281f; stroke-width:.7; }
+.volume-art .chair-cushion { fill:#ffffff10; stroke:#b6c5ab40; stroke-width:.8; }
+.chair-back { fill:none; stroke:#8ba18d; stroke-width:3; stroke-linecap:round; }
+.material-glint { fill:none; stroke:#e4ead750; stroke-width:.8; }
+.seat-seam { stroke:#a2bca980; stroke-width:.8; }
+.plate-shadow { fill:#322718; opacity:.3; }
+.table-plate,.ceramic { fill:#f7f4e9; stroke:#c7c4b7; stroke-width:.7; }
+.plate-rim { fill:#fffdf3; stroke:#c8c5b2; stroke-width:.4; }
+.cutlery { fill:none; stroke:#e4e3d9; stroke-width:.7; }
+.table-glass { fill:#e0f1e78a; stroke:#f3fff4; stroke-width:.6; }
+.bar-panel { fill:#573d2b; stroke:#c19758; stroke-width:.7; }
+.brass-rail { fill:none; stroke:#d6b16b; stroke-width:2; }
+.volume-art .plant-pot { fill:#c0a27c; stroke:#f0d8af; stroke-width:2; }
+.pot-soil { fill:#3d3020; }
+.volume-art .plant-leaf { stroke:#284e2880; stroke-width:.7; filter:drop-shadow(1px 2px 1px #142e2460); }
+.leaf-vein { fill:none; stroke:#c1d89d80; stroke-width:.7; }
+.wall-side { fill:color-mix(in srgb,var(--furniture-color) 50%,#756d61); }
+.wall-top { fill:color-mix(in srgb,var(--furniture-color) 12%,#e7e0ce); stroke:#b9ad98; stroke-width:1; }
+.wall-highlight { fill:none; stroke:#fff6e6; stroke-width:2; }
+.pillar-inset { fill:#ffffff22; stroke:#8c806a55; }
+.door-swing { fill:#caad6c16; stroke:#9c825b; stroke-width:1; stroke-dasharray:4 3; }
+.door-frame { fill:none; stroke:#90785b; stroke-width:5; }
+.door-panel { fill:var(--furniture-color); stroke:#d8b586; stroke-width:1; }
+.door-handle { fill:#dfb764; }
+.window-frame { fill:#e0d5bc; stroke:#8e8777; stroke-width:1; }
+.window-glass { fill:#90c5d2aa; stroke:#e0f0eb; }
+.window-shine { fill:none; stroke:#ffffff55; stroke-width:7; }
+.window-divider { fill:none; stroke:#f1e9d8; stroke-width:4; }
+.window-sill { fill:#e2d4b8; stroke:#b1a590; }
+.metal-side { fill:#7b8887; }
+.metal-top { fill:#c7d3d0; stroke:#edf1e7; stroke-width:1; }
+.hob { fill:#263432; stroke:#768681; }
+.burner { fill:#131c1c; stroke:#909e94; stroke-width:1.5; }
+.sink { fill:#8b9b98; stroke:#f0f4e9; stroke-width:2; }
+.tap { fill:none; stroke:#f3f5e9; stroke-width:3; }
+.cabinet-line { fill:none; stroke:#879995; stroke-width:1; }
+.toilet-bowl { fill:#bccfca; stroke:#fffef1; stroke-width:2; }
+#floorStage .element-plant .element-label { top:95%; font-size:8px; }
+#floorStage .furniture-label { inset:34% 22%; background:#fffcf0ec; border-radius:50%; padding:2px; }
+#floorStage .table-capacity,#floorStage .table-status { font-size:7px; }
