@@ -9,6 +9,19 @@ const Floor3D=(()=>{
  function model(item){
   const faces=[],wood=item.color||'#ad814f',green='#39745b',leg='#604530';
   const face=(points,normal,color)=>faces.push({points,normal,color});
+  const tint=(hex,k)=>'#'+[1,3,5].map(i=>Math.min(255,Math.round(parseInt(hex.slice(i,i+2),16)*k)).toString(16).padStart(2,'0')).join('');
+  // Three rounded rings form a bevel; normals keep highlights fixed in world space.
+  const softBox=(x,y,z,w,h,d,color,r=Math.min(w,d)*.12)=>{
+   r=Math.min(r,w*.45,d*.45);const bevel=Math.min(h*.22,r*.4);
+   const ring=(inset,height)=>{const rw=w/2-inset,rd=d/2-inset,rr=Math.max(.001,r-inset),out=[];
+    for(let corner=0;corner<4;corner++){const a0=corner*Math.PI/2,cx=(corner===0||corner===3?1:-1)*(rw-rr),cz=(corner<2?1:-1)*(rd-rr);
+     for(let j=0;j<=3;j++){const a=a0+j*Math.PI/6;out.push([x+cx+Math.cos(a)*rr,height,z+cz+Math.sin(a)*rr]);}}
+    return out;
+   };
+   const rings=[ring(bevel,y-h/2),ring(0,y+h/2-bevel),ring(bevel,y+h/2)];
+   face(rings[2],[0,1,0],color);
+   for(let k=0;k<2;k++)for(let i=0;i<16;i++){const j=(i+1)%16,p=rings[k][i],q=rings[k][j],u=rings[k+1][i],a=q.map((v,n)=>v-p[n]),b=u.map((v,n)=>v-p[n]);let n=[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];const len=Math.hypot(...n)||1;n=n.map(v=>-v/len);face([p,q,rings[k+1][j],u],n,k?tint(color,1.1):color);}
+  };
   const box=(x,y,z,w,h,d,color)=>{
    const p=[[-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1],[-1,1,-1],[1,1,-1],[1,1,1],[-1,1,1]].map(q=>[x+q[0]*w/2,y+q[1]*h/2,z+q[2]*d/2]);
    [[[4,7,6,5],[0,1,0]],[[0,1,2,3],[0,-1,0]],[[0,4,5,1],[0,0,-1]],[[3,2,6,7],[0,0,1]],[[0,3,7,4],[-1,0,0]],[[1,5,6,2],[1,0,0]]].forEach(([ids,n])=>face(ids.map(i=>p[i]),n,color));
@@ -24,7 +37,14 @@ const Floor3D=(()=>{
    const cabinet=(height=.9)=>{box(0,height/2,0,w*.94,height,d*.88,wood);box(0,height+.035,0,w,.07,d,cream);for(let i=0;i<Math.max(2,Math.ceil(w/.6));i++){const n=Math.max(2,Math.ceil(w/.6)),x=-w*.47+(i+.5)*w*.94/n;box(x,height*.48,d*.445,w*.94/n-.018,height*.82,.012,wood);box(x,height*.65,d*.46,.09,.014,.015,metal);}};
    const armchair=(width=w,depth=d)=>{box(0,.23,0,width*.74,.35,depth*.7,green);box(0,.43,0,width*.7,.12,depth*.65,'#51806b');box(0,.63,-depth*.34,width*.8,.5,depth*.16,green);for(const x of [-width*.39,width*.39])box(x,.48,0,width*.13,.28,depth*.78,green);for(const x of [-width*.3,width*.3])for(const z of [-depth*.28,depth*.28])box(x,.08,z,.035,.16,.035,leg);};
    switch(item.type){
-    case 'bar': cabinet(1.05);box(0,.22,d*.48,w*.95,.04,.045,metal);break;
+    case 'bar':
+     box(0,.51,0,w*.93,.96,d*.82,wood);
+     box(0,.09,0,w*.88,.18,d*.76,dark);
+     for(let i=0,n=Math.min(36,Math.max(8,Math.round(w/.09)));i<n;i++){const x=-w*.45+(i+.5)*w*.9/n;softBox(x,.56,d*.42,w*.9/n*.68,.83,.035,i%3?wood:tint(wood,1.1),.008);}
+     softBox(0,1.055,0,w,.105,d,cream,.06);
+     box(0,.22,d*.48,w*.9,.025,.025,metal);
+     for(const x of [-w*.35,w*.35])box(x,.18,d*.44,.025,.09,.09,metal);
+     break;
     case 'buffet': cabinet();for(const x of [-w*.28,0,w*.28]){box(x,.965,0,w*.2,.055,d*.55,'#b8c0bc');box(x,1.01,-d*.16,w*.2,.045,.03,metal);}break;
     case 'reception': cabinet(1);box(-w*.22,1.15,0,w*.22,.22,.045,dark);box(-w*.22,1.03,.07,w*.25,.02,.13,dark);break;
     case 'sofa': armchair();for(let i=1;i<3;i++)box(-w*.35+i*w*.7/3,.495,0,.012,.005,d*.62,'#2b5947');break;
@@ -41,16 +61,19 @@ const Floor3D=(()=>{
    }
    return faces;
   }
-  if(item.shape==='round')cylinder(0,ty,0,Math.min(tw,td)/2,.075,wood,36);else box(0,ty,0,tw,.075,td,wood);
+  if(item.shape==='round'){cylinder(0,ty-.012,0,Math.min(tw,td)/2,.065,tint(wood,.8),36);cylinder(0,ty+.024,0,Math.min(tw,td)/2*.99,.025,wood,36);}else softBox(0,ty,0,tw,.075,td,wood,.045);
+  box(0,ty-.085,0,tw*.83,.085,td*.82,tint(wood,.72));
   const lh=ty-.05;for(const x of [-tw*.39,tw*.39])for(const z of [-td*.38,td*.38])box(x,lh/2,z,.05,lh,.05,leg);
   // Subtle grain strips live on the horizontal tabletop and rotate with it.
-  if(item.shape!=='round')for(let i=1;i<8;i++)box(-tw/2+i*tw/8,ty+.039,0,.006,.001,td*.93,'#bf9968');
+  if(item.shape!=='round')for(let i=1;i<15;i++){const x=-tw*.45+i*tw*.9/15;const points=[];for(let j=0;j<7;j++)points.push([x+Math.sin(i*2+j*.9)*.003,ty+.039,-td*.43+j*td*.86/6]);face(points.concat(points.slice().reverse().map(p=>[p[0]+.002,p[1],p[2]])),[0,1,0],tint(wood,i%3?1.07:.9));}
   function chair(x,z,a,benchWidth){
    const start=faces.length,cw=benchWidth||Math.min(w,d)*.23,cd=Math.min(w,d)*.21,sy=ty*.58;
-   box(0,sy,0,cw,.10,cd,green);box(0,sy+.065,0,cw*.9,.055,cd*.9,'#51806b');box(0,sy+.19,-cd*.46,cw,.32,.06,green);
-   box(0,sy+.35,-cd*.46,cw,.025,.065,'#b09a68');
-   for(const x of [-cw*.47,cw*.47])box(x,sy+.1,0,.025,.15,cd*.85,green);
-   for(const x of [-cw*.25,0,cw*.25])box(x,sy+.19,-cd*.425,.008,.24,.008,'#2e604b');
+   softBox(0,sy,0,cw,.085,cd,tint(green,.78));softBox(0,sy+.06,0,cw*.93,.09,cd*.92,'#51806b');
+   // Rounded padded back, gently wrapped towards the sitter.
+   softBox(0,sy+.2,-cd*.44,cw,.32,.075,green,.03);
+   softBox(0,sy+.2,-cd*.39,cw*.85,.265,.04,'#467e64',.018);
+   for(const x of [-cw*.46,cw*.46])softBox(x,sy+.1,0,.035,.13,cd*.8,green,.013);
+   for(const x of [-cw*.25,0,cw*.25])box(x,sy+.2,-cd*.30,.003,.21,.003,'#386c53');
    for(const lx of [-cw*.35,cw*.35])for(const lz of [-cd*.35,cd*.35])box(lx,sy/2,lz,.025,sy,.025,leg);
    for(let i=start;i<faces.length;i++){faces[i].points=faces[i].points.map(p=>{const q=rotate(p,a);return [q[0]+x,q[1],q[2]+z];});faces[i].normal=rotate(faces[i].normal,a);}
   }
