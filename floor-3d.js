@@ -2,6 +2,9 @@
 // Actual XYZ geometry, rotated around the vertical axis before fixed-camera projection.
 const Floor3D=(()=>{
  const camera=[0,.866,.5],light=[-.45,.8,.4],cache=new Map();
+ let cacheCharacters=0;
+ const keyFor=item=>JSON.stringify([item.type,item.width,item.depth,item.angle,item.shape,item.capacity,item.color]);
+ function trimCache(){while(cache.size>64||cacheCharacters>4000000){const key=cache.keys().next().value,entry=cache.get(key);cacheCharacters-=entry.svg.length+(entry.image?.length||0);cache.delete(key);}}
  const rotate=(p,a)=>[p[0]*Math.cos(a)+p[2]*Math.sin(a),p[1],-p[0]*Math.sin(a)+p[2]*Math.cos(a)];
  const project=p=>[p[0],p[2]*.866-p[1]*.5];
  const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
@@ -90,15 +93,24 @@ const Floor3D=(()=>{
   return faces;
  }
  function render(item){
-  const key=JSON.stringify([item.type,item.width,item.depth,item.angle,item.shape,item.capacity,item.color]);if(cache.has(key))return cache.get(key);
+  const key=keyFor(item);if(cache.has(key)){const entry=cache.get(key);cache.delete(key);cache.set(key,entry);return entry.svg;}
   const a=(item.angle||0)*Math.PI/180;
   const visible=model(item).map(f=>({...f,points:f.points.map(p=>rotate(p,a)),normal:rotate(f.normal,a)})).filter(f=>dot(f.normal,camera)>.00001);
   visible.sort((a,b)=>a.points.reduce((s,p)=>s+dot(p,camera),0)/a.points.length-b.points.reduce((s,p)=>s+dot(p,camera),0)/b.points.length);
   const vertices=visible.flatMap(f=>f.points.map(project)),xs=vertices.map(p=>p[0]),ys=vertices.map(p=>p[1]);
   const minx=Math.min(...xs)-.035,miny=Math.min(...ys)-.035,width=Math.max(...xs)-minx+.035,height=Math.max(...ys)-miny+.035;
   const polygons=visible.map(f=>'<polygon points="'+f.points.map(p=>project(p).map(v=>v.toFixed(4)).join(',')).join(' ')+'" fill="'+shade(f.color,f.normal)+'" stroke="'+shade(f.color,f.normal)+'" stroke-width="0.002" stroke-linejoin="round"/>').join('');
-  const result='<svg class="geometry-3d" viewBox="'+[minx,miny,width,height].join(' ')+'" preserveAspectRatio="none" aria-hidden="true">'+polygons+'</svg>';
-  if(cache.size>=128)cache.delete(cache.keys().next().value);cache.set(key,result);return result;
+  const result='<svg xmlns="http://www.w3.org/2000/svg" class="geometry-3d" viewBox="'+[minx,miny,width,height].join(' ')+'" preserveAspectRatio="none" aria-hidden="true">'+polygons+'</svg>';
+  cache.set(key,{svg:result});cacheCharacters+=result.length;trimCache();return result;
  }
- return {render,model,rotate,project,shade};
+ // A single image node replaces hundreds of polygon nodes per furniture item.
+ // The browser can share the decoded vector image across identical objects.
+ function image(item){
+  const svg=render(item),entry=cache.get(keyFor(item));
+  if(entry?.image)return entry.image;
+  const result='<img class="geometry-3d" draggable="false" alt="" src="data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg)+'">';
+  if(entry){entry.image=result;cacheCharacters+=result.length;trimCache();}
+  return result;
+ }
+ return {render,image,model,rotate,project,shade};
 })();

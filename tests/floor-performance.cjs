@@ -1,0 +1,6 @@
+const fs=require('fs'),vm=require('vm'),{performance}=require('perf_hooks');
+const ctx={console,structuredClone,localStorage:{getItem:()=>null},ReservationEngine:{TABLES:[],CAPACITY:{}}};vm.createContext(ctx);vm.runInContext(fs.readFileSync('floor-plan.js','utf8')+'\n'+fs.readFileSync('floor-3d.js','utf8'),ctx);
+vm.runInContext(`var plan=FloorPlan.defaults();plan.rooms[0].width=80;plan.rooms[0].depth=80;plan.tables=Array.from({length:200},(_,i)=>FloorPlan.tableOptions({id:'t'+i,number:i+1,roomId:'main',capacity:4,shape:'square',width:1.2,depth:1.2,angle:(i%8)*45,x:(i%20)*4,y:Math.floor(i/20)*4}));`,ctx);
+const code=process.argv[2]!=='--baseline'?`FloorPlan.spacingSummary(plan,'main')`:`plan.tables.forEach(t=>FloorPlan.nearby(plan,t));plan.tables.reduce((n,t,i)=>n+plan.tables.slice(i+1).filter(b=>FloorPlan.gap(plan,t,b)<.9-1e-7).length,0)`;
+let times=[];for(let i=0;i<5;i++){let start=performance.now();vm.runInContext(code,ctx);times.push(performance.now()-start)}times.sort((a,b)=>a-b);console.log(JSON.stringify({tables:200,medianMs:Math.round(times[2]*10)/10}));
+console.log(vm.runInContext(`(()=>{const svg=Floor3D.render(plan.tables[0]);return {polygons:(svg.match(/<polygon/g)||[]).length,bytes:svg.length};})()`,ctx));

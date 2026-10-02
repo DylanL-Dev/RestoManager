@@ -30,8 +30,18 @@ function startFloorEdit() {
     fermerAdministration(); setServiceView('plan'); roomOptions(); afficherTables();
 }
 function finishFloorGesture(){if(typeof recordEditorHistory==='function'){recordEditorHistory();refreshWorkspace();}}
-function placeFloorItem(button,item) {
-    const size=FloorPlan.sizePercent(currentPlan(),item);
+// Coalesce fast pointer streams to one update per display frame.
+function onFloorPointerMove(target,callback){
+    let pending=null,frame=null;
+    const flush=()=>{if(frame!==null&&typeof cancelAnimationFrame==='function')cancelAnimationFrame(frame);frame=null;const event=pending;pending=null;if(event)callback(event);};
+    target.addEventListener('pointermove',event=>{
+        if(typeof requestAnimationFrame!=='function'){callback(event);return;}
+        pending=event;if(frame===null)frame=requestAnimationFrame(flush);
+    });
+    return flush;
+}
+function placeFloorItem(button,item,plan=currentPlan()) {
+    const size=FloorPlan.sizePercent(plan,item);
     button.style.left=item.x+'%';button.style.top=item.y+'%';button.style.width=size.width+'%';button.style.height=size.height+'%';
 }
 function expandFloor(extras=[]){
@@ -58,8 +68,8 @@ function addRotationHandle(button,table){
     let gesture=null;
     const paint=()=>{placeFloorItem(button,table);button.querySelector('.furniture-art').outerHTML=furnitureMarkup(table);};
     handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();const rect=button.getBoundingClientRect();gesture={angle:table.angle||0,x:rect.left+rect.width/2,y:rect.top+rect.height/2};gesture.start=Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x);handle.setPointerCapture(event.pointerId);});
-    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const delta=(Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x)-gesture.start)*180/Math.PI;let angle=gesture.angle+delta;if(snapFloorRotation)angle=Math.round(angle/45)*45;if(rotateFloorTable(table,angle))paint();});
-    handle.addEventListener('pointerup',event=>{event.stopPropagation();gesture=null;finishFloorGesture();});handle.addEventListener('pointercancel',()=>{gesture=null;finishFloorGesture();});
+    const flushMove=onFloorPointerMove(handle,event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const delta=(Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x)-gesture.start)*180/Math.PI;let angle=gesture.angle+delta;if(snapFloorRotation)angle=Math.round(angle/45)*45;if(rotateFloorTable(table,angle))paint();});
+    handle.addEventListener('pointerup',event=>{event.stopPropagation();flushMove();gesture=null;finishFloorGesture();});handle.addEventListener('pointercancel',()=>{flushMove();gesture=null;finishFloorGesture();});
     handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
     handle.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.stopPropagation();event.preventDefault();if(rotateFloorTable(table,(table.angle||0)+(event.key==='ArrowRight'?1:-1)*(snapFloorRotation?45:5))){paint();finishFloorGesture();}});
     button.append(handle);
@@ -94,15 +104,15 @@ function addResizeHandle(button,item){
     const targets=()=>floorSelection.has(item.id)?selectedRoomItems():[item];
     const paint=()=>{for(const child of el('tablesGrid').children){const t=targets().find(t=>t.id===child.getAttribute('data-floor-id'));if(t){placeFloorItem(child,t);child.querySelector('.furniture-art').outerHTML=furnitureMarkup(t);}}};
     handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();if(event.button!==0)return;const rect=button.getBoundingClientRect();gesture={items:targets(),initials:targets().map(t=>({...t})),x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};handle.setPointerCapture(event.pointerId);});
-    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorGroup(g.items,g.initials,factor)){const growth=expandFloor();if(growth)g.initials.forEach(t=>{t.x=(t.x*growth.oldWidth/100+growth.x)/growth.width*100;t.y=(t.y*growth.oldDepth/100+growth.y)/growth.depth*100;});paint();}});
-    ['pointerup','pointercancel'].forEach(name=>handle.addEventListener(name,event=>{event.stopPropagation();gesture=null;finishFloorGesture();}));
+    const flushMove=onFloorPointerMove(handle,event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorGroup(g.items,g.initials,factor)){const growth=expandFloor();if(growth)g.initials.forEach(t=>{t.x=(t.x*growth.oldWidth/100+growth.x)/growth.width*100;t.y=(t.y*growth.oldDepth/100+growth.y)/growth.depth*100;});paint();}});
+    ['pointerup','pointercancel'].forEach(name=>handle.addEventListener(name,event=>{event.stopPropagation();flushMove();gesture=null;finishFloorGesture();}));
     handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
     handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();const items=targets();if(resizeFloorGroup(items,items.map(t=>({...t})),['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05)){expandFloor();paint();finishFloorGesture();}});
     button.append(handle);
 }
 function furnitureMarkup(item) {
     if(item.type==='zone')return '<span class="furniture-art zone-art" style="width:100%;height:100%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg)"></span>';
-    return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.render(item)+'</span>';
+    return '<span class="furniture-art" style="width:100%;height:100%;transform:translate(-50%,-50%)">'+Floor3D.image(item)+'</span>';
 }
 function setEditorAngle(prefix,value){const angle=((Math.round(Number(value)||0)%360)+360)%360;el(prefix+'AngleInput').value=angle;el(prefix+'AngleRange').value=angle;}
 function setEditorColor(prefix,color){el(prefix+'ColorInput').value=color;document.querySelectorAll('[data-owner="'+prefix+'"]').forEach(button=>button.setAttribute('aria-pressed',String(button.getAttribute('data-color')===color)));}
@@ -159,7 +169,7 @@ function bindFloorItem(button,item,onClick) {
         const items=floorSelection.has(item.id)?selectedRoomItems():[item];
         drag={x:event.clientX,y:event.clientY,items,origins:items.map(t=>({x:t.x,y:t.y})),rect:grid.getBoundingClientRect()};button.setPointerCapture(event.pointerId);
     });
-    button.addEventListener('pointermove',event=>{
+    const flushMove=onFloorPointerMove(button,event=>{
         if(!drag)return;if(FloorZoom.isPinching()){drag=null;moved=true;hideAlignmentGuides();return;}
         const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)<6&&!moved)return;moved=true;
         const rawX=dx/drag.rect.width*100,rawY=dy/drag.rect.height*100;
@@ -167,7 +177,7 @@ function bindFloorItem(button,item,onClick) {
         moveFloorGroup(drag.items,drag.origins,snap.dx,snap.dy);
         if(expandFloor()){drag={...drag,x:event.clientX,y:event.clientY,origins:drag.items.map(t=>({x:t.x,y:t.y})),rect:grid.getBoundingClientRect()};}else showAlignmentGuides(snap);
     });
-    button.addEventListener('pointerup',()=>{drag=null;hideAlignmentGuides();finishFloorGesture();});button.addEventListener('pointercancel',()=>{drag=null;moved=true;hideAlignmentGuides();finishFloorGesture();});
+    button.addEventListener('pointerup',()=>{flushMove();drag=null;hideAlignmentGuides();finishFloorGesture();});button.addEventListener('pointercancel',()=>{flushMove();drag=null;moved=true;hideAlignmentGuides();finishFloorGesture();});
     button.addEventListener('keydown',event=>{
         if(!floorDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();
         const room=currentPlan().rooms.find(r=>r.id===item.roomId),items=floorSelection.has(item.id)?selectedRoomItems():[item];
@@ -234,6 +244,7 @@ afficherTables = function () {
     const plan=currentPlan();
     const grid = el('tablesGrid'); grid.replaceChildren();
     const editing = !!floorDraft;
+    const spacing=editing?FloorPlan.spacingSummary(plan,floorRoom):{pairs:0,closeIds:new Set()};
     if(!editing){multiSelectMode=false;floorSelection.clear();}
     grid.classList.toggle('editing', editing); el('editorBar').classList.toggle('hidden', !editing);
     el('rotationSnapToggle').classList.toggle('hidden', !editing);
@@ -244,11 +255,11 @@ afficherTables = function () {
         button.className = 'table-card ' + status + ' shape-' + table.shape;
         button.setAttribute('data-table-number',String(table.number));
         button.classList.toggle('service-selected',typeof serviceTableNumber!=='undefined'&&serviceTableNumber===table.number);
-        placeFloorItem(button, table);
+        placeFloorItem(button, table,plan);
         const r = reservations.filter(r => r.date === getServiceDate() && r.tables.includes(table.number) && ReservationEngine.isBlocking(r)).sort((a,b) => (b.status === STATUS.SEATED) - (a.status === STATUS.SEATED) || a.time.localeCompare(b.time))[0];
         const client = r ? (r.type === 'hotel' ? 'Ch. ' : '') + r.client : (table.capacityMin===table.capacity?table.capacity:table.capacityMin+'–'+table.capacity)+' places';
         button.innerHTML=furnitureMarkup(table)+'<span class="furniture-label"><strong class="table-number">T'+table.number+(table.letter||'')+'</strong><span class="table-capacity">'+escapeHTML(client)+'</span><span class="table-status">'+(r?r.time:'Libre')+'</span></span>';
-        button.classList.toggle('close-spacing',editing&&FloorPlan.nearby(plan,table).length>0);
+        button.classList.toggle('close-spacing',spacing.closeIds.has(table.id));
         button.setAttribute('aria-label', 'Table ' + table.number + ', ' + table.capacity + ' places, ' + (r ? texteStatut(r.status) + ', ' + client : 'libre'));
         bindFloorItem(button, table, () => { if (floorDraft) openTableEditor(table.id); else cliquerTable(table.number); });
         if(editing){addRotationHandle(button,table);addResizeHandle(button,table);}
@@ -257,7 +268,7 @@ afficherTables = function () {
     plan.elements.filter(item=>item.roomId===floorRoom).forEach(item=> {
         const button=document.createElement('button');button.type='button';button.className='floor-element element-'+item.type;
         button.innerHTML=furnitureMarkup(item)+'<span class="element-label">'+escapeHTML(item.label)+'</span>';button.setAttribute('aria-label',item.label+', '+item.width+' × '+item.depth+' mètres');
-        placeFloorItem(button,item);
+        placeFloorItem(button,item,plan);
         if(editing){bindFloorItem(button,item,()=>openElementEditor(item.id));addRotationHandle(button,item);addResizeHandle(button,item);}
         else { button.disabled=true; }
         grid.append(button);
@@ -267,8 +278,7 @@ afficherTables = function () {
     const room=plan.rooms.find(r=>r.id===floorRoom);
     el('roomDimensionsLabel').textContent=room.width+' × '+room.depth+' m'+(room.autoSize===false?'':' · Auto');
     ['plain','wood','tile','stone'].forEach(key=>grid.classList.toggle('floor-'+key,room.floor===key));
-    const tables=plan.tables.filter(t=>t.roomId===floorRoom);
-    const pairs=tables.reduce((count,t,i)=>count+tables.slice(i+1).filter(other=>FloorPlan.gap(plan,t,other)<0.9-1e-7).length,0);
+    const pairs=spacing.pairs;
     el('floorSpacingNotice').textContent=pairs+' rapprochement'+(pairs>1?'s':'')+' de tables à moins de 90 cm. Vérifiez les passages.';
     el('floorSpacingNotice').classList.toggle('hidden',!editing||!pairs);
     FloorZoom.updateRoom(plan,floorRoom);
@@ -299,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el('selectAllFloorBtn').addEventListener('click',()=>{currentPlan().tables.concat(currentPlan().elements).filter(t=>t.roomId===floorRoom).forEach(t=>floorSelection.add(t.id));refreshFloorSelection();});
     el('clearFloorSelectionBtn').addEventListener('click',()=>{floorSelection.clear();refreshFloorSelection();});
     el('rotationSnapToggle').addEventListener('click',()=>{snapFloorRotation=!snapFloorRotation;el('rotationSnapToggle').setAttribute('aria-pressed',String(snapFloorRotation));el('rotationSnapToggle').textContent=snapFloorRotation?'Rotation : 45°':'Rotation libre';});
-    Object.entries(elementPresets).forEach(([type,preset])=>{const button=document.createElement('button');button.type='button';button.className='catalog-item';button.innerHTML=(type==='zone'?'<span class="catalog-zone">▧</span>':'<span class="catalog-preview">'+Floor3D.render({type,width:preset[1],depth:preset[2],angle:25})+'</span>')+'<span>'+preset[0]+'</span>';button.addEventListener('click',()=>{el('elementTypeInput').value=type;setElementDefaults();});el('furnitureCatalog').append(button);});
+    Object.entries(elementPresets).forEach(([type,preset])=>{const button=document.createElement('button');button.type='button';button.className='catalog-item';button.innerHTML=(type==='zone'?'<span class="catalog-zone">▧</span>':'<span class="catalog-preview">'+Floor3D.image({type,width:preset[1],depth:preset[2],angle:25})+'</span>')+'<span>'+preset[0]+'</span>';button.addEventListener('click',()=>{el('elementTypeInput').value=type;setElementDefaults();});el('furnitureCatalog').append(button);});
     el('menuBtn').addEventListener('click', () => { const open = el('serviceMenu').classList.toggle('hidden') === false; el('menuBtn').setAttribute('aria-expanded', String(open)); });
     el('serviceMenu').addEventListener('click', event => { if (event.target.closest('button')) { el('serviceMenu').classList.add('hidden'); el('menuBtn').setAttribute('aria-expanded', 'false'); } });
     el('planTab').addEventListener('click', () => setServiceView('plan')); el('listTab').addEventListener('click', () => setServiceView('list'));

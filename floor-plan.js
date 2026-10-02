@@ -47,6 +47,21 @@ const FloorPlan = (() => {
         return nearest;
     }
     function nearby(plan,table){return plan.tables.filter(t=>t.id!==table.id&&t.roomId===table.roomId).map(t=>({table:t,gap:gap(plan,table,t)})).filter(p=>p.gap<0.9-1e-7);}
+    // Sweep across bounding boxes; exact distance only for nearby candidates.
+    function spacingSummary(plan,roomId){
+        const room=plan.rooms.find(r=>r.id===roomId),closeIds=new Set();let pairs=0;
+        if(!room)return {pairs,closeIds};
+        const boxes=plan.tables.filter(t=>t.roomId===roomId).map(t=>{const b=bounds(t),x=t.x*room.width/100,y=t.y*room.depth/100;return {t,x,y,right:x+b.width,bottom:y+b.depth};}).sort((a,b)=>a.x-b.x);
+        for(let i=0;i<boxes.length;i++){
+            const a=boxes[i];
+            for(let j=i+1;j<boxes.length&&boxes[j].x<a.right+.9;j++){
+                const b=boxes[j],dx=Math.max(0,b.x-a.right),dy=Math.max(0,b.y-a.bottom,a.y-b.bottom);
+                if(Math.hypot(dx,dy)>=.9-1e-7)continue;
+                if(gap(plan,a.t,b.t)<.9-1e-7){pairs++;closeIds.add(a.t.id);closeIds.add(b.t.id);}
+            }
+        }
+        return {pairs,closeIds};
+    }
     function defaults() {
         return { version:3, rooms:[{id:'main',name:'Salle principale',width:12,depth:12,floor:'plain'}], elements:[],
             tables:[tableOptions({id:'table-1',number:1,roomId:'main',capacity:2,shape:'square',width:1.2,depth:1.2,x:45,y:45})] };
@@ -110,7 +125,7 @@ const FloorPlan = (() => {
     if(!valid(plan))plan=defaults();
     function sync(){ReservationEngine.TABLES.splice(0,ReservationEngine.TABLES.length,...plan.tables.map(t=>t.number));Object.keys(ReservationEngine.CAPACITY).forEach(k=>delete ReservationEngine.CAPACITY[k]);plan.tables.forEach(t=>{ReservationEngine.CAPACITY[t.number]=t.capacity;});}
     sync();
-    return {get:()=>structuredClone(plan),defaults,migrate,valid,inside,overlaps,sizePercent,resizeRoom,growRoom,freeSpot,bounds,nearby,gap,tableOptions,itemOptions,label:number=>{const t=plan.tables.find(t=>t.number===number);return 'T'+number+(t?.letter||'');},save(next){
+    return {get:()=>structuredClone(plan),defaults,migrate,valid,inside,overlaps,sizePercent,resizeRoom,growRoom,freeSpot,bounds,nearby,gap,spacingSummary,tableOptions,itemOptions,label:number=>{const t=plan.tables.find(t=>t.number===number);return 'T'+number+(t?.letter||'');},save(next){
         if(!valid(next))throw new Error('Plan invalide : vérifiez les dimensions et les éléments de la salle.');
         localStorage.setItem(key,JSON.stringify(next));plan=structuredClone(next);sync();
     }};

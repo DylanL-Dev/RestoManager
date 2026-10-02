@@ -279,3 +279,24 @@ node('openCatalogBtn').fire('click');assert(node('floorWorkspace').classes.has('
 node('openInspectorBtn').fire('click');assert(!node('floorWorkspace').classes.has('catalog-open'));assert(node('floorWorkspace').classes.has('inspector-open'));
 node('cancelPlanBtn').fire('click');assert.equal(run('editorHistory.length'),0);assert(node('workspaceCatalog').classes.has('hidden'));
 console.log('PASS: catalog creation, atomic group duplication/deletion, protected reservations, inline properties, undo/redo branching and mobile panels.');
+// Broad-phase spacing must match exact geometry, including rotation/overlap.
+run(`var densePlan=FloorPlan.defaults();densePlan.rooms[0].width=20;densePlan.rooms[0].depth=20;densePlan.tables=Array.from({length:70},(_,i)=>FloorPlan.tableOptions({id:'dense'+i,number:i+1,roomId:'main',capacity:2,shape:'square',width:.5+(i%5)*.3,depth:.7+(i%3)*.2,angle:(i*37)%360,x:(i*17)%85,y:(i*23)%85}));`);
+const exactSpacing=run(`(()=>{let pairs=0,ids=new Set();densePlan.tables.forEach((a,i)=>densePlan.tables.slice(i+1).forEach(b=>{if(FloorPlan.gap(densePlan,a,b)<.9-1e-7){pairs++;ids.add(a.id);ids.add(b.id)}}));return {pairs,ids:[...ids].sort()};})()`);
+const fastSpacing=run("(()=>{const s=FloorPlan.spacingSummary(densePlan,'main');return {pairs:s.pairs,ids:[...s.closeIds].sort()};})()");
+assert.equal(JSON.stringify(fastSpacing),JSON.stringify(exactSpacing));
+const vectorImage=run('Floor3D.image(densePlan.tables[0])');
+assert(vectorImage.startsWith('<img '));assert(!vectorImage.includes('<polygon'));
+assert(decodeURIComponent(vectorImage).includes('xmlns="http://www.w3.org/2000/svg"'));
+assert.equal(vectorImage,run('Floor3D.image({...densePlan.tables[0],id:"another",x:90})'));
+assert.notEqual(vectorImage,run('Floor3D.image({...densePlan.tables[0],angle:19})'));
+// A burst of pointer events produces one frame; pointer-up flushes the final move.
+let frames=new Map(),frameNumber=0;
+context.requestAnimationFrame=fn=>{frames.set(++frameNumber,fn);return frameNumber;};context.cancelAnimationFrame=id=>frames.delete(id);
+run("floorDraft=FloorPlan.defaults();floorRoom='main';multiSelectMode=false;floorSelection.clear();alignmentEnabled=false;resetEditorHistory();afficherTables()");
+const framedTable=node('tablesGrid').children.find(n=>n.getAttribute('data-table-number')==='1');
+framedTable.fire('pointerdown',{button:0,clientX:100,clientY:100,pointerId:10});
+framedTable.fire('pointermove',{clientX:120,clientY:100});framedTable.fire('pointermove',{clientX:158,clientY:100});
+assert.equal(frames.size,1);assert.equal(run('floorDraft.tables[0].x'),45);
+framedTable.fire('pointerup');assert.equal(frames.size,0);assert.equal(run('floorDraft.tables[0].x'),55);
+assert.equal(run('editorHistory.length'),2);
+console.log('PASS: exact spacing equivalence on rotated dense scene, reusable lightweight SVG images, frame coalescing and final pointer flush.');

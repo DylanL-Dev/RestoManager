@@ -86,7 +86,7 @@ function renderWorkspaceCatalog(category){
         const item=table?{shape:kind,width:kind==='rectangle'||kind==='bench'?1.8:1.2,depth:1.2,capacity:kind==='rectangle'||kind==='bench'?4:2,angle:25}:{type:kind,width:preset[1],depth:preset[2],angle:25};
         const label=table?{square:'Table carrée',round:'Table ronde',rectangle:'Table rectangulaire',bench:'Banquette avec table'}[kind]:preset[0];
         const button=document.createElement('button');button.type='button';button.className='workspace-catalog-item';button.setAttribute('aria-label','Ajouter : '+label);
-        button.innerHTML=(kind==='zone'?'<span class="catalog-zone">▧</span>':'<span class="catalog-preview">'+Floor3D.render(item)+'</span>')+'<span>'+label+'</span>';
+        button.innerHTML=(kind==='zone'?'<span class="catalog-zone">▧</span>':'<span class="catalog-preview">'+Floor3D.image(item)+'</span>')+'<span>'+label+'</span>';
         button.addEventListener('click',()=>quickAddFurniture(kind));el('workspaceCatalogItems').append(button);
     });
 }
