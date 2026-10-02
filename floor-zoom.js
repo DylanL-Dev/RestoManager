@@ -51,7 +51,7 @@ const FloorZoom = (() => {
         }, { passive:false });
         let pan=null;
         viewport.addEventListener('pointerdown',event=>{
-            if(event.pointerType!=='mouse'||event.button!==0||event.target.closest('button'))return;
+            if(event.pointerType!=='mouse'||event.button!==0||event.shiftKey||event.target.closest('button'))return;
             pan={x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};
             viewport.setPointerCapture(event.pointerId);viewport.classList.add('panning');
         });

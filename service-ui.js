@@ -26,9 +26,10 @@ function setServiceView(view) {
     ['plan', 'list'].forEach(name => { el(name + 'Tab').classList.toggle('active', name === view); el(name + 'Tab').setAttribute('aria-pressed', String(name === view)); });
 }
 function startFloorEdit() {
-    if (!floorDraft) floorDraft = FloorPlan.get();
+    if (!floorDraft) {floorDraft = FloorPlan.get();if(typeof resetEditorHistory==='function')resetEditorHistory();}
     fermerAdministration(); setServiceView('plan'); roomOptions(); afficherTables();
 }
+function finishFloorGesture(){if(typeof recordEditorHistory==='function'){recordEditorHistory();refreshWorkspace();}}
 function placeFloorItem(button,item) {
     const size=FloorPlan.sizePercent(currentPlan(),item);
     button.style.left=item.x+'%';button.style.top=item.y+'%';button.style.width=size.width+'%';button.style.height=size.height+'%';
@@ -58,9 +59,9 @@ function addRotationHandle(button,table){
     const paint=()=>{placeFloorItem(button,table);button.querySelector('.furniture-art').outerHTML=furnitureMarkup(table);};
     handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();const rect=button.getBoundingClientRect();gesture={angle:table.angle||0,x:rect.left+rect.width/2,y:rect.top+rect.height/2};gesture.start=Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x);handle.setPointerCapture(event.pointerId);});
     handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const delta=(Math.atan2(event.clientY-gesture.y,event.clientX-gesture.x)-gesture.start)*180/Math.PI;let angle=gesture.angle+delta;if(snapFloorRotation)angle=Math.round(angle/45)*45;if(rotateFloorTable(table,angle))paint();});
-    handle.addEventListener('pointerup',event=>{event.stopPropagation();gesture=null;});handle.addEventListener('pointercancel',()=>{gesture=null;});
+    handle.addEventListener('pointerup',event=>{event.stopPropagation();gesture=null;finishFloorGesture();});handle.addEventListener('pointercancel',()=>{gesture=null;finishFloorGesture();});
     handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
-    handle.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.stopPropagation();event.preventDefault();if(rotateFloorTable(table,(table.angle||0)+(event.key==='ArrowRight'?1:-1)*(snapFloorRotation?45:5)))paint();});
+    handle.addEventListener('keydown',event=>{if(!['ArrowLeft','ArrowRight'].includes(event.key))return;event.stopPropagation();event.preventDefault();if(rotateFloorTable(table,(table.angle||0)+(event.key==='ArrowRight'?1:-1)*(snapFloorRotation?45:5))){paint();finishFloorGesture();}});
     button.append(handle);
 }
 function resizeFloorItem(item,factor,initial=item){
@@ -90,13 +91,13 @@ function resizeFloorGroup(items,initials,factor){
 function addResizeHandle(button,item){
     const handle=document.createElement('span');handle.className='resize-handle';handle.textContent='↘';handle.setAttribute('role','button');handle.setAttribute('tabindex','0');handle.setAttribute('aria-label',item.number!==undefined?'Redimensionner la table '+item.number:'Redimensionner '+item.label);
     let gesture=null;
-    const targets=()=>multiSelectMode&&floorSelection.has(item.id)?selectedRoomItems():[item];
+    const targets=()=>floorSelection.has(item.id)?selectedRoomItems():[item];
     const paint=()=>{for(const child of el('tablesGrid').children){const t=targets().find(t=>t.id===child.getAttribute('data-floor-id'));if(t){placeFloorItem(child,t);child.querySelector('.furniture-art').outerHTML=furnitureMarkup(t);}}};
     handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();if(event.button!==0)return;const rect=button.getBoundingClientRect();gesture={items:targets(),initials:targets().map(t=>({...t})),x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};handle.setPointerCapture(event.pointerId);});
     handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorGroup(g.items,g.initials,factor)){const growth=expandFloor();if(growth)g.initials.forEach(t=>{t.x=(t.x*growth.oldWidth/100+growth.x)/growth.width*100;t.y=(t.y*growth.oldDepth/100+growth.y)/growth.depth*100;});paint();}});
-    ['pointerup','pointercancel'].forEach(name=>handle.addEventListener(name,event=>{event.stopPropagation();gesture=null;}));
+    ['pointerup','pointercancel'].forEach(name=>handle.addEventListener(name,event=>{event.stopPropagation();gesture=null;finishFloorGesture();}));
     handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
-    handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();const items=targets();if(resizeFloorGroup(items,items.map(t=>({...t})),['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05)){expandFloor();paint();}});
+    handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();const items=targets();if(resizeFloorGroup(items,items.map(t=>({...t})),['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05)){expandFloor();paint();finishFloorGesture();}});
     button.append(handle);
 }
 function furnitureMarkup(item) {
@@ -117,8 +118,9 @@ function refreshFloorSelection(){
     for(const button of el('tablesGrid').children){const selected=floorSelection.has(button.getAttribute('data-floor-id'));button.classList.toggle('group-selected',selected);if(multiSelectMode)button.setAttribute('aria-pressed',String(selected));}
     el('multiSelectBtn').setAttribute('aria-pressed',String(multiSelectMode));
     el('selectionCount').textContent=floorSelection.size+' sélectionné'+(floorSelection.size>1?'s':'');
-    el('selectionTools').classList.toggle('hidden',!floorDraft||!multiSelectMode);
+    el('selectionTools').classList.toggle('hidden',!floorDraft||(!multiSelectMode&&!floorSelection.size));
     el('tablesGrid').classList.toggle('multi-select',multiSelectMode&&!!floorDraft);
+    if(typeof refreshWorkspace==='function')refreshWorkspace();
 }
 function moveFloorGroup(items,origins,dx,dy){
     const room=currentPlan().rooms.find(r=>r.id===floorRoom);
@@ -153,6 +155,7 @@ function bindFloorItem(button,item,onClick) {
         moved=false;
         if(!floorDraft||event.button!==0||event.shiftKey||event.ctrlKey||event.metaKey)return;
         if(multiSelectMode&&!floorSelection.has(item.id))return;
+        if(!floorSelection.has(item.id)){floorSelection.clear();floorSelection.add(item.id);refreshFloorSelection();}
         const items=floorSelection.has(item.id)?selectedRoomItems():[item];
         drag={x:event.clientX,y:event.clientY,items,origins:items.map(t=>({x:t.x,y:t.y})),rect:grid.getBoundingClientRect()};button.setPointerCapture(event.pointerId);
     });
@@ -164,14 +167,15 @@ function bindFloorItem(button,item,onClick) {
         moveFloorGroup(drag.items,drag.origins,snap.dx,snap.dy);
         if(expandFloor()){drag={...drag,x:event.clientX,y:event.clientY,origins:drag.items.map(t=>({x:t.x,y:t.y})),rect:grid.getBoundingClientRect()};}else showAlignmentGuides(snap);
     });
-    button.addEventListener('pointerup',()=>{drag=null;hideAlignmentGuides();});button.addEventListener('pointercancel',()=>{drag=null;moved=true;hideAlignmentGuides();});
+    button.addEventListener('pointerup',()=>{drag=null;hideAlignmentGuides();finishFloorGesture();});button.addEventListener('pointercancel',()=>{drag=null;moved=true;hideAlignmentGuides();finishFloorGesture();});
     button.addEventListener('keydown',event=>{
         if(!floorDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();
         const room=currentPlan().rooms.find(r=>r.id===item.roomId),items=floorSelection.has(item.id)?selectedRoomItems():[item];
-        moveFloorGroup(items,items.map(t=>({x:t.x,y:t.y})),(event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0)*10/room.width,(event.key==='ArrowDown'?1:event.key==='ArrowUp'?-1:0)*10/room.depth);expandFloor();
+        moveFloorGroup(items,items.map(t=>({x:t.x,y:t.y})),(event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0)*10/room.width,(event.key==='ArrowDown'?1:event.key==='ArrowUp'?-1:0)*10/room.depth);expandFloor();finishFloorGesture();
     });
     button.addEventListener('click',event=>{if(moved||FloorZoom.ignoreClick()){moved=false;return;}
         if(floorDraft&&(multiSelectMode||event.shiftKey||event.ctrlKey||event.metaKey)){multiSelectMode=true;floorSelection.has(item.id)?floorSelection.delete(item.id):floorSelection.add(item.id);refreshFloorSelection();return;}
+        if(floorDraft){floorSelection.clear();floorSelection.add(item.id);refreshFloorSelection();return;}
         onClick();
     });
 }
@@ -233,7 +237,7 @@ afficherTables = function () {
     if(!editing){multiSelectMode=false;floorSelection.clear();}
     grid.classList.toggle('editing', editing); el('editorBar').classList.toggle('hidden', !editing);
     el('rotationSnapToggle').classList.toggle('hidden', !editing);
-    el('floorHint').textContent = editing ? 'Glissez pour déplacer. Tirez ↘ pour changer la taille. Touchez pour modifier.' : 'Touchez une table pour ouvrir sa fiche.';
+    el('floorHint').textContent = editing ? 'Glissez pour déplacer. Tirez ↘ pour changer la taille. Touchez pour sélectionner.' : 'Touchez une table pour ouvrir sa fiche.';
     plan.tables.filter(t => t.roomId === floorRoom).forEach(table => {
         const status = getTableStatus(table.number);
         const button = document.createElement('button'); button.type = 'button';
@@ -268,6 +272,7 @@ afficherTables = function () {
     el('floorSpacingNotice').textContent=pairs+' rapprochement'+(pairs>1?'s':'')+' de tables à moins de 90 cm. Vérifiez les passages.';
     el('floorSpacingNotice').classList.toggle('hidden',!editing||!pairs);
     FloorZoom.updateRoom(plan,floorRoom);
+    if(typeof recordEditorHistory==='function')recordEditorHistory();
     if (!plan.tables.some(t=>t.roomId===floorRoom)&&!plan.elements.some(t=>t.roomId===floorRoom)) { const message = document.createElement('p'); message.className = 'floor-empty'; message.textContent = editing ? 'Cette salle est vide. Ajoutez une table.' : 'Aucune table dans cette salle.'; grid.append(message); }
 };
 function openTableEditor(id) {

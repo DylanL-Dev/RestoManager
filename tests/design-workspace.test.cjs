@@ -13,7 +13,7 @@ class Node {
 const html=fs.readFileSync('index.html','utf8');const nodes=new Map([...html.matchAll(/id="([^"]+)"/g)].map(m=>[m[1],new Node()]));
 const sections={'.tables-section':new Node(),'.reservations-section':new Node()}; const ready=[];const data=new Map();let confirms=true,alerts=[];
 const context={console,structuredClone,Date,Set,Math,crypto:require('node:crypto').webcrypto,setTimeout(){},setInterval(){},alert:m=>alerts.push(m),confirm:()=>confirms,localStorage:{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,v)},document:{getElementById:id=>{assert(nodes.has(id),'Missing HTML element '+id);return nodes.get(id)},createElement:()=>new Node(),addEventListener:(e,fn)=>{if(e==='DOMContentLoaded')ready.push(fn)},querySelector:s=>sections[s]||null,querySelectorAll:()=>[]},window:{addEventListener(){}}};
-vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-3d.js','service-ui.js','floor-zoom.js','table-service.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
+vm.createContext(context);for(const path of ['reservation-engine.js','floor-plan.js','app.js','floor-3d.js','service-ui.js','floor-zoom.js','table-service.js','editor-workspace.js'])vm.runInContext(fs.readFileSync(path,'utf8'),context,{filename:path});
 for(const fn of ready)fn();const run=s=>vm.runInContext(s,context);const node=id=>nodes.get(id);
 assert.equal(node('tablesGrid').children.filter(n=>n.getAttribute('data-table-number')).length,1);assert.equal(run('TABLES.length'),1);assert.equal(run('CAPACITY[1]'),2);
 node('editPlanBtn').fire('click');node('addTableBtn').fire('click');node('tableNumberInput').value='26';node('tableCapacityInput').value='4';node('tableShapeInput').value='round';node('tableEditForm').fire('submit');assert.equal(run('floorDraft.tables.length'),2);assert.equal(run('TABLES.length'),1);
@@ -256,3 +256,26 @@ assert(run('FloorPlan.valid(floorDraft)'));assert.equal(run('FloorZoom.getScale(
 const savedWidth=run('FloorPlan.get().rooms[0].width');
 node('cancelPlanBtn').fire('click');assert.equal(run('FloorPlan.get().rooms[0].width'),savedWidth);
 console.log('PASS: repeated automatic growth during resize preserves anchor and proportional size; cancel preserves saved room.');
+
+run("floorDraft=null;reservations=[];history=[];startFloorEdit();floorDraft=FloorPlan.defaults();resetEditorHistory();afficherTables()");
+const baseline=run('JSON.stringify(floorDraft)');
+run("quickAddFurniture('plant')");assert.equal(run('floorDraft.elements.length'),1);assert.equal(run('floorSelection.size'),1);
+assert.equal(node('undoFloorBtn').disabled,false);
+node('undoFloorBtn').fire('click');assert.equal(run('JSON.stringify(floorDraft)'),baseline);
+node('redoFloorBtn').fire('click');assert.equal(run('floorDraft.elements.length'),1);
+run("floorSelection.clear();floorSelection.add(floorDraft.tables[0].id);floorSelection.add(floorDraft.elements[0].id);refreshFloorSelection()");
+node('selectionDuplicateBtn').fire('click');assert.equal(run('floorDraft.tables.length'),2);assert.equal(run('floorDraft.elements.length'),2);assert.equal(run('floorSelection.size'),2);
+assert.equal(run('new Set(floorDraft.tables.map(t=>t.number)).size'),2);
+node('selectionDeleteBtn').fire('click');assert.equal(run('floorDraft.tables.length'),1);assert.equal(run('floorDraft.elements.length'),1);
+node('undoFloorBtn').fire('click');assert.equal(run('floorDraft.tables.length'),2);
+run("floorSelection.add(floorDraft.tables[0].id);reservations=[{tables:[floorDraft.tables[0].number]}];refreshFloorSelection()");
+node('selectionDeleteBtn').fire('click');assert.equal(run('floorDraft.tables.length'),2);assert.equal(node('selectionDeleteBtn').disabled,true);
+run("reservations=[];floorSelection.clear();floorSelection.add(floorDraft.tables[0].id);refreshFloorSelection()");
+node('inspectorWidth').value='200';node('inspectorDepth').value='140';node('inspectorAngle').value='90';node('inspectorColor').value='#28734f';node('inspectorForm').fire('submit');
+assert.equal(run('floorDraft.tables[0].width'),2);assert.equal(run('floorDraft.tables[0].angle'),90);
+node('undoFloorBtn').fire('click');assert.equal(run('floorDraft.tables[0].width'),1.2);
+run("quickAddFurniture('chair')");assert.equal(node('redoFloorBtn').disabled,true);
+node('openCatalogBtn').fire('click');assert(node('floorWorkspace').classes.has('catalog-open'));
+node('openInspectorBtn').fire('click');assert(!node('floorWorkspace').classes.has('catalog-open'));assert(node('floorWorkspace').classes.has('inspector-open'));
+node('cancelPlanBtn').fire('click');assert.equal(run('editorHistory.length'),0);assert(node('workspaceCatalog').classes.has('hidden'));
+console.log('PASS: catalog creation, atomic group duplication/deletion, protected reservations, inline properties, undo/redo branching and mobile panels.');
