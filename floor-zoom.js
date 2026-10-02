@@ -16,6 +16,7 @@ const FloorZoom = (() => {
         scale = clamp(next);
         canvas.style.width = baseWidth + 'px'; canvas.style.height = baseHeight + 'px';
         canvas.style.transform = 'scale(' + scale + ')';
+        canvas.style.setProperty('--floor-inverse-zoom',String(1/scale));
         stage.style.width = baseWidth * scale + 'px'; stage.style.height = baseHeight * scale + 'px';
         viewport.scrollLeft = Math.max(0, x * scale - point.x); viewport.scrollTop = Math.max(0, y * scale - point.y);
         document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + ' %';

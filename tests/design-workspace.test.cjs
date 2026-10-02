@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 class Node {
- constructor(){this.dataset={};this.clientWidth=580;this.clientHeight=580;this.scrollLeft=0;this.scrollTop=0;this.value='';this.children=[];this.events={};this.attributes={};this.style={};this.classes=new Set();this.classList={add:(...cs)=>cs.forEach(c=>this.classes.add(c)),remove:(...cs)=>cs.forEach(c=>this.classes.delete(c)),contains:c=>this.classes.has(c),toggle:(c,force)=>{const yes=force===undefined?!this.classes.has(c):force;yes?this.classes.add(c):this.classes.delete(c);return yes}};}
+ constructor(){this.dataset={};this.clientWidth=580;this.clientHeight=580;this.scrollLeft=0;this.scrollTop=0;this.value='';this.children=[];this.events={};this.attributes={};this.style={setProperty(name,value){this[name]=value;}};this.classes=new Set();this.classList={add:(...cs)=>cs.forEach(c=>this.classes.add(c)),remove:(...cs)=>cs.forEach(c=>this.classes.delete(c)),contains:c=>this.classes.has(c),toggle:(c,force)=>{const yes=force===undefined?!this.classes.has(c):force;yes?this.classes.add(c):this.classes.delete(c);return yes}};}
  addEventListener(name,fn){(this.events[name] ||= []).push(fn)}
  fire(name,event={}){for(const fn of this.events[name]||[])fn({preventDefault(){},target:this,...event})}
  append(n){this.children.push(n)} appendChild(n){this.append(n)} replaceChildren(...nodes){this.children=nodes}
@@ -308,3 +308,10 @@ for(const type of ['table','bar','chair','buffet','plant','lamp','wall','door','
 }
 assert(run("Floor3D.render({shape:'square',width:2,depth:1})!==Floor3D.render({shape:'square',width:1,depth:2})"));
 console.log('PASS: furniture relief preserved at 25× and ¼ size across catalog; width/depth aspect ratio remains editable.');
+
+// Selection controls compensate for canvas zoom, including very large rooms.
+run("floorDraft=FloorPlan.defaults();floorDraft.rooms[0].width=328;floorDraft.rooms[0].depth=150;FloorZoom.updateRoom(floorDraft,'main');FloorZoom.setScale(.06)");
+assert(Math.abs(Number(node('tablesGrid').style['--floor-inverse-zoom'])*run('FloorZoom.getScale()')-1)<1e-9);
+run('FloorZoom.setScale(2.5)');
+assert.equal(Number(node('tablesGrid').style['--floor-inverse-zoom']),.4);
+console.log('PASS: constant screen-size selection controls from 6% to 250% zoom.');

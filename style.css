@@ -1315,3 +1315,39 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 /* Keep vector detail outside the page DOM; images remain non-interactive. */
 img.geometry-3d { display:block; width:100%; height:100%; object-fit:fill; pointer-events:none; user-select:none; }
 .catalog-preview img.geometry-3d { width:100%; height:100%; }
+
+/* Selection controls stay usable at every plan zoom level. */
+#floorWorkspace .rotation-handle,#floorWorkspace .resize-handle {
+    --handle-size:38px;
+    width:calc(var(--handle-size) * var(--floor-inverse-zoom,1));
+    height:calc(var(--handle-size) * var(--floor-inverse-zoom,1));
+    right:calc(-20px * var(--floor-inverse-zoom,1));
+    border-width:calc(2px * var(--floor-inverse-zoom,1));
+    font-size:calc(24px * var(--floor-inverse-zoom,1));
+    box-shadow:0 calc(2px * var(--floor-inverse-zoom,1)) calc(5px * var(--floor-inverse-zoom,1)) #163e3340;
+    background:#fff; color:#176d51; opacity:1; line-height:1; padding:0;
+}
+#floorWorkspace .rotation-handle { top:calc(-24px * var(--floor-inverse-zoom,1)); border-radius:50%; }
+#floorWorkspace .resize-handle { bottom:calc(-24px * var(--floor-inverse-zoom,1)); border-radius:calc(10px * var(--floor-inverse-zoom,1)); }
+#floorWorkspace .group-selected {
+    outline-width:calc(2px * var(--floor-inverse-zoom,1));
+    outline-offset:calc(5px * var(--floor-inverse-zoom,1));
+    border-radius:calc(9px * var(--floor-inverse-zoom,1));
+    box-shadow:none;
+}
+#floorWorkspace .group-selected .furniture-label,
+#floorWorkspace .group-selected .element-label {
+    transform:translateX(-50%) scale(var(--floor-inverse-zoom,1));
+    transform-origin:top center;
+    margin-top:calc(10px * var(--floor-inverse-zoom,1));
+}
+@media(pointer:coarse) {
+    #floorWorkspace .rotation-handle,#floorWorkspace .resize-handle { --handle-size:44px; }
+}
+/* Native CSS cursor: no mouse-following JavaScript or animation loop. */
+:root { --resto-cursor:url('asset/img/editor-cursor.svg') 5 3,auto; }
+body,body button,body a,body summary,body select { cursor:var(--resto-cursor); }
+#floorViewport,#floorWorkspace .table-card,#floorWorkspace .floor-element { cursor:var(--resto-cursor); }
+#floorWorkspace .table-card:active,#floorWorkspace .floor-element:active,#floorViewport.panning { cursor:grabbing; }
+#floorWorkspace .rotation-handle { cursor:grab; }
+#floorWorkspace .resize-handle { cursor:nwse-resize; }
