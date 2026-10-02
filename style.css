@@ -1345,7 +1345,7 @@ img.geometry-3d { display:block; width:100%; height:100%; object-fit:fill; point
     #floorWorkspace .rotation-handle,#floorWorkspace .resize-handle { --handle-size:44px; }
 }
 /* Native CSS cursor: no mouse-following JavaScript or animation loop. */
-:root { --resto-cursor:url('asset/img/editor-cursor.svg?v=2') 10 8,auto; }
+:root { --resto-cursor:url('asset/img/editor-cursor.svg?v=3') 9 9,auto; }
 body,body button,body a,body summary,body select { cursor:var(--resto-cursor); }
 #floorViewport,#floorWorkspace .table-card,#floorWorkspace .floor-element { cursor:var(--resto-cursor); }
 #floorWorkspace .table-card:active,#floorWorkspace .floor-element:active,#floorViewport.panning { cursor:grabbing; }

@@ -6,7 +6,7 @@
     <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#fff"/><stop offset=".55" stop-color="#eefaff"/><stop offset="1" stop-color="#a9dffa"/>
     </linearGradient>
-    <path id="arrow" d="M10 8L12 29L17 23L21 32L25 30L21 21L29 20Z"/>
+    <path id="arrow" d="M11 8L31 16Q34 17.2 31 18.5L21 22L18 31Q17 34 15.5 31L8 11Q7 7 11 8Z"/>
   </defs>
   <use href="#arrow" fill="#7ecbf1" stroke="#a4e0ff" stroke-width="5" opacity=".7" filter="url(#glow)"/>
   <use href="#arrow" fill="#101a20" stroke="url(#rim)" stroke-width="1.6" stroke-linejoin="round"/>
