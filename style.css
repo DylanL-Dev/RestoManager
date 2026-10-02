@@ -1306,3 +1306,8 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
     .workspace-help { font-size:11px; }
 }
 @media(max-width:400px) { .workspace-catalog-items { grid-template-columns:repeat(3,minmax(0,1fr)); } .inspector-fields { grid-template-columns:1fr 1fr; } }
+/* Pendant la conception, toute la hauteur disponible revient au plan. */
+.container:has(.workspace-active) > .search-section,
+.container:has(.workspace-active) > .service-info,
+.container:has(.workspace-active) > .service-nav { display:none; }
+.workspace-active .floor-toolbar { margin-bottom:10px; }
