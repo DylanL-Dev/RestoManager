@@ -131,6 +131,7 @@ function refreshFloorSelection(){
     el('selectionTools').classList.toggle('hidden',!floorDraft||(!multiSelectMode&&!floorSelection.size));
     el('tablesGrid').classList.toggle('multi-select',multiSelectMode&&!!floorDraft);
     if(typeof refreshWorkspace==='function')refreshWorkspace();
+    if(typeof FloorThree!=='undefined')FloorThree.selection();
 }
 function moveFloorGroup(items,origins,dx,dy){
     const room=currentPlan().rooms.find(r=>r.id===floorRoom);
@@ -212,9 +213,10 @@ function visibleFurnitureSpot(item){
         const proposed={...item,x:Math.max(0,viewport.scrollLeft/pixelWidth*100),y:Math.max(0,viewport.scrollTop/pixelHeight*100)};
         expandFloor([proposed]);return {x:proposed.x,y:proposed.y};
     }
-    const left=Math.min(100,viewport.scrollLeft/pixelWidth*100),top=Math.min(100,viewport.scrollTop/pixelHeight*100);
-    const right=Math.min(100,(viewport.scrollLeft+viewport.clientWidth)/pixelWidth*100),bottom=Math.min(100,(viewport.scrollTop+viewport.clientHeight)/pixelHeight*100);
-    const cx=(left+right)/2,cy=(top+bottom)/2;
+    const centre3D=typeof FloorThree!=='undefined'&&FloorThree.isActive()?FloorThree.centre():null;
+    const left=centre3D?Math.max(0,centre3D.x-20):Math.min(100,viewport.scrollLeft/pixelWidth*100),top=centre3D?Math.max(0,centre3D.y-20):Math.min(100,viewport.scrollTop/pixelHeight*100);
+    const right=centre3D?Math.min(100,centre3D.x+20):Math.min(100,(viewport.scrollLeft+viewport.clientWidth)/pixelWidth*100),bottom=centre3D?Math.min(100,centre3D.y+20):Math.min(100,(viewport.scrollTop+viewport.clientHeight)/pixelHeight*100);
+    const cx=centre3D?.x??(left+right)/2,cy=centre3D?.y??(top+bottom)/2;
     const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
     const centre={x:clamp(cx-w/2,0,100-w),y:clamp(cy-h/2,0,100-h)};
     const others=currentPlan().tables.concat(currentPlan().elements).filter(t=>t.roomId===floorRoom&&t.type!=='zone');
@@ -283,6 +285,7 @@ afficherTables = function () {
     el('floorSpacingNotice').classList.toggle('hidden',!editing||!pairs);
     FloorZoom.updateRoom(plan,floorRoom);
     if(typeof recordEditorHistory==='function')recordEditorHistory();
+    if(typeof FloorThree!=='undefined')FloorThree.sync();
     if (!plan.tables.some(t=>t.roomId===floorRoom)&&!plan.elements.some(t=>t.roomId===floorRoom)) { const message = document.createElement('p'); message.className = 'floor-empty'; message.textContent = editing ? 'Cette salle est vide. Ajoutez une table.' : 'Aucune table dans cette salle.'; grid.append(message); }
 };
 function openTableEditor(id) {

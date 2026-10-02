@@ -122,5 +122,5 @@ const Floor3D=(()=>{
   if(entry){entry.image=result;cacheCharacters+=result.length;trimCache();}
   return result;
  }
- return {render,image,model,rotate,project,shade};
+ return {render,image,model,visual:visualItem,rotate,project,shade};
 })();
