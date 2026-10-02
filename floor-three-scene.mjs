@@ -82,7 +82,7 @@ export function createFloorScene(host,api){
     function position(mesh,item){
         const b=api.bounds(item),visual=api.visual(item),scale=item.width/visual.width*unit;
         mesh.position.set((item.x*room.width/100+b.width/2-room.width/2)*unit,0,(item.y*room.depth/100+b.depth/2-room.depth/2)*unit);
-        mesh.rotation.y=-(item.angle||0)*Math.PI/180;mesh.scale.setScalar(scale);
+        mesh.rotation.y=(item.angle||0)*Math.PI/180;mesh.scale.setScalar(scale);
         mesh.userData.height=(mesh.geometry.boundingBox?.max.y||1)*scale;
     }
     function setSelection(ids){
@@ -118,7 +118,7 @@ export function createFloorScene(host,api){
             if(mesh&&!!mesh.userData.zone!==(item.type==='zone')){models.remove(mesh);if(mesh.userData.zone){mesh.geometry.dispose();mesh.material.dispose();}objects.delete(item.id);mesh=null;}
             if(item.type==='zone'){
                 if(!mesh){mesh=new THREE.Mesh(new THREE.BoxGeometry(1,.01,1),new THREE.MeshBasicMaterial({color:item.color,transparent:true,opacity:.15,depthWrite:false}));mesh.userData.zone=true;objects.set(item.id,mesh);models.add(mesh);}
-                const b=api.bounds(item);mesh.position.set((item.x*room.width/100+b.width/2-room.width/2)*unit,.005,(item.y*room.depth/100+b.depth/2-room.depth/2)*unit);mesh.rotation.y=-item.angle*Math.PI/180;mesh.scale.set(item.width*unit,1,item.depth*unit);mesh.material.color.set(item.color);mesh.userData.height=.01;
+                const b=api.bounds(item);mesh.position.set((item.x*room.width/100+b.width/2-room.width/2)*unit,.005,(item.y*room.depth/100+b.depth/2-room.depth/2)*unit);mesh.rotation.y=(item.angle||0)*Math.PI/180;mesh.scale.set(item.width*unit,1,item.depth*unit);mesh.material.color.set(item.color);mesh.userData.height=.01;
             }else{
                 const geometry=geometryFor(item);if(!mesh){mesh=new THREE.Mesh(geometry,material);objects.set(item.id,mesh);models.add(mesh);}else mesh.geometry=geometry;
                 position(mesh,item);
