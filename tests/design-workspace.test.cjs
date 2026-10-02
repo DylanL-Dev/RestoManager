@@ -300,3 +300,11 @@ assert.equal(frames.size,1);assert.equal(run('floorDraft.tables[0].x'),45);
 framedTable.fire('pointerup');assert.equal(frames.size,0);assert.equal(run('floorDraft.tables[0].x'),55);
 assert.equal(run('editorHistory.length'),2);
 console.log('PASS: exact spacing equivalence on rotated dense scene, reusable lightweight SVG images, frame coalescing and final pointer flush.');
+
+// Resizing a model must preserve the same relief, rather than flatten its legs.
+for(const type of ['table','bar','chair','buffet','plant','lamp','wall','door','window','sofa','kitchen','toilets','reception','pillar']){
+ const expression=type==='table'?"{shape:'square',width:1.2,depth:1.2,capacity:4,angle:45}":`{type:'${type}',width:2,depth:1,angle:45}`;
+ assert(run(`(()=>{const t=${expression};return Floor3D.render(t)===Floor3D.render({...t,width:t.width*25,depth:t.depth*25})&&Floor3D.render(t)===Floor3D.render({...t,width:t.width/4,depth:t.depth/4});})()`),type+' preserves relief across scale');
+}
+assert(run("Floor3D.render({shape:'square',width:2,depth:1})!==Floor3D.render({shape:'square',width:1,depth:2})"));
+console.log('PASS: furniture relief preserved at 25× and ¼ size across catalog; width/depth aspect ratio remains editable.');

@@ -3,13 +3,23 @@
 const Floor3D=(()=>{
  const camera=[0,.866,.5],light=[-.45,.8,.4],cache=new Map();
  let cacheCharacters=0;
- const keyFor=item=>JSON.stringify([item.type,item.width,item.depth,item.angle,item.shape,item.capacity,item.color]);
+ const keyFor=item=>{const visual=visualItem(item);return JSON.stringify([visual.type,visual.width,visual.depth,visual.angle,visual.shape,visual.capacity,visual.color]);};
  function trimCache(){while(cache.size>64||cacheCharacters>4000000){const key=cache.keys().next().value,entry=cache.get(key);cacheCharacters-=entry.svg.length+(entry.image?.length||0);cache.delete(key);}}
  const rotate=(p,a)=>[p[0]*Math.cos(a)+p[2]*Math.sin(a),p[1],-p[0]*Math.sin(a)+p[2]*Math.cos(a)];
  const project=p=>[p[0],p[2]*.866-p[1]*.5];
  const dot=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);
  function shade(hex,normal){const n=hex.replace('#','');const rgb=[0,2,4].map(i=>parseInt(n.slice(i,i+2),16));const k=.5+.5*Math.max(0,dot(normal,light));return '#'+rgb.map(c=>Math.min(255,Math.round(c*k)).toString(16).padStart(2,'0')).join('');}
+ // Furniture resize is proportional: retain relief even on oversized layouts.
+ // Dimensions in the plan remain untouched; build the drawing in nominal units.
+ const nominalAreas={bar:2.4,wall:.6,door:1,window:.3,pillar:.25,plant:.36,kitchen:6,toilets:3,lamp:.25,chair:.3025,buffet:2,reception:.96,sofa:1.7};
+ function visualItem(item){
+  const width=item.width||1.2,depth=item.depth||1.2;
+  const area=nominalAreas[item.type]||(item.shape==='rectangle'||item.shape==='bench'?2.16:1.44);
+  const scale=Math.sqrt(width*depth/area);
+  return {...item,width:Math.round(width/scale*1e8)/1e8,depth:Math.round(depth/scale*1e8)/1e8};
+ }
  function model(item){
+  item=visualItem(item);
   const faces=[],wood=item.color||'#ad814f',green='#39745b',leg='#604530';
   const face=(points,normal,color)=>faces.push({points,normal,color});
   const tint=(hex,k)=>'#'+[1,3,5].map(i=>Math.min(255,Math.round(parseInt(hex.slice(i,i+2),16)*k)).toString(16).padStart(2,'0')).join('');
