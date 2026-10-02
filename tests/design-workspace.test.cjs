@@ -147,7 +147,7 @@ console.log('PASS: single-table defaults, reversible one-table restart and progr
 // Advance past the earlier pinch suppression interval before testing fresh clicks.
 context.Date=class extends Date { static now(){return Date.now()+1000;} };
 // A mixed selection moves as a rigid group, including against room edges.
-run(`floorDraft=FloorPlan.get();floorRoom='main';alignmentEnabled=false;multiSelectMode=false;floorSelection.clear();floorDraft.tables[0].x=10;floorDraft.tables[0].y=10;floorDraft.elements.push(FloorPlan.itemOptions({id:'group-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:35,y:25,angle:45}));afficherTables();`);
+run(`floorDraft=FloorPlan.get();floorRoom='main';floorDraft.rooms[0].autoSize=false;alignmentEnabled=false;multiSelectMode=false;floorSelection.clear();floorDraft.tables[0].x=10;floorDraft.tables[0].y=10;floorDraft.elements.push(FloorPlan.itemOptions({id:'group-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:35,y:25,angle:45}));afficherTables();`);
 node('multiSelectBtn').fire('click');
 const firstGroupTable=node('tablesGrid').children.find(n=>n.getAttribute('data-table-number')==='1');
 const groupPlant=node('tablesGrid').children.find(n=>n.getAttribute('data-floor-id')==='group-plant');
@@ -162,7 +162,7 @@ assert(Math.abs(run("floorDraft.elements.find(t=>t.id==='group-plant').x-floorDr
 confirms=true;node('cancelPlanBtn').fire('click');assert.equal(run('floorSelection.size'),0);assert.equal(run('multiSelectMode'),false);
 assert(!run("FloorPlan.get().elements.some(t=>t.id==='group-plant')"));
 console.log('PASS: mixed multi-selection, pointer group drag, preserved spacing, room boundary clamp and cancel.');
-run(`floorDraft=FloorPlan.get();floorRoom='main';multiSelectMode=true;floorSelection.clear();Object.assign(floorDraft.tables[0],{x:10,y:10,width:1,depth:1,angle:45});floorDraft.elements.push(FloorPlan.itemOptions({id:'scale-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:30,y:25,angle:90}));floorSelection.add(floorDraft.tables[0].id);floorSelection.add('scale-plant');afficherTables();`);
+run(`floorDraft=FloorPlan.get();floorRoom='main';floorDraft.rooms[0].autoSize=false;multiSelectMode=true;floorSelection.clear();Object.assign(floorDraft.tables[0],{x:10,y:10,width:1,depth:1,angle:45});floorDraft.elements.push(FloorPlan.itemOptions({id:'scale-plant',roomId:'main',type:'plant',label:'Plante',width:.6,depth:.6,x:30,y:25,angle:90}));floorSelection.add(floorDraft.tables[0].id);floorSelection.add('scale-plant');afficherTables();`);
 const scaleHandle=node('tablesGrid').children[0].children.find(n=>n.className==='resize-handle');
 scaleHandle.fire('pointerdown',{button:0,clientX:0,clientY:0,pointerId:2,stopPropagation(){}});
 scaleHandle.fire('pointermove',{clientX:290,clientY:290,stopPropagation(){}});
@@ -202,3 +202,57 @@ const nearbySpot=run("visibleFurnitureSpot({roomId:'main',width:1,depth:1,angle:
 assert(Math.hypot(nearbySpot.x-central.x,nearbySpot.y-central.y)>0);
 assert(run(`!FloorPlan.overlaps(floorDraft,{roomId:'main',width:1,depth:1,angle:0,x:${nearbySpot.x},y:${nearbySpot.y}},floorDraft.elements[1])`));
 console.log('PASS: visible-centre placement after zoom/pan, nearby vacancy and inherited furniture scale.');
+
+// Automatic room growth preserves physical geometry, group offsets and camera.
+run("floorDraft=FloorPlan.defaults();floorRoom='main';FloorZoom.updateRoom(floorDraft,floorRoom);FloorZoom.setScale(1.5)");
+node('floorViewport').scrollLeft=100;node('floorViewport').scrollTop=120;
+const growScale=run('FloorZoom.getScale()');
+run("floorDraft.elements.push(FloorPlan.itemOptions({id:'grow-bar',roomId:'main',type:'bar',label:'Bar',width:3,depth:1,x:-10,y:-20,angle:90}))");
+const beforeGrow=run('structuredClone(floorDraft)');
+const growth=run('expandFloor()');
+assert(growth.x>0&&growth.y>0);assert.equal(run('FloorZoom.getScale()'),growScale);
+assert.equal(node('floorViewport').scrollLeft,100+growth.x*48*growScale);
+assert.equal(node('floorViewport').scrollTop,120+growth.y*48*growScale);
+assert(run('FloorPlan.valid(floorDraft)'));
+for(const old of beforeGrow.tables.concat(beforeGrow.elements)){
+ const updated=run(`floorDraft.tables.concat(floorDraft.elements).find(t=>t.id==='${old.id}')`);
+ assert.equal(updated.width,old.width);assert.equal(updated.depth,old.depth);assert.equal(updated.angle,old.angle);
+ assert(Math.abs(updated.x*growth.width/100-old.x*growth.oldWidth/100-growth.x)<1e-9);
+ assert(Math.abs(updated.y*growth.depth/100-old.y*growth.oldDepth/100-growth.y)<1e-9);
+}
+assert.equal(run('expandFloor()'),null);
+run('floorDraft.elements=[]');assert.equal(run('expandFloor()'),null);
+run('FloorPlan.save(floorDraft)');assert.equal(run('FloorPlan.get().rooms[0].width'),growth.width);
+// A crowded visible region expands rather than placing another object over it.
+run("floorDraft=FloorPlan.defaults();floorDraft.tables=[];floorDraft.elements=[FloorPlan.itemOptions({id:'full',roomId:'main',type:'bar',label:'Full',width:12,depth:12,x:0,y:0})];FloorZoom.updateRoom(floorDraft,floorRoom);FloorZoom.fit()");
+const expandedSpot=run("visibleFurnitureSpot({id:'new',roomId:'main',width:2,depth:2,angle:0})");
+assert(run('floorDraft.rooms[0].width>12'));
+assert(run(`!FloorPlan.overlaps(floorDraft,{id:'new',roomId:'main',width:2,depth:2,angle:0,x:${expandedSpot.x},y:${expandedSpot.y}},floorDraft.elements[0])`));
+// Consecutive pointer events keep moving after growth, without resetting the zoom.
+run("floorDraft=FloorPlan.defaults();floorDraft.tables[0].x=85;floorDraft.tables[0].y=50;multiSelectMode=false;floorSelection.clear();alignmentEnabled=false;afficherTables();FloorZoom.setScale(1)");
+const growingTable=node('tablesGrid').children.find(n=>n.getAttribute('data-table-number')==='1');
+growingTable.fire('pointerdown',{button:0,clientX:100,clientY:100,pointerId:8});
+growingTable.fire('pointermove',{clientX:158,clientY:100});
+const firstPhysical=run('floorDraft.tables[0].x*floorDraft.rooms[0].width/100');
+growingTable.fire('pointermove',{clientX:180,clientY:100});growingTable.fire('pointerup');
+assert(run('floorDraft.tables[0].x*floorDraft.rooms[0].width/100')>firstPhysical);
+assert(run('FloorPlan.valid(floorDraft)'));assert.equal(run('FloorZoom.getScale()'),1);
+// Huge furniture expands on insertion; fixed mode continues to enforce limits.
+run("floorDraft=FloorPlan.defaults();FloorZoom.updateRoom(floorDraft,floorRoom)");
+assert(run("visibleFurnitureSpot({id:'big',roomId:'main',width:20,depth:4,angle:45})")!==null);
+assert(run('floorDraft.rooms[0].width>12&&floorDraft.rooms[0].depth>12'));
+run('floorDraft.rooms[0].autoSize=false');assert.equal(run("visibleFurnitureSpot({id:'too-big',roomId:'main',width:100,depth:100,angle:0})"),null);
+console.log('PASS: automatic four-sided growth, stable geometry/camera, no shrink, persistence, crowded insertion and continuous drag.');
+
+run("floorDraft=FloorPlan.defaults();floorRoom='main';floorDraft.tables[0].x=85;floorDraft.tables[0].y=85;afficherTables();FloorZoom.setScale(1)");
+const autoResize=node('tablesGrid').children[0].children.find(n=>n.className==='resize-handle');
+autoResize.fire('pointerdown',{button:0,clientX:0,clientY:0,pointerId:9,stopPropagation(){}});
+autoResize.fire('pointermove',{clientX:580,clientY:580,stopPropagation(){}});
+autoResize.fire('pointermove',{clientX:1160,clientY:1160,stopPropagation(){}});
+autoResize.fire('pointerup',{stopPropagation(){}});
+assert(Math.abs(run('floorDraft.tables[0].width')-3.6)<1e-9);
+assert(Math.abs(run('floorDraft.tables[0].x*floorDraft.rooms[0].width/100')-10.2)<1e-9);
+assert(run('FloorPlan.valid(floorDraft)'));assert.equal(run('FloorZoom.getScale()'),1);
+const savedWidth=run('FloorPlan.get().rooms[0].width');
+node('cancelPlanBtn').fire('click');assert.equal(run('FloorPlan.get().rooms[0].width'),savedWidth);
+console.log('PASS: repeated automatic growth during resize preserves anchor and proportional size; cancel preserves saved room.');

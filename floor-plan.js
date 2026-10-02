@@ -76,6 +76,26 @@ const FloorPlan = (() => {
         if (next.some(t=>t.x*width/100+bounds(t).width>width+1e-7 || t.y*depth/100+bounds(t).depth>depth+1e-7)) throw new Error('La salle serait trop petite pour les éléments placés. Déplacez-les avant de réduire sa taille.');
         room.width=width;room.depth=depth;items.forEach((t,i)=>{t.x=next[i].x;t.y=next[i].y;});
     }
+    // Grow only: translate every item together when extending left/up.
+    function growRoom(plan,id,extras=[]) {
+        const room=plan.rooms.find(r=>r.id===id);
+        if(!room || room.autoSize===false)return null;
+        const existing=plan.tables.concat(plan.elements).filter(t=>t.roomId===id);
+        const items=existing.filter(t=>!extras.some(e=>e.id===t.id)).concat(extras);
+        if(!items.length || items.some(t=>![t.x,t.y,t.width,t.depth].every(Number.isFinite)||t.width<=0||t.depth<=0))return null;
+        const oldWidth=room.width,oldDepth=room.depth;
+        const left=Math.min(...items.map(t=>t.x*oldWidth/100)),top=Math.min(...items.map(t=>t.y*oldDepth/100));
+        const right=Math.max(...items.map(t=>t.x*oldWidth/100+bounds(t).width)),bottom=Math.max(...items.map(t=>t.y*oldDepth/100+bounds(t).depth));
+        // Trigger within 50 cm; add at least a metre of working space.
+        const x=left<.5?Math.ceil(1-left):0,y=top<.5?Math.ceil(1-top):0;
+        const width=Math.max(oldWidth+x,right>oldWidth-.5?Math.ceil(right+1)+x:oldWidth+x);
+        const depth=Math.max(oldDepth+y,bottom>oldDepth-.5?Math.ceil(bottom+1)+y:oldDepth+y);
+        if(width===oldWidth&&depth===oldDepth)return null;
+        const rebase=t=>{t.x=(t.x*oldWidth/100+x)/width*100;t.y=(t.y*oldDepth/100+y)/depth*100;};
+        new Set(existing.concat(extras)).forEach(rebase);
+        room.width=width;room.depth=depth;
+        return {x,y,oldWidth,oldDepth,width,depth};
+    }
     function freeSpot(plan,item) {
         const room=roomFor(plan,item);if(bounds(item).width>room.width || bounds(item).depth>room.depth)return null;
         const others=plan.tables.filter(t=>t.roomId===item.roomId && t.id!==item.id);
@@ -90,7 +110,7 @@ const FloorPlan = (() => {
     if(!valid(plan))plan=defaults();
     function sync(){ReservationEngine.TABLES.splice(0,ReservationEngine.TABLES.length,...plan.tables.map(t=>t.number));Object.keys(ReservationEngine.CAPACITY).forEach(k=>delete ReservationEngine.CAPACITY[k]);plan.tables.forEach(t=>{ReservationEngine.CAPACITY[t.number]=t.capacity;});}
     sync();
-    return {get:()=>structuredClone(plan),defaults,migrate,valid,inside,overlaps,sizePercent,resizeRoom,freeSpot,bounds,nearby,gap,tableOptions,itemOptions,label:number=>{const t=plan.tables.find(t=>t.number===number);return 'T'+number+(t?.letter||'');},save(next){
+    return {get:()=>structuredClone(plan),defaults,migrate,valid,inside,overlaps,sizePercent,resizeRoom,growRoom,freeSpot,bounds,nearby,gap,tableOptions,itemOptions,label:number=>{const t=plan.tables.find(t=>t.number===number);return 'T'+number+(t?.letter||'');},save(next){
         if(!valid(next))throw new Error('Plan invalide : vérifiez les dimensions et les éléments de la salle.');
         localStorage.setItem(key,JSON.stringify(next));plan=structuredClone(next);sync();
     }};

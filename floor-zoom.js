@@ -26,12 +26,16 @@ const FloorZoom = (() => {
         setScale(Math.min(1, viewport.clientWidth / baseWidth, (viewport.clientHeight || 580) / baseHeight));
         viewport.scrollLeft = 0; viewport.scrollTop = 0;
     }
-    function updateRoom(plan,id) {
+    function updateRoom(plan,id,growth) {
         const room=plan.rooms.find(r=>r.id===id);
         const key=id+':'+room.width+':'+room.depth;
         if(key===roomKey)return;
         roomKey=key;baseWidth=room.width*metresToPixels;baseHeight=room.depth*metresToPixels;
-        fit();
+        if(growth){
+            const viewport=document.getElementById('floorViewport');
+            const left=viewport.scrollLeft+growth.x*metresToPixels*scale,top=viewport.scrollTop+growth.y*metresToPixels*scale;
+            setScale(scale);viewport.scrollLeft=left;viewport.scrollTop=top;
+        }else fit();
     }
     document.addEventListener('DOMContentLoaded', () => {
         const viewport = document.getElementById('floorViewport');

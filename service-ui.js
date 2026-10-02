@@ -33,14 +33,24 @@ function placeFloorItem(button,item) {
     const size=FloorPlan.sizePercent(currentPlan(),item);
     button.style.left=item.x+'%';button.style.top=item.y+'%';button.style.width=size.width+'%';button.style.height=size.height+'%';
 }
+function expandFloor(extras=[]){
+    if(!floorDraft)return null;
+    const growth=FloorPlan.growRoom(floorDraft,floorRoom,extras);
+    if(!growth)return null;
+    FloorZoom.updateRoom(floorDraft,floorRoom,growth);
+    const items=floorDraft.tables.concat(floorDraft.elements);
+    for(const button of el('tablesGrid').children){const item=items.find(t=>t.id===button.getAttribute('data-floor-id'));if(item)placeFloorItem(button,item);}
+    el('roomDimensionsLabel').textContent=growth.width+' × '+growth.depth+' m · Auto';
+    hideAlignmentGuides();return growth;
+}
 let snapFloorRotation=true;
 function rotateFloorTable(table,angle){
     const room=currentPlan().rooms.find(r=>r.id===table.roomId),before=FloorPlan.bounds(table);
     const candidate={...table,angle:((Math.round(angle)%360)+360)%360},after=FloorPlan.bounds(candidate);
     candidate.x+=((before.width-after.width)/2)/room.width*100;
     candidate.y+=((before.depth-after.depth)/2)/room.depth*100;
-    if(!FloorPlan.inside(currentPlan(),candidate))return false;
-    Object.assign(table,candidate);return true;
+    if(room.autoSize===false&&!FloorPlan.inside(currentPlan(),candidate))return false;
+    Object.assign(table,candidate);expandFloor();return true;
 }
 function addRotationHandle(button,table){
     const handle=document.createElement('span');handle.className='rotation-handle';handle.textContent='↻';handle.setAttribute('role','button');handle.setAttribute('tabindex','0');handle.setAttribute('aria-label',table.number!==undefined?'Tourner la table '+table.number:'Tourner '+table.label);
@@ -70,11 +80,11 @@ function resizeFloorGroup(items,initials,factor){
     const width=Math.max(...initials.map(t=>(t.x-x)*room.width/100+FloorPlan.bounds(t).width));
     const depth=Math.max(...initials.map(t=>(t.y-y)*room.depth/100+FloorPlan.bounds(t).depth));
     const min=Math.max(...initials.map(t=>Math.max(.1/t.width,.1/t.depth)));
-    const max=Math.min((room.width-x*room.width/100)/width,(room.depth-y*room.depth/100)/depth);
+    const max=room.autoSize===false?Math.min((room.width-x*room.width/100)/width,(room.depth-y*room.depth/100)/depth):Infinity;
     if(max<min)return false;
     factor=Math.max(min,Math.min(max,factor));
     const candidates=initials.map(t=>({...t,x:x+(t.x-x)*factor,y:y+(t.y-y)*factor,width:t.width*factor,depth:t.depth*factor}));
-    if(!candidates.every(t=>FloorPlan.inside(currentPlan(),t)))return false;
+    if(room.autoSize===false&&!candidates.every(t=>FloorPlan.inside(currentPlan(),t)))return false;
     items.forEach((t,i)=>Object.assign(t,candidates[i]));return true;
 }
 function addResizeHandle(button,item){
@@ -83,10 +93,10 @@ function addResizeHandle(button,item){
     const targets=()=>multiSelectMode&&floorSelection.has(item.id)?selectedRoomItems():[item];
     const paint=()=>{for(const child of el('tablesGrid').children){const t=targets().find(t=>t.id===child.getAttribute('data-floor-id'));if(t){placeFloorItem(child,t);child.querySelector('.furniture-art').outerHTML=furnitureMarkup(t);}}};
     handle.addEventListener('pointerdown',event=>{event.stopPropagation();event.preventDefault();if(event.button!==0)return;const rect=button.getBoundingClientRect();gesture={items:targets(),initials:targets().map(t=>({...t})),x:event.clientX,y:event.clientY,width:rect.width,height:rect.height};handle.setPointerCapture(event.pointerId);});
-    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorGroup(g.items,g.initials,factor))paint();});
+    handle.addEventListener('pointermove',event=>{if(!gesture)return;event.stopPropagation();event.preventDefault();const g=gesture,dx=event.clientX-g.x,dy=event.clientY-g.y,factor=1+(dx*g.width+dy*g.height)/(g.width*g.width+g.height*g.height);if(resizeFloorGroup(g.items,g.initials,factor)){const growth=expandFloor();if(growth)g.initials.forEach(t=>{t.x=(t.x*growth.oldWidth/100+growth.x)/growth.width*100;t.y=(t.y*growth.oldDepth/100+growth.y)/growth.depth*100;});paint();}});
     ['pointerup','pointercancel'].forEach(name=>handle.addEventListener(name,event=>{event.stopPropagation();gesture=null;}));
     handle.addEventListener('click',event=>{event.stopPropagation();event.preventDefault();});
-    handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();const items=targets();if(resizeFloorGroup(items,items.map(t=>({...t})),['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05))paint();});
+    handle.addEventListener('keydown',event=>{if(!['ArrowUp','ArrowRight','ArrowDown','ArrowLeft'].includes(event.key))return;event.stopPropagation();event.preventDefault();const items=targets();if(resizeFloorGroup(items,items.map(t=>({...t})),['ArrowUp','ArrowRight'].includes(event.key)?1.05:1/1.05)){expandFloor();paint();}});
     button.append(handle);
 }
 function furnitureMarkup(item) {
@@ -114,7 +124,7 @@ function moveFloorGroup(items,origins,dx,dy){
     const room=currentPlan().rooms.find(r=>r.id===floorRoom);
     let minX=-Infinity,maxX=Infinity,minY=-Infinity,maxY=Infinity;
     items.forEach((t,i)=>{const box=FloorPlan.bounds(t),p=origins[i];minX=Math.max(minX,-p.x);minY=Math.max(minY,-p.y);maxX=Math.min(maxX,100-box.width/room.width*100-p.x);maxY=Math.min(maxY,100-box.depth/room.depth*100-p.y);});
-    dx=Math.max(minX,Math.min(maxX,dx));dy=Math.max(minY,Math.min(maxY,dy));
+    if(room.autoSize===false){dx=Math.max(minX,Math.min(maxX,dx));dy=Math.max(minY,Math.min(maxY,dy));}
     items.forEach((t,i)=>{t.x=origins[i].x+dx;t.y=origins[i].y+dy;});
     for(const button of el('tablesGrid').children){const item=items.find(t=>t.id===button.getAttribute('data-floor-id'));if(item)placeFloorItem(button,item);}
 }
@@ -151,13 +161,14 @@ function bindFloorItem(button,item,onClick) {
         const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)<6&&!moved)return;moved=true;
         const rawX=dx/drag.rect.width*100,rawY=dy/drag.rect.height*100;
         const snap=alignmentEnabled&&!event.altKey?snapFloorGroup(drag.items,drag.origins,rawX,rawY,drag.rect):{dx:rawX,dy:rawY};
-        moveFloorGroup(drag.items,drag.origins,snap.dx,snap.dy);showAlignmentGuides(snap);
+        moveFloorGroup(drag.items,drag.origins,snap.dx,snap.dy);
+        if(expandFloor()){drag={...drag,x:event.clientX,y:event.clientY,origins:drag.items.map(t=>({x:t.x,y:t.y})),rect:grid.getBoundingClientRect()};}else showAlignmentGuides(snap);
     });
     button.addEventListener('pointerup',()=>{drag=null;hideAlignmentGuides();});button.addEventListener('pointercancel',()=>{drag=null;moved=true;hideAlignmentGuides();});
     button.addEventListener('keydown',event=>{
         if(!floorDraft||!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(event.key))return;event.preventDefault();
         const room=currentPlan().rooms.find(r=>r.id===item.roomId),items=floorSelection.has(item.id)?selectedRoomItems():[item];
-        moveFloorGroup(items,items.map(t=>({x:t.x,y:t.y})),(event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0)*10/room.width,(event.key==='ArrowDown'?1:event.key==='ArrowUp'?-1:0)*10/room.depth);
+        moveFloorGroup(items,items.map(t=>({x:t.x,y:t.y})),(event.key==='ArrowRight'?1:event.key==='ArrowLeft'?-1:0)*10/room.width,(event.key==='ArrowDown'?1:event.key==='ArrowUp'?-1:0)*10/room.depth);expandFloor();
     });
     button.addEventListener('click',event=>{if(moved||FloorZoom.ignoreClick()){moved=false;return;}
         if(floorDraft&&(multiSelectMode||event.shiftKey||event.ctrlKey||event.metaKey)){multiSelectMode=true;floorSelection.has(item.id)?floorSelection.delete(item.id):floorSelection.add(item.id);refreshFloorSelection();return;}
@@ -182,7 +193,11 @@ function visibleFurnitureSpot(item){
     const room=currentPlan().rooms.find(r=>r.id===floorRoom),viewport=el('floorViewport'),scale=FloorZoom.getScale();
     const pixelWidth=room.width*48*scale,pixelHeight=room.depth*48*scale,box=FloorPlan.bounds(item);
     const w=box.width/room.width*100,h=box.depth/room.depth*100;
-    if(w>100||h>100)return null;
+    if(w>100||h>100){
+        if(room.autoSize===false)return null;
+        const proposed={...item,x:Math.max(0,viewport.scrollLeft/pixelWidth*100),y:Math.max(0,viewport.scrollTop/pixelHeight*100)};
+        expandFloor([proposed]);return {x:proposed.x,y:proposed.y};
+    }
     const left=Math.min(100,viewport.scrollLeft/pixelWidth*100),top=Math.min(100,viewport.scrollTop/pixelHeight*100);
     const right=Math.min(100,(viewport.scrollLeft+viewport.clientWidth)/pixelWidth*100),bottom=Math.min(100,(viewport.scrollTop+viewport.clientHeight)/pixelHeight*100);
     const cx=(left+right)/2,cy=(top+bottom)/2;
@@ -195,7 +210,13 @@ function visibleFurnitureSpot(item){
     const positions=[];
     for(let i=0;i<=16;i++)for(let j=0;j<=16;j++){const x=clamp(left+(right-left-w)*i/16,0,100-w),y=clamp(top+(bottom-top-h)*j/16,0,100-h);positions.push({x,y});}
     positions.sort((a,b)=>Math.hypot((a.x-centre.x)*pixelWidth,(a.y-centre.y)*pixelHeight)-Math.hypot((b.x-centre.x)*pixelWidth,(b.y-centre.y)*pixelHeight));
-    return positions.find(free)||centre;
+    const vacancy=positions.find(free);
+    if(vacancy||room.autoSize===false)return vacancy||centre;
+    // Occupied viewport: add beside the nearest occupied extent, then reveal it.
+    const proposed={...item,x:Math.max(room.width,...others.map(t=>t.x*room.width/100+FloorPlan.bounds(t).width)) /room.width*100+.5/room.width*100,y:centre.y};
+    expandFloor([proposed]);
+    viewport.scrollLeft=Math.max(0,(proposed.x*room.width/100+box.width/2)*48*scale-viewport.clientWidth/2);
+    return {x:proposed.x,y:proposed.y};
 }
 function setElementDefaults(){const preset=elementPresets[el('elementTypeInput').value];el('elementLabelInput').value=preset[0];const size=suggestedFurnitureSize(el('elementTypeInput').value);el('elementWidthInput').value=Math.round(size[0]*100);el('elementDepthInput').value=Math.round(size[1]*100);setEditorColor('element',{plant:'#28734f',window:'#28536d',wall:'#3b4553',toilets:'#6c3187'}[el('elementTypeInput').value]||'#8a5a29');}
 function openElementEditor(id){
@@ -240,7 +261,7 @@ afficherTables = function () {
     alignmentGuides=[0,1].map(i=>{const guide=document.createElement('span');guide.className='alignment-guide '+(i?'horizontal':'vertical')+' hidden';guide.setAttribute('aria-hidden','true');grid.append(guide);return guide;});
     refreshFloorSelection();
     const room=plan.rooms.find(r=>r.id===floorRoom);
-    el('roomDimensionsLabel').textContent=room.width+' × '+room.depth+' m';
+    el('roomDimensionsLabel').textContent=room.width+' × '+room.depth+' m'+(room.autoSize===false?'':' · Auto');
     ['plain','wood','tile','stone'].forEach(key=>grid.classList.toggle('floor-'+key,room.floor===key));
     const tables=plan.tables.filter(t=>t.roomId===floorRoom);
     const pairs=tables.reduce((count,t,i)=>count+tables.slice(i+1).filter(other=>FloorPlan.gap(plan,t,other)<0.9-1e-7).length,0);
@@ -325,6 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!Number.isFinite(width)||!Number.isFinite(depth)||width<0.1||depth<0.1)return fail('Indiquez des dimensions de mobilier valides.');
         if(old){const room=floorDraft.rooms.find(r=>r.id===old.roomId),before=FloorPlan.bounds(old),after=FloorPlan.bounds(candidate);candidate.x+=((before.width-after.width)/2)/room.width*100;candidate.y+=((before.depth-after.depth)/2)/room.depth*100;}
         if(!old){const spot=visibleFurnitureSpot(candidate);if(!spot)return fail('Pas assez de place. Agrandissez la salle ou déplacez les tables.');Object.assign(candidate,spot);}
+        expandFloor([candidate]);
         if(!FloorPlan.inside(floorDraft,candidate))return fail('La table dépasse la salle. Déplacez-la ou agrandissez la salle.');
         if(old)Object.assign(old,candidate);else {floorDraft.tables.push(candidate);rememberAddedFurniture(candidate);}
         el('tableEditModal').classList.add('hidden'); afficherTables();
@@ -347,10 +369,11 @@ document.addEventListener('DOMContentLoaded', () => {
         startFloorEdit(); floorDraft.rooms=floorDraft.rooms.filter(r => r.id!==floorRoom); floorRoom='main'; roomOptions(); afficherTables();
     });
     el('roomDimensionsBtn').addEventListener('click',()=>{
-        const room=floorDraft.rooms.find(r=>r.id===floorRoom);el('roomWidthInput').value=room.width;el('roomDepthInput').value=room.depth;setFloorChoice(room.floor);el('roomDimensionsError').textContent='';el('roomDimensionsModal').classList.remove('hidden');
+        const room=floorDraft.rooms.find(r=>r.id===floorRoom);el('roomAutoSizeInput').checked=room.autoSize!==false;el('roomFixedDimensions').classList.toggle('hidden',room.autoSize!==false);el('roomWidthInput').value=room.width;el('roomDepthInput').value=room.depth;setFloorChoice(room.floor);el('roomDimensionsError').textContent='';el('roomDimensionsModal').classList.remove('hidden');
     });
+    el('roomAutoSizeInput').addEventListener('change',()=>el('roomFixedDimensions').classList.toggle('hidden',el('roomAutoSizeInput').checked));
     el('closeDimensionsBtn').addEventListener('click',()=>el('roomDimensionsModal').classList.add('hidden'));
-    el('roomDimensionsForm').addEventListener('submit',event=>{event.preventDefault();try{FloorPlan.resizeRoom(floorDraft,floorRoom,Number(el('roomWidthInput').value),Number(el('roomDepthInput').value));floorDraft.rooms.find(r=>r.id===floorRoom).floor=roomFloorChoice;el('roomDimensionsModal').classList.add('hidden');afficherTables();}catch(error){el('roomDimensionsError').textContent=error.message;}});
+    el('roomDimensionsForm').addEventListener('submit',event=>{event.preventDefault();try{const automatic=el('roomAutoSizeInput').checked;if(!automatic)FloorPlan.resizeRoom(floorDraft,floorRoom,Number(el('roomWidthInput').value),Number(el('roomDepthInput').value));const room=floorDraft.rooms.find(r=>r.id===floorRoom);room.autoSize=automatic;room.floor=roomFloorChoice;if(automatic)expandFloor();el('roomDimensionsModal').classList.add('hidden');afficherTables();}catch(error){el('roomDimensionsError').textContent=error.message;}});
     el('rotateTableBtn').addEventListener('click',()=>setEditorAngle('table',Number(el('tableAngleInput').value)+90));
     el('addElementBtn').addEventListener('click',()=>openElementEditor(null));
     el('closeElementBtn').addEventListener('click',()=>el('elementModal').classList.add('hidden'));
@@ -362,6 +385,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if(!Number.isInteger(candidate.angle)||candidate.angle<0||candidate.angle>=360||!/^#[0-9a-f]{6}$/i.test(candidate.color)){el('elementError').textContent='Vérifiez l’angle et la couleur.';return;}
         if(old){const room=floorDraft.rooms.find(r=>r.id===old.roomId),before=FloorPlan.bounds(old),after=FloorPlan.bounds(candidate);candidate.x+=((before.width-after.width)/2)/room.width*100;candidate.y+=((before.depth-after.depth)/2)/room.depth*100;}
         if(!old){const spot=visibleFurnitureSpot(candidate);if(spot)Object.assign(candidate,spot);}
+        if(!candidate.label||!Number.isFinite(candidate.width)||!Number.isFinite(candidate.depth)||candidate.width<.1||candidate.depth<.1){el('elementError').textContent='Vérifiez le nom et les dimensions.';return;}
+        expandFloor([candidate]);
         if(!candidate.label||!FloorPlan.inside(floorDraft,candidate)){el('elementError').textContent='Vérifiez le nom et les dimensions : l’élément doit tenir dans la salle.';return;}
         if(old)Object.assign(old,candidate);else {floorDraft.elements.push(candidate);rememberAddedFurniture(candidate);}
         el('elementModal').classList.add('hidden');afficherTables();
