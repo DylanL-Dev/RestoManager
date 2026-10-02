@@ -19,7 +19,7 @@ const FloorThree=(()=>{
         if(loading)return;if(scene){show(true);return;}
         loading=true;el('threeViewBtn').disabled=true;el('threeStatus').textContent='Chargement de la 3D…';
         try{
-            const module=await import('./floor-three-scene.mjs?v=2');
+            const module=await import('./floor-three-scene.mjs?v=3');
             scene=module.createFloorScene(el('floorThreeHost'),{
                 model:Floor3D.model,visual:Floor3D.visual,bounds:FloorPlan.bounds,
                 editing:()=>!!floorDraft,selected:()=>floorSelection,

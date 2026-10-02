@@ -1365,3 +1365,5 @@ body,body button,body a,body summary,body select { cursor:var(--resto-cursor); }
 .three-status{font-size:12px;color:#617569;line-height:1.5;margin:6px 0 12px}
 .three-status:empty{display:none}
 @media(max-width:850px){.floor-three-host{height:52dvh;min-height:300px}.three-controls button{flex:1;font-size:13px;padding:8px}}
+
+.three-table-label{transform:none}

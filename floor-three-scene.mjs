@@ -22,6 +22,39 @@ export function furnitureGeometry(faces){
     geometry.setAttribute('color',new THREE.Float32BufferAttribute(colours,3));
     geometry.computeBoundingBox();geometry.computeBoundingSphere();return geometry;
 }
+// Fit projected geometry rather than estimating from the room's depth.
+export function fitCameraToPoints(camera,points,direction){
+    const box=new THREE.Box3().setFromPoints(points),target=box.getCenter(new THREE.Vector3());
+    const toward=direction.clone().normalize(),right=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),toward).normalize(),up=new THREE.Vector3().crossVectors(toward,right);
+    const tanY=Math.tan(THREE.MathUtils.degToRad(camera.fov/2)),tanX=tanY*camera.aspect;
+    let distance=.1;
+    function measure(){
+        distance=.1;
+        for(const point of points){const q=point.clone().sub(target),z=q.dot(toward);distance=Math.max(distance,z+Math.abs(q.dot(right))/(tanX*.88),z+Math.abs(q.dot(up))/(tanY*.88));}
+        camera.position.copy(target).addScaledVector(toward,distance);camera.lookAt(target);camera.updateMatrixWorld(true);camera.updateProjectionMatrix();
+    }
+    // Centre the projected silhouette, including tall and asymmetrical furniture.
+    for(let pass=0;pass<4;pass++){
+        measure();const projected=points.map(p=>p.clone().project(camera));
+        const x=(Math.min(...projected.map(p=>p.x))+Math.max(...projected.map(p=>p.x)))/2;
+        const y=(Math.min(...projected.map(p=>p.y))+Math.max(...projected.map(p=>p.y)))/2;
+        target.addScaledVector(right,x*distance*tanX).addScaledVector(up,y*distance*tanY);
+    }
+    measure();return target;
+}
+export function placeLabels(candidates,width,height){
+    const placed=[];
+    for(const label of [...candidates].sort((a,b)=>Number(b.selected)-Number(a.selected)||a.z-b.z)){
+        if(placed.length>=80&&!label.selected)continue;
+        for(const offset of [0,-24,24,-48,48]){
+            const rect={...label,x:Math.max(4,Math.min(width-label.width-4,label.x-label.width/2)),y:label.y-label.height+offset};
+            if(rect.y<4||rect.y+rect.height>height-4)continue;
+            if(placed.some(p=>rect.x<p.x+p.width+4&&rect.x+rect.width+4>p.x&&rect.y<p.y+p.height+3&&rect.y+rect.height+3>p.y))continue;
+            placed.push(rect);break;
+        }
+    }
+    return placed;
+}
 function floorTexture(style){
     const canvas=document.createElement('canvas');canvas.width=canvas.height=256;
     const ctx=canvas.getContext('2d');
@@ -64,13 +97,14 @@ export function createFloorScene(host,api){
         const width=host.clientWidth,height=host.clientHeight;if(!width||!height)return;
         if(renderer.domElement.width!==Math.floor(width*renderer.getPixelRatio())||renderer.domElement.height!==Math.floor(height*renderer.getPixelRatio())){renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}
         renderer.render(scene,camera);
-        let shown=0;
+        const candidates=[];
         for(const [id,label] of labels){
-            const mesh=objects.get(id),p=new THREE.Vector3(mesh.position.x,mesh.position.y+mesh.userData.height+.12,mesh.position.z).project(camera);
-            const visible=p.z>-1&&p.z<1&&Math.abs(p.x)<.96&&Math.abs(p.y)<.96&&(selected.has(id)||shown++<80);
-            label.hidden=!visible;label.classList.toggle('is-selected',selected.has(id));
-            if(visible){label.style.left=(p.x*.5+.5)*width+'px';label.style.top=(-p.y*.5+.5)*height+'px';}
+            const mesh=objects.get(id),p=new THREE.Vector3(mesh.position.x,mesh.position.y+mesh.userData.height+.08,mesh.position.z).project(camera);
+            label.hidden=true;label.classList.toggle('is-selected',selected.has(id));
+            if(p.z>-1&&p.z<1&&Math.abs(p.x)<1&&Math.abs(p.y)<1)candidates.push({id,x:(p.x*.5+.5)*width,y:(-p.y*.5+.5)*height,z:p.z,width:Math.max(34,label.textContent.length*8+16),height:23,selected:selected.has(id)});
         }
+        for(const p of placeLabels(candidates,width,height)){const label=labels.get(p.id);label.hidden=false;label.style.left=p.x+'px';label.style.top=p.y+'px';}
+
     }
     controls.addEventListener('change',requestRender);
     const observer=new ResizeObserver(requestRender);observer.observe(host);
@@ -97,10 +131,11 @@ export function createFloorScene(host,api){
     function fit(top=false){
         if(!room)return;const box=new THREE.Box3();for(const mesh of objects.values())box.expandByObject(mesh);
         if(box.isEmpty())box.setFromCenterAndSize(new THREE.Vector3(),new THREE.Vector3(room.width*unit,.1,room.depth*unit));
-        const centre=box.getCenter(new THREE.Vector3()),size=box.getSize(new THREE.Vector3());
-        const aspect=Math.max(.25,host.clientWidth/Math.max(1,host.clientHeight));
-        const distance=Math.max(size.x/aspect,size.z,size.y,2)/(2*Math.tan(THREE.MathUtils.degToRad(20)))*1.45;
-        controls.target.copy(centre);camera.position.copy(centre).add(top?new THREE.Vector3(0,distance,.001):new THREE.Vector3(distance*.55,distance*.85,distance*.8));controls.update();requestRender();
+        camera.aspect=Math.max(.2,host.clientWidth/Math.max(1,host.clientHeight));
+        const points=[];
+        for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z])points.push(new THREE.Vector3(x,y,z));
+        controls.target.copy(fitCameraToPoints(camera,points,top?new THREE.Vector3(0,1,.001):new THREE.Vector3(.45,1,.8)));
+        controls.update();requestRender();
     }
     function sync(plan,id,ids){
         room=plan.rooms.find(r=>r.id===id);if(!room)return;
@@ -108,7 +143,9 @@ export function createFloorScene(host,api){
         const key=JSON.stringify([room.id,room.width,room.depth,room.floor]);
         if(key!==roomKey){
             if(ground){scene.remove(ground);ground.geometry.dispose();ground.material.dispose();texture.dispose();}
-            texture=floorTexture(room.floor);texture.repeat.set(Math.max(1,room.width/4),Math.max(1,room.depth/4));texture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
+            texture=floorTexture(room.floor);const scales=plan.tables.filter(t=>t.roomId===id).map(t=>t.width/api.visual(t).width).sort((a,b)=>a-b);
+            const furnitureScale=scales.length?scales[Math.floor(scales.length/2)]:1;
+            texture.repeat.set(Math.max(1,room.width/furnitureScale/4),Math.max(1,room.depth/furnitureScale/4));texture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());
             ground=new THREE.Mesh(new THREE.PlaneGeometry(room.width*unit,room.depth*unit),new THREE.MeshStandardMaterial({map:texture,roughness:1}));ground.rotation.x=-Math.PI/2;ground.position.y=-.015;scene.add(ground);roomKey=key;
         }
         const items=plan.tables.concat(plan.elements).filter(t=>t.roomId===id),idsNow=new Set(items.map(t=>t.id));
