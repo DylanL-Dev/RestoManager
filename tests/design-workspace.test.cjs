@@ -6,7 +6,7 @@ class Node {
  append(n){this.children.push(n)} appendChild(n){this.append(n)} replaceChildren(...nodes){this.children=nodes}
  getBoundingClientRect(){return {left:0,top:0,width:580,height:580}}
  setPointerCapture(){} closest(){return null}
- setAttribute(k,v){this.attributes[k]=v} focus(){} reset(){this.value=''}
+ setAttribute(k,v){this.attributes[k]=v} getAttribute(k){return this.attributes[k]??null} focus(){} reset(){this.value=''}
  querySelector(){return new Node()} querySelectorAll(){return []}
  set innerHTML(value){this.html=value;this.children=[]} get innerHTML(){return this.html||''}
 }
@@ -36,6 +36,11 @@ node('floorViewport').fire('touchstart',{touches:[{clientX:0,clientY:0},{clientX
 node('floorViewport').fire('touchmove',{touches:[{clientX:0,clientY:0},{clientX:200,clientY:0}]});assert.equal(run('FloorZoom.getScale()'),0.8);
 node('floorViewport').fire('touchend',{touches:[]});assert(!run('FloorZoom.isPinching()'));assert(run('FloorZoom.ignoreClick()'));
 node('floorViewport').clientWidth=348;node('zoomFitBtn').fire('click');assert.equal(run('FloorZoom.getScale()'),348/576);assert.equal(node('floorViewport').scrollLeft,0);
+run('FloorZoom.setScale(1)');node('floorViewport').scrollLeft=200;node('floorViewport').scrollTop=200;
+node('floorViewport').fire('touchstart',{touches:[{clientX:100,clientY:100},{clientX:200,clientY:100}]});
+node('floorViewport').fire('touchmove',{touches:[{clientX:150,clientY:150},{clientX:250,clientY:150}]});
+assert.equal(node('floorViewport').scrollLeft,150);assert.equal(node('floorViewport').scrollTop,150);
+node('floorViewport').fire('touchend',{touches:[]});
 assert.equal(run('JSON.stringify(FloorPlan.get().tables)'),positions);
 console.log('PASS: zoom buttons, wheel, pinch, scale limits, mobile fit and table position preservation.');
 
@@ -45,7 +50,7 @@ const before=run('structuredClone(floorDraft.tables[0])');
 run("FloorPlan.resizeRoom(floorDraft,'main',60,30)");
 const after=run('structuredClone(floorDraft.tables[0])');
 assert.equal(after.width,before.width);assert.equal(after.depth,before.depth);
-assert(Math.abs(after.x*60-before.x*12)<1e-8);assert(Math.abs(after.y*30-before.y*12)<1e-8);
+assert.equal(after.x,before.x);assert.equal(after.y,before.y);
 run('afficherTables()');assert.match(node('roomDimensionsLabel').textContent,/60 × 30/);
 node('zoomFitBtn').fire('click');assert(run('FloorZoom.getScale()')<0.4);
 node('addElementBtn').fire('click');node('elementTypeInput').value='bar';node('elementTypeInput').fire('change');node('elementForm').fire('submit');assert.equal(run('floorDraft.elements.length'),1);
@@ -53,17 +58,21 @@ node('rotateElementBtn').fire('click');assert.equal(Number(node('elementWidthInp
 node('savePlanBtn').fire('click');assert.equal(run('FloorPlan.get().elements.length'),1);assert.equal(run('TABLES.length'),22);
 run('startFloorEdit()');assert.throws(()=>run("FloorPlan.resizeRoom(floorDraft,'main',1,1)"),/trop petite/);assert.equal(run("floorDraft.rooms.find(r=>r.id==='main').width"),60);
 // Large layouts no longer stop at 25 grid slots.
-assert(run(`(() => { const p={version:3,rooms:[{id:'main',name:'Large',width:60,depth:60,floor:'plain'}],tables:[],elements:[]};for(let i=0;i<50;i++){const t=FloorPlan.tableOptions({id:'t'+i,number:i+1,roomId:'main',shape:'square',capacity:2,width:1,depth:1,x:0,y:0});const spot=FloorPlan.freeSpot(p,t);if(!spot)return false;Object.assign(t,spot);p.tables.push(t);}return FloorPlan.valid(p)&&p.tables.length===50;})()`));
-assert(run(`(() => { const old={version:1,rooms:[{id:'main',name:'Original'}],tables:[{id:'t1',number:1,capacity:2,roomId:'main',shape:'square',x:83,y:83},{id:'t25',number:25,capacity:10,roomId:'main',shape:'rectangle',x:3,y:83}]};const p=FloorPlan.migrate(old);return FloorPlan.valid(p)&&p.tables[0].x===83&&p.tables[1].number===25; })()`));
+assert(run(`(() => { const p={version:4,rooms:[{id:'main',name:'Large',width:60,depth:60,floor:'plain'}],tables:[],elements:[]};for(let i=0;i<50;i++){const t=FloorPlan.tableOptions({id:'t'+i,number:i+1,roomId:'main',shape:'square',capacity:2,width:1,depth:1,x:0,y:0});const spot=FloorPlan.freeSpot(p,t);if(!spot)return false;Object.assign(t,spot);p.tables.push(t);}return FloorPlan.valid(p)&&p.tables.length===50;})()`));
+assert(run(`(() => { const old={version:1,rooms:[{id:'main',name:'Original'}],tables:[{id:'t1',number:1,capacity:2,roomId:'main',shape:'square',x:83,y:83},{id:'t25',number:25,capacity:10,roomId:'main',shape:'rectangle',x:3,y:83}]};const p=FloorPlan.migrate(old);return FloorPlan.valid(p)&&Math.abs(p.tables[0].x-10.98)<1e-8&&p.tables[1].number===25; })()`));
 console.log('PASS: independent dimensions, unchanged physical placement, large-room fit, furniture, shrink protection, >25 tables and legacy migration.');
 
 node('floorViewport').scrollLeft=200;node('floorViewport').scrollTop=200;
-node('floorViewport').fire('pointerdown',{pointerType:'mouse',button:0,clientX:200,clientY:200,pointerId:1});
+node('floorViewport').fire('pointerdown',{pointerType:'mouse',button:1,clientX:200,clientY:200,pointerId:1});
 node('floorViewport').fire('pointermove',{clientX:100,clientY:150});assert.equal(node('floorViewport').scrollLeft,300);assert.equal(node('floorViewport').scrollTop,250);
 node('floorViewport').fire('pointerup');assert(!node('floorViewport').classes.has('panning'));
+// Middle-button panning remains available when starting over an object.
+node('floorViewport').fire('pointerdown',{target:{closest:()=>({disabled:false})},pointerType:'mouse',button:1,clientX:200,clientY:200,pointerId:9});
+node('floorViewport').fire('pointermove',{pointerId:9,clientX:150,clientY:180});assert.equal(node('floorViewport').scrollLeft,350);assert.equal(node('floorViewport').scrollTop,270);
+node('floorViewport').fire('pointerup',{pointerId:9});
 const tableBeforeMove=run('floorDraft.tables[0].x');const roomWidth=run("floorDraft.rooms.find(r=>r.id==='main').width");
 run('afficherTables()');node('tablesGrid').children[0].fire('keydown',{key:'ArrowRight'});
-assert(Math.abs(run('floorDraft.tables[0].x')-tableBeforeMove-10/roomWidth)<1e-8);
+assert(Math.abs(run('floorDraft.tables[0].x')-tableBeforeMove-0.1)<1e-8);
 console.log('PASS: mouse panning and fixed 10 cm keyboard movement.');
 
 // Floors persist per room, while cancelled changes remain a draft.
@@ -71,14 +80,14 @@ node('roomDimensionsBtn').fire('click');node('floorWoodBtn').fire('click');node(
 node('savePlanBtn').fire('click');assert.equal(run("FloorPlan.get().rooms.find(r=>r.id==='main').floor"),'wood');assert.equal(run("FloorPlan.get().rooms.find(r=>r.id!=='main').floor"),'plain');
 node('editPlanBtn').fire('click');node('roomDimensionsBtn').fire('click');node('floorStoneBtn').fire('click');node('roomDimensionsForm').fire('submit');assert(node('tablesGrid').classes.has('floor-stone'));node('cancelPlanBtn').fire('click');assert(node('tablesGrid').classes.has('floor-wood'));
 // The editor writes colours, cm dimensions, suffixes and a free rotation angle.
-node('editPlanBtn').fire('click');run("Object.assign(floorDraft.tables.find(t=>t.number===26),{x:50,y:50})");run("openTableEditor(floorDraft.tables.find(t=>t.number===26).id)");node('tableLetterInput').value='A';node('tableMinCapacityInput').value='2';node('tableColorInput').value='#28734f';node('tableAnglePlus').fire('click');node('tableEditForm').fire('submit');
+node('editPlanBtn').fire('click');run("Object.assign(floorDraft.tables.find(t=>t.number===26),{x:30,y:15})");run("openTableEditor(floorDraft.tables.find(t=>t.number===26).id)");node('tableLetterInput').value='A';node('tableMinCapacityInput').value='2';node('tableColorInput').value='#28734f';node('tableAnglePlus').fire('click');node('tableEditForm').fire('submit');
 assert.equal(run('floorDraft.tables.find(t=>t.number===26).angle'),45);assert.equal(run('floorDraft.tables.find(t=>t.number===26).color'),'#28734f');assert.equal(run('floorDraft.tables.find(t=>t.number===26).width'),1.2);
 node('savePlanBtn').fire('click');assert.equal(run('FloorPlan.label(26)'),'T26A');assert.equal(run('CAPACITY[26]'),4);
 node('editPlanBtn').fire('click');run("openTableEditor(floorDraft.tables.find(t=>t.number===26).id)");node('tableMinCapacityInput').value=5;node('tableEditForm').fire('submit');assert.match(node('tableEditError').textContent,/minimum/);node('tableMinCapacityMinus').fire('click');assert.equal(Number(node('tableMinCapacityInput').value),4);
 node('tableShapeInput').value='bench';node('tableSizeMedium').fire('click');assert.equal(Number(node('tableWidthInput').value),190);assert.equal(Number(node('tableDepthInput').value),80);
 // Rotated footprints must fit the room and spacing uses physical distance.
-assert(run(`(()=>{const p={rooms:[{id:'main',width:10,depth:10}]};const t={id:'a',roomId:'main',x:90,y:0,width:2,depth:1,angle:90};return FloorPlan.inside(p,t)&&!FloorPlan.inside(p,{...t,x:91});})()`));
-assert(run(`(()=>{const a={id:'a',roomId:'main',x:0,y:0,width:1,depth:1,angle:0},b={...a,id:'b',x:19};const p={rooms:[{id:'main',width:10,depth:10}],tables:[a,b]};if(Math.abs(FloorPlan.gap(p,a,b)-0.9)>1e-8||FloorPlan.nearby(p,a).length)return false;b.x=18;return FloorPlan.nearby(p,a).length===1;})()`));
-assert(run(`(()=>{const p={version:2,rooms:[{id:'main',name:'Saved',width:12,depth:8}],tables:[],elements:[{id:'bar',type:'bar',label:'Bar',roomId:'main',x:0,y:0,width:3,depth:0.8}]};const m=FloorPlan.migrate(p);return FloorPlan.valid(m)&&m.version===3&&m.rooms[0].floor==='plain'&&m.elements[0].angle===0;})()`));
+assert(run(`(()=>{const p={rooms:[{id:'main',width:10,depth:10}]};const t={id:'a',roomId:'main',x:9.5,y:1,width:2,depth:1,angle:90};return FloorPlan.inside(p,t)&&!FloorPlan.inside(p,{...t,x:9.6});})()`));
+assert(run(`(()=>{const a={id:'a',roomId:'main',x:0.5,y:0.5,width:1,depth:1,angle:0},b={...a,id:'b',x:2.4};const p={rooms:[{id:'main',width:10,depth:10}],tables:[a,b]};if(Math.abs(FloorPlan.gap(p,a,b)-0.9)>1e-8||FloorPlan.nearby(p,a).length)return false;b.x=2.3;return FloorPlan.nearby(p,a).length===1;})()`));
+assert(run(`(()=>{const p={version:2,rooms:[{id:'main',name:'Saved',width:12,depth:8}],tables:[],elements:[{id:'bar',type:'bar',label:'Bar',roomId:'main',x:0,y:0,width:3,depth:0.8}]};const m=FloorPlan.migrate(p);return FloorPlan.valid(m)&&m.version===4&&m.rooms[0].floor==='plain'&&m.elements[0].angle===0;})()`));
 assert.match(run("FloorArt.render({number:1,shape:'round',capacity:4})"),/furniture-chair/);assert.match(run("FloorArt.render({type:'plant'})"),/plant-pot/);
 console.log('PASS: floor rendering classes/persistence/cancel, cm sizes, colours, angle, suffix, min/max, presets, rotated bounds, 90 cm spacing, v2 migration and vector art.');
