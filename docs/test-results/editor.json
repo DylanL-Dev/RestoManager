@@ -1,0 +1,106 @@
+[
+  {
+    "name": "migration-v3-save-reload-preserves-centres-ids-reservations",
+    "status": "passed",
+    "durationMs": 1409,
+    "dialogs": []
+  },
+  {
+    "name": "invalid-plan-remains-stored-and-editing-is-blocked",
+    "status": "passed",
+    "durationMs": 1196,
+    "dialogs": [
+      {
+        "type": "alert",
+        "message": "Le plan enregistré ne peut pas être chargé. Les données sont conservées et l’enregistrement est bloqué. Le plan enregistré est invalide ou utilise une version non prise en charge."
+      }
+    ]
+  },
+  {
+    "name": "reservation-selection-uses-stable-numbers-with-suffix-and-room",
+    "status": "passed",
+    "durationMs": 1119,
+    "dialogs": []
+  },
+  {
+    "name": "repeated-right-angle-rotations-keep-centre-and-size",
+    "status": "passed",
+    "durationMs": 1629,
+    "dialogs": []
+  },
+  {
+    "name": "free-handle-rotation-and-drag-after-rotation",
+    "status": "passed",
+    "durationMs": 1726,
+    "dialogs": []
+  },
+  {
+    "name": "resize-rotated-rectangle-with-visible-handle",
+    "status": "passed",
+    "durationMs": 1534,
+    "dialogs": []
+  },
+  {
+    "name": "properties-preserve-free-geometry-without-rounding",
+    "status": "passed",
+    "durationMs": 1201,
+    "dialogs": []
+  },
+  {
+    "name": "desktop-marquee-group-move-rotate-resize-duplicate-delete",
+    "status": "passed",
+    "durationMs": 2019,
+    "dialogs": [
+      {
+        "type": "confirm",
+        "message": "Supprimer 2 objets du brouillon ?"
+      }
+    ]
+  },
+  {
+    "name": "history-retains-at-least-thirty-operations-and-keyboard-shortcuts",
+    "status": "passed",
+    "durationMs": 4468,
+    "dialogs": []
+  },
+  {
+    "name": "snap-guides-toggle-and-oriented-boundaries",
+    "status": "passed",
+    "durationMs": 1979,
+    "dialogs": []
+  },
+  {
+    "name": "new-table-and-element-appear-at-visible-centre",
+    "status": "passed",
+    "durationMs": 1513,
+    "dialogs": [
+      {
+        "type": "confirm",
+        "message": "Abandonner les modifications du plan ?"
+      }
+    ]
+  },
+  {
+    "name": "room-resize-save-reload-and-cancel-keep-physical-positions",
+    "status": "passed",
+    "durationMs": 1820,
+    "dialogs": [
+      {
+        "type": "confirm",
+        "message": "Abandonner les modifications du plan ?"
+      }
+    ]
+  },
+  {
+    "name": "mobile-touch-selection-multi-drag-and-two-finger-zoom-pan",
+    "status": "passed",
+    "durationMs": 2356,
+    "dialogs": []
+  },
+  {
+    "name": "tablet-touch-selection-multi-drag-and-two-finger-zoom-pan",
+    "status": "passed",
+    "durationMs": 2370,
+    "dialogs": []
+  }
+]

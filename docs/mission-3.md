@@ -123,3 +123,52 @@ Après revue visuelle : numéros conservés à 26 pixels CSS de hauteur et cadra
 adapté au format portrait. Les tests mesurent leur projection à l'écran ; ils
 vérifient aussi l'absence de boucle de rendu au repos. Les 7 scénarios navigateur
 3D et 13 scénarios de modèle/matrices/imports Three.js passent.
+
+## Lot D — stabilisation finale
+
+Catalogue complété : chaises, fauteuils, banquettes, séparations, luminaires et
+comptoirs rejoignent les neuf éléments existants. Tous utilisent les mêmes
+manipulations et le même modèle 2D/3D. Inspecteur de propriétés rapide sur PC,
+commandes défilables et détails en panneau inférieur sur smartphone. Le curseur
+bleu/blanc est disponible à la souris ; les numéros restent lisibles en vue réduite.
+
+Les poignées des petits objets sont écartées sans changer leur emprise ; elles
+évitent les centres des objets voisins. Le redimensionnement groupé ne saute pas
+avec ces poignées déportées. Les limites orientées sont toujours validées.
+
+Le calcul des passages utilise une seule passe avec préfiltre d'enveloppes ; les
+distances polygonales ne sont calculées que pour les candidats proches. En service
+normal, aucun calcul d'espacement d'édition n'est effectué. Les réservations du jour
+sont indexées une seule fois par rendu et la sélection des tables réutilise un seul
+instantané du plan. Aucun changement des règles métier de réservation.
+
+Validation finale locale : **7 suites Node et 33 scénarios navigateur réussis**
+(14 éditeur, 7 Three.js, 12 stabilisation), sans erreur JavaScript inattendue.
+Les profils couvrent 1440×1000, 820×1180, 390×844 et 320×740. Création réelle d'une
+réservation par formulaire, rechargement, édition et conservation des associations
+actives/historiques sont inclus. Les rapports détaillés sont dans
+[`docs/test-results`](test-results), les captures dans [`docs/screenshots`](screenshots).
+
+Le diagnostic de 100 objets relève le coût CPU de reconstruction et les intervalles
+requestAnimationFrame ; ses valeurs brutes sont conservées dans le rapport de
+stabilisation. Les 104 appels de dessin, 3 géométries, 100 textures et 4 programmes
+3D restent stables après les synchronisations. Ces mesures locales ne constituent
+pas une validation des objectifs 60 FPS PC / 30 FPS smartphone sur appareils réels.
+Voir la [matrice manuelle](manual-validation.md) pour les vérifications restantes.
+
+## Fichiers modifiés
+
+| Fichiers | Rôle final |
+|---|---|
+| `floor-plan.js` | Format v4, migrations, sauvegarde protégée, géométrie, collisions, dimensions et ajustement de salle |
+| `floor-editor.js`, `floor-zoom.js`, `floor-properties.js` | Interactions, sélection, poignées, historique, magnétisme, caméra 2D et inspecteur |
+| `floor-3d.mjs`, `vendor/three/*` | Rendu Three.js local, caméra, ressources partagées et secours 2D |
+| `floor-art.js`, `index.html`, `style.css` | Catalogue, commandes, propriétés, responsive et curseur |
+| `app.js`, `reservation-engine.js` | Références de réservation stables, erreurs de stockage et sauvegardes non destructives |
+| `tests/*`, `tests/browser/*` | Régressions métier, géométrie, interactions et scénarios navigateur reproductibles |
+| `package.json`, `package-lock.json`, `.github/workflows/floor-editor.yml`, `.gitignore` | Commandes de test et validation CI |
+| `README.md`, `docs/*` | Audit, résultats, limites, vérifications manuelles et captures |
+
+GitHub Pages utilise toujours sa branche préexistante. Aucun déploiement de la
+branche de mission ni fusion dans `main` n'est effectué. La PR est proposée en
+brouillon pour permettre la validation matérielle finale.

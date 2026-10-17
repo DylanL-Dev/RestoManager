@@ -15,6 +15,12 @@ const FloorArt = (() => {
         return svg(chairs.join('')+'<rect class="furniture-top" x="17" y="20" width="66" height="60" rx="8"/><rect class="furniture-line" x="22" y="25" width="56" height="50" rx="5"/>');
     }
     const drawings={
+        chair:'<rect class="furniture-chair" x="11" y="10" width="78" height="78" rx="10"/><rect class="furniture-top" x="17" y="28" width="66" height="54" rx="7"/><path class="furniture-line heavy" d="M20 18H80"/>',
+        armchair:'<rect class="furniture-chair" x="7" y="8" width="86" height="84" rx="18"/><rect class="furniture-top" x="23" y="28" width="54" height="58" rx="10"/><path class="furniture-line heavy" d="M16 30V78M84 30V78M23 18H77"/>',
+        bench:'<rect class="furniture-chair" x="3" y="7" width="94" height="86" rx="8"/><rect class="furniture-top" x="8" y="31" width="84" height="54" rx="6"/><path class="furniture-line" d="M8 23H92M35 32V84M65 32V84"/>',
+        partition:'<rect class="furniture-solid" x="0" y="0" width="100" height="100"/><path class="furniture-detail" d="M12 10V90M30 10V90M50 10V90M70 10V90M88 10V90"/>',
+        lamp:'<circle class="furniture-chair" cx="50" cy="50" r="36"/><circle class="furniture-top" cx="50" cy="50" r="27"/><circle class="furniture-line" cx="50" cy="50" r="10"/><path class="furniture-line" d="M50 24V40M50 60V76M24 50H40M60 50H76"/>',
+        counter:'<rect class="furniture-chair" x="3" y="6" width="94" height="88" rx="5"/><rect class="furniture-top" x="0" y="0" width="100" height="79" rx="5"/><path class="furniture-line" d="M8 16H92M32 80V94M68 80V94"/>',
         bar:'<rect class="furniture-top" x="3" y="10" width="94" height="75" rx="12"/><path class="furniture-line" d="M10 22H90M10 73H90"/><circle class="furniture-chair" cx="20" cy="93" r="5"/><circle class="furniture-chair" cx="50" cy="93" r="5"/><circle class="furniture-chair" cx="80" cy="93" r="5"/>',
         wall:'<rect class="furniture-solid" x="0" y="0" width="100" height="100"/><path class="furniture-detail" d="M0 50H100M25 0V50M75 0V50M50 50V100"/>',
         door:'<path class="furniture-line heavy" d="M7 95V7H93"/><path class="furniture-door" d="M7 95A88 88 0 0 1 95 7"/><path class="furniture-line heavy" d="M7 95L95 95"/>',

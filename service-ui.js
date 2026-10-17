@@ -65,7 +65,7 @@ function bindFloorItem(button,item,onClick) {
     button.addEventListener('click',()=>{if(moved||FloorZoom.ignoreClick()){moved=false;return;}onClick();});
 }
 function swapDimensions(widthId,depthId){const width=el(widthId).value;el(widthId).value=el(depthId).value;el(depthId).value=width;}
-const elementPresets={bar:['Bar',3,0.8],wall:['Mur',3,0.2],door:['Porte',1,1],window:['Fenêtre',1.5,0.2],pillar:['Pilier',0.5,0.5],plant:['Plante',0.6,0.6],kitchen:['Cuisine',3,2],toilets:['Toilettes',2,1.5],zone:['Zone',3,2]};
+const elementPresets={bar:['Bar',3,0.8],wall:['Mur',3,0.2],door:['Porte',1,1],window:['Fenêtre',1.5,0.2],pillar:['Pilier',0.5,0.5],plant:['Plante',0.6,0.6],kitchen:['Cuisine',3,2],toilets:['Toilettes',2,1.5],zone:['Zone personnalisée',3,2],chair:['Chaise',0.5,0.5],armchair:['Fauteuil',0.8,0.8],bench:['Banquette',1.8,0.7],partition:['Séparation',2,0.15],lamp:['Luminaire',0.5,0.5],counter:['Comptoir',2,0.8]};
 function setElementDefaults(){const preset=elementPresets[el('elementTypeInput').value];el('elementLabelInput').value=preset[0];el('elementWidthInput').value=Math.round(preset[1]*100);el('elementDepthInput').value=Math.round(preset[2]*100);setEditorColor('element',{plant:'#28734f',window:'#28536d',wall:'#3b4553',toilets:'#6c3187'}[el('elementTypeInput').value]||'#8a5a29');}
 function openElementEditor(id){
     selectedFloorElement=id;const item=floorDraft.elements.find(t=>t.id===id);el('elementTitle').textContent=item?'Modifier '+item.label:'Ajouter un élément';
@@ -82,16 +82,22 @@ afficherTables = function () {
     const editing = !!floorDraft;
     grid.classList.toggle('editing', editing); el('editorBar').classList.toggle('hidden', !editing);
     el('editorTools').classList.toggle('hidden',!editing);
+    el('editorStatus').classList.toggle('hidden',!editing);
+    el('floorInspector').classList.toggle('hidden',!editing);
+    document.body?.classList.toggle('floor-editing',editing);
+    const spacing=editing?FloorPlan.spacingPairs(plan,floorRoom):[],closeIds=new Set(spacing.flatMap(pair=>[pair.a.id,pair.b.id]));
+    const byTable=new Map(),serviceDate=getServiceDate();
+    const active=reservations.filter(r=>r.date===serviceDate&&ReservationEngine.isBlocking(r)).sort((a,b)=>(b.status===STATUS.SEATED)-(a.status===STATUS.SEATED)||a.time.localeCompare(b.time));
+    for(const reservation of active)for(const number of reservation.tables)if(!byTable.has(number))byTable.set(number,reservation);
     el('floorHint').textContent = editing ? 'Glissez pour déplacer. Poignées : taille et rotation. Propriétés : détails.' : 'Touchez une table pour ouvrir sa fiche.';
     plan.tables.filter(t => t.roomId === floorRoom).forEach(table => {
-        const status = getTableStatus(table.number);
+        const r=byTable.get(table.number),status=r?(r.status===STATUS.SEATED?'occupied':'reserved'):'free';
         const button = document.createElement('button'); button.type = 'button';
         button.className = 'table-card ' + status + ' shape-' + table.shape;
         placeFloorItem(button, table);
-        const r = reservations.filter(r => r.date === getServiceDate() && r.tables.includes(table.number) && ReservationEngine.isBlocking(r)).sort((a,b) => (b.status === STATUS.SEATED) - (a.status === STATUS.SEATED) || a.time.localeCompare(b.time))[0];
         const client = r ? (r.type === 'hotel' ? 'Ch. ' : '') + r.client : (table.capacityMin===table.capacity?table.capacity:table.capacityMin+'–'+table.capacity)+' places';
         button.innerHTML=furnitureMarkup(table)+'<span class="furniture-label"><strong class="table-number">T'+table.number+(table.letter||'')+'</strong><span class="table-capacity">'+escapeHTML(client)+'</span><span class="table-status">'+(r?r.time:'Libre')+'</span></span>';
-        button.classList.toggle('close-spacing',editing&&FloorPlan.nearby(plan,table).length>0);
+        button.classList.toggle('close-spacing',closeIds.has(table.id));
         button.setAttribute('aria-label', 'Table ' + table.number + ', ' + table.capacity + ' places, ' + (r ? texteStatut(r.status) + ', ' + client : 'libre'));
         bindFloorItem(button, table, () => { if (floorDraft) openTableEditor(table.id); else cliquerTable(table.number); });
         grid.append(button);
@@ -105,10 +111,9 @@ afficherTables = function () {
         grid.append(button);
     });
     const room=plan.rooms.find(r=>r.id===floorRoom);
-    el('roomDimensionsLabel').textContent=room.width+' × '+room.depth+' m';
+    el('roomDimensionsLabel').textContent=Number(room.width.toFixed(2))+' × '+Number(room.depth.toFixed(2))+' m';
     ['plain','wood','tile','stone'].forEach(key=>grid.classList.toggle('floor-'+key,room.floor===key));
-    const tables=plan.tables.filter(t=>t.roomId===floorRoom);
-    const pairs=tables.reduce((count,t,i)=>count+tables.slice(i+1).filter(other=>FloorPlan.gap(plan,t,other)<0.9-1e-7).length,0);
+    const pairs=spacing.length;
     el('floorSpacingNotice').textContent=pairs+' rapprochement'+(pairs>1?'s':'')+' de tables à moins de 90 cm. Vérifiez les passages.';
     el('floorSpacingNotice').classList.toggle('hidden',!editing||!pairs);
     FloorZoom.updateRoom(plan,floorRoom);
@@ -199,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     el('roomDimensionsBtn').addEventListener('click',()=>{
         const room=floorDraft.rooms.find(r=>r.id===floorRoom);el('roomWidthInput').value=room.width;el('roomDepthInput').value=room.depth;setFloorChoice(room.floor);el('roomDimensionsError').textContent='';el('roomDimensionsModal').classList.remove('hidden');
     });
+    el('fitRoomBtn').addEventListener('click',()=>{try{if(!el('roomMarginInput').value.trim())throw new Error('Indiquez une marge en mètres.');const candidate=structuredClone(floorDraft);const size=FloorPlan.fitRoom(candidate,floorRoom,Number(el('roomMarginInput').value));el('roomWidthInput').value=size.width;el('roomDepthInput').value=size.depth;el('roomDimensionsError').textContent='';}catch(error){el('roomDimensionsError').textContent=error.message;}});
     el('closeDimensionsBtn').addEventListener('click',()=>el('roomDimensionsModal').classList.add('hidden'));
     el('roomDimensionsForm').addEventListener('submit',event=>{event.preventDefault();try{FloorPlan.resizeRoom(floorDraft,floorRoom,Number(el('roomWidthInput').value),Number(el('roomDepthInput').value));floorDraft.rooms.find(r=>r.id===floorRoom).floor=roomFloorChoice;el('roomDimensionsModal').classList.add('hidden');afficherTables();}catch(error){el('roomDimensionsError').textContent=error.message;}});
     el('rotateTableBtn').addEventListener('click',()=>setEditorAngle('table',Number(el('tableAngleInput').value)+90));

@@ -1,0 +1,59 @@
+[
+  {
+    "name": "three-switches-and-scene-match-model-with-readable-labels",
+    "status": "passed",
+    "durationMs": 2655,
+    "diagnostics": {}
+  },
+  {
+    "name": "three-camera-orbit-pan-wheel-and-reset",
+    "status": "passed",
+    "durationMs": 3161,
+    "diagnostics": {}
+  },
+  {
+    "name": "three-syncs-2d-edits-rooms-cancel-save-and-reload",
+    "status": "passed",
+    "durationMs": 6024,
+    "diagnostics": {}
+  },
+  {
+    "name": "three-hundred-objects-and-repeated-syncs-keep-resources-bounded",
+    "status": "passed",
+    "durationMs": 15497,
+    "diagnostics": {
+      "resources": {
+        "baseline": {
+          "calls": 104,
+          "geometries": 3,
+          "textures": 100,
+          "programs": 4
+        },
+        "final": {
+          "calls": 104,
+          "geometries": 3,
+          "textures": 100,
+          "programs": 4
+        }
+      }
+    }
+  },
+  {
+    "name": "three-mobile-view-is-usable-without-mutating-the-plan",
+    "status": "passed",
+    "durationMs": 1679,
+    "diagnostics": {}
+  },
+  {
+    "name": "three-webgl-unavailable-keeps-2d-editable-and-data-intact",
+    "status": "passed",
+    "durationMs": 2048,
+    "diagnostics": {}
+  },
+  {
+    "name": "three-context-loss-falls-back-to-2d-without-data-loss",
+    "status": "passed",
+    "durationMs": 1791,
+    "diagnostics": {}
+  }
+]

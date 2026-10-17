@@ -70,8 +70,31 @@ const FloorPlan = (() => {
         for(let i=0;i<4;i++)for(let j=0;j<4;j++)nearest=Math.min(nearest,pointSegment(ap[i],bp[j],bp[(j+1)%4]),pointSegment(bp[j],ap[i],ap[(i+1)%4]));
         return nearest;
     }
+    // AABB distance is a lower bound on distance between oriented footprints.
+    // Distant pairs therefore need neither polygons nor segment distances.
+    function mayBeNear(a,b,ab,bb,distance) {
+        const dx=Math.max(0,Math.abs(a.x-b.x)-(ab.width+bb.width)/2);
+        if(dx>=distance)return false;
+        const dy=Math.max(0,Math.abs(a.y-b.y)-(ab.depth+bb.depth)/2);
+        return dy<distance&&dx*dx+dy*dy<distance*distance;
+    }
     function nearby(plan,table) {
-        return plan.tables.filter(t=>t.id!==table.id&&t.roomId===table.roomId).map(t=>({table:t,gap:gap(plan,table,t)})).filter(p=>p.gap<0.9-epsilon);
+        const box=bounds(table),result=[];
+        for(const other of plan.tables){
+            if(other.id===table.id||other.roomId!==table.roomId||!mayBeNear(table,other,box,bounds(other),0.9))continue;
+            const distance=gap(plan,table,other);if(distance<0.9-epsilon)result.push({table:other,gap:distance});
+        }
+        return result;
+    }
+    function spacingPairs(plan,roomId,distance=0.9) {
+        if(!Number.isFinite(distance)||distance<0)throw new Error('Indiquez une distance positive ou nulle en mètres.');
+        if(!distance)return [];
+        const items=plan.tables.filter(item=>item.roomId===roomId),boxes=items.map(bounds),pairs=[];
+        for(let i=0;i<items.length;i++)for(let j=i+1;j<items.length;j++){
+            if(!mayBeNear(items[i],items[j],boxes[i],boxes[j],distance))continue;
+            const measured=gap(plan,items[i],items[j]);if(measured<distance-epsilon)pairs.push({a:items[i],b:items[j],gap:measured});
+        }
+        return pairs;
     }
     function migrate(raw) {
         if(!raw||typeof raw!=='object')return raw;
@@ -161,7 +184,7 @@ const FloorPlan = (() => {
     function sync(){ReservationEngine.TABLES.splice(0,ReservationEngine.TABLES.length,...plan.tables.map(t=>t.number));Object.keys(ReservationEngine.CAPACITY).forEach(k=>delete ReservationEngine.CAPACITY[k]);plan.tables.forEach(t=>{ReservationEngine.CAPACITY[t.number]=t.capacity;});}
     // Never change reservation table references after a failed load.
     if(!loadError)sync();
-    return {get:()=>structuredClone(plan),getLoadError:()=>loadError,defaults,migrate,valid,inside,overlaps,sizePercent,resizeRoom,fitRoom,freeSpot,bounds,polygons,clampItem,conflicts,nearby,gap,tableOptions,itemOptions,
+    return {get:()=>structuredClone(plan),getLoadError:()=>loadError,defaults,migrate,valid,inside,overlaps,sizePercent,resizeRoom,fitRoom,freeSpot,bounds,polygons,clampItem,conflicts,nearby,spacingPairs,gap,tableOptions,itemOptions,
         label:number=>{const t=plan.tables.find(t=>t.number===number);return 'T'+number+(t?.letter||'');},
         save(next){
             if(loadError)throw new Error(loadError);

@@ -1,0 +1,16 @@
+{
+  "name": "restomanager",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "RestoManager — réservations et éditeur de plan 2D/3D",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test tests/*.test.js tests/*.test.cjs",
+    "test:browser": "node tests/browser/editor.cjs && node tests/browser/three.cjs && node tests/browser/stabilization.cjs",
+    "test:browser:install": "playwright install chromium",
+    "serve": "python3 -m http.server 8000",
+    "screenshots": "node tests/browser/capture.cjs"
+  },
+  "devDependencies": { "playwright": "1.56.1" }
+}

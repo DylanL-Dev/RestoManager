@@ -415,6 +415,7 @@ function afficherSelectionTables(selected) {
 
     container.innerHTML = '';
 
+    const selectionPlan = FloorPlan.get();
     TABLES.forEach(function (table) {
         const element = document.createElement('div');
 
@@ -432,8 +433,8 @@ function afficherSelectionTables(selected) {
             element.classList.add('disabled');
         }
 
-        const planTable = FloorPlan.get().tables.find(t => t.number === table);
-        const room = FloorPlan.get().rooms.find(r => r.id === planTable?.roomId);
+        const planTable = selectionPlan.tables.find(t => t.number === table);
+        const room = selectionPlan.rooms.find(r => r.id === planTable?.roomId);
         element.textContent = FloorPlan.label(table) + (room && room.id !== 'main' ? ' · ' + room.name : '');
 
         element.addEventListener('click', function () {

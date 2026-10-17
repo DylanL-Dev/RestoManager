@@ -228,8 +228,8 @@ export const Floor3D=(()=>{
         return loadPromise;
     }
     async function show(){
-        wanted=true;if(typeof currentPlan==='function')sync(currentPlan(),floorRoom);
-        const success=await ensureRenderer();if(!success){visible=false;ui(false);return false;}if(!wanted)return false;
+        const token=generation;wanted=true;if(typeof currentPlan==='function')sync(currentPlan(),floorRoom);
+        const success=await ensureRenderer();if(token!==generation)return false;if(!success){visible=false;ui(false);return false;}if(!wanted)return false;
         visible=true;controls.enabled=true;ui(true);notice('Un doigt pour tourner. Deux doigts pour zoomer ou déplacer la vue.');schedule();return true;
     }
     function hide(){wanted=false;visible=false;if(controls)controls.enabled=false;if(frame!==null){window.cancelAnimationFrame(frame);frame=null;}ui(false);if(!error)notice('');}

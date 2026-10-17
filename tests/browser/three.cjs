@@ -6,7 +6,7 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { chromium } = require(process.env.PLAYWRIGHT_MODULE || '/tmp/restomanager-browser/node_modules/playwright');
+const { chromium } = (()=>{if(process.env.PLAYWRIGHT_MODULE)return require(process.env.PLAYWRIGHT_MODULE);try{return require('playwright');}catch(_){return require('/tmp/restomanager-browser/node_modules/playwright');}})();
 const origin = process.env.BROWSER_BASE_URL || 'http://127.0.0.1:8000';
 const artifacts = process.env.BROWSER_ARTIFACTS || '/tmp/restomanager-artifacts';
 const planKey = 'restomanager_floor_plan_v1', reservationKey = 'restomanager_reservations', historyKey = 'restomanager_history';
@@ -193,7 +193,7 @@ test('three-context-loss-falls-back-to-2d-without-data-loss', async ({ page }) =
 
 async function main() {
     fs.mkdirSync(artifacts, { recursive: true });
-    const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || '/usr/bin/chromium', headless: true,
+    const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || (fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined), headless: true,
         args: ['--no-sandbox', '--disable-dev-shm-usage', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
     try {
         for (const spec of cases.filter(value => value.name.includes(process.env.BROWSER_CASE || ''))) {

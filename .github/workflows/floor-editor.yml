@@ -1,0 +1,35 @@
+name: Floor editor validation
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [codex/mission-3-floor-editor-2d-3d]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - name: Start local preview
+        run: python3 -m http.server 8000 > /tmp/restomanager-http.log 2>&1 &
+      - name: Browser scenarios
+        env:
+          BROWSER_ARTIFACTS: /tmp/restomanager-artifacts
+        run: |
+          curl --retry 10 --retry-connrefused --retry-delay 1 -fsS http://127.0.0.1:8000/ > /dev/null
+          npm run test:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: floor-editor-browser-results
+          path: /tmp/restomanager-artifacts
+          if-no-files-found: ignore

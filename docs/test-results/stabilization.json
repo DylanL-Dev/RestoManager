@@ -1,0 +1,160 @@
+[
+  {
+    "name": "catalogue-fifteen-types-support-selection-move-rotate-resize-delete",
+    "status": "passed",
+    "durationMs": 8395,
+    "diagnostics": {}
+  },
+  {
+    "name": "quick-inspector-commits-one-operation-and-rejects-invalid-limits",
+    "status": "passed",
+    "durationMs": 1564,
+    "diagnostics": {}
+  },
+  {
+    "name": "automatic-room-fitting-previews-margin-and-applies-without-moving-content",
+    "status": "passed",
+    "durationMs": 1414,
+    "diagnostics": {}
+  },
+  {
+    "name": "responsive-desktop-service-controls-inspector-and-modal",
+    "status": "passed",
+    "durationMs": 1367,
+    "diagnostics": {}
+  },
+  {
+    "name": "responsive-tablet-service-controls-inspector-and-modal",
+    "status": "passed",
+    "durationMs": 1370,
+    "diagnostics": {}
+  },
+  {
+    "name": "responsive-phone-service-controls-inspector-and-modal",
+    "status": "passed",
+    "durationMs": 1360,
+    "diagnostics": {}
+  },
+  {
+    "name": "responsive-narrow-service-controls-inspector-and-modal",
+    "status": "passed",
+    "durationMs": 1297,
+    "diagnostics": {}
+  },
+  {
+    "name": "touch-phone-two-finger-pan-with-constant-distance",
+    "status": "passed",
+    "durationMs": 1517,
+    "diagnostics": {
+      "pan": {
+        "before": [
+          140,
+          140
+        ],
+        "after": {
+          "scroll": [
+            80,
+            100
+          ],
+          "scale": 2
+        }
+      }
+    }
+  },
+  {
+    "name": "touch-tablet-two-finger-pan-with-constant-distance",
+    "status": "passed",
+    "durationMs": 1491,
+    "diagnostics": {
+      "pan": {
+        "before": [
+          140,
+          140
+        ],
+        "after": {
+          "scroll": [
+            80,
+            100
+          ],
+          "scale": 2
+        }
+      }
+    }
+  },
+  {
+    "name": "touch-second-finger-cancels-object-drag-without-history-entry",
+    "status": "passed",
+    "durationMs": 1449,
+    "diagnostics": {}
+  },
+  {
+    "name": "reservation-created-through-form-survives-reload-and-plan-edit",
+    "status": "passed",
+    "durationMs": 2033,
+    "diagnostics": {}
+  },
+  {
+    "name": "hundred-object-2d-render-and-drag-diagnostics",
+    "status": "passed",
+    "durationMs": 2385,
+    "diagnostics": {
+      "renderCpuMs": {
+        "samples": [
+          17,
+          17.800000000279397,
+          27.600000000093132,
+          26.09999999962747,
+          25.09999999962747,
+          24.399999999906868
+        ],
+        "median": 25.09999999962747,
+        "max": 27.600000000093132,
+        "note": "Coût CPU de reconstruction DOM ; aucune assertion FPS ni seuil CI."
+      },
+      "dragAnimationFrameMs": {
+        "samples": [
+          16.600000000000136,
+          16.700000000000045,
+          16.699999999999818,
+          16.700000000000045,
+          16.600000000000136,
+          16.699999999999818,
+          16.600000000000136,
+          16.799999999999955,
+          16.59999999999991,
+          16.700000000000045,
+          16.700000000000045,
+          16.59999999999991,
+          16.700000000000045,
+          16.600000000000136,
+          16.699999999999818,
+          16.600000000000136,
+          16.799999999999955,
+          16.59999999999991,
+          16.700000000000045,
+          16.600000000000136,
+          16.59999999999991,
+          16.700000000000045,
+          16.799999999999955,
+          16.59999999999991,
+          16.700000000000045,
+          16.700000000000045,
+          16.59999999999991,
+          16.700000000000273,
+          16.59999999999991,
+          16.699999999999818,
+          16.59999999999991,
+          16.800000000000182,
+          16.59999999999991,
+          16.59999999999991,
+          16.700000000000273,
+          16.59999999999991,
+          16.699999999999818
+        ],
+        "median": 16.699999999999818,
+        "max": 16.800000000000182,
+        "note": "Profil Chromium émulé ; une mesure physique PC/téléphone reste nécessaire."
+      }
+    }
+  }
+]

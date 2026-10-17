@@ -10,7 +10,7 @@ const plan=(overrides={})=>({version:4,rooms:[room(),room('terrace','tile')],tab
 const close=(a,b)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
 
 test.before(async()=>{
-    ({buildFloorModel,framingDistance,labelScreenScale,Floor3D}=await import(pathToFileURL(path.join(root,'floor-3d.js')).href));
+    ({buildFloorModel,framingDistance,labelScreenScale,Floor3D}=await import(pathToFileURL(path.join(root,'floor-3d.mjs')).href));
     THREE=await import(pathToFileURL(path.join(root,'vendor/three/three.module.min.js')).href);
     ({OrbitControls}=await import(pathToFileURL(path.join(root,'vendor/three/OrbitControls.js')).href));
 });

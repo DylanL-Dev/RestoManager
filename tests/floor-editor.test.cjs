@@ -197,3 +197,89 @@ test('newly added objects are selected and collision feedback stays temporary',(
     assert(h.button('new').classList.contains('floor-collision'));assert.match(h.$('editorStatus').textContent,/chevauchent/);
     h.api.undo();assert.equal(h.items().length,2);assert.equal(h.button('a').classList.contains('floor-collision'),false);
 });
+
+test('property edits are one atomic history operation and preserve reserved table identities',()=>{
+    const h=harness();h.protectedNumbers.add(1);h.select('a');const before=h.items()[0],stored=h.run('JSON.stringify(FloorPlan.get())');
+    assert.equal(h.api.setProperties({x:4.25,y:4.5,width:2.4,depth:0.8,angle:-315,color:'#123abc'}),true);
+    const after=h.items()[0];close(after.x,4.25);close(after.y,4.5);close(after.width,2.4);close(after.depth,0.8);close(after.angle,45);assert.equal(after.color,'#123abc');
+    for(const field of ['id','number','roomId','capacity','capacityMin','letter'])assert.equal(after[field],before[field]);
+    assert.equal(h.run('JSON.stringify(FloorPlan.get())'),stored);h.api.undo();assert.deepEqual(h.items()[0],before);assert.equal(h.$('undoFloorBtn').disabled,true);h.api.redo();assert.deepEqual(h.items()[0],after);
+});
+
+test('invalid properties, unapproved fields and oriented limit violations leave the draft unchanged',()=>{
+    const h=harness();h.select('a');const before=JSON.stringify(h.items());
+    for(const values of [null,[],{id:'hijack'},{number:99},{roomId:'other'},{capacity:100},{width:0.09},{depth:-1},{x:NaN},{y:Infinity},{angle:NaN},{color:'#fff'},{x:'4'},{x:-0.1,width:4},{x:11.8,width:3,depth:0.8,angle:45}]){
+        assert.equal(h.api.setProperties(values),false);assert.equal(JSON.stringify(h.items()),before);assert.equal(h.$('undoFloorBtn').disabled,true);
+    }
+    h.select('b',{shiftKey:true});assert.equal(h.api.setProperties({color:'#ffffff'}),false);assert.equal(JSON.stringify(h.items()),before);
+    const nearEdge=initial();nearEdge.tables=[table({width:3,depth:0.4,x:0.25,angle:90})];const edge=harness(nearEdge);edge.select('a');
+    assert.equal(edge.api.setProperties({angle:0}),false);close(edge.items()[0].angle,90);close(edge.items()[0].x,0.25);
+});
+
+test('selection and property edits refresh the adaptive properties panel and hide it after exit',()=>{
+    const h=harness();h.run('var propertyUpdates=[];var FloorProperties={update(items){propertyUpdates.push(items.map(item=>({id:item.id,x:item.x})));}};');
+    h.select('a');assert.equal(h.run('propertyUpdates.at(-1)[0].id'),'a');h.api.setProperties({x:4});close(h.run('propertyUpdates.at(-1)[0].x'),4);
+    h.api.clearSelection();assert.equal(h.run('propertyUpdates.at(-1).length'),0);h.run('floorDraft=null;afficherTables()');assert.equal(h.run('propertyUpdates.at(-1).length'),0);
+});
+
+test('rotation handles stay inside the room near angled edges at every zoom level',()=>{
+    for(const zoom of [0.4,1,2.5])for(const angle of [0,45,90,180,270]){
+        const radians=angle*Math.PI/180,width=1.5,depth=0.8,boxWidth=width*Math.abs(Math.cos(radians))+depth*Math.abs(Math.sin(radians)),boxDepth=width*Math.abs(Math.sin(radians))+depth*Math.abs(Math.cos(radians));
+        const draft=initial();draft.tables=[table({x:boxWidth/2+0.01,y:boxDepth/2+0.01,width,depth,angle})];const h=harness(draft);
+        h.$('tablesGrid').rect={left:0,top:0,width:600*zoom,height:500*zoom};h.run('FloorZoom.getScale=()=>'+zoom);h.select('a');
+        const handle=h.$('selectionOverlay').querySelector('.rotate-handle'),item=h.items()[0],lx=(parseFloat(handle.style.left)/100-0.5)*width,ly=(parseFloat(handle.style.top)/100-0.5)*depth;
+        const x=item.x+lx*Math.cos(radians)-ly*Math.sin(radians),y=item.y+lx*Math.sin(radians)+ly*Math.cos(radians),margin=22/(50*zoom);
+        assert(x>=margin-1e-8&&y>=margin-1e-8);assert(x<=12-margin+1e-8&&y<=10-margin+1e-8);
+        assert.match(handle.style.transform,/translate\(-50%,-50%\)/);
+    }
+});
+
+test('small selected objects retain a clear drag centre between the enlarged corner hit targets',()=>{
+    for(const zoom of [0.4,1,2.5])for(const angle of [0,37]){
+        const draft=initial();draft.tables=[table({width:0.5,depth:0.5,angle})];const h=harness(draft);
+        h.$('tablesGrid').rect={left:0,top:0,width:600*zoom,height:500*zoom};h.run('FloorZoom.getScale=()=>'+zoom);h.select('a');
+        const node=h.$('selectionOverlay'),ppm=50*zoom;
+        for(const handle of node.querySelectorAll('.resize-handle')){
+            const x=(parseFloat(handle.style.left)/100-0.5)*0.5*ppm,y=(parseFloat(handle.style.top)/100-0.5)*0.5*ppm;
+            assert(Math.abs(x)>=32-1e-8&&Math.abs(y)>=32-1e-8);
+            assert(!(Math.abs(x)<=23&&Math.abs(y)<=23),'A corner hit target must not intercept the object centre');
+        }
+    }
+});
+
+test('small group resizing uses pointer displacement without jumping to the distant handle position',()=>{
+    const draft=initial();draft.tables=[table({width:0.2,depth:0.2}),table({id:'b',number:2,x:3.4,width:0.2,depth:0.2})];
+    const h=harness(draft);h.select('a');h.select('b',{shiftKey:true});const handle=h.$('selectionOverlay').querySelector('.resize-se');
+    h.drag(handle,{x:192,y:182},{x:197,y:182});
+    const items=h.items();close(items[0].width,0.26);close(items[0].depth,0.26);close(items[1].x-items[0].x,0.52);close((items[0].x+items[1].x)/2,3.2);
+});
+
+test('rotation of a small object at the room corner uses a free inward target',()=>{
+    const draft=initial();draft.tables=[table({x:0.25,y:0.25,width:0.5,depth:0.5})];const h=harness(draft);h.select('a');
+    const handle=h.$('selectionOverlay').querySelector('.rotate-handle'),lx=(parseFloat(handle.style.left)/100-0.5)*25,ly=(parseFloat(handle.style.top)/100-0.5)*25;
+    assert.equal(handle.hidden,false);assert(Math.hypot(lx,ly)>=43.9);assert(!(Math.abs(lx)<=23&&Math.abs(ly)<=23));
+    for(const [x,y] of [[-32,-32],[32,-32],[32,32],[-32,32]])assert(Math.max(Math.abs(lx-x),Math.abs(ly-y))>=30);
+    assert.equal(handle.dataset.inset,'true');
+});
+
+test('selection handles never intercept a nearby object centre in the snap regression',()=>{
+    for(const zoom of [0.4,1,2.5]){
+        const draft=initial();draft.tables[1].x=3.13;draft.tables[1].y=4.6;const h=harness(draft);
+        h.$('tablesGrid').rect={left:0,top:0,width:600*zoom,height:500*zoom};h.run('FloorZoom.getScale=()=>'+zoom);h.select('b');
+        const source=h.items()[1],other=h.items()[0],ppm=50*zoom;
+        for(const handle of h.$('selectionOverlay').querySelectorAll('.editor-handle')){
+            if(handle.hidden)continue;
+            const x=(parseFloat(handle.style.left)/100-0.5)*source.width,y=(parseFloat(handle.style.top)/100-0.5)*source.depth;
+            const dx=other.x-source.x-x,dy=other.y-source.y-y;
+            assert(Math.max(Math.abs(dx),Math.abs(dy))*ppm>=26-1e-8,'A handle must not cover table 1');
+        }
+        h.select('a');assert.deepEqual(h.selected(),['a']);
+    }
+});
+
+test('small corner handles move outward when their initial position covers another object',()=>{
+    const draft=initial();draft.tables=[table({width:0.5,depth:0.5}),table({id:'b',number:2,x:3.64,y:3.64,width:0.3,depth:0.3})];
+    const h=harness(draft);h.select('a');const handle=h.$('selectionOverlay').querySelector('.resize-se');assert.equal(handle.hidden,false);
+    const x=(parseFloat(handle.style.left)/100-0.5)*0.5,y=(parseFloat(handle.style.top)/100-0.5)*0.5;
+    assert(Math.max(Math.abs(x-0.64),Math.abs(y-0.64))*50>=26-1e-8);
+});

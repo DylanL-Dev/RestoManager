@@ -12,12 +12,15 @@ const FloorZoom = (() => {
         const canvas = document.getElementById('tablesGrid');
         const stage = document.getElementById('floorStage');
         const point = anchor || { x: viewport.clientWidth / 2, y: viewport.clientHeight / 2 };
-        const x = (viewport.scrollLeft + point.x) / scale, y = (viewport.scrollTop + point.y) / scale;
+        const offset=Math.max(0,(viewport.clientWidth-baseWidth*scale)/2);
+        const x = (viewport.scrollLeft + point.x-offset) / scale, y = (viewport.scrollTop + point.y) / scale;
         scale = clamp(next);
         canvas.style.width = baseWidth + 'px'; canvas.style.height = baseHeight + 'px';
         canvas.style.transform = 'scale(' + scale + ')';
+        canvas.style.setProperty?.('--floor-scale',String(scale));
+        canvas.classList.toggle('zoom-overview',scale<0.85);
         stage.style.width = baseWidth * scale + 'px'; stage.style.height = baseHeight * scale + 'px';
-        viewport.scrollLeft = Math.max(0, x * scale - point.x); viewport.scrollTop = Math.max(0, y * scale - point.y);
+        viewport.scrollLeft = Math.max(0, x * scale+Math.max(0,(viewport.clientWidth-baseWidth*scale)/2) - point.x); viewport.scrollTop = Math.max(0, y * scale - point.y);
         document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + ' %';
         if(typeof FloorEditor!=='undefined'&&FloorEditor.onZoom)FloorEditor.onZoom();
     }
@@ -48,9 +51,11 @@ const FloorZoom = (() => {
         }, { passive:false });
         let pan=null;
         viewport.addEventListener('pointerdown',event=>{
-            if(event.target.closest('button')||pinch)return;
+            const button=event.target.closest('button');
+            if(pinch||button&&!button.disabled&&event.button!==1&&!event.altKey)return;
             if(event.pointerType==='mouse'&&event.button!==0&&event.button!==1)return;
             if(floorDraft&&event.button!==1&&!event.altKey)return;
+            if(event.button===1||event.altKey)event.preventDefault();
             pan={id:event.pointerId,x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};
             viewport.setPointerCapture(event.pointerId);viewport.classList.add('panning');
         });
@@ -65,7 +70,7 @@ const FloorZoom = (() => {
         viewport.addEventListener('touchstart',event=>{
             if(event.touches.length!==2)return;
             event.preventDefault();stopPan();const centre=midpoint(event.touches);
-            pinch={distance:distance(event.touches),scale,worldX:(viewport.scrollLeft+centre.x)/scale,worldY:(viewport.scrollTop+centre.y)/scale};
+            pinch={distance:distance(event.touches),scale,worldX:(viewport.scrollLeft+centre.x-Math.max(0,(viewport.clientWidth-baseWidth*scale)/2))/scale,worldY:(viewport.scrollTop+centre.y)/scale};
             ignoreUntil=Date.now()+400;
             if(typeof FloorEditor!=='undefined')FloorEditor.cancelGesture();
         },{passive:false,capture:true});
@@ -73,7 +78,7 @@ const FloorZoom = (() => {
             if(!pinch||event.touches.length!==2)return;
             event.preventDefault();const centre=midpoint(event.touches);
             if(pinch.distance>0)setScale(pinch.scale*distance(event.touches)/pinch.distance,centre);
-            viewport.scrollLeft=Math.max(0,pinch.worldX*scale-centre.x);
+            viewport.scrollLeft=Math.max(0,pinch.worldX*scale+Math.max(0,(viewport.clientWidth-baseWidth*scale)/2)-centre.x);
             viewport.scrollTop=Math.max(0,pinch.worldY*scale-centre.y);
         },{passive:false});
         const end=event=>{if(pinch&&event.touches.length<2){pinch=null;ignoreUntil=Date.now()+400;}};

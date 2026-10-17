@@ -201,3 +201,28 @@ test('failed backup or save leaves active data, draft isolation and reservation 
     const writes=h.writes.length,bad=h.api.get();bad.tables[0].x=-50;
     assert.throws(()=>h.api.save(bad),/invalide/);assert.equal(h.writes.length,writes);assert.equal(h.engine.CAPACITY[1],8);
 });
+
+test('spacing broad phase matches brute force for rotated tables across rooms and thresholds',()=>{
+    const {api}=load();let seed=1731;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+    const p=plan({rooms:[room('main',30,30),room('terrace',30,30)],tables:Array.from({length:100},(_,i)=>table({id:'table-'+i,number:i+1,roomId:i%5===0?'terrace':'main',x:3+random()*24,y:3+random()*24,width:0.3+random()*2.7,depth:0.3+random()*2.7,angle:random()*360}))});
+    const before=JSON.stringify(p),describe=pairs=>pairs.map(pair=>({ids:[pair.a.id,pair.b.id].sort().join('|'),gap:pair.gap})).sort((a,b)=>a.ids.localeCompare(b.ids));
+    for(const roomId of ['main','terrace'])for(const distance of [0.3,0.9,2.4]){
+        const tables=p.tables.filter(item=>item.roomId===roomId),brute=[];
+        for(let i=0;i<tables.length;i++)for(let j=i+1;j<tables.length;j++){const measured=api.gap(p,tables[i],tables[j]);if(measured<distance-1e-7)brute.push({a:tables[i],b:tables[j],gap:measured});}
+        const actual=describe([...api.spacingPairs(p,roomId,distance)]),expected=describe(brute);
+        assert.deepEqual(actual.map(pair=>pair.ids),expected.map(pair=>pair.ids));actual.forEach((pair,i)=>close(pair.gap,expected[i].gap));
+    }
+    for(const item of p.tables.slice(0,12)){
+        const brute=p.tables.filter(other=>other.id!==item.id&&other.roomId===item.roomId&&api.gap(p,item,other)<0.9-1e-7).map(t=>t.id).sort();
+        assert.deepEqual([...api.nearby(p,item)].map(pair=>pair.table.id).sort(),brute);
+    }
+    assert.equal(JSON.stringify(p),before);
+});
+
+test('spacing pairs exclude touching the threshold, include overlap and contain no duplicates',()=>{
+    const {api}=load(),p=plan({tables:[table({id:'a',x:1,y:1,width:1,depth:1}),table({id:'b',number:2,x:2.9,y:1,width:1,depth:1}),table({id:'c',number:3,x:1,y:1,width:1,depth:1})]});
+    const pairs=[...api.spacingPairs(p,'main')];assert.equal(pairs.length,1);assert.equal(pairs[0].a.id,'a');assert.equal(pairs[0].b.id,'c');assert.equal(pairs[0].gap,0);
+    p.tables[1].x=2.8999;assert.equal(api.spacingPairs(p,'main').length,3);
+    assert.equal(api.spacingPairs(p,'main',0).length,0);assert.equal(api.spacingPairs(p,'missing').length,0);
+    for(const distance of [-1,NaN,Infinity])assert.throws(()=>api.spacingPairs(p,'main',distance),/distance/);
+});

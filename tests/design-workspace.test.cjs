@@ -66,6 +66,10 @@ node('floorViewport').scrollLeft=200;node('floorViewport').scrollTop=200;
 node('floorViewport').fire('pointerdown',{pointerType:'mouse',button:1,clientX:200,clientY:200,pointerId:1});
 node('floorViewport').fire('pointermove',{clientX:100,clientY:150});assert.equal(node('floorViewport').scrollLeft,300);assert.equal(node('floorViewport').scrollTop,250);
 node('floorViewport').fire('pointerup');assert(!node('floorViewport').classes.has('panning'));
+// Middle-button panning remains available when starting over an object.
+node('floorViewport').fire('pointerdown',{target:{closest:()=>({disabled:false})},pointerType:'mouse',button:1,clientX:200,clientY:200,pointerId:9});
+node('floorViewport').fire('pointermove',{pointerId:9,clientX:150,clientY:180});assert.equal(node('floorViewport').scrollLeft,350);assert.equal(node('floorViewport').scrollTop,270);
+node('floorViewport').fire('pointerup',{pointerId:9});
 const tableBeforeMove=run('floorDraft.tables[0].x');const roomWidth=run("floorDraft.rooms.find(r=>r.id==='main').width");
 run('afficherTables()');node('tablesGrid').children[0].fire('keydown',{key:'ArrowRight'});
 assert(Math.abs(run('floorDraft.tables[0].x')-tableBeforeMove-0.1)<1e-8);
