@@ -113,6 +113,7 @@ afficherTables = function () {
     el('floorSpacingNotice').classList.toggle('hidden',!editing||!pairs);
     FloorZoom.updateRoom(plan,floorRoom);
     if(typeof FloorEditor!=='undefined')FloorEditor.onRender();
+    if(typeof Floor3D!=='undefined')Floor3D.sync(plan,floorRoom);
     if (!grid.children.length) { const message = document.createElement('p'); message.className = 'floor-empty'; message.textContent = editing ? 'Cette salle est vide. Ajoutez une table.' : 'Aucune table dans cette salle.'; grid.append(message); }
 };
 function openTableEditor(id) {

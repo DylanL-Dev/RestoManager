@@ -69,6 +69,7 @@ const FloorEditor = (() => {
         if(floorDraft)for(const item of all())for(const other of FloorPlan.conflicts(floorDraft,item)){collisionIds.add(item.id);collisionIds.add(other.id);}
         for(const [id,binding] of bindings){binding.button.classList.toggle('floor-selected',!!floorDraft&&selected.has(id));binding.button.classList.toggle('floor-collision',!!floorDraft&&collisionIds.has(id));if(floorDraft)binding.button.setAttribute('aria-pressed',String(selected.has(id)));}
         overlay();controls();
+        if(typeof Floor3D!=='undefined')Floor3D.sync(currentPlan(),floorRoom);
         if(collisionIds.size)say(collisionIds.size+' objets se chevauchent. Écartez-les avant d’enregistrer.');
         else if(selectedItems().length)say(selectedItems().length+' objet'+(selectedItems().length>1?'s sélectionnés':' sélectionné')+'. Glissez, tournez ou utilisez les poignées.');
         else if(floorDraft)say('Sélectionnez un objet, ou tracez un rectangle sur ordinateur.');

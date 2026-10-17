@@ -6,7 +6,7 @@
 
         <title>RestoManager</title>
 
-        <link rel="stylesheet" href="style.css?v=8" />
+        <link rel="stylesheet" href="style.css?v=10" />
     </head>
 
     <body>
@@ -123,10 +123,13 @@
                     <button type="button" id="snapFloorBtn" aria-pressed="true">Magnétisme</button>
                     <output id="editorStatus" aria-live="polite">Sélectionnez un objet.</output>
                 </div>
+                <div class="floor-view-toolbar" role="group" aria-label="Vue du plan"><button id="floor2DBtn" type="button" aria-pressed="true">Plan 2D</button><button id="floor3DBtn" type="button" aria-pressed="false">Vue 3D</button><button id="reset3DBtn" type="button" class="hidden">Réinitialiser la vue 3D</button></div>
+                <p id="floor3DNotice" class="floor-view-notice hidden" role="status"></p>
                 <div class="zoom-toolbar" aria-label="Zoom du plan"><button id="zoomOutBtn" aria-label="Dézoomer">−</button><output id="zoomLevel" aria-live="polite">100 %</output><button id="zoomInBtn" aria-label="Zoomer">+</button><button id="zoomFitBtn">Vue complète</button></div>
                 <div id="floorViewport" class="floor-scroll"><div id="floorStage"><div id="tablesGrid" class="tables-grid floor-canvas">
                     <!-- Les tables seront générées par app.js -->
                 </div></div></div>
+                <div id="floor3DViewport" class="hidden" aria-label="Aperçu du plan en trois dimensions"></div>
             </section>
 
             <!-- LISTE DES RÉSERVATIONS -->
@@ -329,9 +332,10 @@
         <script src="floor-plan.js?v=4"></script>
         <script src="app.js?v=7"></script>
         <script src="floor-art.js?v=1"></script>
-        <script src="service-ui.js?v=5"></script>
+        <script src="service-ui.js?v=6"></script>
         <script src="floor-zoom.js?v=3"></script>
-        <script src="floor-editor.js?v=1"></script>
+        <script src="floor-editor.js?v=2"></script>
+        <script type="module" src="floor-3d.js?v=1"></script>
     </body>
 </html>
 

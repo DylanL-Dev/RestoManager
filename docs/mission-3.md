@@ -100,3 +100,26 @@ magnétisme, centre visible, dimensions de salle, migration, rechargement, annul
 et associations de réservations validés sans erreur JavaScript. Les propriétés
 conservent les dimensions et angles libres sans arrondi. Les profils tactiles sont
 une émulation Chromium, pas une certification Android matérielle.
+
+## Lot C — rendu 3D
+
+Three.js **0.180.0 (r180)** et OrbitControls sont inclus localement avec leur licence
+MIT. Seuls les modules minifiés nécessaires sont chargés au premier affichage 3D.
+Pas de CDN, image générée ni texture externe. Le modèle conserve les centres X/Z,
+les dimensions, les couleurs et le signe de rotation correspondant aux coordonnées
+2D. Les empreintes du mobilier reprennent les dessins 2D, assises comprises.
+
+Maillages instanciés et géométries/matériaux partagés ; éclairage simple, pas d'ombres
+coûteuses, ratio pixels plafonné et rendu à la demande. Numéros via CanvasTexture
+128×64. Caméra orbitale, zoom/déplacement, réinitialisation et synchronisation du
+brouillon. Indisponibilité ou perte WebGL : retour 2D sans toucher aux données.
+
+Première validation : 7/7 scénarios navigateur avec WebGL logiciel SwiftShader.
+Avec 100 tables, avant et après six cycles de modifications : **104 appels de dessin,
+3 géométries, 100 textures, 4 programmes**, sans accumulation. Ces résultats mesurent
+la structure et la stabilité des ressources ; ils ne certifient pas les FPS sur téléphone.
+
+Après revue visuelle : numéros conservés à 26 pixels CSS de hauteur et cadrage
+adapté au format portrait. Les tests mesurent leur projection à l'écran ; ils
+vérifient aussi l'absence de boucle de rendu au repos. Les 7 scénarios navigateur
+3D et 13 scénarios de modèle/matrices/imports Three.js passent.
