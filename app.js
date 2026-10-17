@@ -10,6 +10,7 @@ const STATUS = ReservationEngine.STATUS;
 
 const STORAGE_RESERVATIONS = 'restomanager_reservations';
 const STORAGE_HISTORY = 'restomanager_history';
+const unreadableStorage = new Set();
 
 let reservations = ReservationEngine.normalizeReservations(
     loadData(STORAGE_RESERVATIONS, [])
@@ -64,24 +65,28 @@ function archiveReservationsBefore(serviceDate) {
         groupes[r.date].push(r);
     });
 
+    const nextHistory = history.map(function (day) {
+        return Object.assign({}, day, { reservations: day.reservations.slice() });
+    });
     Object.keys(groupes).forEach(function (date) {
-        const existing = history.find(function (day) { return day.date === date; });
+        const existing = nextHistory.find(function (day) { return day.date === date; });
         if (existing) {
             const ids = new Set(existing.reservations.map(function (r) { return r.id; }));
             existing.reservations = existing.reservations.concat(
                 groupes[date].filter(function (r) { return !ids.has(r.id); })
             );
         } else {
-            history.push({ date: date, reservations: groupes[date], closedAt: new Date().toISOString() });
+            nextHistory.push({ date: date, reservations: groupes[date], closedAt: new Date().toISOString() });
         }
     });
 
-    reservations = reservations.filter(function (r) {
+    const nextReservations = reservations.filter(function (r) {
         return r.date >= serviceDate;
     });
 
-    saveData(STORAGE_RESERVATIONS, reservations);
-    saveData(STORAGE_HISTORY, history);
+    if (!saveNormalizedData(nextReservations, nextHistory)) return false;
+    reservations = nextReservations;
+    history = nextHistory;
     return true;
 }
 
@@ -89,8 +94,11 @@ function nettoyerAnciennesReservations() {
     return archiveReservationsBefore(getServiceDate());
 }
 document.addEventListener('DOMContentLoaded', function () {
-    saveNormalizedData();
-    nettoyerAnciennesReservations();
+    if (unreadableStorage.size) {
+        alert('Certaines données enregistrées sont illisibles. Leur contenu a été conservé : rétablissez une sauvegarde valide avant de les modifier.');
+    } else if (saveNormalizedData()) {
+        nettoyerAnciennesReservations();
+    }
 
     setDefaultDateTime();
 
@@ -120,10 +128,13 @@ function loadData(key, defaultValue) {
     try {
         const data = localStorage.getItem(key);
 
-        if (data) {
-            return JSON.parse(data);
+        if (data !== null) {
+            const parsed = JSON.parse(data);
+            if (Array.isArray(defaultValue) && !Array.isArray(parsed)) throw new Error('Format de données invalide.');
+            return parsed;
         }
     } catch (error) {
+        unreadableStorage.add(key);
         console.error('Erreur stockage :', error);
     }
 
@@ -131,18 +142,46 @@ function loadData(key, defaultValue) {
 }
 
 function saveData(key, data) {
+    if (unreadableStorage.has(key)) {
+        alert('Les données enregistrées sont illisibles et ont été conservées. Rétablissez une sauvegarde valide avant de les modifier.');
+        return false;
+    }
     try {
         localStorage.setItem(key, JSON.stringify(data));
+        return true;
     } catch (error) {
         console.error('Erreur sauvegarde :', error);
 
         alert('Impossible de sauvegarder les données.');
+        return false;
     }
 }
 
-function saveNormalizedData() {
-    saveData(STORAGE_RESERVATIONS, reservations);
-    saveData(STORAGE_HISTORY, history);
+function saveNormalizedData(nextReservations = reservations, nextHistory = history) {
+    if (unreadableStorage.has(STORAGE_RESERVATIONS) || unreadableStorage.has(STORAGE_HISTORY)) {
+        alert('Les données illisibles ont été conservées. Rétablissez une sauvegarde valide avant de les modifier.');
+        return false;
+    }
+    let previousHistory;
+    try {
+        previousHistory = localStorage.getItem(STORAGE_HISTORY);
+    } catch (error) {
+        console.error('Erreur stockage :', error);
+        alert('Impossible de lire les données avant leur sauvegarde.');
+        return false;
+    }
+    // Persist the archive before removing anything from the active service.
+    if (!saveData(STORAGE_HISTORY, nextHistory)) return false;
+    if (!saveData(STORAGE_RESERVATIONS, nextReservations)) {
+        try {
+            if (previousHistory === null) localStorage.removeItem(STORAGE_HISTORY);
+            else localStorage.setItem(STORAGE_HISTORY, previousHistory);
+        } catch (error) {
+            console.error('Erreur restauration historique :', error);
+            alert('La restauration de l’historique a échoué. Les données restent disponibles en mémoire ; conservez cette page ouverte.');
+        }
+        return false;
+    }
     return true;
 }
 
@@ -380,6 +419,7 @@ function afficherSelectionTables(selected) {
         const element = document.createElement('div');
 
         element.className = 'table-option';
+        element.setAttribute('data-table-number', String(table));
 
         if (selected.includes(table)) {
             element.classList.add('selected');
@@ -412,7 +452,7 @@ function getSelectedTables() {
     const elements = document.querySelectorAll('#tableSelection .selected');
 
     return Array.from(elements).map(function (element) {
-        return Number(element.textContent.substring(1));
+        return Number(element.getAttribute('data-table-number'));
     });
 }
 
@@ -511,10 +551,13 @@ function enregistrerReservation(event) {
         return;
     }
 
-    if (editingId) {
-        modifierReservation(type, client, date, time, guests, duration, tables);
+    const wasEditing = !!editingId;
+    let nextReservations;
+    if (wasEditing) {
+        nextReservations = modifierReservation(type, client, date, time, guests, duration, tables);
+        if (!nextReservations) return;
     } else {
-        reservations.push({
+        nextReservations = reservations.concat({
             id: Date.now().toString(),
 
             type: type,
@@ -537,7 +580,8 @@ function enregistrerReservation(event) {
         });
     }
 
-    saveData(STORAGE_RESERVATIONS, reservations);
+    if (!saveData(STORAGE_RESERVATIONS, nextReservations)) return;
+    reservations = nextReservations;
 
     fermerReservation();
 
@@ -548,7 +592,7 @@ function enregistrerReservation(event) {
     mettreAJourCompteurs();
 
     alert(
-        editingId ? '✅ Réservation modifiée.' : '✅ Réservation enregistrée.'
+        wasEditing ? '✅ Réservation modifiée.' : '✅ Réservation enregistrée.'
     );
 
     editingId = null;
@@ -744,8 +788,11 @@ function changerStatut(id, status) {
         alert('⚠️ ' + transition.error);
         return;
     }
-    Object.assign(reservation, transition.reservation);
-    saveData(STORAGE_RESERVATIONS, reservations);
+    const nextReservations = reservations.map(function (r) {
+        return r.id === id ? transition.reservation : r;
+    });
+    if (!saveData(STORAGE_RESERVATIONS, nextReservations)) return;
+    reservations = nextReservations;
     refreshUI();
 }
 
@@ -785,8 +832,11 @@ function prolongerReservation(id) {
         alert('⚠️ ' + result.error);
         return;
     }
-    Object.assign(reservation, result.reservation, { extendedAt: new Date().toISOString() });
-    saveData(STORAGE_RESERVATIONS, reservations);
+    const nextReservations = reservations.map(function (r) {
+        return r.id === id ? Object.assign({}, result.reservation, { extendedAt: new Date().toISOString() }) : r;
+    });
+    if (!saveData(STORAGE_RESERVATIONS, nextReservations)) return;
+    reservations = nextReservations;
     refreshUI();
 }
 
@@ -838,16 +888,14 @@ function modifierReservation(
     });
 
     if (!reservation) {
-        return;
+        return null;
     }
 
-    reservation.type = type;
-    reservation.client = client;
-    reservation.date = date;
-    reservation.time = time;
-    reservation.guests = guests;
-    reservation.duration = duration;
-    reservation.tables = tables;
+    return reservations.map(function (r) {
+        return r.id === editingId
+            ? Object.assign({}, r, { type: type, client: client, date: date, time: time, guests: guests, duration: duration, tables: tables })
+            : r;
+    });
 }
 
 /* ==============================
@@ -866,8 +914,9 @@ function supprimerReservationDefinitivement(id) {
     if (!reservation) return;
     if (!confirm('Supprimer définitivement cette réservation ? Cette action est irréversible.')) return;
     if (!confirm('Confirmez la suppression définitive de ' + reservation.client + '.')) return;
-    reservations = reservations.filter(function (r) { return r.id !== id; });
-    saveData(STORAGE_RESERVATIONS, reservations);
+    const nextReservations = reservations.filter(function (r) { return r.id !== id; });
+    if (!saveData(STORAGE_RESERVATIONS, nextReservations)) return;
+    reservations = nextReservations;
     refreshUI();
 }
 
@@ -886,9 +935,9 @@ function fermerAdministration() {
 function reinitialiserDonneesTest() {
     if (!confirm('Réinitialiser toutes les réservations et tout l’historique de test ?')) return;
     if (!confirm('Confirmez : la configuration des tables sera conservée.')) return;
+    if (!saveNormalizedData([], [])) return;
     reservations = [];
     history = [];
-    saveNormalizedData();
     refreshUI();
 }
 
@@ -1127,7 +1176,7 @@ function cloturerService() {
         return;
     }
 
-    history.push({
+    const nextHistory = history.concat({
         date: getServiceDate(),
 
         reservations: todayReservations,
@@ -1135,13 +1184,13 @@ function cloturerService() {
         closedAt: new Date().toISOString(),
     });
 
-    reservations = reservations.filter(function (r) {
+    const nextReservations = reservations.filter(function (r) {
         return r.date !== getServiceDate();
     });
 
-    saveData(STORAGE_RESERVATIONS, reservations);
-
-    saveData(STORAGE_HISTORY, history);
+    if (!saveNormalizedData(nextReservations, nextHistory)) return;
+    reservations = nextReservations;
+    history = nextHistory;
 
     afficherTables();
     afficherReservations();

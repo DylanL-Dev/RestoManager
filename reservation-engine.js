@@ -101,7 +101,9 @@
             : STATUS.RESERVED;
         const tables = Array.isArray(source.tables)
             ? source.tables.map(Number).filter(function (table, index, array) {
-                return TABLES.includes(table) && array.indexOf(table) === index;
+                // Keep saved associations even when a plan is temporarily unreadable
+                // or the table is absent from the current catalogue.
+                return Number.isInteger(table) && table > 0 && array.indexOf(table) === index;
             })
             : [];
         return Object.assign({}, source, {
