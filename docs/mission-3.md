@@ -64,3 +64,39 @@ Validation : suites Node métier/stockage/éditeur passantes ; Chromium, huit ro
 90° puis sauvegarde/rechargement v4 sans exception ni mouvement du centre. Revue
 indépendante de 1 000 migrations sur deux salles : identifiants, numéros et centres
 conservés, source inchangée. Aucun changement de l'hébergement Pages.
+
+## Utilisation prévue des outils 2D
+
+- Un clic/toucher sélectionne ; glisser déplace la sélection. « Propriétés » ouvre
+  le formulaire détaillé ; double-clic également sur ordinateur.
+- Maj/Ctrl/clic ajoute ou retire un objet ; « Sélection multiple » permet les
+  touches successives au doigt. Glisser sur le fond avec la souris trace un rectangle.
+- Les poignées de coin dimensionnent ; la poignée ronde tourne autour du centre.
+- Bouton central souris : déplacer la vue. Deux doigts : zoomer et déplacer.
+- Flèches : 10 cm, Maj/flèches : 1 cm. Ctrl/Cmd A : tout sélectionner ; D : dupliquer ;
+  Z : annuler ; Maj Z ou Y : rétablir ; Suppr : supprimer après confirmation.
+- Le magnétisme peut être désactivé. Les guides montrent les alignements proposés.
+- Les collisions restent visibles dans le brouillon ; l'enregistrement exige de
+  résoudre les chevauchements des objets solides. Les zones/ouvertures sont superposables.
+
+## Lot B — résultats
+
+Contrôleur de brouillon séparé, sans modifier les opérations de service. Historique
+borné à 60 opérations, transformations depuis un état initial commun et rendu des
+mouvements coalescé avec requestAnimationFrame. Les poignées conservent leur capture
+de pointeur ; un second doigt restaure le geste et sa sélection avant le pincement.
+Magnétisme : alignements voisins/salle prioritaires, grille de 10 cm en repli.
+La sélection tactile multiple conserve le groupe pendant un glisser ; un toucher
+sans déplacement retire un membre. Nouveaux objets placés au centre visible.
+
+18 scénarios unitaires contrôleur couvrent notamment historique, transformations
+locales/groupées, pointeurs, sélection tactile, annulation, duplication et suppression
+protégée. Le test existant de zoom inclut désormais une translation pure à deux doigts.
+
+Validation navigateur du lot B : **14/14 scénarios** Chromium desktop 1440×1000,
+smartphone tactile 390×844 et tablette tactile 820×1180. Rotation, déplacement et
+redimensionnement orientés, rectangle/groupe, duplication/suppression, historique,
+magnétisme, centre visible, dimensions de salle, migration, rechargement, annulation
+et associations de réservations validés sans erreur JavaScript. Les propriétés
+conservent les dimensions et angles libres sans arrondi. Les profils tactiles sont
+une émulation Chromium, pas une certification Android matérielle.

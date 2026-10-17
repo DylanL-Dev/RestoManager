@@ -1096,3 +1096,33 @@ button:focus-visible,select:focus-visible,input:focus-visible { outline:3px soli
 .capacity-stepper { display:flex; align-items:center; border:1px solid var(--border); border-radius:10px; overflow:hidden; }
 .capacity-stepper input { border:0; text-align:center; min-width:0; }
 .capacity-stepper button { border:0; background:#f0f5f2; min-width:44px; font-size:22px; color:var(--primary-dark); cursor:pointer; }
+
+/* Mission 3: direct manipulation tools. */
+.editor-tools { display:flex; flex-wrap:wrap; gap:7px; padding:10px; margin-bottom:12px; border:1px solid var(--border); border-radius:12px; background:#fff; }
+.editor-tools button { min-height:44px; padding:8px 12px; border:1px solid #cbd5e1; background:#f8fafc; color:#1e293b; border-radius:9px; font:inherit; font-size:12px; cursor:pointer; }
+.editor-tools button[aria-pressed=true] { background:#dbeafe; border-color:#2563eb; color:#1d4ed8; }
+.editor-tools button:disabled { opacity:.45; cursor:default; }
+#editorStatus { flex:1 0 100%; color:#475569; font-size:12px; min-height:18px; }
+.floor-canvas.editing { touch-action:none; user-select:none; }
+#selectionOverlay { position:absolute; border:1.5px solid #2563eb; pointer-events:none; z-index:10; }
+.selection-marquee { position:absolute; border:1px solid #2563eb; background:#2563eb18; z-index:12; pointer-events:none; }
+.snap-guide { position:absolute; pointer-events:none; z-index:9; background:#e11d48; }
+@media (max-width:600px) {
+    .editor-tools { gap:6px; }
+    .editor-tools button { flex:1 0 auto; padding:9px 10px; }
+}
+#floorViewport { touch-action:none; }
+.floor-canvas.editing .floor-selected { outline:2px solid #2563eb; outline-offset:3px; }
+.floor-canvas.editing .floor-collision { outline:2px dashed #dc2626; outline-offset:3px; }
+.selection-overlay { position:absolute; border:1.5px solid #2563eb; pointer-events:none; z-index:10; transform-origin:center; }
+.editor-handle { position:absolute; width:22px; height:22px; min-height:0; border:2px solid #2563eb; border-radius:5px; background:white; pointer-events:auto; touch-action:none; padding:0; cursor:nwse-resize; }
+.editor-handle::before { content:''; position:absolute; inset:-10px; }
+.editor-handle.rotate-handle { border-radius:50%; cursor:grab; color:#1d4ed8; }
+@media(max-width:600px) { .editor-handle { width:26px; height:26px; } }
+.resize-nw { left:0; top:0; transform:translate(-50%,-50%) scale(var(--handle-scale,1)); }
+.resize-ne { left:100%; top:0; transform:translate(-50%,-50%) scale(var(--handle-scale,1)); cursor:nesw-resize; }
+.resize-se { left:100%; top:100%; transform:translate(-50%,-50%) scale(var(--handle-scale,1)); }
+.resize-sw { left:0; top:100%; transform:translate(-50%,-50%) scale(var(--handle-scale,1)); cursor:nesw-resize; }
+.rotate-handle { left:50%; top:0; transform:translate(-50%,-180%) scale(var(--handle-scale,1)); }
+.snap-guide-x { top:0; bottom:0; width:1px; }
+.snap-guide-y { left:0; right:0; height:1px; }

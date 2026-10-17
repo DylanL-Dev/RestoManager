@@ -38,12 +38,14 @@ function furnitureMarkup(item) {
     const box=FloorPlan.bounds(item),width=item.width/box.width*100,height=item.depth/box.depth*100;
     return '<span class="furniture-art" style="width:'+width+'%;height:'+height+'%;transform:translate(-50%,-50%) rotate('+(item.angle||0)+'deg);--furniture-color:'+item.color+'">'+FloorArt.render(item)+'</span>';
 }
-function setEditorAngle(prefix,value){const angle=((Math.round(Number(value)||0)%360)+360)%360;el(prefix+'AngleInput').value=angle;el(prefix+'AngleRange').value=angle;}
+function setEditorAngle(prefix,value){const number=Number(value)||0,angle=number>=0&&number<360?number:((number%360)+360)%360;el(prefix+'AngleInput').value=angle;el(prefix+'AngleRange').value=angle;}
 function setEditorColor(prefix,color){el(prefix+'ColorInput').value=color;document.querySelectorAll('[data-owner="'+prefix+'"]').forEach(button=>button.setAttribute('aria-pressed',String(button.getAttribute('data-color')===color)));}
 function setEditorOptions(prefix,item){setEditorAngle(prefix,item?.angle||0);setEditorColor(prefix,item?.color||'#8a5a29');}
 function setFloorChoice(floor){roomFloorChoice=floor;['plain','wood','tile','stone'].forEach(key=>el('floor'+key[0].toUpperCase()+key.slice(1)+'Btn').setAttribute('aria-pressed',String(floor===key)));}
 function spacingDescription(plan,table){const nearby=FloorPlan.nearby(plan,table);return nearby.length?'Espace à vérifier : moins de 90 cm de '+nearby.map(p=>'T'+p.table.number+(p.table.letter||'')+' ('+Math.round(p.gap*100)+' cm)').join(', ')+'.':'';}
 function bindFloorItem(button,item,onClick) {
+    button.setAttribute('data-floor-id',item.id);
+    if(typeof FloorEditor!=='undefined')return FloorEditor.bind(button,item,onClick);
     const grid=el('tablesGrid');let drag=null,moved=false;
     const move=(x,y)=>{const next=FloorPlan.clampItem(currentPlan(),{...item,x,y});if(next)Object.assign(item,next);placeFloorItem(button,item);};
     button.addEventListener('pointerdown',event=>{
@@ -67,7 +69,7 @@ const elementPresets={bar:['Bar',3,0.8],wall:['Mur',3,0.2],door:['Porte',1,1],wi
 function setElementDefaults(){const preset=elementPresets[el('elementTypeInput').value];el('elementLabelInput').value=preset[0];el('elementWidthInput').value=Math.round(preset[1]*100);el('elementDepthInput').value=Math.round(preset[2]*100);setEditorColor('element',{plant:'#28734f',window:'#28536d',wall:'#3b4553',toilets:'#6c3187'}[el('elementTypeInput').value]||'#8a5a29');}
 function openElementEditor(id){
     selectedFloorElement=id;const item=floorDraft.elements.find(t=>t.id===id);el('elementTitle').textContent=item?'Modifier '+item.label:'Ajouter un élément';
-    if(item){el('elementTypeInput').value=item.type;el('elementLabelInput').value=item.label;el('elementWidthInput').value=Math.round(item.width*100);el('elementDepthInput').value=Math.round(item.depth*100);}
+    if(item){el('elementTypeInput').value=item.type;el('elementLabelInput').value=item.label;el('elementWidthInput').value=item.width*100;el('elementDepthInput').value=item.depth*100;}
     else{el('elementTypeInput').value='bar';setElementDefaults();}
     if(item)setEditorOptions('element',item);else setEditorAngle('element',0);
     el('elementError').textContent='';el('deleteElementBtn').classList.toggle('hidden',!item);el('elementModal').classList.remove('hidden');
@@ -79,7 +81,8 @@ afficherTables = function () {
     const grid = el('tablesGrid'); grid.replaceChildren();
     const editing = !!floorDraft;
     grid.classList.toggle('editing', editing); el('editorBar').classList.toggle('hidden', !editing);
-    el('floorHint').textContent = editing ? 'Glissez pour déplacer. Touchez pour modifier.' : 'Touchez une table pour ouvrir sa fiche.';
+    el('editorTools').classList.toggle('hidden',!editing);
+    el('floorHint').textContent = editing ? 'Glissez pour déplacer. Poignées : taille et rotation. Propriétés : détails.' : 'Touchez une table pour ouvrir sa fiche.';
     plan.tables.filter(t => t.roomId === floorRoom).forEach(table => {
         const status = getTableStatus(table.number);
         const button = document.createElement('button'); button.type = 'button';
@@ -109,6 +112,7 @@ afficherTables = function () {
     el('floorSpacingNotice').textContent=pairs+' rapprochement'+(pairs>1?'s':'')+' de tables à moins de 90 cm. Vérifiez les passages.';
     el('floorSpacingNotice').classList.toggle('hidden',!editing||!pairs);
     FloorZoom.updateRoom(plan,floorRoom);
+    if(typeof FloorEditor!=='undefined')FloorEditor.onRender();
     if (!grid.children.length) { const message = document.createElement('p'); message.className = 'floor-empty'; message.textContent = editing ? 'Cette salle est vide. Ajoutez une table.' : 'Aucune table dans cette salle.'; grid.append(message); }
 };
 function openTableEditor(id) {
@@ -120,7 +124,7 @@ function openTableEditor(id) {
     el('tableMinCapacityInput').value=table?table.capacityMin:2;el('tableLetterInput').value=table?table.letter:'';
     setEditorOptions('table',table);el('tableSpacingHint').textContent=table?spacingDescription(floorDraft,table):'';
     el('tableShapeInput').value = table ? table.shape : 'square';
-    el('tableWidthInput').value=table?Math.round(table.width*100):120;el('tableDepthInput').value=table?Math.round(table.depth*100):120;
+    el('tableWidthInput').value=table?table.width*100:120;el('tableDepthInput').value=table?table.depth*100:120;
     el('deleteTableBtn').classList.toggle('hidden', !table); el('tableEditError').textContent = '';
     el('tableEditModal').classList.remove('hidden'); el('tableNumberInput').focus();
 }
@@ -163,13 +167,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!Number.isInteger(number) || number < 1 || !Number.isInteger(capacity) || capacity < 1 || capacity > 100) return fail('Indiquez un numéro et une capacité valides.');
         if(!['','A','B'].includes(letter))return fail('Choisissez une lettre proposée.');
         if(!Number.isInteger(capacityMin)||capacityMin<1||capacityMin>capacity)return fail('Les couverts minimum doivent être compris entre 1 et le maximum.');
-        if(!Number.isInteger(angle)||angle<0||angle>=360||!/^#[0-9a-f]{6}$/i.test(color))return fail('Vérifiez l’angle et la couleur.');
+        if(!Number.isFinite(angle)||angle<0||angle>=360||!/^#[0-9a-f]{6}$/i.test(color))return fail('Vérifiez l’angle et la couleur.');
         if (floorDraft.tables.some(t => t.number === number && t.id !== selectedFloorTable)) return fail('Ce numéro existe déjà dans une salle.');
         if (old && old.number !== number && referencedTable(old.number)) return fail('Cette table est liée à des réservations. Son numéro doit être conservé.');
         if (old && capacity < old.capacity && reservations.some(r => ReservationEngine.isBlocking(r) && r.tables.includes(old.number) && r.tables.reduce((sum,n) => sum + (n === old.number ? capacity : floorDraft.tables.find(t => t.number === n)?.capacity || 0),0) < r.guests)) return fail('Cette capacité est insuffisante pour une réservation existante.');
         const candidate={...(old||{id:crypto.randomUUID(),roomId:floorRoom,x:0,y:0}),number,capacity,capacityMin,letter,angle,color,width,depth,shape:el('tableShapeInput').value};
         if(!Number.isFinite(width)||!Number.isFinite(depth)||width<0.1||depth<0.1)return fail('Indiquez des dimensions de mobilier valides.');
-        if(!old){const spot=FloorPlan.freeSpot(floorDraft,candidate);if(!spot)return fail('Pas assez de place. Agrandissez la salle ou déplacez les tables.');Object.assign(candidate,spot);}
+        if(!old){const spot=typeof FloorEditor!=='undefined'?FloorPlan.clampItem(floorDraft,{...candidate,...FloorEditor.visibleCenter()}):FloorPlan.freeSpot(floorDraft,candidate);if(!spot)return fail('Pas assez de place. Agrandissez la salle ou déplacez les tables.');Object.assign(candidate,spot);}
         if(!FloorPlan.inside(floorDraft,candidate))return fail('La table dépasse la salle. Déplacez-la ou agrandissez la salle.');
         if(old)Object.assign(old,candidate);else floorDraft.tables.push(candidate);
         el('tableEditModal').classList.add('hidden'); afficherTables();
@@ -204,8 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
     el('elementForm').addEventListener('submit',event=>{
         event.preventDefault();const old=floorDraft.elements.find(t=>t.id===selectedFloorElement);
         const candidate={...(old||{id:crypto.randomUUID(),roomId:floorRoom,x:0,y:0}),type:el('elementTypeInput').value,label:el('elementLabelInput').value.trim(),width:Number(el('elementWidthInput').value)/100,depth:Number(el('elementDepthInput').value)/100,angle:Number(el('elementAngleInput').value),color:el('elementColorInput').value};
-        if(!Number.isInteger(candidate.angle)||candidate.angle<0||candidate.angle>=360||!/^#[0-9a-f]{6}$/i.test(candidate.color)){el('elementError').textContent='Vérifiez l’angle et la couleur.';return;}
-        if(!old){const spot=FloorPlan.freeSpot(floorDraft,candidate);if(spot)Object.assign(candidate,spot);}
+        if(!Number.isFinite(candidate.angle)||candidate.angle<0||candidate.angle>=360||!/^#[0-9a-f]{6}$/i.test(candidate.color)){el('elementError').textContent='Vérifiez l’angle et la couleur.';return;}
+        if(!old){const spot=typeof FloorEditor!=='undefined'?FloorPlan.clampItem(floorDraft,{...candidate,...FloorEditor.visibleCenter()}):FloorPlan.freeSpot(floorDraft,candidate);if(spot)Object.assign(candidate,spot);}
         if(!candidate.label||!FloorPlan.inside(floorDraft,candidate)){el('elementError').textContent='Vérifiez le nom et les dimensions : l’élément doit tenir dans la salle.';return;}
         if(old)Object.assign(old,candidate);else floorDraft.elements.push(candidate);
         el('elementModal').classList.add('hidden');afficherTables();

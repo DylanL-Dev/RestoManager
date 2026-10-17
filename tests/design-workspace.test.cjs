@@ -36,6 +36,11 @@ node('floorViewport').fire('touchstart',{touches:[{clientX:0,clientY:0},{clientX
 node('floorViewport').fire('touchmove',{touches:[{clientX:0,clientY:0},{clientX:200,clientY:0}]});assert.equal(run('FloorZoom.getScale()'),0.8);
 node('floorViewport').fire('touchend',{touches:[]});assert(!run('FloorZoom.isPinching()'));assert(run('FloorZoom.ignoreClick()'));
 node('floorViewport').clientWidth=348;node('zoomFitBtn').fire('click');assert.equal(run('FloorZoom.getScale()'),348/576);assert.equal(node('floorViewport').scrollLeft,0);
+run('FloorZoom.setScale(1)');node('floorViewport').scrollLeft=200;node('floorViewport').scrollTop=200;
+node('floorViewport').fire('touchstart',{touches:[{clientX:100,clientY:100},{clientX:200,clientY:100}]});
+node('floorViewport').fire('touchmove',{touches:[{clientX:150,clientY:150},{clientX:250,clientY:150}]});
+assert.equal(node('floorViewport').scrollLeft,150);assert.equal(node('floorViewport').scrollTop,150);
+node('floorViewport').fire('touchend',{touches:[]});
 assert.equal(run('JSON.stringify(FloorPlan.get().tables)'),positions);
 console.log('PASS: zoom buttons, wheel, pinch, scale limits, mobile fit and table position preservation.');
 
@@ -58,7 +63,7 @@ assert(run(`(() => { const old={version:1,rooms:[{id:'main',name:'Original'}],ta
 console.log('PASS: independent dimensions, unchanged physical placement, large-room fit, furniture, shrink protection, >25 tables and legacy migration.');
 
 node('floorViewport').scrollLeft=200;node('floorViewport').scrollTop=200;
-node('floorViewport').fire('pointerdown',{pointerType:'mouse',button:0,clientX:200,clientY:200,pointerId:1});
+node('floorViewport').fire('pointerdown',{pointerType:'mouse',button:1,clientX:200,clientY:200,pointerId:1});
 node('floorViewport').fire('pointermove',{clientX:100,clientY:150});assert.equal(node('floorViewport').scrollLeft,300);assert.equal(node('floorViewport').scrollTop,250);
 node('floorViewport').fire('pointerup');assert(!node('floorViewport').classes.has('panning'));
 const tableBeforeMove=run('floorDraft.tables[0].x');const roomWidth=run("floorDraft.rooms.find(r=>r.id==='main').width");

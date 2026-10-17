@@ -19,6 +19,7 @@ const FloorZoom = (() => {
         stage.style.width = baseWidth * scale + 'px'; stage.style.height = baseHeight * scale + 'px';
         viewport.scrollLeft = Math.max(0, x * scale - point.x); viewport.scrollTop = Math.max(0, y * scale - point.y);
         document.getElementById('zoomLevel').textContent = Math.round(scale * 100) + ' %';
+        if(typeof FloorEditor!=='undefined'&&FloorEditor.onZoom)FloorEditor.onZoom();
     }
     function fit() {
         const viewport = document.getElementById('floorViewport');
@@ -47,29 +48,36 @@ const FloorZoom = (() => {
         }, { passive:false });
         let pan=null;
         viewport.addEventListener('pointerdown',event=>{
-            if(event.pointerType!=='mouse'||event.button!==0||event.target.closest('button'))return;
-            pan={x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};
+            if(event.target.closest('button')||pinch)return;
+            if(event.pointerType==='mouse'&&event.button!==0&&event.button!==1)return;
+            if(floorDraft&&event.button!==1&&!event.altKey)return;
+            pan={id:event.pointerId,x:event.clientX,y:event.clientY,left:viewport.scrollLeft,top:viewport.scrollTop};
             viewport.setPointerCapture(event.pointerId);viewport.classList.add('panning');
         });
-        viewport.addEventListener('pointermove',event=>{if(!pan)return;viewport.scrollLeft=pan.left+pan.x-event.clientX;viewport.scrollTop=pan.top+pan.y-event.clientY;});
-        const stopPan=()=>{pan=null;viewport.classList.remove('panning');};
+        viewport.addEventListener('pointermove',event=>{
+            if(!pan||event.pointerId!==undefined&&event.pointerId!==pan.id||pinch)return;
+            viewport.scrollLeft=pan.left+pan.x-event.clientX;viewport.scrollTop=pan.top+pan.y-event.clientY;
+        });
+        const stopPan=event=>{if(event&&event.pointerId!==undefined&&pan&&event.pointerId!==pan.id)return;pan=null;viewport.classList.remove('panning');};
         viewport.addEventListener('pointerup',stopPan);viewport.addEventListener('pointercancel',stopPan);
-        const distance = touches => Math.hypot(touches[1].clientX-touches[0].clientX, touches[1].clientY-touches[0].clientY);
-        viewport.addEventListener('touchstart', event => {
-            if (event.touches.length !== 2) return;
-            event.preventDefault(); pinch = { distance:distance(event.touches), scale };
-            ignoreUntil = Date.now() + 400;
-        }, { passive:false });
-        viewport.addEventListener('touchmove', event => {
-            if (!pinch || event.touches.length !== 2) return;
-            event.preventDefault(); const rect=viewport.getBoundingClientRect();
-            if (pinch.distance > 0) setScale(pinch.scale * distance(event.touches) / pinch.distance, {
-                x:(event.touches[0].clientX+event.touches[1].clientX)/2-rect.left,
-                y:(event.touches[0].clientY+event.touches[1].clientY)/2-rect.top
-            });
-        }, { passive:false });
-        const end = event => { if (pinch && event.touches.length < 2) { pinch=null; ignoreUntil=Date.now()+400; } };
-        viewport.addEventListener('touchend',end); viewport.addEventListener('touchcancel',end);
+        const distance=touches=>Math.hypot(touches[1].clientX-touches[0].clientX,touches[1].clientY-touches[0].clientY);
+        const midpoint=touches=>{const rect=viewport.getBoundingClientRect();return {x:(touches[0].clientX+touches[1].clientX)/2-rect.left,y:(touches[0].clientY+touches[1].clientY)/2-rect.top};};
+        viewport.addEventListener('touchstart',event=>{
+            if(event.touches.length!==2)return;
+            event.preventDefault();stopPan();const centre=midpoint(event.touches);
+            pinch={distance:distance(event.touches),scale,worldX:(viewport.scrollLeft+centre.x)/scale,worldY:(viewport.scrollTop+centre.y)/scale};
+            ignoreUntil=Date.now()+400;
+            if(typeof FloorEditor!=='undefined')FloorEditor.cancelGesture();
+        },{passive:false,capture:true});
+        viewport.addEventListener('touchmove',event=>{
+            if(!pinch||event.touches.length!==2)return;
+            event.preventDefault();const centre=midpoint(event.touches);
+            if(pinch.distance>0)setScale(pinch.scale*distance(event.touches)/pinch.distance,centre);
+            viewport.scrollLeft=Math.max(0,pinch.worldX*scale-centre.x);
+            viewport.scrollTop=Math.max(0,pinch.worldY*scale-centre.y);
+        },{passive:false});
+        const end=event=>{if(pinch&&event.touches.length<2){pinch=null;ignoreUntil=Date.now()+400;}};
+        viewport.addEventListener('touchend',end);viewport.addEventListener('touchcancel',end);
         window.addEventListener('resize', () => { if (!pinch) fit(); });
     });
     return { setScale, fit, updateRoom, getScale:()=>scale, isPinching:()=>!!pinch, ignoreClick:()=>!!pinch || Date.now()<ignoreUntil };
