@@ -2,7 +2,22 @@
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
 const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
-let editing=null;
+let editing=null,chosenTables=[];
+function sameTables(a,b){return a.length===b.length&&a.every(n=>b.includes(n))}
+function editChoices(){
+ const selector=$('editTable'),current=chosenTables.slice(),plan=FloorPlan.get();
+ const options=plan.tables.map(t=>({tables:[t.number],label:'Table '+t.number+' · '+t.capacity+' places'}));
+ for(const pair of window.RestoFusion?.pairs()||[]){
+  options.push({tables:pair,label:'Fusion '+pair.join(' + ')+' · '+pair.reduce((sum,n)=>sum+(plan.tables.find(t=>t.number===n)?.capacity||0),0)+' places'});
+ }
+ if(current.length>1&&!options.some(o=>sameTables(o.tables,current)))options.push({tables:current,label:'Fusion actuelle '+current.join(' + ')});
+ selector.replaceChildren();
+ options.forEach((option,i)=>{const elOption=el('option',option.label);elOption.value=String(i);selector.append(elOption)});
+ selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,current))));
+ selector.onchange=()=>{chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
+ const notice=$('editFusionNotice');if(notice){notice.hidden=current.length<2;notice.textContent=current.length>1?'Fusion sélectionnée : '+current.join(' + '):''}
+}
+
 function load(){return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);if(cls)n.className=cls;return n}
 function notify(msg){$('reservationMessage').textContent=msg}
@@ -11,7 +26,11 @@ function action(id,kind){
  try{
  const all=load(),i=all.findIndex(r=>r.id===id);if(i<0)return notify('Réservation introuvable.');
  const r=all[i];
- if(kind==='edit'){editing=id;$('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editTable').replaceChildren(...FloorPlan.get().tables.map(t=>{const o=el('option','Table '+t.number+' · '+t.capacity+' places');o.value=t.number;return o}));$('editTable').value=r.tables[0];$('editTable').disabled=r.tables.length>1;const notice=$('editFusionNotice');if(notice){notice.hidden=r.tables.length<=1;notice.textContent=r.tables.length>1?'Fusion conservée : tables '+r.tables.join(' + ')+'. Modifiez les autres champs sans perdre la fusion.':''}$('editForm').hidden=false;$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return}
+ if(kind==='edit'){
+ editing=id;chosenTables=r.tables.slice();
+ $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
+ editChoices();$('editForm').hidden=false;$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
+ }
  if(kind==='delete'){if(!confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.'))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
  if(kind==='cancel'&&!confirm('Annuler la réservation de '+r.client+' ?'))return;
  const next=E.transition(r,kind==='cancel'?'cancelled':kind);
@@ -38,18 +57,20 @@ function render(){
 $('reservationDate').value=new Date().toLocaleDateString('en-CA');
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',render);
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';render()});
-$('editCancel').addEventListener('click',()=>{editing=null;$('editTable').disabled=false;$('editForm').hidden=true});
+$('editCancel').addEventListener('click',()=>{editing=null;chosenTables=[];$('editForm').hidden=true});
 $('editForm').addEventListener('submit',e=>{
  e.preventDefault();if(!editing)return;
  try{
  const all=load(),i=all.findIndex(r=>r.id===editing);if(i<0)throw Error('Réservation introuvable');
  const previous=all[i];if(!E.isBlocking(previous))throw Error('Une réservation terminée ou annulée ne peut pas être réactivée par modification.');
- const table=Number($('editTable').value),guests=Number($('editGuests').value);
- const t=FloorPlan.get().tables.find(x=>x.number===table);const fusion=previous.tables.length>1;
- if(!fusion&&(!t||guests<(t.capacityMin||1)))throw Error('Capacité minimale non respectée.');
- const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables:fusion?previous.tables.slice():[table]};
+ const guests=Number($('editGuests').value),plan=FloorPlan.get(),tables=chosenTables.slice();
+ if(!tables.length||tables.some(n=>!plan.tables.some(t=>t.number===n)))throw Error('Table inconnue.');
+ if(tables.length>1&&!sameTables(tables,previous.tables)&&!(window.RestoFusion?.pairs()||[]).some(p=>sameTables(p,tables)))throw Error('Fusion non autorisée.');
+ if(tables.length>1&&new Set(tables.map(n=>plan.tables.find(t=>t.number===n).roomId)).size>1)throw Error('Fusion entre salles différentes interdite.');
+ if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0]).capacityMin||1))throw Error('Capacité minimale non respectée.');
+ const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
  const check=E.validate(updated,all,editing);if(!check.valid)throw Error(check.errors.join(' '));
- all[i]=updated;save(all);editing=null;$('editForm').hidden=true;notify('Réservation modifiée.');
+ all[i]=updated;save(all);editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée.');
  }catch(err){notify('Modification impossible : '+err.message)}
 });
 window.addEventListener('restomanager:v3-change',render);
