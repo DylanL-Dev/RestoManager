@@ -37,7 +37,29 @@ function shortcut(label,id,tableId){
 shortcut('＋ Réserver cette table','reservationForm','bookingTable');
 shortcut('＋ Installer un passage','passages','walkinTable');
 box.append(actions);
-if(!list.length)return;list.forEach(r=>{const row=node('div','detailLine');row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+r.status));box.append(row)})}
+if(!list.length)return;
+const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
+const choices={reserved:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],late:[['arrived','✓ Client arrivé'],['seated','Installer'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['completed','Terminer le passage'],['released','Libérer la table']]};
+list.forEach(r=>{
+ const row=node('div','detailLine');
+ row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+(labels[r.status]||r.status)));
+ const controls=node('div','tableStatusActions');
+ (choices[r.status]||[]).forEach(([kind,label])=>{
+ const button=node('button','tableStatusAction',label);button.type='button';
+ button.addEventListener('click',()=>{
+ if(['completed','released','no_show'].includes(kind)&&!confirm('Confirmer : '+label.toLowerCase()+' pour '+r.client+' ?'))return;
+ try{
+ const all=readReservations(),index=all.findIndex(x=>x.id===r.id);if(index<0)throw Error('Réservation introuvable.');
+ const result=ReservationEngine.transition(all[index],kind);if(!result.valid)throw Error(result.error);
+ all[index]=result.reservation;localStorage.setItem('restomanager_reservations',JSON.stringify(all));
+ window.dispatchEvent(new Event('restomanager:v3-change'));
+ const table=plan.tables.find(x=>x.number===t.number);if(table)detail(table,state(table));
+ }catch(error){const warning=node('p','tableActionError',error.message);row.append(warning)}
+ });controls.append(button);
+ });
+ row.append(controls);box.append(row);
+ });
+}
 function refreshAvailability(){
  const dateValue=$('bookingDate').value,time=$('bookingTime').value,guests=Number($('bookingGuests').value),select=$('bookingTable'),previous=select.value;
  select.replaceChildren();
