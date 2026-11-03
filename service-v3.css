@@ -264,3 +264,13 @@ html{scroll-padding-bottom:110px}
 .tableActionError{font-size:12px;color:#ae3333;margin:8px 0}
 .tableDetailSheetBody .detailLine{padding:12px 0;border-top:1px solid #e4eee8}
 @media(max-width:620px){.tableStatusActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.tableStatusAction{padding:9px 6px;font-size:11px}}
+
+/* Intelligent availability suggestions */
+.availabilityInsight{display:grid;gap:8px;margin:12px 0}
+.availabilitySummary{margin:0;padding:12px 14px;border-radius:12px;background:#e9f6ee;color:#166447;font-size:13px;font-weight:700}
+.availabilityWarning{margin:0;padding:11px 14px;border-radius:12px;background:#fff4e2;color:#8a5b12;font-size:13px;font-weight:700}
+.availabilityAlternativesTitle{margin:3px 0 0;font-size:13px;font-weight:800;color:#244b3c}
+.availabilityAlternatives{display:flex;flex-wrap:wrap;gap:8px}
+.availabilityTimeOption{min-height:43px;border:1px solid #b5d9c4;border-radius:12px;background:#fff;color:#176749;font-size:12px;font-weight:750;padding:9px 12px;transition:transform .15s ease,background .15s ease}
+.availabilityTimeOption:active{transform:scale(.96);background:#e8f6ee}
+.availabilityTimeOption:focus-visible{outline:3px solid #16815e;outline-offset:2px}
