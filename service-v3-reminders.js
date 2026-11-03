@@ -54,8 +54,8 @@
    const title=document.createElement('strong');title.textContent=(a.priority?'⚠ ':'')+'Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ')+' · '+a.r.client;
    const desc=document.createElement('p');desc.textContent=(a.remaining>0?'Départ estimé dans '+a.remaining+' min':a.remaining===0?'Fin estimée maintenant':'Fin estimée dépassée de '+Math.abs(a.remaining)+' min')+' (prévue à '+clock(a.end)+'). Vérifier si les clients sont partis.'+(a.next?' Prochaine réservation : '+a.next+'.':'');
    const actions=document.createElement('div');actions.className='serviceReminderActions';
-   actions.append(button('Libérer la table',()=>{
-    if(!confirm('Les clients de '+a.r.client+' sont-ils réellement partis ? Confirmer la libération des tables '+a.r.tables.join(' + ')+' ?'))return;
+   actions.append(button('Libérer la table',async()=>{
+    if(!await window.RestoConfirmRelease(a.r))return;
     const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||all[idx].status!=='seated'){update();return}
     const result=ReservationEngine.transition(all[idx],'released',undefined,all);
     if(!result.valid){alert(result.error||'Impossible de libérer cette table.');return}
