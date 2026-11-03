@@ -82,4 +82,16 @@ for(let i=0;i<1000;i++){
     assert.equal(engine.validate(adjacent,[existing]).valid,true,'Créneau suivant '+i);
 }
 
+
+const seatedBefore=reservation({id:'seated-before',client:'602',date:'2026-11-04',time:'19:00',duration:90,tables:[17,18],status:'seated',guests:3});
+const nextParty=reservation({id:'next-party',client:'Du Pont',date:'2026-11-04',time:'21:30',duration:90,tables:[17,18],status:'reserved',guests:4});
+assert.equal(engine.validate(nextParty,[seatedBefore]).valid,true,'Future slot still valid');
+assert.equal(engine.seatingWarnings(nextParty,[seatedBefore]).length,1,'Seated party requires confirmation');
+assert.equal(engine.seatingWarnings(nextParty,[seatedBefore])[0].plannedEnd,'20:30','Planned departure');
+assert.equal(engine.seatingWarnings(nextParty,[seatedBefore])[0].gapMinutes,60,'Gap minutes');
+assert.equal(engine.seatingWarnings(nextParty,[{...seatedBefore,status:'completed'}]).length,0,'Completed releases warning');
+assert.equal(engine.seatingWarnings({...nextParty,tables:[22,23]},[seatedBefore]).length,0,'Other tables unaffected');
+assert.equal(engine.validate({...nextParty,time:'20:00'},[seatedBefore]).valid,false,'Overlapping seated booking blocked');
+assert.equal(engine.seatingWarnings(nextParty,[seatedBefore],seatedBefore.id).length,0,'Self ignored on edit');
+
 console.log('reservation-engine: scénarios métier et 1000 cas de concurrence horaire validés');
