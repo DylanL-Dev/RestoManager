@@ -301,3 +301,5 @@ html{scroll-padding-bottom:110px}
 .tablePickerCard.unavailable .tablePickerIndicator{color:#a34d35!important;font-weight:750}
 .tablePickerCard.unavailable small{color:#7a8580!important}
 .tablePickerCard.unavailable.selected{border-color:#d6a37d!important}
+
+.tablePickerCard.caution{border-color:#d5a35d!important;background:#fff9e9!important}.tablePickerCard.caution .tablePickerIndicator{color:#93611b!important;font-weight:750}
