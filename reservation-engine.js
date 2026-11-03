@@ -55,8 +55,18 @@
             : NaN;
     }
 
+    function startMinutes(reservation) {
+        if (reservation.status === STATUS.SEATED && reservation.seatedAt) {
+            const actual = new Date(reservation.seatedAt);
+            if (Number.isFinite(actual.getTime())) {
+                const day = [actual.getFullYear(),String(actual.getMonth()+1).padStart(2,'0'),String(actual.getDate()).padStart(2,'0')].join('-');
+                if (day === reservation.date) return actual.getHours()*60+actual.getMinutes();
+            }
+        }
+        return minutes(reservation.time);
+    }
     function endMinutes(reservation) {
-        return minutes(reservation.time) + Number(reservation.duration || DEFAULT_DURATION);
+        return startMinutes(reservation) + Number(reservation.duration || DEFAULT_DURATION);
     }
 
     function isBlocking(reservation) {
@@ -76,8 +86,8 @@
     }
 
     function overlaps(first, second) {
-        return minutes(first.time) < endMinutes(second) &&
-            endMinutes(first) > minutes(second.time);
+        return startMinutes(first) < endMinutes(second) &&
+            endMinutes(first) > startMinutes(second);
     }
 
     function normalizeRoom(value) {
@@ -184,7 +194,7 @@
                 id: other.id, client: other.client, time: other.time,
                 plannedEnd: String(Math.floor(endMinutes(other) / 60)).padStart(2, '0') + ':' +
                     String(endMinutes(other) % 60).padStart(2, '0'),
-                gapMinutes: minutes(candidate.time) - endMinutes(other),
+                gapMinutes: startMinutes(candidate) - endMinutes(other),
                 tables: other.tables.slice()
             };
         });
@@ -228,6 +238,7 @@
         TERMINAL_STATUSES: TERMINAL_STATUSES,
         isBlocking: isBlocking,
         endMinutes: endMinutes,
+        startMinutes: startMinutes,
         tableCapacity: tableCapacity,
         overlaps: overlaps,
         normalizeRoom: normalizeRoom,
