@@ -1,33 +1,49 @@
 'use strict';
 (function(){
-const configs=[['bookingTable','bookingGuests'],['walkinTable','walkinGuests']];
-function setup(selectId,guestsId){
- const select=document.getElementById(selectId);if(!select)return;
+const configs=['bookingTable','walkinTable'];
+let active=null;
+const overlay=document.createElement('div');overlay.className='tablePickerOverlay';overlay.hidden=true;
+overlay.innerHTML='<div class="tablePickerBackdrop"></div><section class="tablePickerSheet" role="dialog" aria-modal="true" aria-labelledby="tablePickerTitle" tabindex="-1"><header class="tablePickerHeader"><div><span class="tablePickerEyebrow">DISPONIBILITÉS</span><h2 id="tablePickerTitle">Choisir une table</h2><p id="tablePickerSubtitle">Sélectionnez la meilleure option</p></div><button class="tablePickerClose" type="button" aria-label="Fermer">✕</button></header><div class="tablePickerGrid"></div><footer class="tablePickerFooter">Les tables proposées respectent le créneau et la capacité indiqués.</footer></section>';
+document.body.append(overlay);
+const grid=overlay.querySelector('.tablePickerGrid'),sheet=overlay.querySelector('.tablePickerSheet');
+let previousFocus=null;
+function close(){overlay.hidden=true;document.body.classList.remove('tablePickerOpen');active=null;if(previousFocus)previousFocus.focus()}
+overlay.querySelector('.tablePickerClose').addEventListener('click',close);
+overlay.querySelector('.tablePickerBackdrop').addEventListener('click',close);
+document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')close();if(e.key==='Tab'){const controls=Array.from(sheet.querySelectorAll('button:not([disabled])'));const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+const refreshers={};
+configs.forEach(id=>{
+ const select=document.getElementById(id);if(!select)return;
  const box=document.createElement('div');box.className='tableChoice';
- const trigger=document.createElement('button');trigger.type='button';trigger.className='tableChoiceTrigger';trigger.setAttribute('aria-expanded','false');
- const panel=document.createElement('div');panel.className='tableChoicePanel';panel.hidden=true;
- const caption=document.createElement('p');caption.className='tableChoiceCaption';caption.textContent='Tables disponibles pour ce créneau';
- const grid=document.createElement('div');grid.className='tableChoiceGrid';panel.append(caption,grid);
- select.parentNode.append(box);box.append(trigger,panel);select.classList.add('visuallyHiddenSelect');select.tabIndex=-1;
+ const trigger=document.createElement('button');trigger.type='button';trigger.className='tableChoiceTrigger';
+ select.parentNode.append(box);box.append(trigger);select.classList.add('visuallyHiddenSelect');select.tabIndex=-1;
  function refresh(){
  const options=Array.from(select.options).filter(o=>o.value);
- trigger.textContent=select.selectedOptions[0]?.value?'Table '+select.value+' · '+select.selectedOptions[0].textContent.split('·')[1]?.trim():'Aucune table disponible';
- trigger.disabled=!options.length;
+ const chosen=options.find(o=>o.value===select.value);
+ trigger.replaceChildren();
+ const label=document.createElement('span');label.textContent=chosen?'Table '+chosen.value+' · '+chosen.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim():'Aucune table disponible';
+ const action=document.createElement('span');action.className='tableChoiceAction';action.textContent=chosen?'Changer':'Choisir';
+ trigger.append(label,action);trigger.disabled=!options.length;
+ if(active===id)render();
+ }
+ function render(){
  grid.replaceChildren();
- options.forEach((option,i)=>{
- const card=document.createElement('button');card.type='button';card.className='tableChoiceCard'+(option.value===select.value?' selected':'');
- const name=document.createElement('strong');name.textContent='Table '+option.value;
- const desc=document.createElement('small');desc.textContent=option.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim();
- card.append(name,desc);
- if(i===0){const tag=document.createElement('em');tag.textContent='Suggestion';card.append(tag)}
- card.addEventListener('click',()=>{select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));panel.hidden=true;trigger.setAttribute('aria-expanded','false');refresh()});
+ const options=Array.from(select.options).filter(o=>o.value);
+ overlay.querySelector('#tablePickerSubtitle').textContent=options.length+' table(s) compatible(s) avec votre réservation';
+ options.forEach((o,i)=>{
+ const card=document.createElement('button');card.type='button';card.className='tablePickerCard'+(o.value===select.value?' selected':'');
+ const top=document.createElement('div');top.className='tablePickerCardTop';
+ const name=document.createElement('strong');name.textContent='Table '+o.value;top.append(name);
+ if(i===0){const tag=document.createElement('span');tag.className='tablePickerBest';tag.textContent='★ Recommandée';top.append(tag)}
+ const desc=document.createElement('small');desc.textContent=o.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim();
+ const indicator=document.createElement('span');indicator.className='tablePickerIndicator';indicator.textContent=o.value===select.value?'✓ Sélectionnée':'Choisir cette table';
+ card.append(top,desc,indicator);
+ card.addEventListener('click',()=>{select.value=o.value;select.dispatchEvent(new Event('change',{bubbles:true}));close();refresh()});
  grid.append(card);
  });
  }
- trigger.addEventListener('click',()=>{panel.hidden=!panel.hidden;trigger.setAttribute('aria-expanded',String(!panel.hidden));if(!panel.hidden)refresh()});
- document.addEventListener('click',e=>{if(!box.contains(e.target)){panel.hidden=true;trigger.setAttribute('aria-expanded','false')}});
- select.addEventListener('change',refresh);refresh();return refresh;
-}
-const refreshers={};configs.forEach(([id,guest])=>{refreshers[id]=setup(id,guest)});
+ trigger.addEventListener('click',()=>{previousFocus=trigger;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus()});
+ select.addEventListener('change',refresh);refresh();refreshers[id]=refresh;
+});
 window.RestoTableChoices={refresh(id){refreshers[id]?.()}};
 })();
