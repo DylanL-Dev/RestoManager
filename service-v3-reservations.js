@@ -14,7 +14,8 @@ function editAvailability(tables){
  const candidate={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
  const result=E.validate(candidate,load(),editing);
  if(!result.valid)return {available:false,reason:result.conflict?'Occupée à '+result.conflict.time+' · '+result.conflict.client:result.errors[0]};
- return {available:true,reason:'Disponible'};
+ const warnings=E.seatingWarnings(candidate,load(),editing);
+ return warnings.length?{available:true,caution:true,reason:'À confirmer · départ prévu '+warnings[0].plannedEnd}:{available:true,reason:'Disponible'};
 }
 function updateEditChoiceAvailability(){
  if(!editing)return;
@@ -24,7 +25,7 @@ function updateEditChoiceAvailability(){
   if(!tables)continue;
   const state=editAvailability(tables);
   option.disabled=!state.available;
-  option.dataset.availability=state.available?'available':'unavailable';
+  option.dataset.availability=state.available?(state.caution?'caution':'available'):'unavailable';
   option.dataset.reason=state.reason;
  }
  window.RestoTableChoices?.refresh('editTable');
@@ -96,6 +97,8 @@ $('editForm').addEventListener('submit',e=>{
  if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0]).capacityMin||1))throw Error('Capacité minimale non respectée.');
  const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
  const check=E.validate(updated,all,editing);if(!check.valid)throw Error(check.errors.join(' '));
+ const warnings=E.seatingWarnings(updated,all,editing);
+ if(warnings.length){const message='Attention : '+warnings.map(w=>'la réservation '+w.client+' est toujours marquée « Installé » sur '+w.tables.join(' + ')+'. Fin théorique '+w.plannedEnd+', marge '+w.gapMinutes+' min').join(' ; ')+'.\\n\\nConfirmer cette attribution malgré l’absence de départ confirmé ?';if(!confirm(message))return;updated.seatingOverride={confirmedAt:new Date().toISOString(),warnings:warnings.map(w=>({id:w.id,client:w.client,plannedEnd:w.plannedEnd,gapMinutes:w.gapMinutes}))};}else delete updated.seatingOverride;
  all[i]=updated;save(all);editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée.');
  }catch(err){notify('Modification impossible : '+err.message)}
 });
