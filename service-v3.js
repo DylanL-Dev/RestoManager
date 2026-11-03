@@ -13,7 +13,20 @@ function node(tag,className,content){const e=document.createElement(tag);if(clas
 function render(){const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);$('tableGrid').replaceChildren(...shown.map(({t,s})=>{const b=node('button','tableCard '+s.key);b.type='button';b.append(node('span','num','Table '+t.number),node('span','status',s.label),node('span','info',s.detail),node('span','capacity',(t.capacityMin||1)+' – '+t.capacity+' places'));b.addEventListener('click',()=>{selected=t.number;detail(t,s)});return b}));if(!shown.length)$('tableGrid').append(node('p','muted','Aucune table pour ce filtre.'));
 const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const arrived=bookings.filter(r=>r.status==='arrived');const waiting=bookings.filter(r=>['reserved','confirmed','late'].includes(r.status));const occupiedNumbers=new Set(bookings.filter(r=>['seated','arrived'].includes(r.status)).flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0)],['Clients arrivés',arrived.reduce((n,r)=>n+r.guests,0)],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0)],['Capacité non occupée',free]];$('kpis').replaceChildren(...kpis.map(([label,value])=>{const c=node('div','kpi');c.append(node('span','',label),node('strong','',value));return c}));
 $('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{const c=node('div','arrival');c.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));return c}));if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
-function detail(t,s){const box=$('detail');box.replaceChildren(node('strong','','Table '+t.number+' · '+s.label),node('p','muted','Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const list=bookings.filter(r=>r.tables.includes(t.number)).sort((a,b)=>a.time.localeCompare(b.time));if(!list.length){box.append(node('p','muted','Aucune réservation pour ce service.'));return}list.forEach(r=>{const row=node('div','detailLine');row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+r.status));box.append(row)})}
+function detail(t,s){const box=$('detail');box.replaceChildren(node('strong','','Table '+t.number+' · '+s.label),node('p','muted','Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const list=bookings.filter(r=>r.tables.includes(t.number)).sort((a,b)=>a.time.localeCompare(b.time));if(!list.length){box.append(node('p','muted','Aucune réservation pour ce service.'))}
+const actions=node('div','tableDetailActions');
+function shortcut(label,id,tableId){
+ const button=node('button','tableDetailAction',label);button.type='button';button.addEventListener('click',()=>{
+ const panel=$(id);if(!panel)return;panel.open=true;
+ const select=$(tableId);if(select){select.value=String(t.number);select.dispatchEvent(new Event('change',{bubbles:true}))}
+ panel.scrollIntoView({behavior:'smooth',block:'start'});
+ const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
+ });actions.append(button);
+}
+shortcut('＋ Réserver cette table','reservationForm','bookingTable');
+shortcut('＋ Installer un passage','passages','walkinTable');
+box.append(actions);
+if(!list.length)return;list.forEach(r=>{const row=node('div','detailLine');row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+r.status));box.append(row)})}
 function refreshAvailability(){
  const dateValue=$('bookingDate').value,time=$('bookingTime').value,guests=Number($('bookingGuests').value),select=$('bookingTable'),previous=select.value;
  select.replaceChildren();
