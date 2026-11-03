@@ -387,3 +387,18 @@ html{scroll-padding-bottom:110px}
 .serviceReminderActions button{flex:1 1 140px;min-height:44px;padding:9px;border:1px solid #c5d9cc;border-radius:12px;background:#f2f8f4;color:#175a44;font-weight:700}
 .serviceReminderActions .serviceReminderPrimary{background:#157452;color:white;border-color:#157452}
 @media(max-width:650px){.serviceReminderPanel{top:75px;right:10px;width:calc(100vw - 20px)}.serviceBell{width:42px;height:42px}}
+
+/* Champs principaux lisibles sur mobile, tablette et ordinateur. */
+#bookingForm>label:has(#bookingClient),
+#bookingForm>label:has(#bookingTable),
+#editForm>label:has(#editTable){grid-column:1/-1;min-width:0;width:100%;box-sizing:border-box}
+#bookingForm>label:has(#bookingClient) input,
+#bookingForm>label:has(#bookingTable) select,
+#editForm>label:has(#editTable) select{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+#bookingForm>label:has(#bookingClient),
+#bookingForm>label:has(#bookingTable),
+#editForm>label:has(#editTable){display:grid;gap:8px;align-content:start}
+#bookingForm>label:has(#bookingTable) .tableChoiceTrigger,
+#editForm>label:has(#editTable) .tableChoiceTrigger,
+#bookingForm>label:has(#bookingTable) button,
+#editForm>label:has(#editTable) button{max-width:100%;min-width:0;box-sizing:border-box}
