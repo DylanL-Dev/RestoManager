@@ -49,6 +49,11 @@
  window.RestoConfirmSeating=function(warnings,client,time){
   if(resolvePending)return Promise.resolve(false);
   focusBefore=document.activeElement;
+  overlay.querySelector('.restoConfirmEyebrow').textContent='ATTRIBUTION À VÉRIFIER';
+  overlay.querySelector('#restoConfirmTitle').textContent='Table encore occupée';
+  overlay.querySelector('.restoConfirmNote').textContent='Le départ est estimé sur la durée prévue. La réservation existante restera « Installé » tant que son départ ne sera pas confirmé.';
+  overlay.querySelector('[data-decision="cancel"]').textContent='Choisir une autre table';
+  overlay.querySelector('[data-decision="accept"]').textContent='Confirmer l’attribution';
   overlay.querySelector('#restoConfirmDescription').textContent='Pour '+client+' à '+time+', les tables sélectionnées sont encore marquées occupées.';
   const list=overlay.querySelector('.restoConfirmWarnings');list.replaceChildren();
   warnings.forEach(w=>{
