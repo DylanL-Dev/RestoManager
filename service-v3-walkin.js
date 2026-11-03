@@ -27,7 +27,7 @@ $('walkinForm').addEventListener('submit',e=>{
  try{
  const all=load(),table=Number($('walkinTable').value);
  if(!table||!choices(all).some(t=>t.number===table))throw Error('Cette table n’est pas disponible.');
- const r={...draft(table),id:'walkin-'+Date.now()+'-'+Math.random().toString(36).slice(2),createdAt:new Date().toISOString()};
+ const r={...draft(table),seatedAt:new Date().toISOString(),id:'walkin-'+Date.now()+'-'+Math.random().toString(36).slice(2),createdAt:new Date().toISOString()};
  const validation=E.validate(r,load());if(!validation.valid)throw Error(validation.errors.join(' '));
  localStorage.setItem(KEY,JSON.stringify(load().concat(r)));
  $('walkinFeedback').textContent='Client de passage installé à la table '+table+'.';
