@@ -284,3 +284,13 @@ html{scroll-padding-bottom:110px}
 .groupedFusionCard{border:2px solid #85bca2;background:#edf8f1}.reservationPrimaryActions{display:flex;gap:8px;flex-wrap:wrap}.reservationMoreActions{margin-top:9px;border:1px solid #d6e3da;border-radius:12px;padding:9px 12px}.reservationMoreActions summary{cursor:pointer;font-weight:700;color:#23654c;min-height:35px;display:flex;align-items:center}.reservationMoreActions button{margin:5px 6px 5px 0}.reservationActions{display:block}
 
 .tableAlreadyReserved{padding:10px 12px;border-radius:11px;background:#f0f7f3;color:#34614d;font-size:13px;line-height:1.45}
+
+/* Reservation edit: same custom table picker as booking and walk-in. */
+#editForm .tableChoice{width:100%}
+#editForm .tableChoiceTrigger{font-size:14px!important;overflow-wrap:anywhere;gap:8px}
+#editForm .tableChoiceTrigger>span:first-child{min-width:0;flex:1}
+#editForm #editFusionNotice{grid-column:1/-1;margin:0}
+#editForm>button{grid-column:1/-1;min-height:50px;font-size:14px;font-weight:750;white-space:normal;line-height:1.3}
+#editForm>button[type=submit]{background:#177451;color:#fff;border-color:#177451}
+#editForm>button#editCancel{background:#fff;color:#245b46}
+@media(min-width:700px){#editForm>button{grid-column:auto}}
