@@ -44,3 +44,36 @@ Branche : `feature/refonte-service-responsive-v3`. Base : `codex/mission-3-floor
 - Une table supprimée ne détruit aucun historique.
 - Les statistiques sont recalculées à chaque transition de statut.
 - L'éditeur 2D/3D reste récupérable ultérieurement.
+
+## Périmètre fonctionnel obligatoire — validation du 3 novembre 2026
+
+**Aucune régression fonctionnelle acceptée** : la V3 remplace l'interface, pas les fonctionnalités métier. Ne pas considérer le projet terminé tant que les fonctions existantes et nouvelles ne sont pas disponibles depuis la V3.
+
+### Réservations
+- Créer, modifier, annuler et supprimer une réservation avec confirmation, et préserver les historiques selon la politique de conservation.
+- Date, heure, nombre de couverts, nom/chambre, origine client, tables affectées, notes et états.
+- Recherche rapide client, chambre, numéro de table ; historique, no-show et clôture de service.
+- Contrôle des chevauchements, chambre déjà réservée sur le même créneau, horaires de fermeture et durée par défaut 90 minutes.
+
+### Tables et salles
+- Ajouter, éditer, renuméroter et supprimer une table ; pas de plafond arbitraire.
+- Configurer capacité minimale et maximale, salle, état indisponible, et préserver les références stables des réservations.
+- Ajouter, renommer et supprimer une salle avec garde-fous sur les tables et réservations.
+- Fusionner et séparer plusieurs tables ; réserver sur la fusion, capacité cumulée et contrôles d'occupation.
+
+### Service et clients de passage
+- Enregistrer les arrivées, installer, libérer, annuler la libération après vérification de conflits.
+- Clients de passage : nom facultatif, nombre de couverts obligatoire, table(s) compatibles, contrôle des prochaines réservations et durée estimée.
+- États explicites sur chaque carte : LIBRE, ATTENDUS, ARRIVÉS, PRÉSENTS, INDISPONIBLE ; PARTIS dans l'historique.
+
+### Disponibilité et indicateurs
+- Sélectionner date et créneau pour consulter les tables réellement disponibles.
+- Proposer des horaires alternatifs de 30 à 40 minutes quand le créneau est complet.
+- Indicateurs distincts pour capacité physique, places attribuables immédiatement, disponibilité à une heure future, présents, attendus, arrivés, couverts servis, tables occupées.
+- Recalculer après chaque changement, sans double comptage des fusions.
+
+### Livraison et tests
+- Remplacer les liens vers l'ancienne interface par des parcours V3 fonctionnels.
+- Vérifier mobile, tablette et ordinateur ; clavier, tailles d'écran et lisibilité.
+- Tests automatisés : collisions de créneaux, durée, chambres, capacité min/max, fusion, passages, libération et restauration, suppression et persistance.
+- Ne pas déployer sur la branche publique avant validation.
