@@ -27,16 +27,16 @@ $('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time
 function occupationProgress(r){
  const start=new Date(r.date+'T'+r.time+':00').getTime();
  const duration=(Number(r.duration)||ReservationEngine.DEFAULT_DURATION)*60000;
- const now=Date.now(),elapsed=Math.max(0,Math.floor((now-start)/60000)),remaining=Math.ceil((start+duration-now)/60000);
+ const now=Date.now(),remaining=Math.ceil((start+duration-now)/60000);
  const percent=Math.max(0,Math.min(100,(now-start)/duration*100));
  const card=node('div','tableTimeProgress');
  const head=node('div','tableTimeProgressHead');
  head.append(node('strong','',r.status==='seated'?'Temps de présence prévu':'Créneau théorique'));
- head.append(node('span','',remaining>0?remaining+' min restantes':remaining===0?'Fin théorique atteinte':Math.abs(remaining)+' min de dépassement'));
+ head.append(node('span','',now<start?'Service prévu à '+r.time:remaining>0?remaining+' min restantes':remaining===0?'Fin théorique atteinte':Math.abs(remaining)+' min de dépassement'));
  const track=node('div','tableTimeProgressTrack'),fill=node('div','tableTimeProgressFill'+(remaining<0?' overdue':''));fill.style.width=percent+'%';track.setAttribute('role','progressbar');track.setAttribute('aria-label','Progression du temps de réservation prévu');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(Math.round(percent)));track.append(fill);
  const foot=node('div','tableTimeProgressFoot');const end=new Date(start+duration);const endLabel=String(end.getHours()).padStart(2,'0')+':'+String(end.getMinutes()).padStart(2,'0');foot.append(node('span','',r.time+' · Début prévu'),node('span','',endLabel+' · Fin prévue'));
  card.append(head,track,foot);
- if(r.status==='seated')card.append(node('small','tableTimeProgressHint','Estimation : les clients restent installés jusqu’à validation de leur départ.'));
+ if(r.status==='seated')card.append(node('small','tableTimeProgressHint',now<start?'Le client est marqué « Installé » avant l’heure prévue : vérifiez son heure réelle d’arrivée. La barre démarre à l’heure de réservation.':'Estimation : les clients restent installés jusqu’à validation de leur départ.'));
  return card;
 }
 function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('strong','',fusion?'Tables '+fusion.tables.join(' + ')+' · '+s.label:'Table '+t.number+' · '+s.label),node('p','muted',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s) réservé(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const list=bookings.filter(r=>r.tables.includes(t.number)).sort((a,b)=>a.time.localeCompare(b.time));if(!list.length){box.append(node('p','muted','Aucune réservation pour ce service.'))}
