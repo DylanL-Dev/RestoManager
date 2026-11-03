@@ -119,6 +119,12 @@ $('bookingForm').addEventListener('submit',event=>{
  if(!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
  const latest=readReservations(),again=ReservationEngine.validate(candidate,latest);
  if(!again.valid){feedback.textContent=again.errors.join(' ');refreshAvailability();return}
+ const warnings=ReservationEngine.seatingWarnings(candidate,latest);
+ if(warnings.length){
+  const message='Attention : '+warnings.map(w=>'la réservation '+w.client+' est encore marquée « Installé » sur les tables '+w.tables.join(' + ')+'. Départ théorique '+w.plannedEnd+' (marge '+w.gapMinutes+' min)').join(' ; ')+'.\\n\\nConfirmer cette réservation malgré l’absence de départ confirmé ?';
+  if(!confirm(message)){feedback.textContent='Attribution non confirmée : aucune réservation créée.';return}
+  candidate.seatingOverride={confirmedAt:new Date().toISOString(),warnings:warnings.map(w=>({id:w.id,client:w.client,plannedEnd:w.plannedEnd,gapMinutes:w.gapMinutes}))};
+ }
  localStorage.setItem('restomanager_reservations',JSON.stringify(latest.concat(candidate)));
  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='Réservation enregistrée : table(s) '+candidate.tables.join(' + ')+' à '+candidate.time+'.';window.RestoFusionSelected=null;refreshAvailability();render();
  }catch(error){feedback.textContent='Enregistrement impossible : '+error.message}
