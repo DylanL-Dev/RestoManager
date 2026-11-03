@@ -2,10 +2,15 @@
 (function(){
 const button=document.getElementById('historyPdf');if(!button)return;
 const pad=n=>String(n).padStart(2,'0'),fmt=d=>[d.getFullYear(),pad(d.getMonth()+1),pad(d.getDate())].join('-');
-button.addEventListener('click',()=>{
+button.addEventListener('click',async()=>{
 const feedback=document.getElementById('historyFeedback');
 try{
-if(!window.jspdf?.jsPDF)throw Error('Le module PDF est indisponible. Vérifiez votre connexion et rechargez la page.');
+button.disabled=true;button.textContent='Préparation du PDF…';feedback.textContent='Génération du rapport en cours…';
+if(!window.jspdf?.jsPDF){
+ const sources=['https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'];
+ for(const src of sources){try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>reject(Error('Chargement impossible'));document.head.append(script)});if(window.jspdf?.jsPDF)break}catch(error){console.warn('Module PDF :',error)}}
+}
+if(!window.jspdf?.jsPDF)throw Error('Le générateur PDF ne se charge pas. Vérifiez la connexion Internet.');
 const dateInput=document.getElementById('historyDate').value,period=document.getElementById('historyPeriod').value,d=new Date(dateInput+'T12:00:00');if(Number.isNaN(d.getTime()))throw Error('Date invalide');
 let start=new Date(d),end=new Date(d);
 if(period==='week'){start.setDate(start.getDate()-(start.getDay()+6)%7);end=new Date(start);end.setDate(end.getDate()+6)}
@@ -31,6 +36,6 @@ if(!dates.length){text('Aucune donnée pour cette période.',19,y,10);y+=12}
 page();y+=8;pdf.setTextColor(100,119,108);for(const line of pdf.splitTextToSize('Données enregistrées dans ce navigateur uniquement. Les couverts servis correspondent aux passages terminés ou libérés.',175)){text(line,16,y,9);y+=5}
 pdf.save('RestoManager-'+period+'-'+from+'-'+to+'.pdf');
 feedback.textContent='Rapport PDF généré et téléchargé.';
-}catch(e){feedback.textContent='Export PDF impossible : '+e.message}
+}catch(e){feedback.textContent='Export PDF impossible : '+e.message;alert(feedback.textContent)}finally{button.disabled=false;button.textContent='Télécharger le PDF'}
 });
 })();
