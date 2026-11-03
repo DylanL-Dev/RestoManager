@@ -4,3 +4,87 @@
 
 .bookingTools{margin-bottom:18px}.bookingTools h2{margin-bottom:12px}.bookingTools form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}.bookingTools label{display:grid;gap:5px;font-size:13px;font-weight:600}.bookingTools input,.bookingTools select{width:100%;min-width:0;padding:11px;border:1px solid #cbd9d2;border-radius:9px;background:#fff;color:#173d32}.bookingTools button{border:0;border-radius:9px;background:#146c55;color:white;font-weight:700;padding:12px}.bookingTools #bookingFeedback{font-size:13px;margin-top:10px}.bookingTools #bookingFeedback:empty{display:none}@media(max-width:900px){.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr))}.bookingTools button{grid-column:1/-1}}
 .reservationPanel{margin-top:18px}.reservationSearch{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:14px 0}.reservationSearch label,#editForm label{display:grid;gap:5px;font-size:13px;font-weight:600}.reservationSearch input,#editForm input,#editForm select{padding:10px;border:1px solid #cbd9d2;border-radius:9px;min-width:0}.reservationSearch button,#editForm button,.reservationActions button{padding:9px 12px;border:1px solid #cbd9d2;border-radius:9px;background:#f4f8f5;color:#163c33;cursor:pointer}.reservationItem{padding:14px 0;border-top:1px solid #e3e9e5}.reservationItem p{font-size:13px;color:#526176;margin:8px 0}.reservationHead{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}.reservationStatus{font-size:12px;font-weight:700;background:#e7f5ec;border-radius:20px;padding:4px 10px}.reservationActions{display:flex;flex-wrap:wrap;gap:7px}#editForm{background:#f5faf7;border:1px solid #cbd9d2;border-radius:12px;padding:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}#editForm[hidden]{display:none}#editForm h2{grid-column:1/-1}#reservationMessage{color:#146c55;font-size:13px}@media(max-width:620px){#editForm{grid-template-columns:repeat(2,minmax(0,1fr))}.reservationSearch label{width:100%}.reservationSearch input{width:100%}}
+
+/* UI 2027: mobile-first service dashboard, tactile and legible */
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#183b32;background:#f6f8f6}
+html{scroll-behavior:smooth;scroll-padding-top:18px}
+body{line-height:1.45}
+main{max-width:1600px;margin:0 auto}
+.top{min-height:74px;background:#103f35}
+.brand strong{letter-spacing:-.7px}
+.serviceIntro{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:4px 0 18px}
+.serviceIntro h1{font-size:clamp(23px,3vw,33px);letter-spacing:-.8px;margin:2px 0 5px}
+.serviceIntro p{margin:0;color:#667a71;font-size:14px}
+.serviceIntro .eyebrow{font-size:11px;font-weight:800;letter-spacing:1.8px;color:#178164}
+.liveTag{white-space:nowrap;border-radius:30px;padding:9px 14px;background:#e3f5eb;color:#176b4c;font-size:12px;font-weight:700}
+.quickActions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.quickAction{display:flex;align-items:center;justify-content:center;min-height:50px;padding:11px;text-align:center;background:white;border:1px solid #dce7e0;border-radius:13px;text-decoration:none;color:#174b3d;font-weight:750;font-size:14px}
+.quickAction.primary{background:#146c55;color:white;border-color:#146c55}
+.kpis{gap:10px}
+.kpi{border-radius:15px;box-shadow:none;padding:15px}
+.kpi strong{font-size:clamp(23px,3vw,32px);letter-spacing:-.8px}
+.panel{box-shadow:0 2px 12px #0e39240a;border-color:#e0e9e2}
+.actionPanel{margin:0 0 12px;padding:0;overflow:hidden}
+.actionPanel summary{list-style:none;cursor:pointer;position:relative;padding:17px 48px 17px 19px;font-size:17px;font-weight:800}
+.actionPanel summary::-webkit-details-marker{display:none}
+.actionPanel summary span{display:block;color:#718278;font-size:12px;font-weight:400;margin-top:3px}
+.actionPanel summary:after{content:"+";position:absolute;right:18px;top:18px;font-size:23px;color:#146c55}
+.actionPanel[open] summary:after{content:"−"}
+.actionPanelBody{padding:0 18px 18px}
+.actionPanelBody>h2{display:none}
+.walkinPanel form,.bookingTools form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}
+.walkinPanel label,.bookingTools label{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:12px;font-weight:700;color:#456357}
+.walkinPanel input,.walkinPanel select,.bookingTools input,.bookingTools select{width:100%;min-width:0;max-width:100%;height:46px;border:1px solid #d6e1d9;border-radius:11px;background:white;padding:10px 12px;font-size:15px;color:#1b4135}
+.walkinPanel button,.bookingTools button{height:46px;border:0;border-radius:11px;background:#146c55;color:white;font-weight:800;padding:0 15px}
+.walkinPanel #walkinFeedback,.bookingTools #bookingFeedback{font-size:12px;line-height:1.5;color:#6a776f}
+.content{margin-top:18px}
+.tableGrid{gap:10px}
+.tableCard{min-height:128px;border-radius:14px;gap:7px;padding:12px}
+.tableCard .num{font-size:17px}
+.tableCard .status{font-size:10px;letter-spacing:.3px}
+.tableCard .info{font-size:12px}
+.filters button{white-space:nowrap}
+.reservationPanel{margin-top:14px}
+.reservationSearch{display:grid;grid-template-columns:180px minmax(0,1fr) auto;align-items:end}
+.reservationSearch label{min-width:0}
+.reservationSearch input{width:100%;min-width:0;height:44px}
+.reservationSearch button{min-height:44px}
+@media(max-width:900px){.quickActions{grid-template-columns:repeat(2,minmax(0,1fr))}.walkinPanel form,.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){
+ .top{min-height:68px;padding:9px 16px}
+ main{padding:14px 12px 92px}
+ .serviceIntro{margin:6px 2px 15px;align-items:flex-start}
+ .serviceIntro h1{font-size:25px;line-height:1.12}
+ .serviceIntro>div>p:last-child{font-size:12px;margin-top:7px}
+ .liveTag{display:none}
+ .quickActions{gap:8px;margin-bottom:14px}
+ .quickAction{min-height:49px;font-size:12px;padding:9px 5px}
+ .kpis{gap:8px;margin-bottom:14px}
+ .kpi{padding:13px 12px}
+ .kpi span{font-size:11px}
+ .kpi strong{font-size:25px;margin-top:4px}
+ .actionPanel summary{font-size:15px;padding:14px 40px 14px 15px}
+ .actionPanel summary:after{right:14px;top:14px}
+ .actionPanelBody{padding:0 14px 15px}
+ .walkinPanel form,.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .walkinPanel label,.bookingTools label{font-size:11px}
+ .walkinPanel input,.walkinPanel select,.bookingTools input,.bookingTools select{height:44px;font-size:14px;padding:8px}
+ .walkinPanel button,.bookingTools button{grid-column:1/-1;width:100%;height:46px}
+ .panel{padding:14px}
+ .actionPanel{padding:0}
+ .panelHead h1{font-size:19px}
+ .panelHead p{font-size:11px}
+ .panelHead{gap:7px}
+ .panelHead label{font-size:12px;min-width:0}
+ .panelHead select{max-width:132px;width:100%;font-size:13px}
+ .filters{flex-wrap:nowrap;overflow-x:auto;padding:2px 0 9px;margin:13px 0 7px;scrollbar-width:thin}
+ .filters button{flex:0 0 auto;font-size:12px;padding:8px 12px}
+ .tableGrid{gap:8px}
+ .tableCard{min-height:121px;padding:11px;gap:5px}
+ .tableCard .num{font-size:16px}
+ .tableCard .capacity{font-size:11px}
+ .reservationSearch{grid-template-columns:1fr 1fr;gap:10px}
+ .reservationSearch label{width:auto}
+ .reservationSearch button{grid-column:1/-1}
+ #editForm{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
