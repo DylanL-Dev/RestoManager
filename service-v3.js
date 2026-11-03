@@ -25,18 +25,20 @@ function render(){const visible=plan.tables.filter(t=>t.roomId===$('roomFilter')
 const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const arrived=bookings.filter(r=>r.status==='arrived');const waiting=bookings.filter(r=>['reserved','confirmed','late'].includes(r.status));const occupiedNumbers=new Set(bookings.filter(r=>['seated','arrived'].includes(r.status)).flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0)],['Clients arrivés',arrived.reduce((n,r)=>n+r.guests,0)],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0)],['Capacité non occupée',free]];$('kpis').replaceChildren(...kpis.map(([label,value])=>{const c=node('div','kpi');c.append(node('span','',label),node('strong','',value));return c}));
 $('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{const c=node('div','arrival');c.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));return c}));if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
 function occupationProgress(r){
- const start=new Date(r.date+'T'+r.time+':00').getTime();
+ const scheduled=new Date(r.date+'T'+r.time+':00').getTime();
+ const actual=r.seatedAt?new Date(r.seatedAt).getTime():NaN;
+ const start=Number.isFinite(actual)&&r.status==='seated'?actual:scheduled;
  const duration=(Number(r.duration)||ReservationEngine.DEFAULT_DURATION)*60000;
  const now=Date.now(),remaining=Math.ceil((start+duration-now)/60000);
  const percent=Math.max(0,Math.min(100,(now-start)/duration*100));
  const card=node('div','tableTimeProgress');
  const head=node('div','tableTimeProgressHead');
  head.append(node('strong','',r.status==='seated'?'Temps de présence prévu':'Créneau théorique'));
- head.append(node('span','',now<start?'Service prévu à '+r.time:remaining>0?remaining+' min restantes':remaining===0?'Fin théorique atteinte':Math.abs(remaining)+' min de dépassement'));
+ head.append(node('span','',now<start?'Installation prévue à '+r.time:remaining>0?remaining+' min restantes':remaining===0?'Fin théorique atteinte':Math.abs(remaining)+' min de dépassement'));
  const track=node('div','tableTimeProgressTrack'),fill=node('div','tableTimeProgressFill'+(remaining<0?' overdue':''));fill.style.width=percent+'%';track.setAttribute('role','progressbar');track.setAttribute('aria-label','Progression du temps de réservation prévu');track.setAttribute('aria-valuemin','0');track.setAttribute('aria-valuemax','100');track.setAttribute('aria-valuenow',String(Math.round(percent)));track.append(fill);
- const foot=node('div','tableTimeProgressFoot');const end=new Date(start+duration);const endLabel=String(end.getHours()).padStart(2,'0')+':'+String(end.getMinutes()).padStart(2,'0');foot.append(node('span','',r.time+' · Début prévu'),node('span','',endLabel+' · Fin prévue'));
+ const foot=node('div','tableTimeProgressFoot');const end=new Date(start+duration);const endLabel=String(end.getHours()).padStart(2,'0')+':'+String(end.getMinutes()).padStart(2,'0');const startDate=new Date(start);const startLabel=String(startDate.getHours()).padStart(2,'0')+':'+String(startDate.getMinutes()).padStart(2,'0');foot.append(node('span','',startLabel+(Number.isFinite(actual)?' · Installation réelle':' · Début prévu')),node('span','',endLabel+' · Fin estimée'));
  card.append(head,track,foot);
- if(r.status==='seated')card.append(node('small','tableTimeProgressHint',now<start?'Le client est marqué « Installé » avant l’heure prévue : vérifiez son heure réelle d’arrivée. La barre démarre à l’heure de réservation.':'Estimation : les clients restent installés jusqu’à validation de leur départ.'));
+ if(r.status==='seated')card.append(node('small','tableTimeProgressHint',now<start?'Le créneau n’a pas encore commencé.':'Estimation : les clients restent installés jusqu’à validation de leur départ.'));
  return card;
 }
 function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('strong','',fusion?'Tables '+fusion.tables.join(' + ')+' · '+s.label:'Table '+t.number+' · '+s.label),node('p','muted',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s) réservé(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const list=bookings.filter(r=>r.tables.includes(t.number)).sort((a,b)=>a.time.localeCompare(b.time));if(!list.length){box.append(node('p','muted','Aucune réservation pour ce service.'))}
