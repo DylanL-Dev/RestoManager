@@ -221,3 +221,11 @@ html{scroll-padding-bottom:110px}
 .roomPickerOpen{overflow:hidden}
 @media(min-width:901px){.roomPickerOverlay{align-items:center;padding:20px}.roomPickerSheet{border-radius:22px;padding-bottom:24px}}
 @media(prefers-reduced-motion:reduce){.roomPickerBackdrop,.roomPickerSheet{animation:none!important}}
+
+/* Independent screens: one active destination, no long vertical page */
+.appScreen[hidden]{display:none!important}
+.appScreenActive{animation:restoScreenEnter 230ms cubic-bezier(.2,.8,.2,1) both;min-width:0}
+@keyframes restoScreenEnter{from{opacity:.45;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.appScreen>.panel,.appScreen>.actionPanel{margin-top:0}
+.appScreen>.content{min-width:0}
+@media(prefers-reduced-motion:reduce){.appScreenActive{animation:none!important}}
