@@ -62,7 +62,7 @@ $('editForm').addEventListener('submit',e=>{
  e.preventDefault();if(!editing)return;
  try{
  const all=load(),i=all.findIndex(r=>r.id===editing);if(i<0)throw Error('Réservation introuvable');
- const previous=all[i];if(!E.isBlocking(previous))throw Error('Une réservation terminée ou annulée ne peut pas être réactivée par modification.');
+ const previous=all[i];if($('editDate').value<new Date().toLocaleDateString('en-CA')&&$('editDate').value!==previous.date)throw Error('Impossible de déplacer une réservation vers une date passée.');if(!E.isBlocking(previous))throw Error('Une réservation terminée ou annulée ne peut pas être réactivée par modification.');
  const guests=Number($('editGuests').value),plan=FloorPlan.get(),tables=chosenTables.slice();
  if(!tables.length||tables.some(n=>!plan.tables.some(t=>t.number===n)))throw Error('Table inconnue.');
  if(tables.length>1&&!sameTables(tables,previous.tables)&&!(window.RestoFusion?.pairs()||[]).some(p=>sameTables(p,tables)))throw Error('Fusion non autorisée.');
