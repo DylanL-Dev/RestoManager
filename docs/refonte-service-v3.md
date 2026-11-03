@@ -77,3 +77,15 @@ Branche : `feature/refonte-service-responsive-v3`. Base : `codex/mission-3-floor
 - Vérifier mobile, tablette et ordinateur ; clavier, tailles d'écran et lisibilité.
 - Tests automatisés : collisions de créneaux, durée, chambres, capacité min/max, fusion, passages, libération et restauration, suppression et persistance.
 - Ne pas déployer sur la branche publique avant validation.
+
+## Clôture du service et historique — exigences obligatoires
+
+- Action « Clôturer le service » accessible dans la nouvelle interface, avec date du service, synthèse chiffrée et confirmation explicite.
+- Avertissement si des clients sont encore présents ou arrivés mais non installés ; aucune suppression silencieuse.
+- Archivage de toutes les réservations du service : réservées, confirmées, arrivées, installées, terminées, annulées, absentes, libérées et clients de passage.
+- Clôture idempotente : ne jamais dupliquer les réservations si l'action est répétée ; préserver identifiants et liens vers les tables.
+- Conserver les réservations des jours suivants et les historiques existants.
+- Historique filtrable par date, client, chambre, table et statut, avec détails de chaque réservation.
+- Indicateurs historiques : couverts attendus, présents, servis, passages, no-shows, annulations, occupation ; préciser la définition de chaque indicateur.
+- Prévoir une stratégie de reprise en cas d'erreur d'écriture ou de données corrompues : ne pas effacer la source avant archivage réussi.
+- Tests de non-régression pour clôture répétée, service à cheval sur minuit, historiques existants, clients encore présents et conservation des réservations futures.
