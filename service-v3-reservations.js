@@ -60,7 +60,7 @@ function action(id,kind){
  }
  if(kind==='delete'){if(!confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.'))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
  if(kind==='cancel'&&!confirm('Annuler la réservation de '+r.client+' ?'))return;
- const next=E.transition(r,kind==='cancel'?'cancelled':kind);
+ const next=E.transition(r,kind==='cancel'?'cancelled':kind,undefined,all);
  if(!next.valid)return notify(next.error);
  all[i]=next.reservation;save(all);notify('Statut mis à jour : '+statuses[all[i].status]+'.');
  }catch(e){notify('Erreur : '+e.message)}
