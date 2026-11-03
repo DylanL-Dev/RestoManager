@@ -4,6 +4,31 @@ const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=Reserv
 const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,chosenTables=[];
 function sameTables(a,b){return a.length===b.length&&a.every(n=>b.includes(n))}
+function editAvailability(tables){
+ const previous=load().find(r=>r.id===editing);
+ if(!previous)return {available:false,reason:'Réservation introuvable'};
+ const plan=FloorPlan.get(),guests=Number($('editGuests').value),total=tables.reduce((n,id)=>n+(plan.tables.find(t=>t.number===id)?.capacity||0),0);
+ if(!Number.isInteger(guests)||guests<1)return {available:false,reason:'Nombre de couverts invalide'};
+ if(total<guests)return {available:false,reason:'Capacité insuffisante'};
+ if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0])?.capacityMin||1))return {available:false,reason:'Capacité minimale non respectée'};
+ const candidate={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
+ const result=E.validate(candidate,load(),editing);
+ if(!result.valid)return {available:false,reason:result.conflict?'Occupée à '+result.conflict.time+' · '+result.conflict.client:result.errors[0]};
+ return {available:true,reason:'Disponible'};
+}
+function updateEditChoiceAvailability(){
+ if(!editing)return;
+ const select=$('editTable');
+ for(const option of select.options){
+  const tables=option._tables;
+  if(!tables)continue;
+  const state=editAvailability(tables);
+  option.disabled=!state.available;
+  option.dataset.availability=state.available?'available':'unavailable';
+  option.dataset.reason=state.reason;
+ }
+ window.RestoTableChoices?.refresh('editTable');
+}
 function editChoices(){
  const selector=$('editTable'),current=chosenTables.slice(),plan=FloorPlan.get();
  const options=plan.tables.map(t=>({tables:[t.number],label:'Table '+t.number+' · '+t.capacity+' places'}));
@@ -12,9 +37,9 @@ function editChoices(){
  }
  if(current.length>1&&!options.some(o=>sameTables(o.tables,current)))options.push({tables:current,label:'Fusion actuelle '+current.join(' + ')});
  selector.replaceChildren();
- options.forEach((option,i)=>{const elOption=el('option',option.label);elOption.value=String(i);selector.append(elOption)});
+ options.forEach((option,i)=>{const elOption=el('option',option.label);elOption.value=String(i);elOption._tables=option.tables.slice();selector.append(elOption)});
  selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,current))));
- window.RestoTableChoices?.refresh('editTable');
+ updateEditChoiceAvailability();
  selector.onchange=()=>{chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
  const notice=$('editFusionNotice');if(notice){notice.hidden=current.length<2;notice.textContent=current.length>1?'Fusion sélectionnée : '+current.join(' + '):''}
 }
@@ -74,7 +99,8 @@ $('editForm').addEventListener('submit',e=>{
  all[i]=updated;save(all);editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée.');
  }catch(err){notify('Modification impossible : '+err.message)}
 });
-window.addEventListener('restomanager:v3-change',render);
+['editGuests','editDate','editTime','editClient'].forEach(id=>$(id).addEventListener('input',updateEditChoiceAvailability));
+window.addEventListener('restomanager:v3-change',()=>{render();updateEditChoiceAvailability()});
 window.addEventListener('storage',e=>{if(e.key===KEY)render()});
 render();
 })();
