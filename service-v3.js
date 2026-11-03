@@ -34,9 +34,7 @@ function shortcut(label,id,tableId){
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
  });actions.append(button);
 }
-shortcut('＋ Réserver cette table','reservationForm','bookingTable');
-shortcut('＋ Installer un passage','passages','walkinTable');
-box.append(actions);
+if(s.key==='free'){shortcut('＋ Réserver cette table','reservationForm','bookingTable');shortcut('＋ Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Table attribuée : utilisez les actions de la réservation ci-dessous. Pour un autre créneau, passez par Ajouter.'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 const choices={reserved:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],late:[['arrived','✓ Client arrivé'],['seated','Installer'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['completed','Terminer le passage'],['released','Libérer la table']]};
