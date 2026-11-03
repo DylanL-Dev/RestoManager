@@ -238,3 +238,20 @@ html{scroll-padding-bottom:110px}
 .quickAction{display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .quickAction .navSvgIcon{width:18px;height:18px}
 @media(max-width:360px){.mobileNavIcon .navSvgIcon{width:22px;height:22px}}
+
+/* Direct table actions: accessible responsive sheet */
+.tableDetailModal[hidden]{display:none!important}
+.tableDetailModal{position:fixed;inset:0;z-index:1700;display:flex;align-items:flex-end;justify-content:center}
+.tableDetailBackdrop{position:absolute;inset:0;background:rgba(8,28,22,.54);animation:restoBackdropIn .18s ease both}
+.tableDetailSheet{position:relative;width:min(100%,540px);max-height:min(84dvh,800px);overflow:auto;overscroll-behavior:contain;background:#fff;border-radius:24px 24px 0 0;padding:22px 18px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -12px 35px #102c2338;animation:restoSheetIn .25s cubic-bezier(.2,.8,.2,1) both}
+.tableDetailSheetHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid #e4eee8}
+.tableDetailSheetHeader small{font-size:10px;letter-spacing:.13em;font-weight:850;color:#16815e}
+.tableDetailSheetHeader h2{font-size:23px;margin:5px 0;color:#123d30}
+.tableDetailClose{border:0;border-radius:11px;background:#edf6f0;color:#1b5c45;min-width:40px;min-height:40px;font-size:19px}
+.tableDetailSheetBody{padding-top:15px}
+.tableDetailSheetBody #detail{display:grid;gap:8px}
+.tableDetailSheetBody .tableDetailActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tableDetailSheetBody .tableDetailAction{min-height:52px;font-size:13px}
+.tableDetailOpen{overflow:hidden}
+@media(min-width:901px){.tableDetailModal{align-items:center;padding:20px}.tableDetailSheet{border-radius:22px;padding:24px}}
+@media(prefers-reduced-motion:reduce){.tableDetailBackdrop,.tableDetailSheet{animation:none!important}}
