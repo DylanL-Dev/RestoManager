@@ -303,3 +303,33 @@ html{scroll-padding-bottom:110px}
 .tablePickerCard.unavailable.selected{border-color:#d6a37d!important}
 
 .tablePickerCard.caution{border-color:#d5a35d!important;background:#fff9e9!important}.tablePickerCard.caution .tablePickerIndicator{color:#93611b!important;font-weight:750}
+
+/* Branded seated-guest confirmation */
+.restoConfirmOverlay[hidden]{display:none!important}
+.restoConfirmOverlay{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:18px}
+.restoConfirmBackdrop{position:absolute;inset:0;background:rgba(12,34,27,.56);backdrop-filter:blur(5px)}
+.restoConfirmSheet{position:relative;z-index:1;width:min(100%,490px);max-height:min(88dvh,740px);overflow-y:auto;background:#fffdf9;border-radius:24px;padding:26px 22px;box-shadow:0 24px 65px #102b2450;color:#183f32}
+.restoConfirmSymbol{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#fff0d2;color:#9b6419;font-size:27px;font-weight:900;margin-bottom:14px}
+.restoConfirmEyebrow{color:#9b6419;font-size:11px;font-weight:850;letter-spacing:.12em;margin:0 0 5px}
+.restoConfirmSheet h2{font-size:25px;line-height:1.2;color:#163e31;margin:0 0 9px}
+.restoConfirmSheet #restoConfirmDescription{font-size:14px;color:#5b7168;line-height:1.5;margin:0 0 17px}
+.restoConfirmWarnings{display:grid;gap:10px}
+.restoConfirmWarning{display:grid;gap:7px;background:#fff8e9;border:1px solid #f0d8a8;border-radius:15px;padding:15px}
+.restoConfirmWarning strong{font-size:15px;color:#3b4d3f}
+.restoConfirmWarning span{font-size:13px;color:#745627}
+.restoConfirmNote{font-size:12px;line-height:1.5;color:#65756b;margin:15px 0 20px}
+.restoConfirmActions{display:grid;gap:10px}
+.restoConfirmActions button{border-radius:13px;min-height:52px;padding:12px;font-size:14px;font-weight:800;white-space:normal}
+.restoConfirmActions [data-decision=accept]{background:#187652;border:1px solid #187652;color:#fff}
+.restoConfirmActions [data-decision=cancel]{background:#f5f8f5;border:1px solid #d1ded5;color:#265743}
+.restoConfirmOpen{overflow:hidden}
+.tableTimeProgress{display:grid;gap:10px;background:#f0f8f3;border:1px solid #d3e8da;border-radius:15px;padding:15px;margin:10px 0}
+.tableTimeProgressHead,.tableTimeProgressFoot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tableTimeProgressHead strong{font-size:14px;color:#204e3b}
+.tableTimeProgressHead span{font-size:13px;font-weight:800;color:#277454}
+.tableTimeProgressTrack{height:12px;border-radius:99px;background:#dbe7de;overflow:hidden}
+.tableTimeProgressFill{height:100%;border-radius:99px;background:linear-gradient(90deg,#78bfa0,#167a55);transition:width .3s ease}
+.tableTimeProgressFill.overdue{background:#c17c32}
+.tableTimeProgressFoot{font-size:11px;color:#61776a}
+.tableTimeProgressHint{font-size:11px;color:#61776a;line-height:1.4}
+@media(max-width:480px){.restoConfirmSheet{padding:23px 18px;border-radius:21px}.restoConfirmSheet h2{font-size:23px}}
