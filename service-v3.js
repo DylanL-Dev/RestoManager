@@ -17,7 +17,7 @@ function detail(t,s){const box=$('detail');box.replaceChildren(node('strong','',
 const actions=node('div','tableDetailActions');
 function shortcut(label,id,tableId){
  const button=node('button','tableDetailAction',label);button.type='button';button.addEventListener('click',()=>{
- const panel=$(id);if(!panel)return;panel.open=true;
+ window.RestoScreens?.show(id);const panel=$(id);if(!panel)return;panel.open=true;
  const select=$(tableId);if(select){select.value=String(t.number);select.dispatchEvent(new Event('change',{bubbles:true}))}
  panel.scrollIntoView({behavior:'smooth',block:'start'});
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
