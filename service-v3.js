@@ -81,7 +81,7 @@ function refreshAvailability(){
  const tables=pair.map(n=>plan.tables.find(t=>t.number===n));
  if(tables.some(t=>!t))return null;
  const capacity=tables.reduce((sum,t)=>sum+t.capacity,0),min=tables.reduce((sum,t)=>sum+(t.capacityMin||1),0);
- if(guests<min||guests>capacity)return null;
+ if(guests>capacity||guests<1)return null;
  const candidate={id:'fusion-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time,guests,duration,tables:pair,status:'reserved'};
  return ReservationEngine.validate(candidate,reservationsAll).valid?{pair,capacity}:null;
  }).filter(Boolean).sort((a,b)=>a.capacity-b.capacity);
@@ -114,7 +114,7 @@ $('bookingForm').addEventListener('submit',event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
  const existing=readReservations(),table=Number($('bookingTable').value),guests=Number($('bookingGuests').value);
- const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,duration:ReservationEngine.DEFAULT_DURATION,tables:Array.isArray(fusion)&&fusion.length===2?fusion:[table],status:'reserved'};
+ const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,duration:ReservationEngine.DEFAULT_DURATION,tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
  if(!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
