@@ -432,3 +432,15 @@ html{scroll-padding-bottom:110px}
 .appScreen[data-screen='administration']:not([hidden]) #historyStats{display:grid!important}
 
 .walkinPaxButtons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.walkinPaxButtons button{min-height:52px;border:1px solid #bedbcb;border-radius:12px;background:#f1f8f4;color:#155a41;font-weight:750}.walkinPaxButtons button.selected{background:#087f5b;color:#fff}.walkinRecommendation{padding:16px;border-radius:12px;background:#e8f6ed;color:#155c41;font-weight:750}.walkinInstall{min-height:58px;width:100%;font-weight:800;font-size:17px}.walkinInstall:disabled{opacity:.5}@media(max-width:450px){.walkinPaxButtons{grid-template-columns:repeat(3,1fr)}}
+
+/* Passage express : grille compacte sur tous les écrans */
+.walkinPanel #walkinForm{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+.walkinPanel #walkinForm>label{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.walkinPanel #walkinGuests{height:48px;font-size:18px}
+.walkinPanel #walkinForm .walkinPaxButtons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;width:100%}
+.walkinPanel #walkinForm .walkinPaxButtons button{grid-column:auto;width:100%;height:48px;min-height:48px;padding:0;border:1px solid #c8ded1;border-radius:11px;background:#edf6f0;color:#165a43;font-size:18px;font-weight:800}
+.walkinPanel #walkinForm .walkinPaxButtons button.selected{background:#087f5b;color:white;border-color:#087f5b}
+.walkinPanel #walkinForm .walkinRecommendation{margin:0;padding:12px 14px;border-radius:11px;background:#edf6f0;color:#205741;font-size:14px;line-height:1.5}
+.walkinPanel #walkinForm .walkinInstall{width:100%;height:54px;min-height:54px;grid-column:auto;font-size:16px;border-radius:12px}
+.walkinPanel #walkinForm .walkinInstall:disabled{opacity:.5}
+@media(max-width:450px){.walkinPanel #walkinForm .walkinPaxButtons{grid-template-columns:repeat(3,minmax(0,1fr))}}
