@@ -60,7 +60,7 @@
             const actual = new Date(reservation.seatedAt);
             if (Number.isFinite(actual.getTime())) {
                 const day = [actual.getFullYear(),String(actual.getMonth()+1).padStart(2,'0'),String(actual.getDate()).padStart(2,'0')].join('-');
-                if (day === reservation.date) return actual.getHours()*60+actual.getMinutes();
+                if (day === reservation.date) return Math.max(minutes(reservation.time), actual.getHours()*60+actual.getMinutes());
             }
         }
         return minutes(reservation.time);
@@ -200,7 +200,7 @@
         });
     }
 
-    function transition(reservation, status, now) {
+    function transition(reservation, status, now, reservations) {
         const allowed = {
             reserved: [STATUS.CONFIRMED, STATUS.LATE, STATUS.ARRIVED, STATUS.SEATED, STATUS.CANCELLED, STATUS.NO_SHOW],
             confirmed: [STATUS.LATE, STATUS.ARRIVED, STATUS.SEATED, STATUS.CANCELLED, STATUS.NO_SHOW],
@@ -210,6 +210,13 @@
         };
         if (!(allowed[reservation.status] || []).includes(status)) {
             return { valid: false, error: 'Transition de statut non autorisée.' };
+        }
+        if (status === STATUS.SEATED && Array.isArray(reservations)) {
+            const conflict = normalizeReservations(reservations).find(function (other) {
+                return other.id !== reservation.id && other.date === reservation.date &&
+                    other.status === STATUS.SEATED && sharesTable(reservation, other);
+            });
+            if (conflict) return { valid: false, error: 'Installation impossible : la table est encore occupée par ' + conflict.client + '. Confirmez d’abord son départ.' };
         }
         const updated = Object.assign({}, reservation, { status: status, updatedAt: now || new Date().toISOString() });
         if (status === STATUS.ARRIVED) updated.arrivedAt = updated.updatedAt;
