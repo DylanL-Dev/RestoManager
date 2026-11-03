@@ -63,7 +63,7 @@ list.forEach(r=>{
  (choices[r.status]||[]).forEach(([kind,label])=>{
  const button=node('button','tableStatusAction',label);button.type='button';
  button.addEventListener('click',async()=>{
- if(['completed','released','no_show'].includes(kind)&&!confirm('Confirmer : '+label.toLowerCase()+' pour '+r.client+' ?'))return;
+ if(['completed','released','no_show'].includes(kind)&&!(await confirmTableDeparture(kind,r)))return;
  try{
  const all=readReservations(),index=all.findIndex(x=>x.id===r.id);if(index<0)throw Error('Réservation introuvable.');
  if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(all[index])))return;
@@ -75,6 +75,28 @@ list.forEach(r=>{
  });controls.append(button);
  });
  row.append(controls);box.append(row);
+ });
+}
+function confirmTableDeparture(kind,r){
+ return new Promise(resolve=>{
+  const existing=document.getElementById('restoDepartureConfirm');if(existing)existing.remove();
+  const overlay=document.createElement('div');overlay.id='restoDepartureConfirm';overlay.className='restoDepartureOverlay';
+  const dialog=document.createElement('section');dialog.className='restoDepartureDialog';dialog.setAttribute('role','alertdialog');dialog.setAttribute('aria-modal','true');
+  dialog.setAttribute('aria-labelledby','restoDepartureTitle');
+  const icon=document.createElement('div');icon.className='restoDepartureIcon';icon.textContent=kind==='no_show'?'!':'✓';
+  const eyebrow=document.createElement('div');eyebrow.className='restoDepartureEyebrow';eyebrow.textContent='GESTION DU SERVICE';
+  const title=document.createElement('h2');title.id='restoDepartureTitle';title.textContent=kind==='completed'?'Terminer le passage ?':kind==='released'?'Libérer la table ?':'Signaler le client absent ?';
+  const description=document.createElement('p');description.textContent=kind==='completed'?'Le passage sera marqué comme terminé dans le suivi des réservations.':kind==='released'?'Confirmez que les clients sont partis. Les tables seront libérées pour une nouvelle attribution.':'La réservation sera marquée comme absente.';
+  const info=document.createElement('div');info.className='restoDepartureInfo';info.textContent=r.client+' · '+(r.tables.length>1?'Tables '+r.tables.join(' + '):'Table '+r.tables[0]);
+  const actions=document.createElement('div');actions.className='restoDepartureActions';
+  const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Annuler';cancel.className='restoDepartureCancel';
+  const accept=document.createElement('button');accept.type='button';accept.textContent=kind==='completed'?'Terminer le passage':kind==='released'?'Confirmer la libération':'Confirmer l’absence';accept.className='restoDepartureAccept';
+  actions.append(cancel,accept);dialog.append(icon,eyebrow,title,description,info,actions);overlay.append(dialog);document.body.append(overlay);
+  const previous=document.activeElement;
+  function finish(ok){document.removeEventListener('keydown',onKey,true);overlay.remove();previous?.focus?.();resolve(ok)}
+  function onKey(e){if(e.key==='Escape'){e.preventDefault();finish(false)}else if(e.key==='Tab'){const target=e.shiftKey?accept:cancel;if(document.activeElement===(e.shiftKey?cancel:accept)){e.preventDefault();target.focus()}}}
+  cancel.addEventListener('click',()=>finish(false));accept.addEventListener('click',()=>finish(true));overlay.addEventListener('click',e=>{if(e.target===overlay)finish(false)});
+  document.addEventListener('keydown',onKey,true);cancel.focus();
  });
 }
 function refreshAvailability(){
