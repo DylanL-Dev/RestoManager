@@ -343,3 +343,13 @@ html{scroll-padding-bottom:110px}
 .reservationAllergy{background:#fff0dd;color:#794313;border:1px solid #f1d5a9;border-radius:12px;padding:12px;font-weight:700;white-space:pre-wrap}
 .reservationNotes{background:#f4f7f5;border-left:4px solid #438b73;border-radius:8px;padding:12px;white-space:pre-wrap}
 #editForm textarea{width:100%;font:inherit;resize:vertical;min-height:75px;border:1px solid #cadbd2;border-radius:12px;padding:12px;background:#fff;color:#183f34}
+
+.bookingSuccessOverlay{position:fixed;inset:0;z-index:10020;background:rgba(10,37,30,.62);display:flex;align-items:center;justify-content:center;padding:20px}
+.bookingSuccessCard{width:min(100%,460px);background:#fff;border-radius:24px;padding:30px 24px;box-shadow:0 20px 65px #10291f50;text-align:center;color:#153e31}
+.bookingSuccessIcon{width:70px;height:70px;display:grid;place-items:center;margin:0 auto 20px;border-radius:50%;background:#e2f5e9;color:#137b51;font-size:38px;font-weight:800}
+.bookingSuccessCard h2{font-size:25px;margin:0 0 15px}
+.bookingSuccessCard p{line-height:1.5;overflow-wrap:anywhere}
+.bookingSuccessSub{color:#63796e}
+.bookingSuccessActions{display:grid;gap:10px;margin-top:24px}
+.bookingSuccessActions button{min-height:54px;border:0;border-radius:13px;background:#147655;color:white;font-weight:750;font-size:16px}
+.bookingSuccessActions .bookingSuccessSecondary{background:#edf5f0;color:#176046;border:1px solid #c9e1d3}
