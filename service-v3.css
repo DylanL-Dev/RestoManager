@@ -372,3 +372,18 @@ html{scroll-padding-bottom:110px}
    contraintes à une demi-colonne, quelle que soit la taille de l'écran. */
 #editForm>label:has(#editAllergies),#editForm>label:has(#editNotes){grid-column:1/-1;min-width:0;width:100%;display:grid;gap:8px;align-self:stretch}
 #editForm #editAllergies,#editForm #editNotes{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;min-height:108px;resize:vertical;line-height:1.45}
+
+/* Rappels de service accessibles pendant le rush */
+.top{position:relative}
+.serviceBell{position:relative;flex:0 0 auto;display:grid;place-items:center;width:46px;height:46px;border:1px solid #c8ded2;border-radius:15px;background:#f0f8f3;color:#12684c;cursor:pointer;margin-left:auto}
+.serviceBellCount{position:absolute;top:-5px;right:-5px;min-width:21px;height:21px;padding:1px 5px;box-sizing:border-box;border-radius:20px;background:#b65122;color:white;font-size:12px;font-weight:800;line-height:19px;text-align:center}
+.serviceReminderPanel{position:fixed;z-index:1100;right:14px;top:82px;width:min(440px,calc(100vw - 28px));max-height:min(75vh,650px);overflow:auto;padding:18px;box-sizing:border-box;background:#fff;border:1px solid #d7e6dc;border-radius:22px;box-shadow:0 16px 60px #122d2440;color:#183d31}
+.serviceReminderPanel[hidden]{display:none}
+.serviceReminderHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;font-size:19px}
+.serviceReminderClose{border:0;background:#edf5f0;border-radius:10px;padding:8px 12px;color:#245b48}
+.serviceReminderItem{padding:15px 0;border-top:1px solid #e0eae4}
+.serviceReminderItem p{line-height:1.5;color:#53645c;margin:9px 0 14px}
+.serviceReminderActions{display:flex;flex-wrap:wrap;gap:8px}
+.serviceReminderActions button{flex:1 1 140px;min-height:44px;padding:9px;border:1px solid #c5d9cc;border-radius:12px;background:#f2f8f4;color:#175a44;font-weight:700}
+.serviceReminderActions .serviceReminderPrimary{background:#157452;color:white;border-color:#157452}
+@media(max-width:650px){.serviceReminderPanel{top:75px;right:10px;width:calc(100vw - 20px)}.serviceBell{width:42px;height:42px}}
