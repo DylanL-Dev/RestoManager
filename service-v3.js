@@ -76,7 +76,7 @@ function refreshAvailability(){
  }
  const options=matches(time);
  const fusionPanel=$('fusionSuggestions');if(fusionPanel)fusionPanel.replaceChildren();
- if(!options.length&&fusionPanel&&window.RestoFusion){
+ if(fusionPanel&&window.RestoFusion){
  const pairs=window.RestoFusion.pairs(),matchesFusion=pairs.map(pair=>{
  const tables=pair.map(n=>plan.tables.find(t=>t.number===n));
  if(tables.some(t=>!t))return null;
@@ -86,7 +86,7 @@ function refreshAvailability(){
  return ReservationEngine.validate(candidate,reservationsAll).valid?{pair,capacity}:null;
  }).filter(Boolean).sort((a,b)=>a.capacity-b.capacity);
  if(matchesFusion.length){fusionPanel.append(node('strong','','Fusions autorisées disponibles'));matchesFusion.forEach(({pair,capacity})=>{
- const button=node('button','fusionSuggestion','Tables '+pair.join(' + ')+' · '+capacity+' places');button.type='button';
+ const button=node('button','fusionSuggestion','Tables '+pair.join(' + ')+' · '+capacity+' places'+(capacity>guests?' · Retirer '+(capacity-guests)+' couvert(s)':''));button.type='button';
  button.addEventListener('click',()=>{window.RestoFusionSelected=pair.slice();select.required=false;fusionPanel.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));$('bookingFeedback').textContent='Fusion sélectionnée : tables '+pair.join(' + ')+'. Confirmez avec Ajouter la réservation.'});fusionPanel.append(button)
  });}else fusionPanel.append(node('p','muted','Aucune fusion configurée disponible pour ce créneau.'));
  }
