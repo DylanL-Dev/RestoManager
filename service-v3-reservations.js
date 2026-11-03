@@ -85,7 +85,7 @@ $('reservationDate').value=new Date().toLocaleDateString('en-CA');
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',render);
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';render()});
 $('editCancel').addEventListener('click',()=>{editing=null;chosenTables=[];$('editForm').hidden=true});
-$('editForm').addEventListener('submit',e=>{
+$('editForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!editing)return;
  try{
  const all=load(),i=all.findIndex(r=>r.id===editing);if(i<0)throw Error('Réservation introuvable');
@@ -98,7 +98,18 @@ $('editForm').addEventListener('submit',e=>{
  const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
  const check=E.validate(updated,all,editing);if(!check.valid)throw Error(check.errors.join(' '));
  const warnings=E.seatingWarnings(updated,all,editing);
- if(warnings.length){const message='Attention : '+warnings.map(w=>'la réservation '+w.client+' est toujours marquée « Installé » sur '+w.tables.join(' + ')+'. Fin théorique '+w.plannedEnd+', marge '+w.gapMinutes+' min').join(' ; ')+'.\\n\\nConfirmer cette attribution malgré l’absence de départ confirmé ?';if(!confirm(message))return;updated.seatingOverride={confirmedAt:new Date().toISOString(),warnings:warnings.map(w=>({id:w.id,client:w.client,plannedEnd:w.plannedEnd,gapMinutes:w.gapMinutes}))};}else delete updated.seatingOverride;
+ if(warnings.length){
+  const accepted=await window.RestoConfirmSeating(warnings,updated.client,updated.time);
+  if(!accepted){notify('Attribution annulée : aucune modification enregistrée.');return}
+  const latest=load(),latestIndex=latest.findIndex(r=>r.id===editing);
+  if(latestIndex<0)throw Error('Réservation introuvable après confirmation.');
+  const recheck=E.validate(updated,latest,editing);
+  if(!recheck.valid)throw Error(recheck.errors.join(' '));
+  const currentWarnings=E.seatingWarnings(updated,latest,editing);
+  if(JSON.stringify(currentWarnings)!==JSON.stringify(warnings))throw Error('La situation des tables a changé. Vérifiez et confirmez à nouveau.');
+  updated.seatingOverride={confirmedAt:new Date().toISOString(),warnings:warnings.map(w=>({id:w.id,client:w.client,plannedEnd:w.plannedEnd,gapMinutes:w.gapMinutes}))};
+  latest[latestIndex]=updated;save(latest);editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée avec confirmation.');return;
+ }else delete updated.seatingOverride;
  all[i]=updated;save(all);editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée.');
  }catch(err){notify('Modification impossible : '+err.message)}
 });
