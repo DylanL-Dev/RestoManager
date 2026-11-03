@@ -1,5 +1,14 @@
 'use strict';
 (function(){
+function confirmEarlySeating(r){
+ const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(r.date||''),t=/^(\d{2}):(\d{2})$/.exec(r.time||'');
+ if(!d||!t)return true;
+ const scheduled=new Date(+d[1],+d[2]-1,+d[3],+t[1],+t[2]);
+ const early=Math.ceil((scheduled.getTime()-Date.now())/60000);
+ if(early<=30)return true;
+ return window.confirm('Installation très en avance\n\nClient : '+r.client+'\nRéservation : '+r.time+'\nAvance : '+early+' minutes\n\nInstaller maintenant et enregistrer l’heure réelle ?');
+}
+
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 const date=today();$('serviceDate').textContent=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -66,6 +75,7 @@ list.forEach(r=>{
  if(['completed','released','no_show'].includes(kind)&&!confirm('Confirmer : '+label.toLowerCase()+' pour '+r.client+' ?'))return;
  try{
  const all=readReservations(),index=all.findIndex(x=>x.id===r.id);if(index<0)throw Error('Réservation introuvable.');
+ if(kind==='seated'&&!confirmEarlySeating(all[index]))return;
  const result=ReservationEngine.transition(all[index],kind,undefined,all);if(!result.valid)throw Error(result.error);
  all[index]=result.reservation;localStorage.setItem('restomanager_reservations',JSON.stringify(all));
  window.dispatchEvent(new Event('restomanager:v3-change'));
