@@ -22,6 +22,30 @@
    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
   }
  });
+ window.RestoConfirmEarlySeating=function(reservation){
+  const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(reservation.date||''),t=/^(\d{2}):(\d{2})$/.exec(reservation.time||'');
+  if(!d||!t)return Promise.resolve(true);
+  const scheduled=new Date(+d[1],+d[2]-1,+d[3],+t[1],+t[2]);
+  const early=Math.ceil((scheduled.getTime()-Date.now())/60000);
+  if(early<=30)return Promise.resolve(true);
+  if(resolvePending)return Promise.resolve(false);
+  focusBefore=document.activeElement;
+  overlay.querySelector('.restoConfirmEyebrow').textContent='INSTALLATION ANTICIPÉE';
+  overlay.querySelector('#restoConfirmTitle').textContent='Installer le client en avance ?';
+  overlay.querySelector('#restoConfirmDescription').textContent='Cette réservation est prévue à '+reservation.time+'. Vous allez installer le client maintenant.';
+  const list=overlay.querySelector('.restoConfirmWarnings');list.replaceChildren();
+  const card=document.createElement('div');card.className='restoConfirmWarning';
+  const name=document.createElement('strong');name.textContent='Client '+reservation.client;
+  const delay=document.createElement('span');delay.textContent='Avance sur la réservation : '+early+' minutes';
+  const table=document.createElement('span');table.textContent='Table'+(reservation.tables.length>1?'s ':' ')+reservation.tables.join(' + ');
+  card.append(name,delay,table);list.append(card);
+  overlay.querySelector('.restoConfirmNote').textContent='En confirmant, le client passera en « Installé » et son heure réelle d’installation sera enregistrée. Le suivi de présence démarrera maintenant.';
+  overlay.querySelector('[data-decision="cancel"]').textContent='Annuler';
+  overlay.querySelector('[data-decision="accept"]').textContent='Oui, installer le client';
+  overlay.hidden=false;document.body.classList.add('restoConfirmOpen');
+  overlay.querySelector('[data-decision="cancel"]').focus();
+  return new Promise(resolve=>{resolvePending=resolve});
+ };
  window.RestoConfirmSeating=function(warnings,client,time){
   if(resolvePending)return Promise.resolve(false);
   focusBefore=document.activeElement;
