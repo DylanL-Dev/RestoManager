@@ -282,3 +282,5 @@ html{scroll-padding-bottom:110px}
 .fusionTableBadge{display:block;margin-top:6px;font-size:12px;font-weight:800;color:#146747}.fusionCoverHint{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:#fff2d7;color:#835300;font-size:12px;font-weight:750}.fusionDetailNote{display:block;margin-top:7px;color:#176447;font-size:13px;font-weight:700}
 
 .groupedFusionCard{border:2px solid #85bca2;background:#edf8f1}.reservationPrimaryActions{display:flex;gap:8px;flex-wrap:wrap}.reservationMoreActions{margin-top:9px;border:1px solid #d6e3da;border-radius:12px;padding:9px 12px}.reservationMoreActions summary{cursor:pointer;font-weight:700;color:#23654c;min-height:35px;display:flex;align-items:center}.reservationMoreActions button{margin:5px 6px 5px 0}.reservationActions{display:block}
+
+.tableAlreadyReserved{padding:10px 12px;border-radius:11px;background:#f0f7f3;color:#34614d;font-size:13px;line-height:1.45}
