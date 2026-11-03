@@ -171,6 +171,25 @@
         return { valid: errors.length === 0, errors: errors, conflict: conflict || null, roomConflict: roomConflict };
     }
 
+    // A seated party can still be present after its planned end. This is a
+    // warning requiring staff approval, not an automatic table release.
+    function seatingWarnings(candidate, reservations, ignoredId) {
+        if (!candidate || !Array.isArray(candidate.tables) || !Number.isFinite(minutes(candidate.time))) return [];
+        return normalizeReservations(reservations).filter(function (other) {
+            return other.id !== ignoredId && other.date === candidate.date &&
+                other.status === STATUS.SEATED && sharesTable(candidate, other) &&
+                !overlaps(candidate, other) && endMinutes(other) <= minutes(candidate.time);
+        }).map(function (other) {
+            return {
+                id: other.id, client: other.client, time: other.time,
+                plannedEnd: String(Math.floor(endMinutes(other) / 60)).padStart(2, '0') + ':' +
+                    String(endMinutes(other) % 60).padStart(2, '0'),
+                gapMinutes: minutes(candidate.time) - endMinutes(other),
+                tables: other.tables.slice()
+            };
+        });
+    }
+
     function transition(reservation, status, now) {
         const allowed = {
             reserved: [STATUS.CONFIRMED, STATUS.LATE, STATUS.ARRIVED, STATUS.SEATED, STATUS.CANCELLED, STATUS.NO_SHOW],
@@ -216,6 +235,7 @@
         normalizeReservation: normalizeReservation,
         normalizeReservations: normalizeReservations,
         validate: validate,
+        seatingWarnings: seatingWarnings,
         transition: transition,
         extend: extend,
     };
