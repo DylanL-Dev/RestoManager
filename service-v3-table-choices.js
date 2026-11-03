@@ -32,13 +32,14 @@ configs.forEach(id=>{
  overlay.querySelector('#tablePickerTitle').textContent=id==='editTable'?'Modifier les tables':'Choisir une table';
  overlay.querySelector('#tablePickerSubtitle').textContent=id==='editTable'?'Sélectionnez une table ou une fusion autorisée':options.length+' table(s) compatible(s) avec votre réservation';
  overlay.querySelector('.tablePickerFooter').textContent=id==='editTable'?'La disponibilité sera vérifiée avant l’enregistrement.':'Les tables proposées respectent le créneau et la capacité indiqués.';
+ options.sort((a,b)=>id==='editTable'?Number(b.dataset.availability==='available')-Number(a.dataset.availability==='available'):0);
  options.forEach((o,i)=>{
- const card=document.createElement('button');card.type='button';card.className='tablePickerCard'+(o.value===select.value?' selected':'');
+ const card=document.createElement('button');card.type='button';card.className='tablePickerCard'+(o.value===select.value?' selected':'')+(o.disabled?' unavailable':'');card.disabled=Boolean(o.disabled);
  const top=document.createElement('div');top.className='tablePickerCardTop';
  const name=document.createElement('strong');name.textContent=id==='editTable'?o.textContent.split(' · ')[0]:'Table '+o.value;top.append(name);
  if(i===0&&id!=='editTable'){const tag=document.createElement('span');tag.className='tablePickerBest';tag.textContent='★ Recommandée';top.append(tag)}
  const desc=document.createElement('small');desc.textContent=o.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim();
- const indicator=document.createElement('span');indicator.className='tablePickerIndicator';indicator.textContent=o.value===select.value?'✓ Sélectionnée':'Choisir cette table';
+ const indicator=document.createElement('span');indicator.className='tablePickerIndicator';indicator.textContent=id==='editTable'?(o.disabled?(o.dataset.reason||'Indisponible'):(o.value===select.value?'✓ Sélectionnée':'✓ Disponible')):(o.value===select.value?'✓ Sélectionnée':'Choisir cette table');
  card.append(top,desc,indicator);
  card.addEventListener('click',()=>{select.value=o.value;select.dispatchEvent(new Event('change',{bubbles:true}));close();refresh()});
  grid.append(card);
