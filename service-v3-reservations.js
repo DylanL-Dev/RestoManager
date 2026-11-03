@@ -1,5 +1,14 @@
 'use strict';
 (function(){
+function confirmEarlySeating(r){
+ const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(r.date||''),t=/^(\d{2}):(\d{2})$/.exec(r.time||'');
+ if(!d||!t)return true;
+ const scheduled=new Date(+d[1],+d[2]-1,+d[3],+t[1],+t[2]);
+ const early=Math.ceil((scheduled.getTime()-Date.now())/60000);
+ if(early<=30)return true;
+ return window.confirm('Installation très en avance\n\nClient : '+r.client+'\nRéservation : '+r.time+'\nAvance : '+early+' minutes\n\nInstaller maintenant et enregistrer l’heure réelle ?');
+}
+
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
 const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,chosenTables=[],expanded=null;
@@ -61,6 +70,7 @@ function action(id,kind){
  }
  if(kind==='delete'){if(!confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.'))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
  if(kind==='cancel'&&!confirm('Annuler la réservation de '+r.client+' ?'))return;
+ if(kind==='seated'&&!confirmEarlySeating(r))return;
  const next=E.transition(r,kind==='cancel'?'cancelled':kind,undefined,all);
  if(!next.valid)return notify(next.error);
  all[i]=next.reservation;save(all);notify('Statut mis à jour : '+statuses[all[i].status]+'.');
