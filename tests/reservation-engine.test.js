@@ -94,4 +94,13 @@ assert.equal(engine.seatingWarnings({...nextParty,tables:[22,23]},[seatedBefore]
 assert.equal(engine.validate({...nextParty,time:'20:00'},[seatedBefore]).valid,false,'Overlapping seated booking blocked');
 assert.equal(engine.seatingWarnings(nextParty,[seatedBefore],seatedBefore.id).length,0,'Self ignored on edit');
 
+const seatedAt=new Date(2026,10,4,19,15).toISOString();
+const lateSeated={...seatedBefore,seatedAt};
+assert.equal(engine.startMinutes(lateSeated),19*60+15,'Début réel 19h15');
+assert.equal(engine.endMinutes(lateSeated),20*60+45,'Fin estimée 20h45');
+assert.equal(engine.validate({...nextParty,time:'20:30'},[lateSeated]).valid,false,'Créneau 20h30 bloqué');
+assert.equal(engine.seatingWarnings({...nextParty,time:'21:00'},[lateSeated])[0].plannedEnd,'20:45','Avertissement actualisé');
+assert.equal(engine.seatingWarnings({...nextParty,time:'21:00'},[lateSeated])[0].gapMinutes,15,'Marge actualisée');
+assert.equal(engine.endMinutes({...lateSeated,seatedAt:undefined}),20*60+30,'Anciennes données sans horodatage');
+
 console.log('reservation-engine: scénarios métier et 1000 cas de concurrence horaire validés');
