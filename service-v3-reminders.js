@@ -12,6 +12,14 @@
  function collect(){
   const now=new Date(),all=read(),sleep=snoozes(),alerts=[];
   for(const r of all){
+   if(!sameDay(r.date,now)||!['reserved','confirmed','late'].includes(r.status))continue;
+   const expected=new Date(r.date+'T'+r.time+':00');
+   if(!Number.isFinite(expected.getTime()))continue;
+   const delay=Math.floor((now.getTime()-expected.getTime())/60000);
+   if(delay<10||Number(sleep['late:'+r.id])>now.getTime())continue;
+   alerts.push({kind:'late',r,delay,priority:delay>=20});
+  }
+  for(const r of all){
    if(r.status!=='seated'||!sameDay(r.date,now))continue;
    const start=r.seatedAt?new Date(r.seatedAt):new Date(r.date+'T'+r.time+':00');
    if(!Number.isFinite(start.getTime()))continue;
@@ -21,18 +29,28 @@
    const next=all.filter(x=>x.id!==r.id&&x.date===r.date&&ReservationEngine.isBlocking(x)&&x.tables.some(t=>r.tables.includes(t))).map(x=>x.time).sort()[0];
    const priority=remaining<=-15||Boolean(next);
    if(Number(sleep[r.id])>now.getTime())continue;
-   alerts.push({r,end,remaining,next,priority});
+   alerts.push({kind:'departure',r,end,remaining,next,priority});
   }
-  return alerts.sort((a,b)=>Number(b.priority)-Number(a.priority)||a.remaining-b.remaining);
+  return alerts.sort((a,b)=>Number(b.priority)-Number(a.priority)||(a.kind==='late'?-a.delay:a.remaining)-(b.kind==='late'?-b.delay:b.remaining));
  }
  function update(){
   const alerts=collect();const count=bell.querySelector('span');count.textContent=String(alerts.length);count.hidden=!alerts.length;
   bell.setAttribute('aria-label',alerts.length+' rappel(s) de service');
   panel.replaceChildren();
   const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent='Rappels de service';head.append(h,button('✕',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
-  if(!alerts.length){const p=document.createElement('p');p.textContent='Aucun départ à vérifier pour le moment.';panel.append(p);return}
+  if(!alerts.length){const p=document.createElement('p');p.textContent='Aucun rappel pour le moment.';panel.append(p);return}
   for(const a of alerts){
    const item=document.createElement('article');item.className='serviceReminderItem';
+   if(a.kind==='late'){
+    const title=document.createElement('strong');title.textContent='⏰ Client en retard · '+a.r.client+' · Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ');
+    const desc=document.createElement('p');desc.textContent='Attendu à '+a.r.time+' · '+a.delay+' min de retard. Vérifiez si le client est arrivé avant de modifier son statut.';
+    const actions=document.createElement('div');actions.className='serviceReminderActions';
+    const changeStatus=(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){alert(result.error||'Action impossible.');return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
+    actions.append(button('✓ Client arrivé',()=>changeStatus('arrived'),'serviceReminderPrimary'));
+    if(a.r.status!=='late')actions.append(button('Signaler le retard',()=>changeStatus('late')));
+    actions.append(button('Rappeler dans 10 min',()=>{const data=snoozes();data['late:'+a.r.id]=Date.now()+600000;localStorage.setItem(SNOOZE,JSON.stringify(data));update()}));
+    item.append(title,desc,actions);panel.append(item);continue;
+   }
    const title=document.createElement('strong');title.textContent=(a.priority?'⚠ ':'')+'Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ')+' · '+a.r.client;
    const desc=document.createElement('p');desc.textContent=(a.remaining>0?'Départ estimé dans '+a.remaining+' min':a.remaining===0?'Fin estimée maintenant':'Fin estimée dépassée de '+Math.abs(a.remaining)+' min')+' (prévue à '+clock(a.end)+'). Vérifier si les clients sont partis.'+(a.next?' Prochaine réservation : '+a.next+'.':'');
    const actions=document.createElement('div');actions.className='serviceReminderActions';
