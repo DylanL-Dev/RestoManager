@@ -1,14 +1,5 @@
 'use strict';
 (function(){
-function confirmEarlySeating(r){
- const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(r.date||''),t=/^(\d{2}):(\d{2})$/.exec(r.time||'');
- if(!d||!t)return true;
- const scheduled=new Date(+d[1],+d[2]-1,+d[3],+t[1],+t[2]);
- const early=Math.ceil((scheduled.getTime()-Date.now())/60000);
- if(early<=30)return true;
- return window.confirm('Installation très en avance\n\nClient : '+r.client+'\nRéservation : '+r.time+'\nAvance : '+early+' minutes\n\nInstaller maintenant et enregistrer l’heure réelle ?');
-}
-
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 const date=today();$('serviceDate').textContent=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -53,14 +44,14 @@ function occupationProgress(r){
 function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('strong','',fusion?'Tables '+fusion.tables.join(' + ')+' · '+s.label:'Table '+t.number+' · '+s.label),node('p','muted',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s) réservé(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const list=bookings.filter(r=>r.tables.includes(t.number)).sort((a,b)=>a.time.localeCompare(b.time));if(!list.length){box.append(node('p','muted','Aucune réservation pour ce service.'))}
 const actions=node('div','tableDetailActions');
 function shortcut(label,id,tableId){
- const button=node('button','tableDetailAction',label);button.type='button';button.addEventListener('click',()=>{
+ const button=node('button','tableDetailAction',label);button.type='button';button.addEventListener('click',async()=>{
  closeTable();window.RestoScreens?.show(id);const panel=$(id);if(!panel)return;panel.open=true;
  const select=$(tableId);if(select){select.value=String(t.number);select.dispatchEvent(new Event('change',{bubbles:true}))}
  panel.scrollIntoView({behavior:'smooth',block:'start'});
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
  });actions.append(button);
 }
-if(s.key==='free'){shortcut('＋ Réserver cette table','reservationForm','bookingTable');shortcut('＋ Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Table attribuée : utilisez les actions de la réservation ci-dessous. Pour un autre créneau, passez par Ajouter.'))}
+if(s.key==='free'){shortcut('＋ Réserver cette table','reservationForm','bookingTable');shortcut('＋ Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Cette table est réservée. Pour accueillir le client, choisissez « Client arrivé » ou « Installer » ci-dessous.'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 const choices={reserved:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],late:[['arrived','✓ Client arrivé'],['seated','Installer'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['completed','Terminer le passage'],['released','Libérer la table']]};
@@ -75,7 +66,7 @@ list.forEach(r=>{
  if(['completed','released','no_show'].includes(kind)&&!confirm('Confirmer : '+label.toLowerCase()+' pour '+r.client+' ?'))return;
  try{
  const all=readReservations(),index=all.findIndex(x=>x.id===r.id);if(index<0)throw Error('Réservation introuvable.');
- if(kind==='seated'&&!confirmEarlySeating(all[index]))return;
+ if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(all[index])))return;
  const result=ReservationEngine.transition(all[index],kind,undefined,all);if(!result.valid)throw Error(result.error);
  all[index]=result.reservation;localStorage.setItem('restomanager_reservations',JSON.stringify(all));
  window.dispatchEvent(new Event('restomanager:v3-change'));
