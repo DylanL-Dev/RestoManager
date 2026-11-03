@@ -41,9 +41,10 @@ $('bookingForm').addEventListener('submit',event=>{
  const latest=readReservations(),again=ReservationEngine.validate(candidate,latest);
  if(!again.valid){feedback.textContent=again.errors.join(' ');refreshAvailability();return}
  localStorage.setItem('restomanager_reservations',JSON.stringify(latest.concat(candidate)));
- bookings=readReservations().filter(r=>r.date===date);feedback.textContent='Réservation enregistrée : table '+table+' à '+candidate.time+'.';refreshAvailability();render();
+ bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='Réservation enregistrée : table '+table+' à '+candidate.time+'.';refreshAvailability();render();
  }catch(error){feedback.textContent='Enregistrement impossible : '+error.message}
 });
 refreshAvailability();
+window.addEventListener('restomanager:v3-change',()=>{try{bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});render();
 })();
