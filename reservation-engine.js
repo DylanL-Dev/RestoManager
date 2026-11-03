@@ -45,6 +45,7 @@
     ];
 
     function minutes(time) {
+        if (!/^\d{2}:\d{2}$/.test(String(time || ''))) return NaN;
         const parts = String(time || '').split(':');
         const hours = Number(parts[0]);
         const mins = Number(parts[1]);
@@ -123,26 +124,43 @@
         return Array.isArray(raw) ? raw.map(normalizeReservation) : [];
     }
 
+    function validDate(value) {
+        if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const [year, month, day] = value.split('-').map(Number);
+        if (year < 2000 || year > 2100) return false;
+        const date = new Date(Date.UTC(year, month - 1, day));
+        return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+    }
+
     function validate(candidate, reservations, ignoredId) {
         const errors = [];
+        if (!candidate || typeof candidate !== 'object') return {valid:false,errors:['Réservation invalide.'],conflict:null,roomConflict:null};
         if (!candidate.client || !String(candidate.client).trim()) errors.push('Client requis.');
-        if (!candidate.date) errors.push('Date requise.');
+        if (!validDate(candidate.date)) errors.push('Date invalide (AAAA-MM-JJ).');
         if (!Number.isFinite(minutes(candidate.time))) errors.push('Heure invalide.');
-        if (!Number.isFinite(Number(candidate.guests)) || Number(candidate.guests) < 1) {
+        if (!Number.isInteger(Number(candidate.guests)) || Number(candidate.guests) < 1) {
             errors.push('Le nombre de personnes doit être supérieur à 0.');
         }
+        const duration = Number(candidate.duration == null ? DEFAULT_DURATION : candidate.duration);
+        if (!Number.isInteger(duration) || duration < 1) errors.push('Durée de réservation invalide.');
         if (!Array.isArray(candidate.tables) || candidate.tables.length === 0) {
             errors.push('Sélectionnez au moins une table.');
         }
-        if ((candidate.tables || []).some(function (table) { return !TABLES.includes(Number(table)); })) {
+        const selectedTables = Array.isArray(candidate.tables) ? candidate.tables : [];
+        if (selectedTables.some(function (table) { return !Number.isInteger(Number(table)) || Number(table) < 1; }) ||
+            new Set(selectedTables.map(Number)).size !== selectedTables.length) {
+            errors.push('Les numéros de tables doivent être uniques et valides.');
+        }
+        if (selectedTables.some(function (table) { return !TABLES.includes(Number(table)); })) {
             errors.push('Une table sélectionnée est inconnue.');
         }
-        if (tableCapacity(candidate.tables || []) < Number(candidate.guests)) {
+        if (tableCapacity([...new Set(selectedTables.map(Number))]) < Number(candidate.guests)) {
             errors.push('La capacité des tables sélectionnées est insuffisante.');
         }
-        if (endMinutes(candidate) > CLOSING_MINUTES) {
+        if (Number.isFinite(minutes(candidate.time)) && Number.isInteger(duration) && duration > 0 && minutes(candidate.time) + duration > CLOSING_MINUTES) {
             errors.push('La réservation dépasse la fermeture à 21h30.');
         }
+        if (errors.length) return { valid: false, errors: errors, conflict: null, roomConflict: null };
         const conflict = normalizeReservations(reservations).find(function (other) {
             return other.id !== ignoredId && other.date === candidate.date &&
                 isBlocking(other) && sharesTable(candidate, other) && overlaps(candidate, other);
