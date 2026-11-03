@@ -409,3 +409,17 @@ html{scroll-padding-bottom:110px}
 .reservationViewTab.isActive{background:#176b50;color:#fff;border-color:#176b50}
 .reservationViewEmpty{padding:18px 8px;color:#66766e}
 @media(max-width:480px){.reservationViewTabs{display:grid;grid-template-columns:1fr 1fr}.reservationViewTab:last-child{grid-column:1/-1}}
+
+/* Confirmation intégrée des départs et libérations */
+.restoDepartureOverlay{position:fixed;inset:0;z-index:99999;background:rgba(12,35,28,.62);display:flex;align-items:center;justify-content:center;padding:18px}
+.restoDepartureDialog{box-sizing:border-box;width:min(100%,460px);max-height:calc(100dvh - 36px);overflow:auto;background:#fffdfb;border-radius:26px;padding:clamp(22px,5vw,34px);box-shadow:0 22px 70px rgba(0,0,0,.22);color:#163e32}
+.restoDepartureIcon{width:54px;height:54px;display:grid;place-items:center;border-radius:17px;background:#e7f4ec;color:#176b50;font-size:28px;font-weight:800;margin-bottom:18px}
+.restoDepartureEyebrow{font-size:12px;letter-spacing:.12em;font-weight:800;color:#28765e;margin-bottom:8px}
+.restoDepartureDialog h2{font-size:clamp(23px,5vw,30px);line-height:1.2;margin:0 0 12px;color:#173f32}
+.restoDepartureDialog p{font-size:16px;line-height:1.55;color:#5c7068;margin:0 0 18px}
+.restoDepartureInfo{padding:15px 17px;border-radius:14px;background:#edf6f0;font-weight:750;margin-bottom:24px;overflow-wrap:anywhere}
+.restoDepartureActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.restoDepartureActions button{min-height:54px;padding:12px;border-radius:14px;font:inherit;font-weight:750;cursor:pointer}
+.restoDepartureCancel{background:#f3f7f5;color:#245747;border:1px solid #cbdcd2}
+.restoDepartureAccept{background:#176b50;color:white;border:1px solid #176b50}
+@media(max-width:380px){.restoDepartureActions{grid-template-columns:1fr}.restoDepartureDialog{padding:22px}}
