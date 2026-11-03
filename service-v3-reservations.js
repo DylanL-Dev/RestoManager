@@ -2,7 +2,8 @@
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
 const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
-let editing=null,chosenTables=[],expanded=null;
+let editing=null,chosenTables=[],expanded=null,reservationView='active';
+const departedStatuses=new Set(['completed','released','cancelled','no_show']);
 function sameTables(a,b){return a.length===b.length&&a.every(n=>b.includes(n))}
 function editAvailability(tables){
  const previous=load().find(r=>r.id===editing);
@@ -72,8 +73,19 @@ function render(){
  let list;try{list=load()}catch(e){return notify('Lecture impossible : '+e.message)}
  list=list.filter(r=>(!date||r.date===date)&&(!query||[r.client,...r.tables.map(String)].join(' ').toLocaleLowerCase('fr-FR').includes(query))).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
  const root=$('reservationList');root.replaceChildren();
- if(!list.length){root.append(el('p','Aucune réservation pour cette recherche.'));return}
- list.forEach(r=>{
+ const active=list.filter(r=>!departedStatuses.has(r.status));
+ const departed=list.filter(r=>departedStatuses.has(r.status));
+ const tabs=el('div',undefined,'reservationViewTabs');
+ tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Filtrer les réservations par suivi');
+ for(const [key,label,count] of [['active','En cours et à venir',active.length],['departed','Terminées et sorties',departed.length],['all','Toutes',list.length]]){
+  const btn=el('button',label+' ('+count+')','reservationViewTab'+(reservationView===key?' isActive':''));
+  btn.type='button';btn.setAttribute('aria-pressed',String(reservationView===key));
+  btn.addEventListener('click',()=>{reservationView=key;render()});tabs.append(btn);
+ }
+ root.append(tabs);
+ const shown=reservationView==='active'?active:reservationView==='departed'?departed:list;
+ if(!shown.length){root.append(el('p',list.length?'Aucune réservation dans cette catégorie.':'Aucune réservation pour cette recherche.','reservationViewEmpty'));return}
+ shown.forEach(r=>{
  const card=el('article',undefined,'reservationItem');
  const head=el('div',undefined,'reservationHead');head.append(el('strong',r.time+' · '+r.client),el('span',statuses[r.status]||r.status,'reservationStatus'));card.append(head);const detailButton=el('button',expanded===r.id?'Masquer la fiche':'Voir la fiche et le suivi','reservationOpenDetail');detailButton.type='button';detailButton.setAttribute('aria-expanded',String(expanded===r.id));detailButton.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});card.append(detailButton);
  const total=r.tables.reduce((sum,n)=>sum+(FloorPlan.get().tables.find(t=>t.number===n)?.capacity||0),0);card.append(el('p',r.date+' · '+r.guests+' couvert(s) · '+(r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+r.tables[0])+(r.type==='hotel'?' · Hôtel':'')));if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
