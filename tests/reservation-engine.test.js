@@ -24,7 +24,17 @@ assert.equal(engine.validate(reservation({ guests: 4, tables: [2, 3] }), []).val
 assert.equal(engine.validate(reservation({ guests: 6, tables: [2, 3, 4] }), []).valid, true);
 assert.equal(engine.validate(reservation({ guests: 8, tables: [2, 3, 4, 5] }), []).valid, true);
 assert.equal(engine.validate(reservation({ guests: 4, tables: [2] }), []).valid, false);
-assert.equal(engine.validate(reservation({ time: '20:30', duration: 90 }), []).valid, false);
+assert.equal(engine.validate(reservation({ time: '20:30', duration: 90 }), []).valid, true);
+
+
+const lastOrder = reservation({id:'late-order',client:'702',time:'20:15',duration:90,tables:[22,23],guests:3});
+assert.equal(engine.validate(lastOrder,[]).valid,true,'20h15 + 90 minutes autorisé (fin 21h45)');
+assert.equal(engine.endMinutes(lastOrder),21*60+45,'Occupation prévue jusqu’à 21h45');
+assert.equal(engine.validate(reservation({time:'21:30'}),[]).valid,true,'Dernière commande 21h30 autorisée');
+assert.equal(engine.validate(reservation({time:'21:31'}),[]).valid,false,'Nouvelle réservation après 21h30 refusée');
+assert.equal(engine.validate(reservation({time:'22:00'}),[]).valid,false,'22h00 refusée');
+assert.equal(engine.validate({...lastOrder,id:'late-conflict',client:'703',time:'20:30'},[lastOrder]).valid,false,'Conflit après 21h30 conservé');
+assert.equal(engine.validate({...lastOrder,id:'late-adjacent',client:'703',time:'21:45'},[lastOrder]).valid,false,'Créneau après dernière commande refusé');
 
 const late = engine.transition(first, engine.STATUS.LATE).reservation;
 assert.equal(engine.isBlocking(late), true);
