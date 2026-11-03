@@ -1,6 +1,6 @@
 'use strict';
 (function(){
-const configs=['bookingTable','walkinTable'];
+const configs=['bookingTable','walkinTable','editTable'];
 let active=null;
 const overlay=document.createElement('div');overlay.className='tablePickerOverlay';overlay.hidden=true;
 overlay.innerHTML='<div class="tablePickerBackdrop"></div><section class="tablePickerSheet" role="dialog" aria-modal="true" aria-labelledby="tablePickerTitle" tabindex="-1"><header class="tablePickerHeader"><div><span class="tablePickerEyebrow">DISPONIBILITÉS</span><h2 id="tablePickerTitle">Choisir une table</h2><p id="tablePickerSubtitle">Sélectionnez la meilleure option</p></div><button class="tablePickerClose" type="button" aria-label="Fermer">✕</button></header><div class="tablePickerGrid"></div><footer class="tablePickerFooter">Les tables proposées respectent le créneau et la capacité indiqués.</footer></section>';
@@ -21,7 +21,7 @@ configs.forEach(id=>{
  const options=Array.from(select.options).filter(o=>o.value);
  const chosen=options.find(o=>o.value===select.value);
  trigger.replaceChildren();
- const label=document.createElement('span');label.textContent=chosen?'Table '+chosen.value+' · '+chosen.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim():'Aucune table disponible';
+ const label=document.createElement('span');label.textContent=chosen?(id==='editTable'?chosen.textContent:'Table '+chosen.value+' · '+chosen.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim()):'Aucune table disponible';
  const action=document.createElement('span');action.className='tableChoiceAction';action.textContent=chosen?'Changer':'Choisir';
  trigger.append(label,action);trigger.disabled=!options.length;
  if(active===id)render();
@@ -29,12 +29,14 @@ configs.forEach(id=>{
  function render(){
  grid.replaceChildren();
  const options=Array.from(select.options).filter(o=>o.value);
- overlay.querySelector('#tablePickerSubtitle').textContent=options.length+' table(s) compatible(s) avec votre réservation';
+ overlay.querySelector('#tablePickerTitle').textContent=id==='editTable'?'Modifier les tables':'Choisir une table';
+ overlay.querySelector('#tablePickerSubtitle').textContent=id==='editTable'?'Sélectionnez une table ou une fusion autorisée':options.length+' table(s) compatible(s) avec votre réservation';
+ overlay.querySelector('.tablePickerFooter').textContent=id==='editTable'?'La disponibilité sera vérifiée avant l’enregistrement.':'Les tables proposées respectent le créneau et la capacité indiqués.';
  options.forEach((o,i)=>{
  const card=document.createElement('button');card.type='button';card.className='tablePickerCard'+(o.value===select.value?' selected':'');
  const top=document.createElement('div');top.className='tablePickerCardTop';
- const name=document.createElement('strong');name.textContent='Table '+o.value;top.append(name);
- if(i===0){const tag=document.createElement('span');tag.className='tablePickerBest';tag.textContent='★ Recommandée';top.append(tag)}
+ const name=document.createElement('strong');name.textContent=id==='editTable'?o.textContent.split(' · ')[0]:'Table '+o.value;top.append(name);
+ if(i===0&&id!=='editTable'){const tag=document.createElement('span');tag.className='tablePickerBest';tag.textContent='★ Recommandée';top.append(tag)}
  const desc=document.createElement('small');desc.textContent=o.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim();
  const indicator=document.createElement('span');indicator.className='tablePickerIndicator';indicator.textContent=o.value===select.value?'✓ Sélectionnée':'Choisir cette table';
  card.append(top,desc,indicator);
