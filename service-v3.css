@@ -294,3 +294,10 @@ html{scroll-padding-bottom:110px}
 #editForm>button[type=submit]{background:#177451;color:#fff;border-color:#177451}
 #editForm>button#editCancel{background:#fff;color:#245b46}
 @media(min-width:700px){#editForm>button{grid-column:auto}}
+
+/* Availability states in the reservation edit table picker */
+.tablePickerCard.unavailable{background:#f5f6f5!important;border-color:#dce1de!important;color:#7a8580!important;opacity:.78;cursor:not-allowed}
+.tablePickerCard.unavailable strong{color:#7a8580!important}
+.tablePickerCard.unavailable .tablePickerIndicator{color:#a34d35!important;font-weight:750}
+.tablePickerCard.unavailable small{color:#7a8580!important}
+.tablePickerCard.unavailable.selected{border-color:#d6a37d!important}
