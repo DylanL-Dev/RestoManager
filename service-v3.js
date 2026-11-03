@@ -142,14 +142,14 @@ function showBookingSuccess(reservation){
  const mark=document.createElement('div');mark.className='bookingSuccessIcon';mark.textContent='✓';
  const heading=document.createElement('h2');heading.id='bookingSuccessTitle';heading.textContent='Réservation enregistrée !';
  const summary=document.createElement('p');summary.textContent=reservation.client+' · '+reservation.guests+' couvert(s) · '+reservation.time+' · '+(reservation.tables.length>1?'Tables ':'Table ')+reservation.tables.join(' + ');
- const note=document.createElement('p');note.className='bookingSuccessSub';note.textContent='La réservation a bien été ajoutée au service.';
+ const note=document.createElement('p');note.className='bookingSuccessSub';note.textContent='La réservation a bien été ajoutée au service.';if(reservation.allergies||reservation.notes){const extra=document.createElement('p');extra.className='bookingSuccessSub';extra.textContent=(reservation.allergies?'⚠ Allergies : '+reservation.allergies+'  ':'')+(reservation.notes?'Notes : '+reservation.notes:'');dialog.append(extra)}
  const actions=document.createElement('div');actions.className='bookingSuccessActions';
  const view=document.createElement('button');view.type='button';view.textContent='Voir la réservation';
  const again=document.createElement('button');again.type='button';again.className='bookingSuccessSecondary';again.textContent='Ajouter une autre';
  function close(){overlay.remove();document.removeEventListener('keydown',escape)}
  function escape(e){if(e.key==='Escape')close()}
  view.addEventListener('click',()=>{close();window.RestoScreens?.show('reservations');const dateField=$('reservationDate'),query=$('reservationQuery');if(dateField)dateField.value=reservation.date;if(query){query.value=reservation.client;query.dispatchEvent(new Event('input',{bubbles:true}))}document.getElementById('reservations')?.scrollIntoView({block:'start'})});
- again.addEventListener('click',()=>{close();$('bookingClient').value='';$('bookingClient').focus();refreshAvailability()});
+ again.addEventListener('click',()=>{close();$('bookingClient').value='';$('bookingAllergies').value='';$('bookingNotes').value='';$('bookingClient').focus();refreshAvailability()});
  actions.append(view,again);dialog.append(mark,heading,summary,note,actions);overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',escape);view.focus();
 }
 function readReservations(){const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
@@ -161,7 +161,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  try{
  const existing=readReservations(),table=Number($('bookingTable').value),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<today())throw Error('Impossible de créer une réservation à une date passée.');
- const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,duration:ReservationEngine.DEFAULT_DURATION,tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
+ const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.DEFAULT_DURATION,tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
  if(!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
