@@ -156,3 +156,5 @@ body.tablePickerOpen{overflow:hidden}
 .bookingTypeOption input:checked+span strong{color:#116e4e}
 .bookingTypeOption input:focus-visible+span{outline:3px solid #16815e;outline-offset:2px}
 @media(max-width:620px){.bookingTypeChoices{gap:8px}.bookingTypeOption span{padding:10px;min-height:63px}.bookingTypeOption strong{font-size:12px}.bookingTypeOption small{font-size:10px}}
+
+.tableDetailActions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 5px}.tableDetailAction{border:1px solid #badbc9;border-radius:10px;background:#eaf7ef;color:#116747;font-size:12px;font-weight:750;padding:10px 12px;min-height:42px;cursor:pointer}.tableDetailAction:focus-visible{outline:3px solid #16815e;outline-offset:2px}@media(max-width:620px){.tableDetailActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.tableDetailAction{font-size:11px;padding:9px 7px}}
