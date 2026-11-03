@@ -402,3 +402,10 @@ html{scroll-padding-bottom:110px}
 #editForm>label:has(#editTable) .tableChoiceTrigger,
 #bookingForm>label:has(#bookingTable) button,
 #editForm>label:has(#editTable) button{max-width:100%;min-width:0;box-sizing:border-box}
+
+/* Suivi des réservations : filtres opérationnels */
+.reservationViewTabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px}
+.reservationViewTab{flex:1 1 145px;min-width:0;padding:12px 10px;border:1px solid #cbdcd2;border-radius:14px;background:#f5f8f6;color:#285746;font:inherit;font-weight:650;cursor:pointer}
+.reservationViewTab.isActive{background:#176b50;color:#fff;border-color:#176b50}
+.reservationViewEmpty{padding:18px 8px;color:#66766e}
+@media(max-width:480px){.reservationViewTabs{display:grid;grid-template-columns:1fr 1fr}.reservationViewTab:last-child{grid-column:1/-1}}
