@@ -229,3 +229,12 @@ html{scroll-padding-bottom:110px}
 .appScreen>.panel,.appScreen>.actionPanel{margin-top:0}
 .appScreen>.content{min-width:0}
 @media(prefers-reduced-motion:reduce){.appScreenActive{animation:none!important}}
+
+/* Unified vector icon system, Lucide-style outline */
+.navSvgIcon{display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;stroke:currentColor}
+.mobileNavIcon .navSvgIcon{width:24px;height:24px}
+.mobileNavAdd .navSvgIcon{width:24px;height:24px;stroke-width:2.4}
+.sidebar a{display:flex;align-items:center;gap:10px}
+.quickAction{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.quickAction .navSvgIcon{width:18px;height:18px}
+@media(max-width:360px){.mobileNavIcon .navSvgIcon{width:22px;height:22px}}
