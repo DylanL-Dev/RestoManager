@@ -142,3 +142,17 @@ body.tablePickerOpen{overflow:hidden}
 .tablePickerBest{font-size:9px}
 .tablePickerFooter{padding:12px 17px}
 }
+
+/* Segmented client type: no native Android popup */
+.bookingTypeField{grid-column:1/-1;border:0;padding:0;margin:0;min-width:0}
+.bookingTypeField legend{font-size:12px;font-weight:750;color:#456357;margin-bottom:8px}
+.bookingTypeChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bookingTypeOption{position:relative;display:block!important;cursor:pointer;min-width:0}
+.bookingTypeOption input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none}
+.bookingTypeOption span{display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:65px;padding:11px 13px;background:#fff;border:1px solid #dce6df;border-radius:13px;transition:background .12s,border-color .12s}
+.bookingTypeOption strong{font-size:13px;font-weight:800;color:#25493c}
+.bookingTypeOption small{font-size:11px;font-weight:450;color:#748278}
+.bookingTypeOption input:checked+span{background:#eaf7ef;border:2px solid #16815e;padding:10px 12px}
+.bookingTypeOption input:checked+span strong{color:#116e4e}
+.bookingTypeOption input:focus-visible+span{outline:3px solid #16815e;outline-offset:2px}
+@media(max-width:620px){.bookingTypeChoices{gap:8px}.bookingTypeOption span{padding:10px;min-height:63px}.bookingTypeOption strong{font-size:12px}.bookingTypeOption small{font-size:10px}}
