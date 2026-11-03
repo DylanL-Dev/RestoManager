@@ -160,3 +160,18 @@ body.tablePickerOpen{overflow:hidden}
 .tableDetailActions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 5px}.tableDetailAction{border:1px solid #badbc9;border-radius:10px;background:#eaf7ef;color:#116747;font-size:12px;font-weight:750;padding:10px 12px;min-height:42px;cursor:pointer}.tableDetailAction:focus-visible{outline:3px solid #16815e;outline-offset:2px}@media(max-width:620px){.tableDetailActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.tableDetailAction{font-size:11px;padding:9px 7px}}
 
 .tableAdminPanel{margin-top:16px}.tableAdminPanel form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.tableAdminPanel label{display:grid;gap:5px;font-size:12px;font-weight:700}.tableAdminPanel input,.tableAdminPanel select{min-width:0;width:100%;height:44px;padding:8px;border:1px solid #d4e3d8;border-radius:10px}.tableAdminPanel button{padding:10px;border:1px solid #c9ded0;border-radius:10px;background:#e9f6ee;color:#14674b;font-weight:700}.tableAdminPanel #tableAdminSubmit{grid-column:1/-1;background:#146c55;color:white}.tableAdminItem{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #e3ece6}.tableAdminItem span{flex:1;min-width:140px;font-size:13px}#tableAdminFeedback{font-size:12px;color:#14674b}
+
+/* Fixed bottom navigation — service-first mobile UI */
+.mobileBottomNav{display:none}
+@media(max-width:900px){
+.mobileBottomNav{position:fixed;bottom:0;left:0;right:0;z-index:500;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;gap:0;background:#fff;border-top:1px solid #dce8e0;box-shadow:0 -6px 25px #103e3414;padding:7px max(7px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left))}
+.mobileNavItem{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:51px;padding:4px 2px;border-radius:11px;color:#6c7f73;text-decoration:none;font-size:10px;font-weight:650;white-space:nowrap}
+.mobileNavIcon{display:grid;place-items:center;width:29px;height:27px;font-size:23px;line-height:1}
+.mobileNavItem.active{background:#e8f6ee;color:#126d4f;font-weight:850}
+.mobileNavAdd .mobileNavIcon{background:#176e55;color:#fff;border-radius:11px;width:34px;height:32px;font-size:25px}
+.mobileNavAdd.active .mobileNavIcon{background:#0e543f}
+.mobileNavItem:focus-visible{outline:3px solid #16815e;outline-offset:-2px}
+main{padding-bottom:max(110px,calc(95px + env(safe-area-inset-bottom)))!important}
+html{scroll-padding-bottom:110px}
+}
+@media(max-width:360px){.mobileNavItem{font-size:9px}.mobileBottomNav{padding-left:3px;padding-right:3px}}
