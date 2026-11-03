@@ -27,7 +27,7 @@ form.addEventListener('submit',e=>{e.preventDefault();try{
  if(next.tables.some(t=>t.number===number&&t.id!==editId))throw Error('Ce numéro de table existe déjà.');
  if(editId){const t=next.tables.find(x=>x.id===editId);if(!t)throw Error('Table introuvable');
  if(t.number!==number&&bookings().some(r=>r.tables.includes(t.number)))throw Error('Renumérotation impossible : des réservations référencent cette table.');
- if(bookings().some(r=>r.tables.includes(t.number)&&E.isBlocking(r)&&r.guests>max))throw Error('La nouvelle capacité est inférieure à une réservation active.');
+ if(bookings().some(r=>r.tables.includes(t.number)&&E.isBlocking(r)&&r.guests>r.tables.reduce((sum,n)=>sum+(n===t.number?max:(next.tables.find(x=>x.number===n)?.capacity||0)),0)))throw Error('La nouvelle capacité est inférieure aux couverts d’une réservation active, y compris fusionnée.');
  Object.assign(t,{number,capacityMin:min,capacity:max,roomId});
  }else{
  const base={id:'table-v3-'+Date.now(),number,capacityMin:min,capacity:max,roomId,shape:'rect',width:1.2,depth:.8,angle:0,x:1,y:1};
