@@ -62,7 +62,7 @@ list.forEach(r=>{
  if(r.tables.length>1){const total=r.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0);row.append(node('span','fusionDetailNote','Tables fusionnées : '+r.tables.join(' + ')));if(total>r.guests)row.append(node('span','fusionCoverHint','Préparation : retirer '+(total-r.guests)+' couvert(s)'))}const controls=node('div','tableStatusActions');
  (choices[r.status]||[]).forEach(([kind,label])=>{
  const button=node('button','tableStatusAction',label);button.type='button';
- button.addEventListener('click',()=>{
+ button.addEventListener('click',async()=>{
  if(['completed','released','no_show'].includes(kind)&&!confirm('Confirmer : '+label.toLowerCase()+' pour '+r.client+' ?'))return;
  try{
  const all=readReservations(),index=all.findIndex(x=>x.id===r.id);if(index<0)throw Error('Réservation introuvable.');
