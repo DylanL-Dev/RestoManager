@@ -1,0 +1,46 @@
+# Refonte RestoManager — interface de service V3
+
+Branche : `feature/refonte-service-responsive-v3`. Base : `codex/mission-3-floor-editor-2d-3d`.
+
+## Décisions produit validées
+
+- Conserver l'identité RestoManager existante : fond clair, bleu marine, accents dorés, logo et typographie cohérents.
+- Mettre de côté **dans l'interface de service** la 3D, le mobilier et les commandes avancées de l'éditeur. Ne pas supprimer leur code, leurs données ni les migrations.
+- Remplacer le plan miniature comme vue de service principale par une **grille de cartes rectangulaires responsive** : deux colonnes sur téléphone si lisibles, trois à cinq sur tablette selon la largeur, davantage sur ordinateur. Pas de défilement horizontal ni de débordement.
+- Chaque carte affiche sans ouverture : **numéro**, **statut textuel**, nombre de personnes et/ou capacité min–max, heure d'arrivée prévue si pertinente. Ne jamais se reposer sur la couleur seule.
+- États : LIBRE, ATTENDUS, ARRIVÉS, PRÉSENTS, INDISPONIBLE. PARTIS s'applique à la réservation terminée dans l'historique ; la table elle-même redevient LIBRE si aucun autre blocage ne s'applique.
+- Fiche table en panneau inférieur mobile, actions contextuelles rapides : enregistrer l'arrivée, installer, libérer avec confirmation, annuler une libération après vérification des conflits.
+- Création d'un **client de passage sans réservation** : nombre de couverts obligatoire, nom facultatif, table ou fusion compatible, horaire et durée ; même contrôle de conflits que les réservations.
+- Ajout et suppression de tables sans plafond arbitraire ; numéro unique dans la salle ; capacités minimum et maximum configurables, entiers positifs et min <= max. Ne pas supprimer une table affectée à des réservations actives ou futures ; préserver l'historique.
+- Fusion temporaire de deux tables ou plus : somme des capacités par défaut, capacité effective modifiable et validée ; verrouiller toutes les tables membres pendant la réservation, séparer sans perte de données. Les fusions futures ne doivent pas bloquer le présent.
+- Tableau de bord dérivé de l'état réel : clients présents, attendus, arrivés, places disponibles **maintenant**, capacité totale, tables libres/occupées, couverts servis, taux d'occupation. Le calcul de disponibilité future est distinct et dépend du créneau et des fusions.
+- Navigation mobile à accès direct : Service, Réservations, Tables, Gestion ; recherche client/chambre/table, filtre par salle, panneau de fiche sans quitter la liste.
+
+## Règles de sécurité et migration
+
+1. Inventorier les structures persistées, les statuts et les références de tables avant toute modification.
+2. Garder les IDs de table stables ; éviter toute réinitialisation du stockage local.
+3. Ne jamais compter deux fois les capacités des tables fusionnées.
+4. Ne pas compter les places vides d'une table occupée comme des places librement attribuables.
+5. Lors d'une annulation de libération, vérifier les réservations concurrentes et refuser avec explication en cas de conflit.
+6. Conserver le moteur de réservation existant et ses contraintes (durée, horaires, collisions) jusqu'à adaptation testée.
+7. Ne pas changer la branche de déploiement GitHub Pages ni fusionner dans main sans validation.
+
+## Ordre d'implémentation
+
+- Lot A : grille responsive et statuts textuels, fiches de table et navigation.
+- Lot B : gestion tables illimitée, min/max, suppression sécurisée.
+- Lot C : clients de passage et fusion de tables avec validation des créneaux.
+- Lot D : statistiques temps réel et disponibilité par horaire.
+- Lot E : tests Android/tablette/desktop, clavier, lecteurs d'écran, persistance et régressions.
+
+## Critères de validation
+
+- À 360 px, numéros et libellés des cartes restent lisibles sans zoom ni débordement.
+- L'état de chaque table est explicite même en niveaux de gris.
+- Les clients de passage apparaissent dans les couverts et l'historique.
+- La fusion empêche les doubles attributions.
+- L'annulation d'une libération ne crée jamais de conflit.
+- Une table supprimée ne détruit aucun historique.
+- Les statistiques sont recalculées à chaque transition de statut.
+- L'éditeur 2D/3D reste récupérable ultérieurement.
