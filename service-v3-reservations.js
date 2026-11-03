@@ -2,7 +2,7 @@
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
 const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
-let editing=null,chosenTables=[];
+let editing=null,chosenTables=[],expanded=null;
 function sameTables(a,b){return a.length===b.length&&a.every(n=>b.includes(n))}
 function editAvailability(tables){
  const previous=load().find(r=>r.id===editing);
@@ -53,9 +53,10 @@ function action(id,kind){
  try{
  const all=load(),i=all.findIndex(r=>r.id===id);if(i<0)return notify('Réservation introuvable.');
  const r=all[i];
+ if(kind==='confirm'){if(!['reserved','late'].includes(r.status))return notify('Cette réservation ne peut pas être confirmée.');all[i]={...r,status:'confirmed',confirmedAt:new Date().toISOString()};save(all);notify('Réservation confirmée.');return}
  if(kind==='edit'){
  editing=id;chosenTables=r.tables.slice();
- $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
+ $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
  editChoices();$('editForm').hidden=false;$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
  }
  if(kind==='delete'){if(!confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.'))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
@@ -73,16 +74,26 @@ function render(){
  if(!list.length){root.append(el('p','Aucune réservation pour cette recherche.'));return}
  list.forEach(r=>{
  const card=el('article',undefined,'reservationItem');
- const head=el('div',undefined,'reservationHead');head.append(el('strong',r.time+' · '+r.client),el('span',statuses[r.status]||r.status,'reservationStatus'));card.append(head);
+ const head=el('div',undefined,'reservationHead');head.append(el('strong',r.time+' · '+r.client),el('span',statuses[r.status]||r.status,'reservationStatus'));card.append(head);const detailButton=el('button',expanded===r.id?'Masquer la fiche':'Voir la fiche et le suivi','reservationOpenDetail');detailButton.type='button';detailButton.setAttribute('aria-expanded',String(expanded===r.id));detailButton.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});card.append(detailButton);
  const total=r.tables.reduce((sum,n)=>sum+(FloorPlan.get().tables.find(t=>t.number===n)?.capacity||0),0);card.append(el('p',r.date+' · '+r.guests+' couvert(s) · '+(r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+r.tables[0])+(r.type==='hotel'?' · Hôtel':'')));if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
+ if(r.allergies)card.append(el('p','⚠ Allergies signalées : '+r.allergies,'reservationAllergy'));
+ if(r.notes)card.append(el('p','📝 '+r.notes,'reservationNotes'));
+ if(expanded===r.id){
+ const details=el('section',undefined,'reservationExpanded');
+ details.append(el('h3','Suivi de la réservation'));
+ details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
+ if(r.confirmedAt)details.append(el('p','Confirmée le '+new Date(r.confirmedAt).toLocaleString('fr-FR')));
+ if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}
+ card.append(details);
+ }
  const actions=el('div',undefined,'reservationActions');
- const opts=[['edit','Modifier'],['arrived','Arrivé'],['seated','Installer'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler'],['delete','Supprimer']];
- const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>k==='edit'||k==='delete'||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='arrived'||k==='seated'||k==='completed'?primary:more).append(b)});actions.append(primary);if(more.children.length>1)actions.append(more);
+ const opts=[['edit','Modifier'],['confirm','Confirmer'],['arrived','Arrivé'],['seated','Installer'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler'],['delete','Supprimer']];
+ const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||k==='delete'||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='confirm'||k==='arrived'||k==='seated'||k==='completed'?primary:more).append(b)});actions.append(primary);if(more.children.length>1)actions.append(more);
  card.append(actions);root.append(card);
  });
 }
 $('reservationDate').value=new Date().toLocaleDateString('en-CA');
-$('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',render);
+$('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',()=>{if($('reservationQuery').value.trim())$('reservationDate').value='';render()});
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';render()});
 $('editCancel').addEventListener('click',()=>{editing=null;chosenTables=[];$('editForm').hidden=true});
 $('editForm').addEventListener('submit',async e=>{
@@ -95,7 +106,7 @@ $('editForm').addEventListener('submit',async e=>{
  if(tables.length>1&&!sameTables(tables,previous.tables)&&!(window.RestoFusion?.pairs()||[]).some(p=>sameTables(p,tables)))throw Error('Fusion non autorisée.');
  if(tables.length>1&&new Set(tables.map(n=>plan.tables.find(t=>t.number===n).roomId)).size>1)throw Error('Fusion entre salles différentes interdite.');
  if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0]).capacityMin||1))throw Error('Capacité minimale non respectée.');
- const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
+ const updated={...previous,notes:$('editNotes').value.trim().slice(0,1000),allergies:$('editAllergies').value.trim().slice(0,500),client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
  const check=E.validate(updated,all,editing);if(!check.valid)throw Error(check.errors.join(' '));
  const warnings=E.seatingWarnings(updated,all,editing);
  if(warnings.length){
