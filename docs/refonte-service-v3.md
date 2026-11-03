@@ -89,3 +89,15 @@ Branche : `feature/refonte-service-responsive-v3`. Base : `codex/mission-3-floor
 - Indicateurs historiques : couverts attendus, présents, servis, passages, no-shows, annulations, occupation ; préciser la définition de chaque indicateur.
 - Prévoir une stratégie de reprise en cas d'erreur d'écriture ou de données corrompues : ne pas effacer la source avant archivage réussi.
 - Tests de non-régression pour clôture répétée, service à cheval sur minuit, historiques existants, clients encore présents et conservation des réservations futures.
+
+## Décision produit — V3 orientée serveur (3 novembre 2026)
+
+**Périmètre prioritaire :** service en temps réel, réservations, disponibilités par créneau, clients de passage, tables/capacités, historique/clôture, administration et recherche rapide. La priorité UX est une action réalisable en quelques secondes sur smartphone, tablette ou ordinateur, avec statuts textuels, erreurs prévenues et minimum de clics.
+
+**Hors périmètre V3 pour le moment :** plan de salle graphique 2D/3D, mobilier, rotation, redimensionnement spatial, zoom, sélection multiple et alignement d'objets, édition graphique des espaces. Ne pas supprimer leur historique Git ; ne pas les réintroduire dans la navigation de la V3 tant qu'une nouvelle décision produit ne les réactive pas.
+
+**Gestion des tables conservée :** créer, modifier, renuméroter, supprimer et paramétrer capacité minimale/maximale et salle, sous forme de liste/grille de cartes et formulaires simples, sans éditeur graphique.
+
+**Navigation cible :** Service / Réservations / Disponibilités / Historique / Administration. Clôture sécurisée accessible depuis Service. Préserver moteur métier, données existantes et contrôles de conflits.
+
+**Critères d'expérience :** identifier l'état de chaque table sans se fier à la couleur ; recherche client/chambre instantanée ; réserver ou installer un passage rapidement ; suggérer un créneau de remplacement ; afficher la prochaine réservation avant d'installer un passage ; confirmation des opérations destructrices ; fonctionnement tactile et sans défilement horizontal.
