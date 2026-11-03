@@ -175,3 +175,28 @@ main{padding-bottom:max(110px,calc(95px + env(safe-area-inset-bottom)))!importan
 html{scroll-padding-bottom:110px}
 }
 @media(max-width:360px){.mobileNavItem{font-size:9px}.mobileBottomNav{padding-left:3px;padding-right:3px}}
+
+/* Motion system V3: subtle, purposeful and reduced-motion aware */
+:root{--motion-fast:150ms;--motion-normal:240ms;--motion-slow:360ms;--motion-ease:cubic-bezier(.2,.8,.2,1)}
+@keyframes restoFadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes restoSheetIn{from{opacity:.65;transform:translateY(24px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes restoBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes restoSelection{0%{box-shadow:0 0 0 0 #16815e55}100%{box-shadow:0 0 0 7px #16815e00}}
+@keyframes restoSoftAppear{from{opacity:.5}to{opacity:1}}
+.serviceIntro,.quickActions,.kpis{animation:restoFadeUp var(--motion-slow) var(--motion-ease) both}
+.quickActions{animation-delay:45ms}.kpis{animation-delay:85ms}
+.mobileNavItem,.quickAction,.tableChoiceTrigger,.tablePickerCard,.tableAdminItem button,.reservationActions button,.tableDetailAction{transition:background-color var(--motion-fast) ease,color var(--motion-fast) ease,border-color var(--motion-fast) ease,transform var(--motion-fast) var(--motion-ease),box-shadow var(--motion-fast) ease}
+.mobileNavItem:active,.quickAction:active,.tablePickerCard:active,.tableDetailAction:active{transform:scale(.965)}
+.mobileNavItem.active .mobileNavIcon{animation:restoSoftAppear var(--motion-normal) ease}
+.tableCard{transition:transform var(--motion-fast) var(--motion-ease),box-shadow var(--motion-fast) ease,border-color var(--motion-fast) ease}
+.tableCard:active{transform:scale(.975)}
+.tablePickerOverlay:not([hidden]) .tablePickerBackdrop{animation:restoBackdropIn 180ms ease both}
+.tablePickerOverlay:not([hidden]) .tablePickerSheet{animation:restoSheetIn var(--motion-normal) var(--motion-ease) both}
+.tablePickerCard.selected{animation:restoSelection var(--motion-slow) ease-out}
+.actionPanel[open] .actionPanelBody{animation:restoFadeUp var(--motion-normal) var(--motion-ease) both}
+.actionPanel summary:after{transition:transform var(--motion-fast) ease}
+.reservationItem,.tableAdminItem{animation:restoSoftAppear var(--motion-normal) ease both}
+@media(hover:hover){.quickAction:hover,.tableDetailAction:hover{transform:translateY(-2px);box-shadow:0 5px 15px #103f3516}.tablePickerCard:hover{transform:translateY(-2px);border-color:#16815e}}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
