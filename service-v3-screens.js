@@ -6,10 +6,11 @@ const groups=[
  {id:'reservations',nodes:['#reservations']},
  {id:'reservationForm',nodes:['#reservationForm']},
  {id:'passages',nodes:['#passages']},
- {id:'administration',nodes:['#administration']}
+ {id:'administration',nodes:['#administration']},
+ {id:'history',nodes:['#historyStats']}
 ];
 const screens=new Map();
-groups.forEach(group=>{const screen=document.createElement('section');screen.className='appScreen';screen.dataset.screen=group.id;screen.setAttribute('aria-label',({tables:'Service et tables',reservations:'Réservations',reservationForm:'Nouvelle réservation',passages:'Clients de passage',administration:'Gestion des tables'})[group.id]);group.nodes.forEach(selector=>{const el=main.querySelector(selector);if(el){if(el.tagName==='DETAILS')el.open=true;screen.append(el)}});main.append(screen);screens.set(group.id,screen)});
+groups.forEach(group=>{const screen=document.createElement('section');screen.className='appScreen';screen.dataset.screen=group.id;screen.setAttribute('aria-label',({tables:'Service et tables',reservations:'Réservations',reservationForm:'Nouvelle réservation',passages:'Clients de passage',administration:'Gestion des tables',history:'Historique et statistiques'})[group.id]);group.nodes.forEach(selector=>{const el=main.querySelector(selector);if(el){if(el.tagName==='DETAILS')el.open=true;screen.append(el)}});main.append(screen);screens.set(group.id,screen)});
 const links=[...document.querySelectorAll('.mobileNavItem')],sidebar=[...document.querySelectorAll('.sidebar a[href^="#"]')];
 let current=null;
 function show(id,options={}){
