@@ -53,4 +53,23 @@ assert.equal(engine.CAPACITY[25], 10);
 Object.values(engine.STATUS).forEach(function (status) {
     assert.notEqual(status, 'unknown');
 });
-console.log('reservation-engine: 15 scénarios métier validés');
+
+assert.equal(engine.validate(reservation({date:'2026-02-29'}),[]).valid,false,'Date impossible');
+assert.equal(engine.validate(reservation({date:'2028-02-29'}),[]).valid,true,'Date bissextile');
+assert.equal(engine.validate(reservation({date:'2026-99-99'}),[]).valid,false,'Date invalide');
+assert.equal(engine.validate(reservation({guests:1.5}),[]).valid,false,'Couverts entiers');
+assert.equal(engine.validate(reservation({duration:-10}),[]).valid,false,'Durée positive');
+assert.equal(engine.validate(reservation({duration:1.5}),[]).valid,false,'Durée entière');
+assert.equal(engine.validate(reservation({tables:[1,1],guests:3}),[]).valid,false,'Table dupliquée ne double pas sa capacité');
+assert.equal(engine.validate(reservation({time:'19:0'}),[]).valid,false,'Format horaire');
+const formatMinutes = m => String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+for(let i=0;i<1000;i++){
+    const start=16*60+(i%9)*15;
+    const existing=reservation({id:'stress-'+i,time:formatMinutes(start)});
+    const overlapping=reservation({id:'overlap-'+i,time:formatMinutes(start+15)});
+    const adjacent=reservation({id:'adjacent-'+i,time:formatMinutes(start+90)});
+    assert.equal(engine.validate(overlapping,[existing]).valid,false,'Chevauchement '+i);
+    assert.equal(engine.validate(adjacent,[existing]).valid,true,'Créneau suivant '+i);
+}
+
+console.log('reservation-engine: scénarios métier et 1000 cas de concurrence horaire validés');
