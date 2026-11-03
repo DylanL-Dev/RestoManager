@@ -1,7 +1,7 @@
 /* RestoManager PWA — shell only. Reservation data remains in localStorage. */
-const CACHE='restomanager-shell-20261103-v2';
+const CACHE='restomanager-shell-20261103-v3';
 const ROOT='/RestoManager/';
-const SHELL=['index.html','service-v3.html','service-v3.css','reservation-engine.js','floor-plan.js','service-v3.js','service-v3-reservations.js','service-v3-walkin.js','service-v3-table-choices.js','service-v3-table-admin.js','service-v3-room-choices.js','service-v3-screens.js','service-v3-fusions.js','service-v3-reminders.js','service-v3-confirm.js','asset/img/logo.png','pwa-icon.svg','manifest.json'].map(p=>ROOT+p);
+const SHELL=['index.html','service-v3.html','service-v3.css','reservation-engine.js','floor-plan.js','service-v3.js','service-v3-reservations.js','service-v3-walkin.js','service-v3-table-choices.js','service-v3-table-admin.js','service-v3-room-choices.js','service-v3-screens.js','service-v3-fusions.js','service-v3-reminders.js','service-v3-history.js','service-v3-confirm.js','asset/img/logo.png','pwa-icon.svg','manifest.json'].map(p=>ROOT+p);
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async cache=>{await Promise.allSettled(SHELL.map(async url=>{const response=await fetch(url,{cache:'reload'});if(response.ok)await cache.put(url,response)}))}).then(()=>self.skipWaiting()))});
 self.addEventListener('activate',event=>{event.waitUntil(Promise.all([caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('restomanager-shell-')&&k!==CACHE).map(k=>caches.delete(k)))),self.clients.claim()]))});
 self.addEventListener('fetch',event=>{const req=event.request;if(req.method!=='GET')return;const url=new URL(req.url);if(url.origin!==self.location.origin||!url.pathname.startsWith(ROOT))return;
