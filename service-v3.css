@@ -360,3 +360,10 @@ html{scroll-padding-bottom:110px}
 .bookingExtraFields textarea{width:100%;box-sizing:border-box;min-height:76px;resize:vertical;font:inherit;font-weight:400;line-height:1.45;color:#193f34;background:white;border:1px solid #c7d9ce;border-radius:12px;padding:12px}
 .bookingExtraFields textarea:focus-visible{outline:3px solid #9bd7bd;outline-offset:2px}
 .bookingExtraHint{margin:0;font-size:.85rem;color:#637a70;line-height:1.45}
+
+/* Les consignes de service occupent toute la grille du formulaire. */
+.bookingTools form>.bookingExtraFields{grid-column:1/-1;min-width:0;width:100%;align-self:stretch;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px 18px}
+.bookingTools .bookingExtraFields h3,.bookingTools .bookingExtraFields .bookingExtraHint{grid-column:1/-1}
+.bookingTools .bookingExtraFields label{min-width:0;align-self:start;font-size:14px}
+.bookingTools .bookingExtraFields textarea{display:block;max-width:100%;min-width:0;min-height:105px}
+@media(max-width:720px){.bookingTools form>.bookingExtraFields{grid-template-columns:minmax(0,1fr);padding:16px;gap:14px}.bookingTools .bookingExtraFields h3,.bookingTools .bookingExtraFields .bookingExtraHint{grid-column:1}.bookingTools .bookingExtraFields textarea{min-height:90px}}
