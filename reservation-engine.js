@@ -157,8 +157,8 @@
         if (tableCapacity([...new Set(selectedTables.map(Number))]) < Number(candidate.guests)) {
             errors.push('La capacité des tables sélectionnées est insuffisante.');
         }
-        if (Number.isFinite(minutes(candidate.time)) && Number.isInteger(duration) && duration > 0 && minutes(candidate.time) + duration > CLOSING_MINUTES) {
-            errors.push('La réservation dépasse la fermeture à 21h30.');
+        if (Number.isFinite(minutes(candidate.time)) && minutes(candidate.time) > CLOSING_MINUTES) {
+            errors.push('Dernière prise de commandes à 21h30 : choisissez une heure d’arrivée au plus tard à 21h30.');
         }
         if (errors.length) return { valid: false, errors: errors, conflict: null, roomConflict: null };
         const conflict = normalizeReservations(reservations).find(function (other) {
