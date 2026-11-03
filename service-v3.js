@@ -78,48 +78,61 @@ list.forEach(r=>{
 }
 function refreshAvailability(){
  const dateValue=$('bookingDate').value,time=$('bookingTime').value,guests=Number($('bookingGuests').value),select=$('bookingTable'),previous=select.value;
- const insight=$('availabilityInsight');if(insight)insight.replaceChildren();
- select.replaceChildren();
- window.RestoFusionSelected=null;select.required=true;
+ const insight=$('availabilityInsight'),fusionPanel=$('fusionSuggestions');
+ if(insight)insight.replaceChildren();
+ if(fusionPanel)fusionPanel.replaceChildren();
+ select.replaceChildren();window.RestoFusionSelected=null;select.required=true;
  if(!dateValue||!time||!Number.isInteger(guests)||guests<1)return;
  const reservationsAll=readReservations(),duration=ReservationEngine.DEFAULT_DURATION;
  const suitable=plan.tables.filter(t=>t.capacity>=guests&&(t.capacityMin||1)<=guests).sort((a,b)=>a.capacity-b.capacity||a.number-b.number);
+ const pairs=window.RestoFusion?window.RestoFusion.pairs():[];
+ const configured=pairs.map(pair=>{
+  const tables=pair.map(n=>plan.tables.find(t=>t.number===n));
+  if(tables.some(t=>!t))return null;
+  return {pair,capacity:tables.reduce((sum,t)=>sum+t.capacity,0)};
+ }).filter(x=>x&&x.capacity>=guests);
+ function candidate(at,tables){return {id:'availability-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time:at,guests,duration,tables,status:'reserved'};}
  function matches(at){
-  return suitable.filter(t=>{
-   const candidate={id:'candidate',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time:at,guests,duration,tables:[t.number],status:'reserved'};
-   return ReservationEngine.validate(candidate,reservationsAll).valid;
-  });
+  const singles=suitable.filter(t=>ReservationEngine.validate(candidate(at,[t.number]),reservationsAll).valid);
+  const fusions=configured.filter(x=>ReservationEngine.validate(candidate(at,x.pair),reservationsAll).valid);
+  return {singles,fusions};
  }
- const options=matches(time);
- const fusionPanel=$('fusionSuggestions');if(fusionPanel)fusionPanel.replaceChildren();
- if(fusionPanel&&window.RestoFusion){
- const pairs=window.RestoFusion.pairs(),matchesFusion=pairs.map(pair=>{
- const tables=pair.map(n=>plan.tables.find(t=>t.number===n));
- if(tables.some(t=>!t))return null;
- const capacity=tables.reduce((sum,t)=>sum+t.capacity,0),min=tables.reduce((sum,t)=>sum+(t.capacityMin||1),0);
- if(guests>capacity||guests<1)return null;
- const candidate={id:'fusion-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time,guests,duration,tables:pair,status:'reserved'};
- return ReservationEngine.validate(candidate,reservationsAll).valid?{pair,capacity}:null;
- }).filter(Boolean).sort((a,b)=>a.capacity-b.capacity);
- if(matchesFusion.length){fusionPanel.append(node('strong','','Fusions autorisées disponibles'));matchesFusion.forEach(({pair,capacity})=>{
- const button=node('button','fusionSuggestion','Tables '+pair.join(' + ')+' · '+capacity+' places'+(capacity>guests?' · Retirer '+(capacity-guests)+' couvert(s)':''));button.type='button';
- button.addEventListener('click',()=>{window.RestoFusionSelected=pair.slice();select.required=false;fusionPanel.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));$('bookingFeedback').textContent='Fusion sélectionnée : tables '+pair.join(' + ')+'. Confirmez avec Ajouter la réservation.'});fusionPanel.append(button)
- });}else fusionPanel.append(node('p','muted','Aucune fusion configurée disponible pour ce créneau.'));
- }
- if(options.length)window.RestoFusionSelected=null;
+ const available=matches(time),options=available.singles,fusions=available.fusions;
  options.forEach((t,i)=>{const option=document.createElement('option');option.value=t.number;option.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places'+(i===0?' · Recommandée':'');select.append(option)});
  if(options.some(t=>String(t.number)===previous))select.value=previous;
- if(!options.length){const o=document.createElement('option');o.value='';o.textContent='Aucune table disponible';select.append(o)}
+ if(!options.length){const o=document.createElement('option');o.value='';o.textContent=fusions.length?'Choisir une fusion ci-dessous':'Aucune table disponible';select.append(o)}
+ if(fusionPanel){
+  if(fusions.length){
+   fusionPanel.append(node('strong','','Fusions autorisées disponibles'));
+   // Smaller groups first: do not waste four tables on a party of two.
+   fusions.sort((a,b)=>a.capacity-b.capacity||a.pair.length-b.pair.length);
+   fusions.forEach(({pair,capacity})=>{
+    const button=node('button','fusionSuggestion','Tables '+pair.join(' + ')+' · '+capacity+' places'+(capacity>guests?' · Retirer '+(capacity-guests)+' couvert(s)':''));
+    button.type='button';
+    button.addEventListener('click',()=>{window.RestoFusionSelected=pair.slice();select.required=false;fusionPanel.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));$('bookingFeedback').textContent='Fusion sélectionnée : tables '+pair.join(' + ')+'. Confirmez avec Ajouter la réservation.'});
+    fusionPanel.append(button);
+   });
+  }else fusionPanel.append(node('p','muted','Aucune fusion configurée disponible pour ce créneau.'));
+ }
  window.RestoTableChoices?.refresh('bookingTable');
  if(!insight)return;
- const summary=node('p','availabilitySummary',options.length?options.length+' table(s) compatible(s) à '+time+' · Meilleure capacité proposée en premier.':'Aucune table compatible à '+time+'.');
- insight.append(summary);
- if(suitable.length&&options.length<=Math.max(1,Math.floor(suitable.length*.2))){insight.append(node('p','availabilityWarning',options.length?'Créneau presque complet pour '+guests+' couvert(s).':'Créneau complet pour '+guests+' couvert(s).'))}
- if(options.length===0){
+ const total=options.length+fusions.length;
+ insight.append(node('p','availabilitySummary',total?options.length+' table(s) individuelle(s) et '+fusions.length+' fusion(s) compatibles à '+time+'.':'Aucune configuration compatible à '+time+'.'));
+ if(!total){
+  insight.append(node('p','availabilityWarning','Aucune table ou fusion autorisée disponible pour '+guests+' couvert(s) à cet horaire.'));
   const current=Number(time.slice(0,2))*60+Number(time.slice(3,5)),alternatives=[];
-  for(const delta of [-60,-30,30,60,90]){const mins=current+delta;if(mins<0||mins>=24*60)continue;const at=String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');const available=matches(at);if(available.length)alternatives.push({at,count:available.length})}
-  if(alternatives.length){insight.append(node('p','availabilityAlternativesTitle','Autres horaires disponibles :'));const choices=node('div','availabilityAlternatives');alternatives.forEach(({at,count})=>{const b=node('button','availabilityTimeOption',at+' · '+count+' table(s)');b.type='button';b.addEventListener('click',()=>{$('bookingTime').value=at;refreshAvailability()});choices.append(b)});insight.append(choices)}
-  else insight.append(node('p','muted','Aucun horaire compatible dans les créneaux proches testés. Essayez une autre date.'));
+  for(const delta of [-60,-30,30,60,90]){
+   const mins=current+delta;if(mins<0||mins>=24*60)continue;
+   const at=String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+   const found=matches(at),count=found.singles.length+found.fusions.length;
+   if(count)alternatives.push({at,count});
+  }
+  if(alternatives.length){
+   insight.append(node('p','availabilityAlternativesTitle','Autres horaires disponibles :'));
+   const choices=node('div','availabilityAlternatives');
+   alternatives.forEach(({at,count})=>{const button=node('button','availabilityTimeOption',at+' · '+count+' possibilité(s)');button.type='button';button.addEventListener('click',()=>{$('bookingTime').value=at;refreshAvailability()});choices.append(button)});
+   insight.append(choices);
+  }else insight.append(node('p','muted','Aucune configuration compatible dans les créneaux proches testés. Essayez une autre date.'));
  }
 }
 function readReservations(){const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
