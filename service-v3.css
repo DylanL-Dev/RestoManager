@@ -106,3 +106,39 @@ main{max-width:1600px;margin:0 auto}
 .tableChoiceCard.selected{border:2px solid #168466!important;background:#eaf8ef!important}
 .tableChoiceCard:focus-visible,.tableChoiceTrigger:focus-visible{outline:3px solid #178466;outline-offset:2px}
 @media(max-width:620px){.tableChoiceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tableChoicePanel{padding:9px}.tableChoiceCard{padding:9px!important}}
+
+/* Table picker V2: centered dialog desktop, bottom sheet mobile. */
+.tablePickerOverlay[hidden]{display:none!important}
+.tablePickerOverlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px}
+.tablePickerBackdrop{position:absolute;inset:0;background:#102b25b8;backdrop-filter:blur(4px)}
+.tablePickerSheet{position:relative;width:min(620px,100%);max-height:min(78vh,780px);display:flex;flex-direction:column;background:#fff;border-radius:24px;box-shadow:0 24px 80px #0d251c50;overflow:hidden}
+.tablePickerHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:23px 24px 17px;border-bottom:1px solid #e7eee8}
+.tablePickerEyebrow{font-size:10px;letter-spacing:1.5px;font-weight:850;color:#19805e}
+.tablePickerHeader h2{font-size:23px;letter-spacing:-.5px;margin:5px 0 3px;color:#143d31}
+.tablePickerHeader p{font-size:12px;color:#738278;margin:0}
+.tablePickerClose{flex:0 0 36px;width:36px;height:36px;border:0;border-radius:50%;background:#edf4ef;color:#21483a;font-size:16px;cursor:pointer}
+.tablePickerGrid{overflow-y:auto;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:10px;padding:18px 24px}
+.tablePickerCard{display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:8px;min-height:110px;padding:15px;border:1px solid #dce8df;border-radius:15px;background:#fff;color:#183e32;cursor:pointer}
+.tablePickerCard.selected{background:#eaf8f0;border:2px solid #19815f;padding:14px}
+.tablePickerCardTop{display:flex;align-items:flex-start;justify-content:space-between;gap:5px;flex-wrap:wrap}
+.tablePickerCard strong{font-size:17px}
+.tablePickerCard small{font-size:12px;color:#64796d}
+.tablePickerBest{font-size:10px;font-weight:750;border-radius:16px;padding:4px 7px;color:#116646;background:#d7f2e3}
+.tablePickerIndicator{font-size:11px;color:#16815e;font-weight:750;margin-top:auto}
+.tablePickerFooter{padding:13px 24px 17px;border-top:1px solid #e7eee8;color:#77857a;font-size:11px}
+body.tablePickerOpen{overflow:hidden}
+.tableChoiceTrigger{gap:8px;justify-content:space-between!important}
+.tableChoiceAction{flex:0 0 auto;color:#178362;font-size:12px;font-weight:800}
+.tableChoiceTrigger:after{display:none}
+@media(max-width:620px){
+.tablePickerOverlay{padding:0;align-items:end}
+.tablePickerSheet{width:100%;max-height:84dvh;border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+.tablePickerHeader{padding:20px 18px 14px}
+.tablePickerHeader h2{font-size:21px}
+.tablePickerGrid{gap:9px;padding:14px 16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.tablePickerCard{padding:12px;min-height:105px;border-radius:13px}
+.tablePickerCard.selected{padding:11px}
+.tablePickerCard strong{font-size:15px}
+.tablePickerBest{font-size:9px}
+.tablePickerFooter{padding:12px 17px}
+}
