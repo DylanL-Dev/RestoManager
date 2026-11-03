@@ -5,6 +5,12 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <title>RestoManager</title>
+        <!-- V3 branch entry: the classic application remains available with ?classic=1. -->
+        <script>
+            if (new URLSearchParams(location.search).get('classic') !== '1') {
+                location.replace('service-v3.html' + location.search + location.hash);
+            }
+        </script>
         <link rel="icon" type="image/png" href="asset/img/logo.png">
 
         <link rel="stylesheet" href="style.css?v=11" />
