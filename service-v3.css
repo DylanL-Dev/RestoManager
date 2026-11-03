@@ -367,3 +367,8 @@ html{scroll-padding-bottom:110px}
 .bookingTools .bookingExtraFields label{min-width:0;align-self:start;font-size:14px}
 .bookingTools .bookingExtraFields textarea{display:block;max-width:100%;min-width:0;min-height:105px}
 @media(max-width:720px){.bookingTools form>.bookingExtraFields{grid-template-columns:minmax(0,1fr);padding:16px;gap:14px}.bookingTools .bookingExtraFields h3,.bookingTools .bookingExtraFields .bookingExtraHint{grid-column:1}.bookingTools .bookingExtraFields textarea{min-height:90px}}
+
+/* Fiche de modification : les informations de service ne doivent jamais être
+   contraintes à une demi-colonne, quelle que soit la taille de l'écran. */
+#editForm>label:has(#editAllergies),#editForm>label:has(#editNotes){grid-column:1/-1;min-width:0;width:100%;display:grid;gap:8px;align-self:stretch}
+#editForm #editAllergies,#editForm #editNotes{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;min-height:108px;resize:vertical;line-height:1.45}
