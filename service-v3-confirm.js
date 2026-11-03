@@ -46,6 +46,25 @@
   overlay.querySelector('[data-decision="cancel"]').focus();
   return new Promise(resolve=>{resolvePending=resolve});
  };
+ window.RestoConfirmRelease=function(reservation){
+  if(resolvePending)return Promise.resolve(false);
+  focusBefore=document.activeElement;
+  overlay.querySelector('.restoConfirmEyebrow').textContent='DÉPART À CONFIRMER';
+  overlay.querySelector('#restoConfirmTitle').textContent='Libérer la table ?';
+  overlay.querySelector('#restoConfirmDescription').textContent='Vérifiez que les clients ont réellement quitté leur table avant de la rendre disponible.';
+  const list=overlay.querySelector('.restoConfirmWarnings');list.replaceChildren();
+  const card=document.createElement('div');card.className='restoConfirmWarning';
+  const client=document.createElement('strong');client.textContent='Client '+reservation.client;
+  const tables=document.createElement('span');tables.textContent='Table'+(reservation.tables.length>1?'s ':' ')+reservation.tables.join(' + ');
+  const count=document.createElement('span');count.textContent=reservation.guests+' couvert(s)';
+  card.append(client,tables,count);list.append(card);
+  overlay.querySelector('.restoConfirmNote').textContent='Cette action enregistrera le départ réel et libérera la table pour les prochaines réservations.';
+  overlay.querySelector('[data-decision="cancel"]').textContent='Non, toujours occupée';
+  overlay.querySelector('[data-decision="accept"]').textContent='Oui, libérer la table';
+  overlay.hidden=false;document.body.classList.add('restoConfirmOpen');
+  overlay.querySelector('[data-decision="cancel"]').focus();
+  return new Promise(resolve=>{resolvePending=resolve});
+ };
  window.RestoConfirmSeating=function(warnings,client,time){
   if(resolvePending)return Promise.resolve(false);
   focusBefore=document.activeElement;
