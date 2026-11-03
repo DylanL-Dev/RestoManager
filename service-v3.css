@@ -430,3 +430,5 @@ html{scroll-padding-bottom:110px}
 
 #historyStats{display:none!important}
 .appScreen[data-screen='administration']:not([hidden]) #historyStats{display:grid!important}
+
+.walkinPaxButtons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.walkinPaxButtons button{min-height:52px;border:1px solid #bedbcb;border-radius:12px;background:#f1f8f4;color:#155a41;font-weight:750}.walkinPaxButtons button.selected{background:#087f5b;color:#fff}.walkinRecommendation{padding:16px;border-radius:12px;background:#e8f6ed;color:#155c41;font-weight:750}.walkinInstall{min-height:58px;width:100%;font-weight:800;font-size:17px}.walkinInstall:disabled{opacity:.5}@media(max-width:450px){.walkinPaxButtons{grid-template-columns:repeat(3,1fr)}}
