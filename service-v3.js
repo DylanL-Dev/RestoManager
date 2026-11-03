@@ -27,7 +27,7 @@ $('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time
 function occupationProgress(r){
  const scheduled=new Date(r.date+'T'+r.time+':00').getTime();
  const actual=r.seatedAt?new Date(r.seatedAt).getTime():NaN;
- const start=Number.isFinite(actual)&&r.status==='seated'?actual:scheduled;
+ const start=Number.isFinite(actual)&&r.status==='seated'?Math.max(actual,scheduled):scheduled;
  const duration=(Number(r.duration)||ReservationEngine.DEFAULT_DURATION)*60000;
  const now=Date.now(),remaining=Math.ceil((start+duration-now)/60000);
  const percent=Math.max(0,Math.min(100,(now-start)/duration*100));
@@ -66,7 +66,7 @@ list.forEach(r=>{
  if(['completed','released','no_show'].includes(kind)&&!confirm('Confirmer : '+label.toLowerCase()+' pour '+r.client+' ?'))return;
  try{
  const all=readReservations(),index=all.findIndex(x=>x.id===r.id);if(index<0)throw Error('Réservation introuvable.');
- const result=ReservationEngine.transition(all[index],kind);if(!result.valid)throw Error(result.error);
+ const result=ReservationEngine.transition(all[index],kind,undefined,all);if(!result.valid)throw Error(result.error);
  all[index]=result.reservation;localStorage.setItem('restomanager_reservations',JSON.stringify(all));
  window.dispatchEvent(new Event('restomanager:v3-change'));
  const table=plan.tables.find(x=>x.number===t.number);if(table)detail(table,state(table));
