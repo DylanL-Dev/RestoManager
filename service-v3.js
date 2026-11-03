@@ -112,6 +112,7 @@ $('bookingForm').addEventListener('submit',event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
  const existing=readReservations(),table=Number($('bookingTable').value),guests=Number($('bookingGuests').value);
+ if($('bookingDate').value<today())throw Error('Impossible de créer une réservation à une date passée.');
  const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,duration:ReservationEngine.DEFAULT_DURATION,tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
