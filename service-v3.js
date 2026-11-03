@@ -43,7 +43,7 @@ const choices={reserved:[['arrived','✓ Client arrivé'],['seated','Installer']
 list.forEach(r=>{
  const row=node('div','detailLine');
  row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+(labels[r.status]||r.status)));
- const controls=node('div','tableStatusActions');
+ if(r.tables.length>1){const total=r.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0);row.append(node('span','fusionDetailNote','Tables fusionnées : '+r.tables.join(' + ')));if(total>r.guests)row.append(node('span','fusionCoverHint','Préparation : retirer '+(total-r.guests)+' couvert(s)'))}const controls=node('div','tableStatusActions');
  (choices[r.status]||[]).forEach(([kind,label])=>{
  const button=node('button','tableStatusAction',label);button.type='button';
  button.addEventListener('click',()=>{
