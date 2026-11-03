@@ -333,3 +333,13 @@ html{scroll-padding-bottom:110px}
 .tableTimeProgressFoot{font-size:11px;color:#61776a}
 .tableTimeProgressHint{font-size:11px;color:#61776a;line-height:1.4}
 @media(max-width:480px){.restoConfirmSheet{padding:23px 18px;border-radius:21px}.restoConfirmSheet h2{font-size:23px}}
+
+/* Fiche réservation : consultation mobile et informations de service */
+.reservationOpenDetail{display:block;width:100%;text-align:left;background:#edf7f1;color:#176c52;border:1px solid #c8e1d4;border-radius:12px;padding:12px 15px;margin:12px 0;font-weight:700}
+.reservationExpanded{background:#f2f8f5;border:1px solid #d4e7dd;border-radius:14px;padding:16px;margin:12px 0;color:#244c40}
+.reservationExpanded h3{margin:0 0 10px;font-size:1rem}
+.reservationExpanded p{margin:8px 0}
+.reservationExpanded progress{width:100%;height:14px;accent-color:#178063}
+.reservationAllergy{background:#fff0dd;color:#794313;border:1px solid #f1d5a9;border-radius:12px;padding:12px;font-weight:700;white-space:pre-wrap}
+.reservationNotes{background:#f4f7f5;border-left:4px solid #438b73;border-radius:8px;padding:12px;white-space:pre-wrap}
+#editForm textarea{width:100%;font:inherit;resize:vertical;min-height:75px;border:1px solid #cadbd2;border-radius:12px;padding:12px;background:#fff;color:#183f34}
