@@ -60,7 +60,7 @@
             const actual = new Date(reservation.seatedAt);
             if (Number.isFinite(actual.getTime())) {
                 const day = [actual.getFullYear(),String(actual.getMonth()+1).padStart(2,'0'),String(actual.getDate()).padStart(2,'0')].join('-');
-                if (day === reservation.date) return Math.max(minutes(reservation.time), actual.getHours()*60+actual.getMinutes());
+                if (day === reservation.date) return actual.getHours()*60+actual.getMinutes();
             }
         }
         return minutes(reservation.time);
