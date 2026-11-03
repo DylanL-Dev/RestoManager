@@ -30,7 +30,7 @@ form.addEventListener('submit',e=>{e.preventDefault();try{
  if(bookings().some(r=>r.tables.includes(t.number)&&E.isBlocking(r)&&r.guests>r.tables.reduce((sum,n)=>sum+(n===t.number?max:(next.tables.find(x=>x.number===n)?.capacity||0)),0)))throw Error('La nouvelle capacité est inférieure aux couverts d’une réservation active, y compris fusionnée.');
  Object.assign(t,{number,capacityMin:min,capacity:max,roomId});
  }else{
- const base={id:'table-v3-'+Date.now(),number,capacityMin:min,capacity:max,roomId,shape:'rect',width:1.2,depth:.8,angle:0,x:1,y:1};
+ const base=FloorPlan.tableOptions({id:'table-v3-'+Date.now(),number,capacityMin:min,capacity:max,roomId,shape:'rectangle',width:1.2,depth:.8,angle:0,x:1,y:1});
  const spot=FloorPlan.freeSpot(next,base);if(!spot)throw Error('Impossible de placer la table dans la salle enregistrée.');next.tables.push({...base,...spot});
  }
  FloorPlan.save(next);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Table enregistrée.';refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));
