@@ -135,6 +135,23 @@ function refreshAvailability(){
   }else insight.append(node('p','muted','Aucune configuration compatible dans les créneaux proches testés. Essayez une autre date.'));
  }
 }
+function showBookingSuccess(reservation){
+ const old=document.getElementById('bookingSuccessDialog');if(old)old.remove();
+ const overlay=document.createElement('div');overlay.id='bookingSuccessDialog';overlay.className='bookingSuccessOverlay';
+ const dialog=document.createElement('section');dialog.className='bookingSuccessCard';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','bookingSuccessTitle');
+ const mark=document.createElement('div');mark.className='bookingSuccessIcon';mark.textContent='✓';
+ const heading=document.createElement('h2');heading.id='bookingSuccessTitle';heading.textContent='Réservation enregistrée !';
+ const summary=document.createElement('p');summary.textContent=reservation.client+' · '+reservation.guests+' couvert(s) · '+reservation.time+' · '+(reservation.tables.length>1?'Tables ':'Table ')+reservation.tables.join(' + ');
+ const note=document.createElement('p');note.className='bookingSuccessSub';note.textContent='La réservation a bien été ajoutée au service.';
+ const actions=document.createElement('div');actions.className='bookingSuccessActions';
+ const view=document.createElement('button');view.type='button';view.textContent='Voir la réservation';
+ const again=document.createElement('button');again.type='button';again.className='bookingSuccessSecondary';again.textContent='Ajouter une autre';
+ function close(){overlay.remove();document.removeEventListener('keydown',escape)}
+ function escape(e){if(e.key==='Escape')close()}
+ view.addEventListener('click',()=>{close();window.RestoScreens?.show('reservations');const dateField=$('reservationDate'),query=$('reservationQuery');if(dateField)dateField.value=reservation.date;if(query){query.value=reservation.client;query.dispatchEvent(new Event('input',{bubbles:true}))}document.getElementById('reservations')?.scrollIntoView({block:'start'})});
+ again.addEventListener('click',()=>{close();$('bookingClient').value='';$('bookingClient').focus();refreshAvailability()});
+ actions.append(view,again);dialog.append(mark,heading,summary,note,actions);overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',escape);view.focus();
+}
 function readReservations(){const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
 $('bookingDate').value=date;
 $('bookingTime').value='19:00';
@@ -159,10 +176,10 @@ $('bookingForm').addEventListener('submit',async event=>{
   if(JSON.stringify(ReservationEngine.seatingWarnings(candidate,current))!==JSON.stringify(warnings)){feedback.textContent='La situation des tables a changé. Recommencez la confirmation.';refreshAvailability();return}
   candidate.seatingOverride={confirmedAt:new Date().toISOString(),warnings:warnings.map(w=>({id:w.id,client:w.client,plannedEnd:w.plannedEnd,gapMinutes:w.gapMinutes}))};
   localStorage.setItem('restomanager_reservations',JSON.stringify(current.concat(candidate)));
-  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='Réservation enregistrée avec confirmation : table(s) '+candidate.tables.join(' + ')+' à '+candidate.time+'.';window.RestoFusionSelected=null;refreshAvailability();render();return;
+  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;refreshAvailability();render();showBookingSuccess(candidate);return;
  }
  localStorage.setItem('restomanager_reservations',JSON.stringify(latest.concat(candidate)));
- bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='Réservation enregistrée : table(s) '+candidate.tables.join(' + ')+' à '+candidate.time+'.';window.RestoFusionSelected=null;refreshAvailability();render();
+ bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;refreshAvailability();render();showBookingSuccess(candidate);
  }catch(error){feedback.textContent='Enregistrement impossible : '+error.message}
 });
 refreshAvailability();
