@@ -777,3 +777,18 @@ html[data-theme="dark"] :is(.restoAddChoiceClose,.restoAddChoiceOption,.walkinPa
 .managementGroupBody .rushHint{margin-top:18px;line-height:1.6}
 .managementGroupBody .managementGroupHead{padding-block:20px}
 @media(max-width:620px){.managementGroup{margin-bottom:18px}.managementGroupBody{padding:17px}.managementGroupBody .rushSettings{margin-top:24px;padding-top:22px}.managementGroupBody .rushSettings>p{margin-bottom:16px}}
+
+/* Dark mode: consistent date/time controls, including custom time text inputs. */
+html[data-theme="dark"] .shiftSettings input.rmTimeInput,
+html[data-theme="dark"] .managementGroupBody .shiftSettings input.rmTimeInput,
+html[data-theme="dark"] .shiftSettings input[type="time"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] #bookingDate{
+ background:#243c32!important;color:#edf7f0!important;border:1px solid #547461!important;
+ box-shadow:none!important;color-scheme:dark!important;
+}
+html[data-theme="dark"] :is(.shiftSettings input.rmTimeInput,.shiftSettings input[type="time"],input[type="date"],#bookingDate):focus-visible{
+ outline:2px solid #92dfba!important;outline-offset:2px!important;border-color:#92dfba!important;
+}
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+html[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1) sepia(.2) saturate(1.4);opacity:.85}
