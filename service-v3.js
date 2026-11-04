@@ -51,15 +51,16 @@ function shortcut(label,id,tableId){
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
  });actions.append(button);
 }
-if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Cette table est réservée. Pour accueillir le client, choisissez « Client arrivé » ou « Installer » ci-dessous.'))}
+if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Cette table est réservée. Retrouvez le client ci-dessous, puis choisissez « Installer à table ».'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
-const choices={reserved:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],late:[['arrived','✓ Client arrivé'],['seated','Installer'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['completed','Terminer le passage'],['released','Libérer la table']]};
+const choices={reserved:[['seated','Installer à table'],['arrived','Signaler l’arrivée'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['seated','Installer à table'],['arrived','Signaler l’arrivée'],['late','Signaler un retard'],['no_show','Absent']],late:[['seated','Installer à table'],['arrived','Signaler l’arrivée'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['released','Libérer la table'],['completed','Terminer le passage']]};
 list.forEach(r=>{
  const row=node('div','detailLine');
  row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+(labels[r.status]||r.status)));
  if(r.status==='seated')row.append(occupationProgress(r));
  if(r.tables.length>1){const total=r.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0);row.append(node('span','fusionDetailNote','Tables fusionnées : '+r.tables.join(' + ')));if(total>r.guests)row.append(node('span','fusionCoverHint','Préparation : retirer '+(total-r.guests)+' couvert(s)'))}const controls=node('div','tableStatusActions');
+ const secondary=node('details','tableSecondaryActions');const secondaryTitle=node('summary','','Autres actions');secondary.append(secondaryTitle);
  (choices[r.status]||[]).forEach(([kind,label])=>{
  const button=node('button','tableStatusAction',label);button.type='button';
  button.addEventListener('click',async()=>{
@@ -73,8 +74,9 @@ list.forEach(r=>{
  window.dispatchEvent(new Event('restomanager:v3-change'));
  const table=plan.tables.find(x=>x.number===t.number);if(table)detail(table,state(table));
  }catch(error){const warning=node('p','tableActionError',error.message);row.append(warning)}
- });controls.append(button);
+ });if(kind==='seated'||kind==='released')controls.append(button);else secondary.append(button);
  });
+ if(secondary.children.length>1)controls.append(secondary);
  row.append(controls);box.append(row);
  });
 }
