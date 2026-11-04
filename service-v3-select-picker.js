@@ -11,7 +11,10 @@
   function render(){items.querySelectorAll('button').forEach(b=>{const yes=b.dataset.value===choice;b.classList.toggle('selected',yes);b.setAttribute('aria-checked',String(yes));});}
   function open(select){
     source=select;focusBefore=document.activeElement;choice=select.value;
-    const label=select.labels?.[0]?.textContent?.trim()||select.getAttribute('aria-label')||'Choisir une option';
+    const associated=select.labels?.[0];
+    const explicit=select.getAttribute('aria-label')?.trim();
+    const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\\s+/g,' ').trim() : '';
+    const label=explicit||labelText||'Choisir une option';
     dialog.querySelector('header strong').textContent=label;
     items.replaceChildren();
     Array.from(select.options).filter(o=>!o.hidden).forEach(o=>{
