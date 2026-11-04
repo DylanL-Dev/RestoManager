@@ -9,7 +9,7 @@ const groups=[
  {id:'administration',nodes:['#restaurantShifts','#administration','#historyStats']}
 ];
 const screens=new Map();
-groups.forEach(group=>{const screen=document.createElement('section');screen.className='appScreen';screen.dataset.screen=group.id;screen.setAttribute('aria-label',({tables:'Service et tables',reservations:'Réservations',reservationForm:'Nouvelle réservation',passages:'Clients de passage',administration:'Gestion des tables',history:'Historique et statistiques'})[group.id]);group.nodes.forEach(selector=>{const el=main.querySelector(selector);if(el){if(el.tagName==='DETAILS')el.open=true;screen.append(el)}});main.append(screen);screens.set(group.id,screen)});
+groups.forEach(group=>{const screen=document.createElement('section');screen.className='appScreen';screen.dataset.screen=group.id;screen.setAttribute('aria-label',({tables:'Service et tables',reservations:'Réservations',reservationForm:'Nouvelle réservation',passages:'Service en cours',administration:'Gestion des tables',history:'Historique et statistiques'})[group.id]);group.nodes.forEach(selector=>{const el=main.querySelector(selector);if(el){if(el.tagName==='DETAILS')el.open=true;screen.append(el)}});main.append(screen);screens.set(group.id,screen)});
 // Gestion : navigation compacte, sections indépendantes et accessibles.
 const management=screens.get('administration');
 if(management){
