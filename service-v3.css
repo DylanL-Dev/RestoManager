@@ -1041,3 +1041,24 @@ html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded 
  .top .refreshAppBtn{width:42px;min-width:42px;padding:0}
  .top .refreshAppBtn span{display:none}
 }
+
+/* Header actions share a single right-hand grid cell: refresh next to bell. */
+body>header.top>.headerQuickActions{
+ display:flex;align-items:center;justify-content:flex-end;gap:9px;
+ margin-left:auto;min-width:0;
+}
+body>header.top>.headerQuickActions .serviceBell{margin-left:0!important}
+body>header.top>.headerQuickActions .refreshAppBtn{
+ width:46px;height:46px;min-width:46px;padding:0!important;
+ border-radius:15px;background:#245b49!important;color:#f4fff7!important;
+ border:1px solid #5b997b!important;
+}
+body>header.top>.headerQuickActions .refreshAppBtn span{display:none!important}
+body>header.top>.headerQuickActions .refreshAppBtn svg{width:21px;height:21px}
+@media(min-width:901px){
+ body>header.top>.headerQuickActions{grid-column:3;justify-self:end}
+}
+@media(max-width:650px){
+ body>header.top>.headerQuickActions{gap:7px}
+ body>header.top>.headerQuickActions :is(.refreshAppBtn,.serviceBell){width:42px;height:42px;min-width:42px}
+}
