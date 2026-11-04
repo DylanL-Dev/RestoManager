@@ -2,7 +2,7 @@
 (function(){
 const main=document.querySelector('.shell main');if(!main)return;
 const groups=[
- {id:'tables',nodes:['.serviceIntro','.quickActions','#kpis','.content']},
+ {id:'tables',nodes:['.serviceIntro','.quickActions','#kpis','#rushDashboard','.content']},
  {id:'reservations',nodes:['#reservations']},
  {id:'reservationForm',nodes:['#reservationForm']},
  {id:'passages',nodes:['.quickReleasePanel','#passages']},
