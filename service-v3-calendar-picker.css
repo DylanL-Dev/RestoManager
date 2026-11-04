@@ -1,0 +1,15 @@
+
+/* Calendrier personnalisé RestoManager, mobile et hors ligne */
+.rmCalendarField{display:block;position:relative;width:100%;min-width:0}
+.rmCalendarField .rmCalendarInput{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;pointer-events:none!important}
+.rmCalendarTrigger{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px;width:100%!important;min-width:0!important;min-height:48px!important;padding:11px 14px!important;border:1px solid #cbdcd2!important;border-radius:12px!important;background:#fff!important;color:#1b473a!important;text-align:left!important;font:inherit!important;font-weight:650!important;cursor:pointer!important}
+.rmCalendarTrigger:after{content:'▦';color:#087f5b;font-size:19px}.rmCalendarTrigger.isEmpty{color:#74857d}.rmCalendarTrigger:focus-visible{outline:2px solid #087f5b;outline-offset:2px}
+.rmCalendarOverlay[hidden]{display:none!important}.rmCalendarOverlay{position:fixed;inset:0;z-index:99999;display:grid;place-items:center;padding:16px}.rmCalendarBackdrop{position:absolute;inset:0;background:rgba(10,35,29,.56)}
+.rmCalendarDialog{position:relative;width:min(100%,420px);max-height:calc(100dvh - 32px);overflow-y:auto;background:white;border-radius:24px;padding:22px;box-shadow:0 24px 70px #102f2938;color:#1b473a}
+.rmCalendarDialog header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}.rmCalendarEyebrow{color:#087f5b;font-size:11px;font-weight:800;letter-spacing:.12em}.rmCalendarDialog h2{font-size:25px;margin:6px 0 0}.rmCalendarClose{border:0;border-radius:13px;background:#eaf5ee;color:#1b5946;font-size:30px;width:44px;height:44px}
+.rmCalendarNav{display:flex;align-items:center;justify-content:space-between;background:#eff8f2;border-radius:14px;padding:8px;margin-bottom:15px}.rmCalendarMonth{text-transform:capitalize;font-weight:800;font-size:17px}.rmCalendarPrev,.rmCalendarNext{border:0;background:white;border-radius:11px;width:42px;height:42px;font-size:28px;color:#087f5b}
+.rmCalendarWeek,.rmCalendarDays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;text-align:center}.rmCalendarWeek{margin-bottom:8px;color:#6e8379;font-size:12px;font-weight:700}.rmCalendarDays{margin-bottom:18px}
+.rmCalendarDay{border:1px solid transparent;border-radius:11px;background:#f7faf8;color:#23493c;aspect-ratio:1;min-width:0;font-size:14px;font-weight:650;padding:0;cursor:pointer}.rmCalendarDay.isToday{border-color:#087f5b}.rmCalendarDay.isSelected{background:#087f5b;color:white}.rmCalendarDay:disabled{opacity:.28;cursor:not-allowed}.rmCalendarDay:focus-visible{outline:2px solid #087f5b;outline-offset:2px}
+.rmCalendarActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rmCalendarActions button{min-height:46px;border-radius:12px;border:1px solid #d1e1d6;background:#f5faf6;color:#1b5946;font-weight:750}.rmCalendarActions .rmCalendarToday{background:#087f5b;color:white;border-color:#087f5b}
+body.rmCalendarOpen{overflow:hidden}
+@media(max-width:370px){.rmCalendarDialog{padding:15px}.rmCalendarDays,.rmCalendarWeek{gap:3px}}
