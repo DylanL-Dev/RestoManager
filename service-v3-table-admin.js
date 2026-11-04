@@ -6,8 +6,9 @@ let editId=null;
 function bookings(){return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
  const plan=FloorPlan.get();list.replaceChildren();const rooms=$('tableAdminRoom');rooms.replaceChildren();
- plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rooms.append(o)});
- plan.tables.slice().sort((a,b)=>a.number-b.number).forEach(t=>{
+ const selectedRoom=rooms.value;plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
+ plan.tables.slice().sort((a,b)=>a.roomId.localeCompare(b.roomId)||a.number-b.number).forEach(t=>{
+ if(!list.lastRoom||list.lastRoom!==t.roomId){const heading=document.createElement('h4');heading.textContent=plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle';list.append(heading);list.lastRoom=t.roomId}
  const row=document.createElement('div');row.className='tableAdminItem';
  const info=document.createElement('span');info.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places · '+(plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle');
  const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.onclick=()=>{editId=t.id;$('tableAdminNumber').value=t.number;$('tableAdminMin').value=t.capacityMin||1;$('tableAdminMax').value=t.capacity;$('tableAdminRoom').value=t.roomId;$('tableAdminSubmit').textContent='Enregistrer les modifications';form.scrollIntoView({behavior:'smooth',block:'center'})};
@@ -35,7 +36,7 @@ form.addEventListener('submit',e=>{e.preventDefault();try{
  }
  FloorPlan.save(next);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Table enregistrée.';refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));
  }catch(err){feedback.textContent='Enregistrement impossible : '+err.message}});
-refresh();
+window.addEventListener('restomanager:v3-tables',refresh);refresh();
 })();
 
 (function(){
