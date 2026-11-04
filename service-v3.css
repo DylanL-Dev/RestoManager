@@ -495,3 +495,25 @@ html{scroll-padding-bottom:110px}
 .managementChevron svg{width:20px;height:20px;stroke-width:2}
 .quickAction .navSvgIcon{width:22px;height:22px}
 .mobileNavIcon svg{width:24px;height:24px}
+
+/* Passage express : liste des clients installés */
+.quickReleasePanel{background:#fff;border:1px solid #dce9e1;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px #123b2c0a}
+.quickReleaseHeader h2{display:flex;align-items:center;gap:9px;margin:0;color:#143e32;font-size:20px}
+.quickReleaseHeader h2 svg{color:#087f5b;width:23px;height:23px}
+#quickReleaseCount{background:#e6f5ed;color:#087f5b;border-radius:20px;font-size:13px;padding:4px 9px}
+.quickReleaseHeader p{font-size:13px;color:#697b72;margin:8px 0 16px}
+.quickReleaseTools{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.quickReleaseTools label{font-size:13px;color:#3c5a4e;font-weight:600;min-width:0}
+.quickReleaseTools input,.quickReleaseTools select{display:block;width:100%;min-width:0;min-height:45px;border:1px solid #cdded3;border-radius:10px;margin-top:6px;padding:8px;background:#fff;color:#193e33}
+.quickReleaseList{display:grid;gap:9px}
+.quickReleaseRow{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #e0eae3;border-radius:13px;padding:12px;background:#f8fbf9}
+.quickReleaseInfo{min-width:0;display:grid;gap:5px}
+.quickReleaseInfo strong{font-size:16px;color:#173e33}
+.quickReleaseInfo span{font-size:13px;color:#657a70;overflow-wrap:anywhere}
+.quickReleaseButton{border:0;border-radius:10px;background:#087f5b;color:white;font-weight:750;min-width:96px;min-height:47px;padding:9px 12px;flex-shrink:0;cursor:pointer}
+.quickReleaseButton:active{transform:scale(.97)}
+.quickReleaseEmpty{color:#708277;text-align:center;padding:14px 6px}
+#quickReleaseUndo:not(:empty){background:#eaf7ee;border-radius:10px;padding:11px;margin-bottom:12px;color:#17533d;font-size:13px}
+.quickReleaseUndoButton{border:0;background:transparent;color:#075e44;text-decoration:underline;font-weight:800;cursor:pointer;padding:6px}
+#quickReleaseFeedback:not(:empty){color:#9d421d}
+@media(max-width:560px){.quickReleasePanel{padding:14px}.quickReleaseTools{grid-template-columns:1fr}.quickReleaseRow{padding:10px}.quickReleaseInfo strong{font-size:15px}.quickReleaseInfo span{font-size:12px}.quickReleaseButton{min-width:85px}}
