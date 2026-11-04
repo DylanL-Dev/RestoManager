@@ -30,6 +30,7 @@ y=45;text(title,16,y,20,true);y+=9;text(from===to?frenchDate(from):'Du '+frenchD
 text('Synthèse du service',16,y,14,true);y+=9;
 const metrics=[['Couverts accueillis',welcomedCovers],['Servis et terminés',covers],['Encore en salle',inRoomCovers],['Tables / groupes terminés',served.length],['Couverts hôtel (terminés)',hotel],['Couverts extérieurs (terminés)',covers-hotel],['Sans réservation (passages)',walkinPassages],['Sans réservation (couverts)',walkins],['Absences',noShow],['Annulations',cancelled]];
 for(let i=0;i<metrics.length;i++){const col=i%2,row=Math.floor(i/2),x=16+col*92,yy=y+row*24;pdf.setDrawColor(215,232,221);pdf.roundedRect(x,yy,86,20,2,2);text(metrics[i][0],x+4,yy+7,9);pdf.setTextColor(8,127,91);text(metrics[i][1],x+4,yy+16,15,true);pdf.setTextColor(28,58,47)}y+=127;
+if(y>190){pdf.addPage();y=22}
 // Répartition graphique des couverts
 y+=3;text('Répartition de la clientèle',16,y,13,true);y+=8;
 const hotelPct=covers?hotel/covers:0,externalPct=covers?100*(covers-hotel)/covers:0;
