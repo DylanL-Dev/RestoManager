@@ -921,3 +921,12 @@ html[data-theme="dark"] .v3-picker-items button.selected:focus-visible{backgroun
 .v3-picker-panel > header > button[data-close]::before{transform:translate(-50%,-50%) rotate(45deg)!important}
 .v3-picker-panel > header > button[data-close]::after{transform:translate(-50%,-50%) rotate(-45deg)!important}
 .v3-picker-panel > header > button[data-close] svg{display:none!important}
+
+
+/* V3 Android touch feedback: remove Chromium's blue tap flash globally.
+   Keep native focus-visible outlines for keyboard accessibility. */
+html,body,button,a,input,select,textarea,summary,label,
+[role="button"],[role="option"],[role="tab"],[tabindex],
+.v3-picker-panel,.v3-picker-panel *{
+ -webkit-tap-highlight-color:transparent;
+}
