@@ -833,3 +833,34 @@ html[data-theme="dark"] .historyPanel .historyControls #historyPdf:focus-visible
   outline:2px solid #a5e8c7!important;outline-offset:-2px;
  }
 }
+
+/* Service closure: legible archive and status in dark mode. */
+html[data-theme="dark"] .closurePanel,
+html[data-theme="dark"] .managementGroupBody .closurePanel{
+ color:#edf7f0!important;
+}
+html[data-theme="dark"] .closurePanel :is(h3,p,summary,#closureStatus,#closureArchive,#closureArchive p,#closureArchive span,#closureArchive small){
+ color:#d1e7da!important;opacity:1!important;
+}
+html[data-theme="dark"] .closurePanel h3{color:#f2fff7!important}
+html[data-theme="dark"] .closurePanel #closureStatus{
+ line-height:1.6!important;font-weight:500;
+}
+html[data-theme="dark"] .closurePanel details{color:#edf7f0!important}
+html[data-theme="dark"] .closurePanel summary{
+ cursor:pointer;padding:10px 4px;font-weight:650;line-height:1.5;
+}
+html[data-theme="dark"] .closurePanel #closureArchive{
+ padding-top:12px;max-height:260px;
+}
+html[data-theme="dark"] .closurePanel #closureArchive p{
+ padding:12px 4px!important;border-bottom:1px solid #547461!important;line-height:1.6!important;
+}
+html[data-theme="dark"] .closurePanel #closureManual{
+ background:#14795b!important;color:#fff!important;border:1px solid #27916e!important;
+}
+html[data-theme="dark"] .closurePanel #closureManual:hover{background:#198969!important}
+html[data-theme="dark"] .closurePanel #closureManual:focus-visible,
+html[data-theme="dark"] .closurePanel summary:focus-visible{
+ outline:2px solid #92dfba!important;outline-offset:2px!important;
+}
