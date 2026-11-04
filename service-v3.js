@@ -229,7 +229,8 @@ $('bookingForm').addEventListener('submit',async event=>{
   localStorage.setItem('restomanager_reservations',JSON.stringify(current.concat(candidate)));
   bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;refreshAvailability();render();showBookingSuccess(candidate);return;
  }
- localStorage.setItem('restomanager_reservations',JSON.stringify(latest.concat(candidate)));
+ const current=readReservations();if(!ReservationEngine.validate(candidate,current).valid){feedback.textContent='La disponibilité a changé. Réessayez.';refreshAvailability();return}
+ localStorage.setItem('restomanager_reservations',JSON.stringify(current.concat(candidate)));
  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;refreshAvailability();render();showBookingSuccess(candidate);
  }catch(error){feedback.textContent='Enregistrement impossible : '+error.message}
 });
