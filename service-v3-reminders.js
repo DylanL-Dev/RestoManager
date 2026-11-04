@@ -1,7 +1,7 @@
 'use strict';
 (function(){
  const KEY='restomanager_reservations',SNOOZE='restomanager_v3_reminder_snoozes';
- const bell=document.createElement('button');bell.type='button';bell.className='serviceBell';bell.setAttribute('aria-label','Rappels de service');bell.innerHTML='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span class="serviceBellCount" hidden>0</span>';
+ const bell=document.createElement('button');bell.type='button';bell.className='serviceBell';bell.setAttribute('aria-label','Rappels de service');bell.innerHTML='<i data-lucide="bell"></i><span class="serviceBellCount" hidden>0</span>';
  const panel=document.createElement('section');panel.className='serviceReminderPanel';panel.hidden=true;panel.setAttribute('role','region');panel.setAttribute('aria-label','Notifications de service');
  document.querySelector('.top')?.append(bell);document.body.append(panel);
  const read=()=>{try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}};
@@ -37,12 +37,12 @@
   const alerts=collect();const count=bell.querySelector('span');count.textContent=String(alerts.length);count.hidden=!alerts.length;
   bell.setAttribute('aria-label',alerts.length+' rappel(s) de service');
   panel.replaceChildren();
-  const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent='Rappels de service';head.append(h,button('✕',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
+  const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent='Rappels de service';head.append(h,button('Fermer',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
   if(!alerts.length){const p=document.createElement('p');p.textContent='Aucun rappel pour le moment.';panel.append(p);return}
   for(const a of alerts){
    const item=document.createElement('article');item.className='serviceReminderItem';
    if(a.kind==='late'){
-    const title=document.createElement('strong');title.textContent='⏰ Client en retard · '+a.r.client+' · Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ');
+    const title=document.createElement('strong');title.textContent='Client en retard · '+a.r.client+' · Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ');
     const desc=document.createElement('p');desc.textContent='Attendu à '+a.r.time+' · '+a.delay+' min de retard. Vérifiez si le client est arrivé avant de modifier son statut.';
     const actions=document.createElement('div');actions.className='serviceReminderActions';
     const changeStatus=(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){alert(result.error||'Action impossible.');return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
