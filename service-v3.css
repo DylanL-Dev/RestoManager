@@ -517,3 +517,12 @@ html{scroll-padding-bottom:110px}
 .quickReleaseUndoButton{border:0;background:transparent;color:#075e44;text-decoration:underline;font-weight:800;cursor:pointer;padding:6px}
 #quickReleaseFeedback:not(:empty){color:#9d421d}
 @media(max-width:560px){.quickReleasePanel{padding:14px}.quickReleaseTools{grid-template-columns:1fr}.quickReleaseRow{padding:10px}.quickReleaseInfo strong{font-size:15px}.quickReleaseInfo span{font-size:12px}.quickReleaseButton{min-width:85px}}
+
+/* Fiche table : action d'accueil prioritaire */
+.tableSecondaryActions{width:100%;border:1px solid #d5e2da;border-radius:12px;padding:0;background:#fff}
+.tableSecondaryActions summary{cursor:pointer;list-style:none;padding:13px 15px;color:#315f4e;font-weight:700}
+.tableSecondaryActions summary::-webkit-details-marker{display:none}
+.tableSecondaryActions summary:after{content:'⌄';float:right}
+.tableSecondaryActions[open] summary:after{content:'⌃'}
+.tableSecondaryActions .tableStatusAction{margin:6px;min-height:42px}
+.tableStatusActions>.tableStatusAction:first-child{background:#087f5b;color:white;border-color:#087f5b;font-weight:750}
