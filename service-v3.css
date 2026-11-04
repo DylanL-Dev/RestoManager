@@ -904,3 +904,20 @@ html[data-theme="dark"] .v3-picker-panel footer [data-confirm],body[data-theme="
 .v3-picker-items button.selected:focus,.v3-picker-items button.selected:focus-visible{background:#bcebd3!important;color:#173d31!important;outline:2px solid #087f60!important;outline-offset:-2px!important}
 html[data-theme="dark"] .v3-picker-items button:focus-visible{outline-color:#72d8aa!important;box-shadow:0 0 0 2px rgba(114,216,170,.24)!important}
 html[data-theme="dark"] .v3-picker-items button.selected:focus-visible{background:#087f60!important;color:#fff!important}
+
+
+/* Picker close control: draw a centered cross independent of Android font baselines */
+.v3-picker-panel > header > button[data-close]{
+ position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;
+ width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;
+ font-size:0!important;line-height:0!important;overflow:hidden!important;
+}
+.v3-picker-panel > header > button[data-close]::before,
+.v3-picker-panel > header > button[data-close]::after{
+ content:""!important;position:absolute!important;left:50%!important;top:50%!important;
+ width:20px!important;height:2px!important;border-radius:2px!important;
+ background:currentColor!important;transform-origin:center!important;pointer-events:none!important;
+}
+.v3-picker-panel > header > button[data-close]::before{transform:translate(-50%,-50%) rotate(45deg)!important}
+.v3-picker-panel > header > button[data-close]::after{transform:translate(-50%,-50%) rotate(-45deg)!important}
+.v3-picker-panel > header > button[data-close] svg{display:none!important}
