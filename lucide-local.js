@@ -3,6 +3,8 @@
 (function(){
 const shapes={
 'layout-grid':'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+'calendar-plus':'<path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M12 14v6M9 17h6"/>',
+'chevron-right':'<path d="m9 18 6-6-6-6"/>',
 'calendar-days':'<path d="M8 2v4M16 2v4"/><rect width="18" height="18" x="3" y="4" rx="2"/><path d="M3 10h18M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01M16 18h.01"/>',
 'plus':'<path d="M12 5v14M5 12h14"/>',
 'clock-3':'<circle cx="12" cy="12" r="10"/><path d="M12 6v6h4"/>',
