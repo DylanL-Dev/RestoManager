@@ -3,7 +3,7 @@
   const dialog=document.createElement('div');
   dialog.className='v3-picker-backdrop';
   dialog.hidden=true;
-  dialog.innerHTML='<section class="v3-picker-panel" role="dialog" aria-modal="true" aria-label="Choisir une option"><header><strong>Choisir une option</strong><button type="button" data-close aria-label="Fermer">×</button></header><div class="v3-picker-items"></div><footer><button type="button" data-cancel>Annuler</button><button type="button" data-confirm>Valider</button></footer></section>';
+  dialog.innerHTML='<section class="v3-picker-panel" role="dialog" aria-modal="true" aria-label="Choisir une option"><header><strong>Choisir une option</strong><button type="button" data-close aria-label="Fermer"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5L19 19M19 5L5 19" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg></button></header><div class="v3-picker-items"></div><footer><button type="button" data-cancel>Annuler</button><button type="button" data-confirm>Valider</button></footer></section>';
   document.body.appendChild(dialog);
   const items=dialog.querySelector('.v3-picker-items');
   let source=null,choice=null,focusBefore=null;
