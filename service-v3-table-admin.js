@@ -11,10 +11,10 @@ function refresh(){
  const row=document.createElement('div');row.className='tableAdminItem';
  const info=document.createElement('span');info.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places · '+(plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle');
  const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.onclick=()=>{editId=t.id;$('tableAdminNumber').value=t.number;$('tableAdminMin').value=t.capacityMin||1;$('tableAdminMax').value=t.capacity;$('tableAdminRoom').value=t.roomId;$('tableAdminSubmit').textContent='Enregistrer les modifications';form.scrollIntoView({behavior:'smooth',block:'center'})};
- const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.onclick=()=>{try{
+ const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.onclick=async()=>{try{
  const refs=bookings().filter(r=>r.tables.includes(t.number));
  if(refs.length)throw Error('Cette table figure dans '+refs.length+' réservation(s), y compris l’historique. Suppression bloquée pour préserver les données.');
- if(!confirm('Supprimer définitivement la table '+t.number+' ?'))return;
+ if(!await window.RestoDialog.confirm('Supprimer définitivement la table '+t.number+' ?',{title:'Supprimer la table',danger:true,acceptLabel:'Supprimer'}))return;
  const next=FloorPlan.get();next.tables=next.tables.filter(x=>x.id!==t.id);FloorPlan.save(next);refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Table supprimée.';
  }catch(e){feedback.textContent=e.message}};
  row.append(info,edit,remove);list.append(row);
