@@ -22,6 +22,26 @@
    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
   }
  });
+ window.RestoCheckOccupiedTables=function(reservation,records){
+  const occupied=(records||[]).filter(other=>other.id!==reservation.id&&other.date===reservation.date&&other.status==='seated'&&other.tables.some(table=>reservation.tables.includes(table)));
+  if(!occupied.length)return false;
+  const conflict=occupied[0],shared=conflict.tables.filter(table=>reservation.tables.includes(table));
+  const block=document.createElement('div');block.className='restoConfirmOverlay';block.setAttribute('role','presentation');
+  const backdrop=document.createElement('div');backdrop.className='restoConfirmBackdrop';
+  const sheet=document.createElement('section');sheet.className='restoConfirmSheet';sheet.setAttribute('role','alertdialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label','Table déjà occupée');
+  const eyebrow=document.createElement('p');eyebrow.className='restoConfirmEyebrow';eyebrow.textContent='INSTALLATION IMPOSSIBLE';
+  const title=document.createElement('h2');title.textContent='Table '+shared.join(' + ')+' déjà occupée';
+  const message=document.createElement('p');message.textContent='Le client '+conflict.client+' est actuellement installé à cette table.';
+  const advice=document.createElement('p');advice.className='restoConfirmNote';advice.textContent='Pour installer le client '+reservation.client+', libérez d’abord la table ou attribuez-lui une autre table disponible.';
+  const actions=document.createElement('div');actions.className='restoConfirmActions';
+  const close=document.createElement('button');close.type='button';close.textContent='Compris';close.className='restoConfirmBlockClose';
+  const previous=document.activeElement;
+  const dismiss=()=>{block.remove();previous?.focus()};
+  close.addEventListener('click',dismiss);backdrop.addEventListener('click',dismiss);
+  block.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();dismiss()}});
+  actions.append(close);sheet.append(eyebrow,title,message,advice,actions);block.append(backdrop,sheet);document.body.append(block);close.focus();
+  return true;
+ };
  window.RestoConfirmEarlySeating=function(reservation){
   const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(reservation.date||''),t=/^(\d{2}):(\d{2})$/.exec(reservation.time||'');
   if(!d||!t)return Promise.resolve(true);
