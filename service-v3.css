@@ -488,3 +488,10 @@ html{scroll-padding-bottom:110px}
 .managementGroupBody .closurePanel{display:grid;gap:12px}
 .managementGroupBody .closurePanel h3{font-size:17px}
 @media(max-width:620px){.managementGroupBody .shiftSettingsGrid{grid-template-columns:1fr}.managementGroupBody{padding:14px}.managementGroupHead{padding:13px 14px}.managementGroupBody .shiftSettings fieldset{padding:12px}.managementGroupBody .historyControls{grid-template-columns:1fr}.managementGroupBody #historyPdf{grid-column:auto}}
+
+/* Lucide icon sizing: one visual system throughout the service interface */
+.navSvgIcon{width:22px;height:22px;flex-shrink:0;stroke-width:1.9}
+.managementGroupIcon svg{width:23px;height:23px;stroke-width:1.9}
+.managementChevron svg{width:20px;height:20px;stroke-width:2}
+.quickAction .navSvgIcon{width:22px;height:22px}
+.mobileNavIcon svg{width:24px;height:24px}
