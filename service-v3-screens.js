@@ -20,21 +20,26 @@ if(management){
   if(!element)return;
   const wrapper=document.createElement('details');wrapper.className='managementGroup';wrapper.id=id;wrapper.open=!!opened;
   const summary=document.createElement('summary');summary.className='managementGroupHead';
-  const badge=document.createElement('span');badge.className='managementGroupIcon';badge.textContent=symbol;badge.setAttribute('aria-hidden','true');
+  const badge=document.createElement('span');badge.className='managementGroupIcon';const icons={
+'clock':'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+'tables':'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+'check':'<path d="m5 12 4 4L19 6"/>',
+'report':'<rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/>'
+};badge.innerHTML='<svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(icons[symbol]||icons.clock)+'</svg>';badge.setAttribute('aria-hidden','true');
   const words=document.createElement('span');words.className='managementGroupWords';
   const strong=document.createElement('strong');strong.textContent=title;
   const small=document.createElement('small');small.textContent=description;
   words.append(strong,small);
-  const chevron=document.createElement('span');chevron.className='managementChevron';chevron.textContent='⌄';chevron.setAttribute('aria-hidden','true');
+  const chevron=document.createElement('span');chevron.className='managementChevron';chevron.innerHTML='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';chevron.setAttribute('aria-hidden','true');
   summary.append(badge,words,chevron);
   const body=document.createElement('div');body.className='managementGroupBody';body.append(element);
   wrapper.append(summary,body);management.append(wrapper);
   return wrapper;
  }
- group('manageHours','◷','Restaurant & horaires','Services du midi et du soir',hours,true);
- if(tables){tables.open=false;group('manageTables','▦','Tables & salle','Ajouter et organiser les tables',tables,false)}
- group('manageClosure','✓','Clôture du service','Clôture et archives du service',closure,false);
- group('manageReports','▤','Rapports & statistiques','Historique, couverts et PDF',reports,false);
+ group('manageHours','clock','Restaurant & horaires','Services du midi et du soir',hours,true);
+ if(tables){tables.open=false;group('manageTables','tables','Tables & salle','Ajouter et organiser les tables',tables,false)}
+ group('manageClosure','check','Clôture du service','Clôture et archives du service',closure,false);
+ group('manageReports','report','Rapports & statistiques','Historique, couverts et PDF',reports,false);
 }
 const links=[...document.querySelectorAll('.mobileNavItem')],sidebar=[...document.querySelectorAll('.sidebar a[href^="#"]')];
 let current=null;
