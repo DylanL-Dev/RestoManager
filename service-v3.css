@@ -666,26 +666,32 @@ html{scroll-padding-bottom:110px}
 /* Header V3: true center using three equal grid tracks, regardless of brand width. */
 @media(min-width:901px){body>header.top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;position:relative}body>header.top>.brand{grid-column:1;justify-self:start;min-width:0}body>header.top>.heading{grid-column:2;position:static;left:auto;top:auto;transform:none;display:flex;align-items:center;justify-self:center;text-align:center;max-width:none;width:auto;white-space:nowrap}body>header.top>.notificationBell,body>header.top>.notificationButton,body>header.top>button:last-child{grid-column:3;justify-self:end}}
 
-/* Theme control in the rightmost header column */
-body>header.top>.themeModeControl{display:flex;align-items:center;gap:7px;grid-column:3;justify-self:end;margin-right:62px;color:#e7f5ee;font-size:19px}
-.themeModeControl select{appearance:none;border:1px solid #6caa92;border-radius:12px;background:#1d5a48;color:white;padding:9px 12px;min-height:40px;font-size:13px;font-weight:700;cursor:pointer}
-.themeModeControl select:focus-visible{outline:3px solid #9bdcba;outline-offset:2px}
-@media(max-width:900px){body>header.top>.themeModeControl{margin-left:auto;margin-right:54px}.themeModeControl select{max-width:112px}}
-@media(max-width:620px){body>header.top>.themeModeControl{margin-right:44px}.themeModeControl select{max-width:94px;font-size:11px;padding:7px}.themeModeControl>span{display:none}}
-/* Dark theme, scoped to V3. Explicit overrides cover the existing hardcoded surfaces. */
-html[data-theme="dark"]{background:#0e1b19;color:#e3f2ea}
-html[data-theme="dark"] body{background:#0e1b19;color:#e3f2ea}
-html[data-theme="dark"] .top{background:#102e28}
-html[data-theme="dark"] .sidebar{background:#102d27}
-html[data-theme="dark"] main,html[data-theme="dark"] .shell{background:#0e1b19;color:#e3f2ea}
-html[data-theme="dark"] .panel,html[data-theme="dark"] .tableCard,html[data-theme="dark"] .kpi,html[data-theme="dark"] .modal,html[data-theme="dark"] dialog,html[data-theme="dark"] fieldset,html[data-theme="dark"] .card,html[data-theme="dark"] .adminCard{background:#182c27;color:#e3f2ea;border-color:#36554a}
-html[data-theme="dark"] .tableCard{background:#1a342c;border-color:#3b6956}
-html[data-theme="dark"] .tableCard .num,html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3,html[data-theme="dark"] h4,html[data-theme="dark"] label,html[data-theme="dark"] strong{color:#e8f7ef}
-html[data-theme="dark"] .muted,html[data-theme="dark"] small,html[data-theme="dark"] .panel p{color:#adc6b9}
-html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] option{background-color:#203a31;color:#f0fff6;border-color:#456c59}
-html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#a6c2b4}
-html[data-theme="dark"] button:not(.primary):not(.selected),html[data-theme="dark"] .tableSortLabel select{background-color:#264538;color:#e5f6ed;border-color:#47705d}
-html[data-theme="dark"] button.selected,html[data-theme="dark"] .sidebar a.selected{background:#a5dfbd;color:#102c23}
-html[data-theme="dark"] .tableSortLabel,html[data-theme="dark"] .tableSortLabel span{color:#d7eae0}
+
+/* V3 appearance settings: no header controls, no extra header height. */
+.themeSettingsGroup{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px}
+.themeSettingsHead strong{font-size:16px}.themeSettingsHead p{font-size:13px;color:#667b70;margin:5px 0 0}
+.themeModeControl{display:flex;align-items:center;gap:12px;color:#36594b;font-size:13px;font-weight:700}
+.themeModeControl select{min-height:42px;min-width:158px;padding:9px 12px;border:1px solid #c8ded1;border-radius:11px;background:#fff;color:#184b39;font:inherit;cursor:pointer}
+.themeModeControl select:focus-visible{outline:3px solid #8bd2b1;outline-offset:2px}
+@media(max-width:620px){.themeSettingsGroup{flex-direction:column;align-items:stretch}.themeModeControl{justify-content:space-between}}
+/* Dark theme uses a coherent surface and text hierarchy. */
+html[data-theme="dark"]{--dark-bg:#101e1b;--dark-card:#1a2d27;--dark-subtle:#243c32;--dark-line:#3a5b4b;--dark-text:#edf7f0;--dark-muted:#b4cbbd;background:var(--dark-bg);color:var(--dark-text);color-scheme:dark}
+html[data-theme="dark"] body,html[data-theme="dark"] main,html[data-theme="dark"] .shell{background:var(--dark-bg);color:var(--dark-text)}
+html[data-theme="dark"] .top{background:#11372e}
+html[data-theme="dark"] .sidebar{background:#143e32}
+html[data-theme="dark"] :is(.panel,.rushDashboard,.managementGroup,.kpi,.tableCard,.actionPanel,.reservationItem,.reservationPanel,.walkinPanel,.quickReleasePanel,.tableChoicePanel,.tablePickerSheet,.roomPickerSheet,.tableDetailSheet,.restoConfirmSheet,.bookingSuccessCard,.adminCard,.card,.modal,dialog,fieldset){background:var(--dark-card);color:var(--dark-text);border-color:var(--dark-line)}
+html[data-theme="dark"] :is(.rushFigures>div,.rushSettings,.rushSummary,.availabilitySummary,.liveTag,.tableChoiceCard,.tablePickerCard,.roomPickerOption,.fusionRow,.fusionSuggestion,.reservationActions,.tableDetailAction,.tableStatusAction,.tableAdminItem,.managementGroupIcon){background:var(--dark-subtle);color:var(--dark-text);border-color:var(--dark-line)}
+html[data-theme="dark"] :is(h1,h2,h3,h4,h5,h6,.rushDashHead h2,.rushFigures strong,.managementGroupWords strong,.tableCard .num,.serviceIntro h1,.panelHead,.subhead,.managementIntro h1,.themeSettingsHead strong){color:var(--dark-text)}
+html[data-theme="dark"] :is(.muted,.rushDashHead p,.rushFigures span,.serviceIntro p,.managementGroupWords small,.themeSettingsHead p,.info,.capacity,.detailLine,.managementIntro p,.panel p,.tableCard small){color:var(--dark-muted)}
+html[data-theme="dark"] :is(input,select,textarea,option,.rushDashboard select,.rushSettings select,.themeModeControl select){background-color:#223c32;color:var(--dark-text);border-color:#547461}
+html[data-theme="dark"] :is(input,textarea)::placeholder{color:#b4c9bc}
+html[data-theme="dark"] :is(.quickAction:not(.primary),.availabilityTimeOption,button:not(.primary):not(.selected),.tableSortLabel select){background-color:#274438;color:var(--dark-text);border-color:#52715e}
+html[data-theme="dark"] :is(.quickAction.primary,.primary){background-color:#14795b;color:#fff;border-color:#14795b}
+html[data-theme="dark"] :is(.sidebar a.selected,.filters button.active,button.selected){background:#b2e6c5;color:#14372b}
+html[data-theme="dark"] :is(.availabilityWarning,.caution){background:#483921;color:#ffdc9a;border-color:#86663b}
+html[data-theme="dark"] :is(.tableCard.free,.tableCard.expected,.tableCard.arrived,.tableCard.present){background:#1d392f;color:var(--dark-text);border-color:#48765d}
+html[data-theme="dark"] :is(.status,.liveTag){color:#d6f5df;background:#285540}
+html[data-theme="dark"] :is(.rushProgress,.rushProgressTrack,.tableTimeProgressTrack){background:#3c5749}
+html[data-theme="dark"] :is(.tableSortLabel,.tableSortLabel span,.themeModeControl){color:var(--dark-text)}
 html[data-theme="dark"] .tableSortLabel select{background-image:none;padding-right:14px}
-html[data-theme="dark"] a:not(.brand):not(.selected){color:#b9e8cd}
+html[data-theme="dark"] :is(a:not(.brand):not(.quickAction):not(.selected)){color:#b7e9c9}
