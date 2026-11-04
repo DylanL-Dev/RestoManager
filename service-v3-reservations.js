@@ -60,8 +60,8 @@ async function action(id,kind){
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
  editChoices();$('editForm').hidden=false;$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
  }
- if(kind==='delete'){if(!confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.'))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
- if(kind==='cancel'&&!confirm('Annuler la réservation de '+r.client+' ?'))return;
+ if(kind==='delete'){if(!await window.RestoDialog.confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.',{title:'Supprimer la réservation',danger:true,acceptLabel:'Supprimer'}))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
+ if(kind==='cancel'&&!await window.RestoDialog.confirm('Annuler la réservation de '+r.client+' ?',{title:'Annuler la réservation',danger:true,acceptLabel:'Annuler la réservation'}))return;
  if(kind==='seated'&&window.RestoCheckOccupiedTables?.(r,all))return;
  if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(r)))return;
  const next=E.transition(r,kind==='cancel'?'cancelled':kind,undefined,all);
