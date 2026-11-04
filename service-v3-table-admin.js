@@ -6,7 +6,7 @@ form.noValidate=true;
 let editId=null;
 function bookings(){return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
- const plan=FloorPlan.get();list.replaceChildren();list.lastRoom=null;const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
+ const plan=TableStore.get();list.replaceChildren();list.lastRoom=null;const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
  plan.tables.slice().sort((a,b)=>a.roomId.localeCompare(b.roomId)||a.number-b.number).forEach(t=>{
  if(!list.lastRoom||list.lastRoom!==t.roomId){const heading=document.createElement('h4');heading.textContent=plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle';list.append(heading);list.lastRoom=t.roomId}
  const row=document.createElement('div');row.className='tableAdminItem';
@@ -16,7 +16,7 @@ function refresh(){
  const refs=bookings().filter(r=>r.tables.includes(t.number));
  if(refs.length)throw Error('Cette table figure dans '+refs.length+' réservation(s), y compris l’historique. Suppression bloquée pour préserver les données.');
  if(!await window.RestoDialog.confirm('Supprimer définitivement la table '+t.number+' ?',{title:'Supprimer la table',danger:true,acceptLabel:'Supprimer'}))return;
- const next=FloorPlan.get();next.tables=next.tables.filter(x=>x.id!==t.id);FloorPlan.save(next);refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Table supprimée.';
+ const next=TableStore.get();next.tables=next.tables.filter(x=>x.id!==t.id);TableStore.save(next);refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Table supprimée.';
  }catch(e){feedback.textContent=e.message}};
  row.append(info,edit,remove);list.append(row);
  });
@@ -24,7 +24,7 @@ function refresh(){
 $('tableAdminNew').textContent='Réinitialiser le formulaire';
 $('tableAdminNew').addEventListener('click',()=>{editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';$('tableAdminMin').value=1;$('tableAdminMax').value=2;feedback.textContent='Formulaire prêt pour une nouvelle table.';$('tableAdminNumber').focus()});
 form.addEventListener('submit',e=>{e.preventDefault();try{
- const next=FloorPlan.get(),number=Number($('tableAdminNumber').value),min=Number($('tableAdminMin').value),max=Number($('tableAdminMax').value),roomId=$('tableAdminRoom').value;
+ const next=TableStore.get(),number=Number($('tableAdminNumber').value),min=Number($('tableAdminMin').value),max=Number($('tableAdminMax').value),roomId=$('tableAdminRoom').value;
  if(!Number.isInteger(number)||number<1)throw Error('Indiquez un numéro de table entier supérieur à zéro.');
  if(!Number.isInteger(min)||min<1||!Number.isInteger(max)||max<min)throw Error('Vérifiez les capacités : le maximum doit être supérieur ou égal au minimum.');
  if(!next.rooms.some(r=>r.id===roomId))throw Error('Sélectionnez une salle valide.');
@@ -34,10 +34,9 @@ form.addEventListener('submit',e=>{e.preventDefault();try{
  if(bookings().some(r=>r.tables.includes(t.number)&&E.isBlocking(r)&&r.guests>r.tables.reduce((sum,n)=>sum+(n===t.number?max:(next.tables.find(x=>x.number===n)?.capacity||0)),0)))throw Error('La nouvelle capacité est inférieure aux couverts d’une réservation active, y compris fusionnée.');
  Object.assign(t,{number,capacityMin:min,capacity:max,roomId});
  }else{
- const base=FloorPlan.tableOptions({id:'table-v3-'+Date.now(),number,capacityMin:min,capacity:max,roomId,shape:'rectangle',width:1.2,depth:.8,angle:0,x:1,y:1});
- const spot=FloorPlan.freeSpot(next,base);if(!spot)throw Error('Impossible de placer la table dans la salle enregistrée.');next.tables.push({...base,...spot});
+ next.tables.push({id:'table-v3-'+Date.now(),number,capacityMin:min,capacity:max,roomId});
  }
- FloorPlan.save(next);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Table enregistrée.';refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));
+ TableStore.save(next);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Table enregistrée.';refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));
  }catch(err){feedback.textContent='Enregistrement impossible : '+err.message}});
 window.addEventListener('restomanager:v3-tables',refresh);refresh();
 })();
@@ -49,7 +48,7 @@ const style=document.createElement('style');style.textContent='.roomManager{padd
 box.innerHTML='<h3>Gestion des salles</h3><p class="muted">Ajoutez des salles et affectez-leur des tables.</p><div id="roomManagerList"></div><form id="roomManagerForm"><label>Nom de la nouvelle salle <input id="roomManagerName" maxlength="60" required placeholder="Ex. Salon privé"></label><button type="submit">Ajouter une salle</button></form><p id="roomManagerFeedback" role="status"></p>';
 form.parentElement.insertBefore(box,form);
 const list=box.querySelector('#roomManagerList'),feedback=box.querySelector('#roomManagerFeedback');
-function refresh(){const plan=FloorPlan.get();list.replaceChildren();for(const room of plan.rooms){const row=document.createElement('div');row.className='roomManagerItem';const tables=plan.tables.filter(t=>t.roomId===room.id);const label=document.createElement('span');label.textContent=room.name+' · '+tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';row.append(label);if(room.id!=='main'){const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.addEventListener('click',async()=>{try{const next=FloorPlan.get();if(next.tables.some(t=>t.roomId===room.id)||next.elements.some(e=>e.roomId===room.id))throw Error('Cette salle contient encore des tables ou du mobilier.');if(!await window.RestoDialog.confirm('Supprimer la salle '+room.name+' ?',{title:'Supprimer la salle',danger:true,acceptLabel:'Supprimer'}))return;next.rooms=next.rooms.filter(r=>r.id!==room.id);FloorPlan.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle supprimée.'}catch(e){feedback.textContent=e.message}});row.append(remove)}list.append(row)}}
-box.querySelector('#roomManagerForm').addEventListener('submit',e=>{e.preventDefault();try{const name=box.querySelector('#roomManagerName').value.trim(),next=FloorPlan.get();if(!name||next.rooms.some(r=>r.name.toLowerCase()===name.toLowerCase()))throw Error('Nom vide ou déjà utilisé.');next.rooms.push({id:'room-'+Date.now(),name,width:12,depth:12,floor:'plain'});FloorPlan.save(next);box.querySelector('#roomManagerName').value='';window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle ajoutée : '+name}catch(err){feedback.textContent=err.message}});
+function refresh(){const plan=TableStore.get();list.replaceChildren();for(const room of plan.rooms){const row=document.createElement('div');row.className='roomManagerItem';const tables=plan.tables.filter(t=>t.roomId===room.id);const label=document.createElement('span');label.textContent=room.name+' · '+tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';row.append(label);if(room.id!=='main'){const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.addEventListener('click',async()=>{try{const next=TableStore.get();if(next.tables.some(t=>t.roomId===room.id))throw Error('Cette salle contient encore des tables ou du mobilier.');if(!await window.RestoDialog.confirm('Supprimer la salle '+room.name+' ?',{title:'Supprimer la salle',danger:true,acceptLabel:'Supprimer'}))return;next.rooms=next.rooms.filter(r=>r.id!==room.id);TableStore.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle supprimée.'}catch(e){feedback.textContent=e.message}});row.append(remove)}list.append(row)}}
+box.querySelector('#roomManagerForm').addEventListener('submit',e=>{e.preventDefault();try{const name=box.querySelector('#roomManagerName').value.trim(),next=TableStore.get();if(!name||next.rooms.some(r=>r.name.toLowerCase()===name.toLowerCase()))throw Error('Nom vide ou déjà utilisé.');next.rooms.push({id:'room-'+Date.now(),name});TableStore.save(next);box.querySelector('#roomManagerName').value='';window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle ajoutée : '+name}catch(err){feedback.textContent=err.message}});
 window.addEventListener('restomanager:v3-tables',refresh);refresh();
 })();
