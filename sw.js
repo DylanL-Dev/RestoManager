@@ -1,5 +1,5 @@
 /* RestoManager PWA — shell only. Reservation data remains in localStorage. */
-const CACHE='restomanager-shell-20261104-dialog1';
+const CACHE='restomanager-shell-20261104-dialog-icons1';
 const ROOT='/RestoManager/';
 const SHELL=['index.html','service-v3.html','service-v3.css','reservation-engine.js','floor-plan.js','service-v3.js','service-v3-reservations.js','service-v3-walkin.js','service-v3-table-choices.js','service-v3-table-admin.js','service-v3-room-choices.js','service-v3-screens.js','service-v3-fusions.js','service-v3-reminders.js','service-v3-history.js','service-v3-dialogs.js','service-v3-confirm.js','service-v3-walkin-fast.js','service-v3-quick-release.js','service-v3-add-choice.js','service-v3-time-picker.js','service-v3-calendar-picker.js','service-v3-calendar-picker.css','service-v3-shifts.js','service-v3-closure.js','service-v3-report-download.js','service-v3-lucide.js','lucide-local.js','asset/img/restomanager-chef-white.svg','asset/img/logo.png','pwa-icon.svg','manifest.json'].map(p=>ROOT+p);
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(async cache=>{await Promise.all(SHELL.map(async url=>{const response=await fetch(url,{cache:'reload'});if(!response.ok)throw Error('PWA resource unavailable: '+url);await cache.put(url,response)}))}).then(()=>self.skipWaiting()))});
