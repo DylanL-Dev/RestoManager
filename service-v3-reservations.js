@@ -122,6 +122,8 @@ $('editForm').addEventListener('submit',async e=>{
  if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0]).capacityMin||1))throw Error('Capacité minimale non respectée.');
  const updated={...previous,notes:$('editNotes').value.trim().slice(0,1000),allergies:$('editAllergies').value.trim().slice(0,500),client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
  const check=E.validate(updated,all,editing);if(!check.valid)throw Error(check.errors.join(' '));
+ const rushCheck=window.RestoRush.evaluate(updated,all,editing);
+ if(rushCheck.blocked&&!await window.RestoRush.confirm(updated,all,editing))return;
  const warnings=E.seatingWarnings(updated,all,editing);
  if(warnings.length){
   const accepted=await window.RestoConfirmSeating(warnings,updated.client,updated.time);
