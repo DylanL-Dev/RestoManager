@@ -221,10 +221,32 @@ function getCurrentTime() {
     return hours + ':' + minutes;
 }
 
-function setDefaultDateTime() {
-    document.getElementById('reservationDate').value = getToday();
+function getNextReservationSlot(now = new Date()) {
+    // Creating a reservation is always available, even outside service hours.
+    // Only the requested arrival time must fall within an enabled service.
+    const shifts = Object.values(ReservationEngine.getShifts())
+        .filter(shift => shift.enabled && shift.start && shift.end)
+        .sort((a, b) => a.start.localeCompare(b.start));
+    const currentTime = String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0');
+    const today = formatDateValue(now);
+    const todaySlot = shifts.find(shift => currentTime <= shift.end);
+    if (todaySlot) {
+        return { date: today, time: currentTime < todaySlot.start ? todaySlot.start : currentTime };
+    }
+    if (shifts.length) {
+        const tomorrow = new Date(now);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return { date: formatDateValue(tomorrow), time: shifts[0].start };
+    }
+    // No service enabled: keep fields editable; validation explains the closure.
+    return { date: today, time: currentTime };
+}
 
-    document.getElementById('reservationTime').value = getCurrentTime();
+function setDefaultDateTime() {
+    const slot = getNextReservationSlot();
+    document.getElementById('reservationDate').value = slot.date;
+    document.getElementById('reservationTime').value = slot.time;
 }
 
 function afficherDateHeure() {
