@@ -1007,3 +1007,19 @@ html[data-theme="dark"] .reservationPanel .reservationItem :is(button,summary):f
 @media(max-width:600px){
  html[data-theme="dark"] .reservationPanel .reservationItem{padding:12px;margin:10px 0}
 }
+
+/* Expanded reservation details: dark mode must not inherit the light card surface. */
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded{
+ background:#233d32!important;color:#edf7f0!important;
+ border:1px solid #567b64!important;border-radius:14px;
+ box-shadow:none!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded :is(h3,p,span,strong,small,label,div){
+ color:#edf7f0!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded p{
+ background:transparent!important;opacity:1!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded progress{
+ accent-color:#72d8aa;
+}
