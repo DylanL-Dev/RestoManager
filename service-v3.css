@@ -891,3 +891,8 @@ html[data-theme="dark"] .v3-picker-panel footer [data-confirm],body[data-theme="
 .v3-picker-panel > header{position:relative!important;display:grid!important;grid-template-columns:minmax(0,1fr) 44px!important;align-items:start!important;gap:12px!important;width:100%!important;min-height:44px!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
 .v3-picker-panel > header > strong{display:block!important;min-width:0!important;overflow-wrap:break-word!important;line-height:1.35!important;padding:6px 0!important;margin:0!important;font-size:1.05rem!important}
 .v3-picker-panel > header > button[data-close]{position:static!important;display:grid!important;place-items:center!important;justify-self:end!important;align-self:start!important;flex:none!important;min-width:44px!important;width:44px!important;max-width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;margin:0!important;line-height:1!important;font-size:26px!important;transform:none!important;float:none!important}
+
+
+/* Keep the close glyph perfectly centered regardless of global button rules */
+.v3-picker-panel > header > button[data-close]{display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;vertical-align:middle!important;line-height:1!important;letter-spacing:0!important;text-indent:0!important}
+.v3-picker-panel > header > button[data-close] svg{display:block!important;margin:auto!important;flex:none!important;width:22px!important;height:22px!important}
