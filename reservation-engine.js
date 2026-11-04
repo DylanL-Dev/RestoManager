@@ -145,6 +145,19 @@
         return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
     }
 
+    const SHIFT_KEY = 'restomanager_shifts_v1';
+    const SHIFT_DEFAULTS = {lunch:{enabled:true,start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'21:30'}};
+    function getShifts(){
+        let stored={};
+        try{if(typeof localStorage!=='undefined')stored=JSON.parse(localStorage.getItem(SHIFT_KEY)||'{}')||{}}catch(e){}
+        const result={};
+        for(const key of ['lunch','dinner']){
+            const raw=stored[key]||{},fallback=SHIFT_DEFAULTS[key];
+            result[key]={enabled:typeof raw.enabled==='boolean'?raw.enabled:fallback.enabled,start:Number.isFinite(minutes(raw.start))?raw.start:fallback.start,end:Number.isFinite(minutes(raw.end))?raw.end:fallback.end};
+        }
+        return result;
+    }
+
     function validate(candidate, reservations, ignoredId) {
         const errors = [];
         if (!candidate || typeof candidate !== 'object') return {valid:false,errors:['Réservation invalide.'],conflict:null,roomConflict:null};
@@ -172,9 +185,9 @@
         }
         if (Number.isFinite(minutes(candidate.time))) {
             const arrival = minutes(candidate.time);
-            if (arrival < LUNCH_START || (arrival > LUNCH_LAST_ORDER && arrival < DINNER_START) || arrival > CLOSING_MINUTES) {
-                errors.push('Accueil des réservations : midi de 12h à 14h30, soir de 19h à 21h30. Les clients déjà installés peuvent rester après la dernière commande.');
-            }
+            const shifts = getShifts();
+            const allowed = Object.values(shifts).some(shift => shift.enabled && arrival >= minutes(shift.start) && arrival <= minutes(shift.end));
+            if (!allowed) errors.push('Horaire hors des services ouverts. Vérifiez les horaires dans Gestion du restaurant.');
         }
         if (errors.length) return { valid: false, errors: errors, conflict: null, roomConflict: null };
         const conflict = normalizeReservations(reservations).find(function (other) {
@@ -259,6 +272,7 @@
         normalizeReservation: normalizeReservation,
         normalizeReservations: normalizeReservations,
         validate: validate,
+        getShifts: getShifts,
         seatingWarnings: seatingWarnings,
         transition: transition,
         extend: extend,
