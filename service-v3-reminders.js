@@ -45,7 +45,7 @@
     const title=document.createElement('strong');title.textContent='Client en retard · '+a.r.client+' · Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ');
     const desc=document.createElement('p');desc.textContent='Attendu à '+a.r.time+' · '+a.delay+' min de retard. Vérifiez si le client est arrivé avant de modifier son statut.';
     const actions=document.createElement('div');actions.className='serviceReminderActions';
-    const changeStatus=(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){alert(result.error||'Action impossible.');return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
+    const changeStatus=(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){window.RestoDialog.alert(result.error||'Action impossible.',{title:'Action impossible'});return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
     actions.append(button('✓ Client arrivé',()=>changeStatus('arrived'),'serviceReminderPrimary'));
     if(a.r.status!=='late')actions.append(button('Signaler le retard',()=>changeStatus('late')));
     actions.append(button('Rappeler dans 10 min',()=>{const data=snoozes();data['late:'+a.r.id]=Date.now()+600000;localStorage.setItem(SNOOZE,JSON.stringify(data));update()}));
@@ -58,7 +58,7 @@
     if(!await window.RestoConfirmRelease(a.r))return;
     const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||all[idx].status!=='seated'){update();return}
     const result=ReservationEngine.transition(all[idx],'released',undefined,all);
-    if(!result.valid){alert(result.error||'Impossible de libérer cette table.');return}
+    if(!result.valid){window.RestoDialog.alert(result.error||'Impossible de libérer cette table.',{title:'Libération impossible'});return}
     all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update();
    },'serviceReminderPrimary'));
    actions.append(button('Toujours occupée · 10 min',()=>{const s=snoozes();s[a.r.id]=Date.now()+600000;localStorage.setItem(SNOOZE,JSON.stringify(s));update()}));
