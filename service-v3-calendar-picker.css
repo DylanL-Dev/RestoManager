@@ -16,3 +16,20 @@ body.rmCalendarOpen{overflow:hidden}
 
 /* Icônes Lucide cohérentes : aucun caractère décoratif de remplacement */
 .rmCalendarTrigger:after{content:none!important}.rmCalendarTrigger svg{width:21px;height:21px;flex:none;color:#087f5b}.rmCalendarNav svg,.rmCalendarClose svg{width:22px;height:22px;display:block;margin:auto}.rmCalendarNav button,.rmCalendarClose{display:grid;place-items:center}
+
+/* Thème sombre du calendrier : priorité sur les styles génériques des modales et boutons. */
+body .rmCalendarDialog{background:#132b25!important;color:#f2faf5!important;border:1px solid #3c6253!important}
+body .rmCalendarDialog h2{color:#f2faf5!important}
+body .rmCalendarEyebrow{color:#80d9ad!important}
+body .rmCalendarNav{background:#1e3b31!important;color:#f2faf5!important}
+body .rmCalendarMonth{color:#f2faf5!important}
+body .rmCalendarPrev,body .rmCalendarNext,body .rmCalendarClose{background:#294b3d!important;color:#f2faf5!important;border:1px solid #466b59!important}
+body .rmCalendarNav svg,body .rmCalendarClose svg{color:inherit!important;stroke:currentColor!important}
+body .rmCalendarWeek{color:#c2d5c9!important}
+body .rmCalendarDay{background:#254438!important;color:#f2faf5!important;border:1px solid #3d6352!important}
+body .rmCalendarDay.isToday{border:2px solid #84dfad!important}
+body .rmCalendarDay.isSelected{background:#079568!important;color:#fff!important;border-color:#9bf2c0!important}
+body .rmCalendarDay:disabled{opacity:.32!important}
+body .rmCalendarActions button{background:#294b3d!important;color:#f2faf5!important;border:1px solid #527564!important}
+body .rmCalendarActions .rmCalendarToday{background:#078b62!important;color:#fff!important;border-color:#078b62!important}
+body .rmCalendarDialog button:focus-visible{outline:3px solid #a0edc0!important;outline-offset:2px}
