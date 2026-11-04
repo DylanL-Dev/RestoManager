@@ -37,3 +37,14 @@ form.addEventListener('submit',e=>{e.preventDefault();try{
  }catch(err){feedback.textContent='Enregistrement impossible : '+err.message}});
 refresh();
 })();
+
+(function(){
+const form=document.getElementById('tableAdminForm');if(!form)return;
+const box=document.createElement('section');box.className='roomManager';
+box.innerHTML='<h3>Gestion des salles</h3><p class="muted">Ajoutez des salles et affectez-leur des tables.</p><div id="roomManagerList"></div><form id="roomManagerForm"><label>Nom de la nouvelle salle <input id="roomManagerName" maxlength="60" required placeholder="Ex. Salon privé"></label><button type="submit">Ajouter une salle</button></form><p id="roomManagerFeedback" role="status"></p>';
+form.parentElement.insertBefore(box,form);
+const list=box.querySelector('#roomManagerList'),feedback=box.querySelector('#roomManagerFeedback');
+function refresh(){const plan=FloorPlan.get();list.replaceChildren();for(const room of plan.rooms){const row=document.createElement('div');row.className='roomManagerItem';const tables=plan.tables.filter(t=>t.roomId===room.id);const label=document.createElement('span');label.textContent=room.name+' · '+tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';row.append(label);if(room.id!=='main'){const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.addEventListener('click',async()=>{try{const next=FloorPlan.get();if(next.tables.some(t=>t.roomId===room.id)||next.elements.some(e=>e.roomId===room.id))throw Error('Cette salle contient encore des tables ou du mobilier.');if(!await window.RestoDialog.confirm('Supprimer la salle '+room.name+' ?',{title:'Supprimer la salle',danger:true,acceptLabel:'Supprimer'}))return;next.rooms=next.rooms.filter(r=>r.id!==room.id);FloorPlan.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle supprimée.'}catch(e){feedback.textContent=e.message}});row.append(remove)}list.append(row)}}
+box.querySelector('#roomManagerForm').addEventListener('submit',e=>{e.preventDefault();try{const name=box.querySelector('#roomManagerName').value.trim(),next=FloorPlan.get();if(!name||next.rooms.some(r=>r.name.toLowerCase()===name.toLowerCase()))throw Error('Nom vide ou déjà utilisé.');next.rooms.push({id:'room-'+Date.now(),name,width:12,depth:12,floor:'plain'});FloorPlan.save(next);box.querySelector('#roomManagerName').value='';window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle ajoutée : '+name}catch(err){feedback.textContent=err.message}});
+window.addEventListener('restomanager:v3-tables',refresh);refresh();
+})();
