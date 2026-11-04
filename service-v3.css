@@ -1023,3 +1023,21 @@ html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded 
 html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded progress{
  accent-color:#72d8aa;
 }
+
+/* Header refresh control — compact on mobile, labelled on larger screens. */
+.top .refreshAppBtn{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ flex:0 0 auto;min-height:42px;padding:9px 13px;border-radius:12px;
+ background:#245b49!important;color:#f4fff7!important;border:1px solid #5b997b!important;
+ font:inherit;font-size:13px;font-weight:750;cursor:pointer;
+ -webkit-tap-highlight-color:transparent;
+}
+.top .refreshAppBtn :is(svg,i){width:18px;height:18px;flex:none;color:inherit}
+.top .refreshAppBtn:focus-visible{outline:3px solid #a0e7bc;outline-offset:2px}
+.top .refreshAppBtn:active{background:#31765b!important}
+.top .refreshAppBtn.is-refreshing svg{animation:restoRefreshSpin .7s linear infinite}
+@keyframes restoRefreshSpin{to{transform:rotate(360deg)}}
+@media(max-width:700px){
+ .top .refreshAppBtn{width:42px;min-width:42px;padding:0}
+ .top .refreshAppBtn span{display:none}
+}
