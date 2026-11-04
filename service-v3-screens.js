@@ -5,7 +5,7 @@ const groups=[
  {id:'tables',nodes:['.serviceIntro','.quickActions','#kpis','.content']},
  {id:'reservations',nodes:['#reservations']},
  {id:'reservationForm',nodes:['#reservationForm']},
- {id:'passages',nodes:['#passages']},
+ {id:'passages',nodes:['.quickReleasePanel','#passages']},
  {id:'administration',nodes:['#restaurantShifts','#administration','#historyStats']}
 ];
 const screens=new Map();
