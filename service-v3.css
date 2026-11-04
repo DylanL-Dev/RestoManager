@@ -448,3 +448,43 @@ html{scroll-padding-bottom:110px}
 .closurePanel{display:grid;gap:10px;border:1px solid #d8e9df;background:#f5faf7;border-radius:14px;padding:15px}.closurePanel h3{margin:0}.closurePanel p{margin:0;color:#365a49}.closurePanel button{min-height:44px;border:0;border-radius:10px;background:#087f5b;color:white;font-weight:750;padding:10px 16px}.closurePanel details{font-size:14px}.closurePanel #closureArchive{max-height:220px;overflow:auto;padding-top:8px}.closurePanel #closureArchive p{padding:6px 0;border-bottom:1px solid #d8e9df}
 
 .shiftSettings{padding:18px}.shiftSettings h2{margin:0 0 8px}.shiftSettings form{display:grid;gap:14px}.shiftSettingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.shiftSettings fieldset{border:1px solid #d6e8dd;border-radius:12px;padding:12px;display:grid;gap:12px;min-width:0}.shiftSettings legend{font-weight:750;padding:0 5px}.shiftSettings label{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.shiftSettings input[type=time]{min-height:42px;max-width:145px}.shiftSettings button{background:#087f5b;color:#fff;border:0;border-radius:11px;min-height:46px;font-weight:750}@media(max-width:540px){.shiftSettingsGrid{grid-template-columns:1fr}}
+
+/* Gestion V3 : tableau de bord mobile compact */
+.appScreen[data-screen="administration"]{display:flex;flex-direction:column;gap:12px;max-width:900px;margin-inline:auto}
+.appScreen[data-screen="administration"][hidden]{display:none}
+.managementIntro{padding:6px 4px 12px}
+.managementEyebrow{display:block;color:#087f5b;font-size:11px;font-weight:800;letter-spacing:.12em;margin-bottom:7px}
+.managementIntro h1{font-size:clamp(24px,5vw,30px);line-height:1.15;margin:0 0 7px;color:#153d33}
+.managementIntro p{margin:0;color:#667b72;font-size:14px;line-height:1.5}
+.managementGroup{background:#fff;border:1px solid #e0eae3;border-radius:18px;box-shadow:0 3px 13px #153d3309;overflow:hidden;min-width:0}
+.managementGroupHead{list-style:none;display:flex;align-items:center;gap:13px;padding:16px;cursor:pointer;min-height:78px}
+.managementGroupHead::-webkit-details-marker{display:none}
+.managementGroupIcon{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;background:#e9f6ef;color:#087f5b;font-size:23px;flex-shrink:0;font-weight:700}
+.managementGroupWords{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.managementGroupWords strong{font-size:16px;color:#173e33;line-height:1.3}
+.managementGroupWords small{font-size:12px;color:#6b7e75;line-height:1.4}
+.managementChevron{font-size:27px;color:#648578;transition:transform .2s}
+.managementGroup[open]>.managementGroupHead .managementChevron{transform:rotate(180deg)}
+.managementGroup[open]>.managementGroupHead{border-bottom:1px solid #edf1ed}
+.managementGroupBody{padding:16px;min-width:0}
+.managementGroupBody>.panel,.managementGroupBody>.closurePanel{border:0;box-shadow:none;background:transparent;border-radius:0;margin:0;padding:0;max-width:none}
+.managementGroupBody .shiftSettings h2,.managementGroupBody .historyHeading .eyebrow{display:none}
+.managementGroupBody .shiftSettings>.muted{font-size:13px;margin:0 0 14px;color:#6b7e75}
+.managementGroupBody .shiftSettingsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.managementGroupBody .shiftSettings fieldset{background:#f8fbf9;border:1px solid #e1eae4;border-radius:13px;padding:13px;gap:12px}
+.managementGroupBody .shiftSettings legend{font-size:14px}
+.managementGroupBody .shiftSettings label{font-size:13px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.managementGroupBody .shiftSettings label:has(input[type=time]){grid-template-columns:1fr}
+.managementGroupBody .shiftSettings input[type=time]{width:100%;max-width:none;min-width:0;border-radius:9px;min-height:44px}
+.managementGroupBody .shiftSettings input[type=checkbox]{width:19px;height:19px;accent-color:#087f5b}
+.managementGroupBody .shiftSettings button{width:100%;font-size:15px}
+.managementGroupBody #administration>summary{font-size:14px}
+.managementGroupBody #historyStats .historyHeading h2{font-size:19px;margin:0 0 8px}
+.managementGroupBody #historyStats .historyHeading .muted{font-size:13px}
+.managementGroupBody .historyControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.managementGroupBody .historyControls label{min-width:0;font-size:13px}
+.managementGroupBody .historyControls input,.managementGroupBody .historyControls select{width:100%;min-width:0}
+.managementGroupBody #historyPdf{grid-column:1/-1;width:100%;min-height:45px;border-radius:10px}
+.managementGroupBody .closurePanel{display:grid;gap:12px}
+.managementGroupBody .closurePanel h3{font-size:17px}
+@media(max-width:620px){.managementGroupBody .shiftSettingsGrid{grid-template-columns:1fr}.managementGroupBody{padding:14px}.managementGroupHead{padding:13px 14px}.managementGroupBody .shiftSettings fieldset{padding:12px}.managementGroupBody .historyControls{grid-template-columns:1fr}.managementGroupBody #historyPdf{grid-column:auto}}
