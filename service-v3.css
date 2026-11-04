@@ -792,3 +792,21 @@ html[data-theme="dark"] :is(.shiftSettings input.rmTimeInput,.shiftSettings inpu
 }
 html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
 html[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1) sepia(.2) saturate(1.4);opacity:.85}
+
+/* Reports: ensure the reference date and export action respect dark mode. */
+html[data-theme="dark"] .historyPanel .historyControls #historyDate{
+ background:#243c32!important;color:#edf7f0!important;border:1px solid #547461!important;
+ color-scheme:dark!important;-webkit-text-fill-color:#edf7f0!important;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyDate::-webkit-calendar-picker-indicator{
+ filter:invert(1) sepia(.2) saturate(1.4);opacity:.85;cursor:pointer;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyDate:focus-visible{
+ outline:2px solid #92dfba!important;outline-offset:2px!important;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyPdf{
+ background:#14795b!important;color:#fff!important;border:1px solid #208c6b!important;
+ font-weight:700!important;cursor:pointer;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyPdf:hover{background:#198969!important}
+html[data-theme="dark"] .historyPanel .historyControls #historyPdf:focus-visible{outline:2px solid #92dfba!important;outline-offset:2px!important}
