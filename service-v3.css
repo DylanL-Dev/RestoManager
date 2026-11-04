@@ -662,3 +662,6 @@ html{scroll-padding-bottom:110px}
 /* Center the service title in the viewport, independent of logo and notification width. */
 @media(min-width:901px){header.top{position:relative}header.top>.heading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:40%;text-align:center;pointer-events:none}header.top>.heading b{font-size:15px}header.top>.heading span{font-size:12px}}
 @media(max-width:900px){header.top>.heading{position:static;transform:none;min-width:0;text-align:left}}
+
+/* Header V3: true center using three equal grid tracks, regardless of brand width. */
+@media(min-width:901px){body>header.top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;position:relative}body>header.top>.brand{grid-column:1;justify-self:start;min-width:0}body>header.top>.heading{grid-column:2;position:static;left:auto;top:auto;transform:none;display:flex;align-items:center;justify-self:center;text-align:center;max-width:none;width:auto;white-space:nowrap}body>header.top>.notificationBell,body>header.top>.notificationButton,body>header.top>button:last-child{grid-column:3;justify-self:end}}
