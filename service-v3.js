@@ -66,6 +66,7 @@ list.forEach(r=>{
  if(['completed','released','no_show'].includes(kind)&&!(await confirmTableDeparture(kind,r)))return;
  try{
  const all=readReservations(),index=all.findIndex(x=>x.id===r.id);if(index<0)throw Error('Réservation introuvable.');
+ if(kind==='seated'&&window.RestoCheckOccupiedTables?.(all[index],all))return;
  if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(all[index])))return;
  const result=ReservationEngine.transition(all[index],kind,undefined,all);if(!result.valid)throw Error(result.error);
  all[index]=result.reservation;localStorage.setItem('restomanager_reservations',JSON.stringify(all));
