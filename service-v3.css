@@ -608,3 +608,21 @@ html{scroll-padding-bottom:110px}
  .managementGroupBody .shiftSettings label:has(> .rmTimeInput),
  .shiftSettings label:has(> .rmTimeInput){grid-template-columns:minmax(0,1fr)!important}
 }
+
+
+/* Arrival load and reservation rush guard — responsive on phone, tablet and desktop */
+.rushDashboard{background:#fff;border:1px solid #dce8e0;border-radius:18px;padding:18px;margin:0 0 18px;box-shadow:0 5px 18px #12274608;min-width:0}
+.rushDashHead h2{margin:0 0 4px;font-size:19px;color:#163c33}.rushDashHead p{font-size:13px;color:#64786f;margin:0 0 14px}
+.rushDashboard select,.rushSettings select{width:100%;max-width:380px;min-height:44px;padding:10px 12px;border:1px solid #cbdcd2;border-radius:11px;background:white;color:#163c33;font:inherit}
+.rushDashContent{margin-top:14px}.rushFigures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.rushFigures>div{background:#f1f7f3;border-radius:12px;padding:13px;min-width:0}.rushFigures strong{display:block;font-size:clamp(24px,4vw,32px);color:#163c33;font-variant-numeric:tabular-nums}.rushFigures span{display:block;margin-top:5px;font-size:12px;line-height:1.4;color:#53695e;overflow-wrap:anywhere}
+.rushProgress{height:14px;background:#e0eae3;border-radius:999px;overflow:hidden}.rushProgressFill{height:100%;background:#087f5b;border-radius:999px;transition:width .25s ease}.rushProgressFill.busy{background:#dc9b35}.rushProgressFill.full{background:#b53e38}
+.rushHint{font-size:13px;line-height:1.5;color:#576d63;margin:11px 0 0}.rushSettings{margin-top:20px;padding-top:20px;border-top:1px solid #dce8e0}.rushSettings h3{margin:0 0 8px}.rushSettings>p{font-size:13px;line-height:1.55;color:#576d63}.rushSettings label{display:grid;gap:8px;font-size:13px;font-weight:700}
+.rushAvailabilityHint{padding:10px 12px;background:#f1f7f3;border-radius:11px;color:#195c43;font-size:13px;font-weight:700}
+.rushOverlay{position:fixed;inset:0;z-index:100010;display:flex;justify-content:center;align-items:center;padding:16px;background:#092d23a8;backdrop-filter:blur(4px)}
+.rushModal{width:min(100%,520px);max-height:calc(100dvh - 32px);overflow-y:auto;background:white;border-radius:22px;padding:clamp(16px,4vw,25px);color:#173e32;box-shadow:0 20px 70px #09281d55}
+.rushModal h2{font-size:clamp(21px,4vw,26px);margin:0 0 10px}.rushModal>p{font-size:14px;line-height:1.55;color:#53695e}
+.rushModal .rushAfter{font-weight:800;color:#9a5d10}.rushAlternatives{border-top:1px solid #e0eae3;margin-top:16px;padding-top:14px}.rushAlternatives>strong{font-size:14px}.rushAlternatives p{font-size:13px;padding:8px 10px;margin:7px 0;background:#f1f7f3;border-radius:9px}
+.rushActions{display:flex;gap:10px;margin-top:18px}.rushActions button{flex:1;min-height:48px;border-radius:12px;border:1px solid #cbdcd2;background:#f3f8f5;color:#163c33;font:700 14px inherit;padding:10px;cursor:pointer}.rushActions .rushAccept{background:#087f5b;border-color:#087f5b;color:white}
+@media(max-width:620px){.rushDashboard{padding:13px;margin-bottom:14px}.rushModal{border-radius:17px}.rushActions{flex-direction:column}.rushActions button{width:100%}.rushFigures>div{padding:11px}.rushFigures span{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.rushProgressFill{transition:none}}
