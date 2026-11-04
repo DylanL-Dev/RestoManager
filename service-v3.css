@@ -545,3 +545,24 @@ html{scroll-padding-bottom:110px}
 .restoAddChoiceOption strong{font-size:16px}
 .restoAddChoiceOption small{font-size:13px;color:#718078;line-height:1.4}
 .restoAddChoiceOpen{overflow:hidden}
+
+/* Sélecteur horaire unique, accessible et hors ligne */
+.rmTimeOverlay[hidden]{display:none!important}
+.rmTimeOverlay{position:fixed;inset:0;z-index:16000;display:flex;align-items:center;justify-content:center;padding:18px}
+.rmTimeBackdrop{position:absolute;inset:0;background:rgba(10,34,27,.58)}
+.rmTimeDialog{position:relative;background:#fff;border-radius:22px;width:min(100%,420px);padding:24px;box-shadow:0 25px 65px #0a251e40;display:grid;gap:19px;color:#1a4537}
+.rmTimeDialog header{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.rmTimeDialog h2{font-size:24px;margin:6px 0 0}
+.rmTimeEyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;color:#087f5b}
+.rmTimeClose{width:43px;height:43px;border:0;border-radius:12px;background:#e9f4ed;color:#195943;font-size:30px;cursor:pointer}
+.rmTimePreview{background:#edf7f0;border-radius:14px;text-align:center;font-size:43px;font-weight:750;letter-spacing:.02em;padding:17px;color:#087f5b;font-variant-numeric:tabular-nums}
+.rmTimeFields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rmTimeFields label{display:grid;gap:9px;font-weight:650;font-size:14px}
+.rmTimeFields select{width:100%;min-width:0;border:1px solid #cbdcd2;border-radius:12px;background:white;color:#173d31;padding:13px;font-size:18px;min-height:52px}
+.rmTimePrecision{display:flex;align-items:center;gap:9px;font-size:13px;color:#52675c}
+.rmTimePrecision input{accent-color:#087f5b;width:18px;height:18px}
+.rmTimeActions{display:grid;grid-template-columns:1fr 1.25fr;gap:10px}
+.rmTimeActions button{border-radius:12px;min-height:49px;padding:10px;border:1px solid #cbdcd2;background:#f5f8f5;color:#245a47;font-weight:750}
+.rmTimeActions .rmTimeSave{background:#087f5b;border-color:#087f5b;color:#fff}
+.rmTimeOpen{overflow:hidden}
+.rmTimeInput{cursor:pointer}
