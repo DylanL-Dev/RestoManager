@@ -10,6 +10,9 @@
     root.ReservationEngine = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     const DEFAULT_DURATION = 90;
+    const LUNCH_START = 12 * 60;
+    const LUNCH_LAST_ORDER = 14 * 60 + 30;
+    const DINNER_START = 17 * 60;
     const CLOSING_MINUTES = 21 * 60 + 30;
     const TABLES = [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23,
@@ -167,8 +170,11 @@
         if (tableCapacity([...new Set(selectedTables.map(Number))]) < Number(candidate.guests)) {
             errors.push('La capacité des tables sélectionnées est insuffisante.');
         }
-        if (Number.isFinite(minutes(candidate.time)) && minutes(candidate.time) > CLOSING_MINUTES) {
-            errors.push('Dernière prise de commandes à 21h30 : choisissez une heure d’arrivée au plus tard à 21h30.');
+        if (Number.isFinite(minutes(candidate.time))) {
+            const arrival = minutes(candidate.time);
+            if (arrival < LUNCH_START || (arrival > LUNCH_LAST_ORDER && arrival < DINNER_START) || arrival > CLOSING_MINUTES) {
+                errors.push('Accueil des réservations : midi de 12h à 14h30, soir de 17h à 21h30. Les clients déjà installés peuvent rester après la dernière commande.');
+            }
         }
         if (errors.length) return { valid: false, errors: errors, conflict: null, roomConflict: null };
         const conflict = normalizeReservations(reservations).find(function (other) {
