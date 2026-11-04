@@ -695,3 +695,25 @@ html[data-theme="dark"] :is(.rushProgress,.rushProgressTrack,.tableTimeProgressT
 html[data-theme="dark"] :is(.tableSortLabel,.tableSortLabel span,.themeModeControl){color:var(--dark-text)}
 html[data-theme="dark"] .tableSortLabel select{background-image:none;padding-right:14px}
 html[data-theme="dark"] :is(a:not(.brand):not(.quickAction):not(.selected)){color:#b7e9c9}
+
+/* Dark-theme visual repair: scoped to V3, preserving business logic. */
+html[data-theme="dark"] :is(.bookingExtraFields,.roomAdminPanel,.roomManager,.roomsAdmin,.roomSettings,.historyMetric,.historyStat,.historyKpi,.statsCard,.rushSettings,.rushDashContent>div,.managementGroupBody .panel){background:var(--dark-card);color:var(--dark-text);border-color:var(--dark-line)}
+html[data-theme="dark"] .bookingExtraFields{background:#20382f!important;border:1px solid var(--dark-line);border-radius:15px;padding:16px}
+html[data-theme="dark"] .bookingExtraFields :is(h3,label,p,small){color:var(--dark-text)!important}
+html[data-theme="dark"] .bookingExtraFields :is(textarea,input){background:#142b23!important;color:var(--dark-text)!important;border-color:#527461!important}
+html[data-theme="dark"] .bookingTypeOption span{background:#233d33!important;border-color:#4c6c5b!important;color:var(--dark-text)!important}
+html[data-theme="dark"] .bookingTypeOption :is(strong,small){color:var(--dark-text)!important}
+html[data-theme="dark"] .bookingTypeOption input:checked+span{background:#255d47!important;border-color:#72caa2!important;box-shadow:inset 0 0 0 1px #72caa2}
+html[data-theme="dark"] .bookingTypeOption input:focus-visible+span{outline:3px solid #8bdfb5;outline-offset:2px}
+html[data-theme="dark"] :is(#bookingDate,#bookingTime,#bookingGuests,#bookingTable){background:#223c32!important;color:var(--dark-text)!important;border-color:#547461!important;color-scheme:dark}
+html[data-theme="dark"] :is(.tableChoiceTrigger,.tablePickerOpen,.roomChoiceTrigger,.availabilitySummary,.availabilityInsight>p,.bookingExtraFields~p){background:#244236!important;color:var(--dark-text)!important;border-color:var(--dark-line)}
+html[data-theme="dark"] :is(.tableChoiceTrigger,.tablePickerOpen,.roomChoiceTrigger) :is(span,strong,small){color:var(--dark-text)!important}
+html[data-theme="dark"] :is(.tableAdminPanel,.tableAdminPanel section,.tableAdminPanel fieldset,.tableAdminPanel .roomAdmin,.tableAdminPanel .roomList,.tableAdminPanel .roomManager,.tableAdminPanel .roomSettings){background:#20382f!important;color:var(--dark-text)!important;border-color:var(--dark-line)!important}
+html[data-theme="dark"] .tableAdminPanel :is(h2,h3,h4,p,small,label,span){color:var(--dark-text)}
+html[data-theme="dark"] .tableAdminPanel :is(input,select,textarea){background:#142b23!important;color:var(--dark-text)!important;border-color:#527461!important}
+html[data-theme="dark"] :is(.historyPanel .historyStat,.historyPanel .historyMetric,.historyPanel .historyKpi,.historyPanel .statCard,.historyPanel .statsCard,.historyPanel .summaryCard,.historyPanel .historySummary>div){background:#233e33!important;color:var(--dark-text)!important;border-color:var(--dark-line)}
+html[data-theme="dark"] .historyPanel :is(.historyStat,.historyMetric,.historyKpi,.statCard,.statsCard,.summaryCard) :is(span,strong,p,small){color:var(--dark-text)!important}
+html[data-theme="dark"] :is(.historyPanel input[type="date"],.shiftSettings input[type="time"]){background:#223c32!important;color:var(--dark-text)!important;border-color:#547461!important;color-scheme:dark}
+html[data-theme="dark"] :is(.managementGroupBody .shiftSettings>.muted,.managementGroupBody .historyHeading .muted,.tableAdminPanel .muted,.walkinPanel .muted,.quickReleasePanel .muted){color:var(--dark-muted)!important}
+html[data-theme="dark"] :is(.managementGroupBody .shiftSettings,.managementGroupBody .historyPanel){background:transparent!important}
+html[data-theme="dark"] :is(.bookingExtraFields,.tableAdminPanel,.historyPanel) :is(button[type="submit"],button.primary){background:#14795b!important;color:#fff!important;border-color:#14795b!important}
