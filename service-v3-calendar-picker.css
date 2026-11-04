@@ -13,3 +13,6 @@
 .rmCalendarActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.rmCalendarActions button{min-height:46px;border-radius:12px;border:1px solid #d1e1d6;background:#f5faf6;color:#1b5946;font-weight:750}.rmCalendarActions .rmCalendarToday{background:#087f5b;color:white;border-color:#087f5b}
 body.rmCalendarOpen{overflow:hidden}
 @media(max-width:370px){.rmCalendarDialog{padding:15px}.rmCalendarDays,.rmCalendarWeek{gap:3px}}
+
+/* Icônes Lucide cohérentes : aucun caractère décoratif de remplacement */
+.rmCalendarTrigger:after{content:none!important}.rmCalendarTrigger svg{width:21px;height:21px;flex:none;color:#087f5b}.rmCalendarNav svg,.rmCalendarClose svg{width:22px;height:22px;display:block;margin:auto}.rmCalendarNav button,.rmCalendarClose{display:grid;place-items:center}
