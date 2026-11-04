@@ -896,3 +896,11 @@ html[data-theme="dark"] .v3-picker-panel footer [data-confirm],body[data-theme="
 /* Keep the close glyph perfectly centered regardless of global button rules */
 .v3-picker-panel > header > button[data-close]{display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;vertical-align:middle!important;line-height:1!important;letter-spacing:0!important;text-indent:0!important}
 .v3-picker-panel > header > button[data-close] svg{display:block!important;margin:auto!important;flex:none!important;width:22px!important;height:22px!important}
+
+
+/* Branded touch and keyboard focus for picker options */
+.v3-picker-panel,.v3-picker-panel *{-webkit-tap-highlight-color:transparent}
+.v3-picker-items button:focus,.v3-picker-items button:focus-visible{outline:2px solid #087f60!important;outline-offset:-2px!important;box-shadow:0 0 0 2px rgba(8,127,96,.16)!important}
+.v3-picker-items button.selected:focus,.v3-picker-items button.selected:focus-visible{background:#bcebd3!important;color:#173d31!important;outline:2px solid #087f60!important;outline-offset:-2px!important}
+html[data-theme="dark"] .v3-picker-items button:focus-visible{outline-color:#72d8aa!important;box-shadow:0 0 0 2px rgba(114,216,170,.24)!important}
+html[data-theme="dark"] .v3-picker-items button.selected:focus-visible{background:#087f60!important;color:#fff!important}
