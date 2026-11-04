@@ -665,3 +665,27 @@ html{scroll-padding-bottom:110px}
 
 /* Header V3: true center using three equal grid tracks, regardless of brand width. */
 @media(min-width:901px){body>header.top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;position:relative}body>header.top>.brand{grid-column:1;justify-self:start;min-width:0}body>header.top>.heading{grid-column:2;position:static;left:auto;top:auto;transform:none;display:flex;align-items:center;justify-self:center;text-align:center;max-width:none;width:auto;white-space:nowrap}body>header.top>.notificationBell,body>header.top>.notificationButton,body>header.top>button:last-child{grid-column:3;justify-self:end}}
+
+/* Theme control in the rightmost header column */
+body>header.top>.themeModeControl{display:flex;align-items:center;gap:7px;grid-column:3;justify-self:end;margin-right:62px;color:#e7f5ee;font-size:19px}
+.themeModeControl select{appearance:none;border:1px solid #6caa92;border-radius:12px;background:#1d5a48;color:white;padding:9px 12px;min-height:40px;font-size:13px;font-weight:700;cursor:pointer}
+.themeModeControl select:focus-visible{outline:3px solid #9bdcba;outline-offset:2px}
+@media(max-width:900px){body>header.top>.themeModeControl{margin-left:auto;margin-right:54px}.themeModeControl select{max-width:112px}}
+@media(max-width:620px){body>header.top>.themeModeControl{margin-right:44px}.themeModeControl select{max-width:94px;font-size:11px;padding:7px}.themeModeControl>span{display:none}}
+/* Dark theme, scoped to V3. Explicit overrides cover the existing hardcoded surfaces. */
+html[data-theme="dark"]{background:#0e1b19;color:#e3f2ea}
+html[data-theme="dark"] body{background:#0e1b19;color:#e3f2ea}
+html[data-theme="dark"] .top{background:#102e28}
+html[data-theme="dark"] .sidebar{background:#102d27}
+html[data-theme="dark"] main,html[data-theme="dark"] .shell{background:#0e1b19;color:#e3f2ea}
+html[data-theme="dark"] .panel,html[data-theme="dark"] .tableCard,html[data-theme="dark"] .kpi,html[data-theme="dark"] .modal,html[data-theme="dark"] dialog,html[data-theme="dark"] fieldset,html[data-theme="dark"] .card,html[data-theme="dark"] .adminCard{background:#182c27;color:#e3f2ea;border-color:#36554a}
+html[data-theme="dark"] .tableCard{background:#1a342c;border-color:#3b6956}
+html[data-theme="dark"] .tableCard .num,html[data-theme="dark"] h1,html[data-theme="dark"] h2,html[data-theme="dark"] h3,html[data-theme="dark"] h4,html[data-theme="dark"] label,html[data-theme="dark"] strong{color:#e8f7ef}
+html[data-theme="dark"] .muted,html[data-theme="dark"] small,html[data-theme="dark"] .panel p{color:#adc6b9}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea,html[data-theme="dark"] option{background-color:#203a31;color:#f0fff6;border-color:#456c59}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#a6c2b4}
+html[data-theme="dark"] button:not(.primary):not(.selected),html[data-theme="dark"] .tableSortLabel select{background-color:#264538;color:#e5f6ed;border-color:#47705d}
+html[data-theme="dark"] button.selected,html[data-theme="dark"] .sidebar a.selected{background:#a5dfbd;color:#102c23}
+html[data-theme="dark"] .tableSortLabel,html[data-theme="dark"] .tableSortLabel span{color:#d7eae0}
+html[data-theme="dark"] .tableSortLabel select{background-image:none;padding-right:14px}
+html[data-theme="dark"] a:not(.brand):not(.selected){color:#b9e8cd}
