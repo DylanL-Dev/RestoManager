@@ -764,3 +764,16 @@ html[data-theme="dark"] .walkinPanel #walkinForm .walkinInstall{background:#1479
 html[data-theme="dark"] .walkinPanel #walkinForm .walkinInstall:disabled{background:#355449!important;color:#c5d6ce!important;opacity:.75}
 html[data-theme="dark"] .walkinPanel #walkinForm :is(.tableChoiceTrigger,.tablePickerOpen){background:#29493b!important;color:#f0f8f3!important;border-color:#4b7060!important}
 html[data-theme="dark"] :is(.restoAddChoiceClose,.restoAddChoiceOption,.walkinPaxButtons button):focus-visible{outline:3px solid #7be1b7;outline-offset:2px}
+
+/* Management rhythm: separate configuration blocks without visual clutter. */
+.managementGroup{margin-block:0 26px}
+.managementGroup:last-child{margin-bottom:0}
+.managementGroupBody{padding:clamp(18px,2vw,26px)}
+.managementGroupBody .shiftSettings form{gap:20px}
+.managementGroupBody .rushSettings{margin-top:32px;padding:28px 0 4px;border-top:1px solid #54746155}
+.managementGroupBody .rushSettings h3{margin:0 0 12px;line-height:1.35}
+.managementGroupBody .rushSettings>p{margin:0 0 20px;line-height:1.65}
+.managementGroupBody .rushSettings label{gap:12px}
+.managementGroupBody .rushHint{margin-top:18px;line-height:1.6}
+.managementGroupBody .managementGroupHead{padding-block:20px}
+@media(max-width:620px){.managementGroup{margin-bottom:18px}.managementGroupBody{padding:17px}.managementGroupBody .rushSettings{margin-top:24px;padding-top:22px}.managementGroupBody .rushSettings>p{margin-bottom:16px}}
