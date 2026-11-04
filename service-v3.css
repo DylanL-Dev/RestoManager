@@ -626,3 +626,25 @@ html{scroll-padding-bottom:110px}
 .rushActions{display:flex;gap:10px;margin-top:18px}.rushActions button{flex:1;min-height:48px;border-radius:12px;border:1px solid #cbdcd2;background:#f3f8f5;color:#163c33;font:700 14px inherit;padding:10px;cursor:pointer}.rushActions .rushAccept{background:#087f5b;border-color:#087f5b;color:white}
 @media(max-width:620px){.rushDashboard{padding:13px;margin-bottom:14px}.rushModal{border-radius:17px}.rushActions{flex-direction:column}.rushActions button{width:100%}.rushFigures>div{padding:11px}.rushFigures span{font-size:11px}}
 @media(prefers-reduced-motion:reduce){.rushProgressFill{transition:none}}
+
+
+/* V3 desktop workspace: wider screens, compact header, readable panels */
+@media (min-width: 901px) {
+  .top { min-height: 64px; padding: 8px 22px; }
+  .brand img { width: 42px; height: 42px; }
+  .brand strong { font-size: 20px; }
+  .brand small { font-size: 11px; }
+  .shell { min-height: calc(100vh - 64px); }
+  main { max-width: none; width: 100%; padding: 22px clamp(20px, 2.5vw, 44px); }
+  .appScreen[data-screen="administration"] { max-width: 1280px; width: 100%; }
+  .appScreen[data-screen="reservations"],
+  .appScreen[data-screen="passages"],
+  .appScreen[data-screen="tables"] { max-width: 1440px; width: 100%; margin-inline: auto; }
+  .appScreen[data-screen="administration"] .managementGroupBody { min-width: 0; }
+}
+@media (min-width: 1450px) {
+  .appScreen[data-screen="administration"] { max-width: 1360px; }
+  .appScreen[data-screen="reservations"],
+  .appScreen[data-screen="passages"],
+  .appScreen[data-screen="tables"] { max-width: 1600px; }
+}
