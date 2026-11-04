@@ -952,3 +952,58 @@ html,body,button,a,input,select,textarea,summary,label,
 html[data-theme="dark"] .managementGroup > .managementGroupHead:focus-visible{
  outline-color:#72d8aa!important;
 }
+
+/* V3 reservation list: readable dark-theme surfaces and action hierarchy.
+   Scoped to the reservation panel so other screens retain their palette. */
+html[data-theme="dark"] .reservationPanel .reservationItem{
+ background:#1b3028!important;color:#edf7f0!important;
+ border:1px solid #456654!important;border-radius:16px;
+ padding:15px;margin:12px 0;
+}
+html[data-theme="dark"] .reservationPanel .reservationHead strong{color:#f4fff7!important}
+html[data-theme="dark"] .reservationPanel .reservationStatus{
+ background:#315744!important;color:#e9fff1!important;
+ border:1px solid #628f73!important;opacity:1!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem > p{
+ color:#c5ddcf!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationOpenDetail{
+ display:block;width:100%;background:#285c49!important;color:#f2fff7!important;
+ border:1px solid #548f73!important;border-radius:11px;font-weight:750;
+}
+html[data-theme="dark"] .reservationPanel .reservationOpenDetail:is(:hover,:focus-visible){
+ background:#34745b!important;color:#fff!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationActions{
+ background:#233c31!important;border:1px solid #405f4d!important;
+ border-radius:12px;padding:10px;
+}
+html[data-theme="dark"] .reservationPanel .reservationActions button{
+ background:#315846!important;color:#f3fff7!important;
+ border:1px solid #648e74!important;opacity:1!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationActions button:is(:hover,:focus-visible){
+ background:#3c7258!important;color:#fff!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationMoreActions{
+ background:#20382e!important;border:1px solid #54715f!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationMoreActions summary{
+ color:#e3f7e9!important;background:transparent!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationMoreActions summary:is(:hover,:focus-visible){
+ color:#fff!important;background:#315542!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem :is(.reservationAllergy,.reservationNote,.reservationNotes,.reservationDetail,.reservationDetails){
+ color:#e5f5e9!important;background:#284338!important;border-color:#587663!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem :is(input,textarea,select){
+ color:#edf7f0!important;background:#203a2f!important;border-color:#64846f!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem :is(button,summary):focus-visible{
+ outline:2px solid #a0e7bc!important;outline-offset:2px;
+}
+@media(max-width:600px){
+ html[data-theme="dark"] .reservationPanel .reservationItem{padding:12px;margin:10px 0}
+}
