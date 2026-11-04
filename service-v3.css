@@ -587,3 +587,24 @@ html{scroll-padding-bottom:110px}
  .rmTimeDialog{padding:20px;gap:12px}
  .rmTimeGrid{max-height:230px}
 }
+
+/* Correctif : les champs textuels remplacent input[type=time] ; éviter le chevauchement des libellés */
+.managementGroupBody .shiftSettings label:has(> .rmTimeInput),
+.shiftSettings label:has(> .rmTimeInput){
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr) minmax(0,1.55fr)!important;
+ align-items:center!important;
+ column-gap:12px!important;
+ row-gap:6px!important;
+ width:100%!important;
+ min-width:0!important;
+}
+.managementGroupBody .shiftSettings label:has(> .rmTimeInput) .rmTimeInput,
+.shiftSettings label:has(> .rmTimeInput) .rmTimeInput{
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ margin:0!important;position:static!important;
+}
+@media(max-width:390px){
+ .managementGroupBody .shiftSettings label:has(> .rmTimeInput),
+ .shiftSettings label:has(> .rmTimeInput){grid-template-columns:minmax(0,1fr)!important}
+}
