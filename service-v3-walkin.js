@@ -5,7 +5,7 @@ const time=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+'
 const date=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 $('walkinTime').value=time();
 function load(){return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
-function draft(table){return {id:'walkin-preview',type:'exterieur',client:$('walkinName').value.trim()||'Client de passage',date:date(),time:$('walkinTime').value,guests:Number($('walkinGuests').value),duration:Number($('walkinDuration').value),tables:[table],status:'seated',walkIn:true}}
+function draft(table){return {id:'walkin-preview',type:document.querySelector('input[name="walkinType"]:checked')?.value==='exterieur'?'exterieur':'hotel',client:$('walkinRoom').value.trim()||$('walkinName')?.value.trim()||'Client de passage',date:date(),time:$('walkinTime').value,guests:Number($('walkinGuests').value),duration:Number($('walkinDuration').value),tables:[table],status:'seated',walkIn:true}}
 function choices(all){
  const n=Number($('walkinGuests').value),duration=Number($('walkinDuration').value);
  if(!Number.isInteger(n)||n<1||!Number.isInteger(duration)||duration<15)return [];
@@ -21,7 +21,7 @@ function refresh(){
  }catch(e){$('walkinFeedback').textContent='Erreur de disponibilité : '+e.message}
  if(window.RestoTableChoices)window.RestoTableChoices.refresh('walkinTable');
 }
-['walkinName','walkinGuests','walkinTime','walkinDuration'].forEach(id=>$(id).addEventListener('input',refresh));
+['walkinRoom','walkinGuests','walkinTime','walkinDuration'].forEach(id=>$(id)?.addEventListener('input',refresh));document.querySelectorAll('input[name="walkinType"]').forEach(input=>input.addEventListener('change',refresh));
 $('walkinForm').addEventListener('submit',e=>{
  e.preventDefault();
  try{
@@ -31,7 +31,7 @@ $('walkinForm').addEventListener('submit',e=>{
  const validation=E.validate(r,load());if(!validation.valid)throw Error(validation.errors.join(' '));
  localStorage.setItem(KEY,JSON.stringify(load().concat(r)));
  $('walkinFeedback').textContent='Client de passage installé à la table '+table+'.';
- $('walkinName').value='';window.dispatchEvent(new Event('restomanager:v3-change'));refresh();
+ $('walkinRoom').value='';window.dispatchEvent(new Event('restomanager:v3-change'));refresh();
  }catch(err){$('walkinFeedback').textContent='Installation impossible : '+err.message}
 });
 window.addEventListener('restomanager:v3-change',refresh);
