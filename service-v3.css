@@ -810,3 +810,26 @@ html[data-theme="dark"] .historyPanel .historyControls #historyPdf{
 }
 html[data-theme="dark"] .historyPanel .historyControls #historyPdf:hover{background:#198969!important}
 html[data-theme="dark"] .historyPanel .historyControls #historyPdf:focus-visible{outline:2px solid #92dfba!important;outline-offset:2px!important}
+
+/* Mobile bottom navigation follows the selected dark theme. */
+@media(max-width:768px){
+ html[data-theme="dark"] .mobileBottomNav{
+  background:#152b24!important;border-top:1px solid #3a5b4b!important;
+  box-shadow:0 -6px 24px #0005!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem{
+  color:#b8d5c6!important;background:transparent;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem.active{
+  background:#294a3d!important;color:#f0fff6!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd .mobileNavIcon{
+  background:#168665!important;color:#fff!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd.active .mobileNavIcon{
+  background:#21a37a!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem:focus-visible{
+  outline:2px solid #a5e8c7!important;outline-offset:-2px;
+ }
+}
