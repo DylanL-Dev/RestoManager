@@ -648,3 +648,7 @@ html{scroll-padding-bottom:110px}
   .appScreen[data-screen="passages"],
   .appScreen[data-screen="tables"] { max-width: 1600px; }
 }
+
+/* Room selector remains accessible without a redundant visible label. */
+.srOnlyRoom{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.roomFilterLabel{display:block}
