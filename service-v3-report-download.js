@@ -53,6 +53,6 @@ if(!dates.length){text('Aucune donnée pour cette période.',19,y,10);y+=12}
 page();y+=8;pdf.setTextColor(100,119,108);for(const line of pdf.splitTextToSize('Données enregistrées dans ce navigateur uniquement. Les couverts servis correspondent aux passages terminés ou libérés.',175)){text(line,16,y,9);y+=5}
 pdf.save('RestoManager-'+period+'-'+from+'-'+to+'.pdf');
 feedback.textContent='Rapport PDF généré et téléchargé.';
-}catch(e){feedback.textContent='Export PDF impossible : '+e.message;alert(feedback.textContent)}finally{button.disabled=false;button.textContent='Télécharger le PDF'}
+}catch(e){feedback.textContent='Export PDF impossible : '+e.message;window.RestoDialog.alert(feedback.textContent,{title:'Export PDF impossible'})}finally{button.disabled=false;button.textContent='Télécharger le PDF'}
 });
 })();
