@@ -566,3 +566,24 @@ html{scroll-padding-bottom:110px}
 .rmTimeActions .rmTimeSave{background:#087f5b;border-color:#087f5b;color:#fff}
 .rmTimeOpen{overflow:hidden}
 .rmTimeInput{cursor:pointer}
+
+/* v2 : affichage intégré et boutons sans menu Android */
+.rmTimeDialog{gap:14px;max-height:min(92dvh,760px);overflow:auto;padding:22px}
+.rmTimePreview{display:flex;align-items:center;justify-content:center;gap:4px;padding:12px;font-size:38px}
+.rmTimePreview button{font:inherit;font-weight:800;color:#087f5b;border:0;background:transparent;border-radius:10px;padding:5px 9px;min-width:70px}
+.rmTimePreview button.isActive{background:#d4eddf}
+.rmTimeSwitch{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:4px;background:#f0f5f1;border-radius:12px}
+.rmTimeSwitch button{border:0;background:transparent;color:#49695a;padding:10px;border-radius:9px;font-size:15px;font-weight:700}
+.rmTimeSwitch button.isActive{background:white;color:#087f5b;box-shadow:0 2px 7px #173c2814}
+.rmTimeGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:240px;overflow-y:auto;overscroll-behavior:contain;padding:3px}
+.rmTimeGrid.rmTimeGridHours{grid-template-columns:repeat(6,minmax(0,1fr))}
+.rmTimeNumber{min-height:43px;border-radius:10px;border:1px solid #dce8df;background:#f8faf8;color:#245444;font-weight:750;font-size:15px}
+.rmTimeNumber.isSelected{background:#087f5b;color:#fff;border-color:#087f5b}
+.rmTimeNumber:active{transform:scale(.97)}
+.rmTimeInput{box-sizing:border-box!important;width:100%!important;min-height:48px!important;border:1px solid #cbdcd2!important;border-radius:12px!important;background:#fff!important;padding:11px 40px 11px 14px!important;color:#194436!important;font-size:16px!important;font-weight:700!important;box-shadow:none!important;appearance:none!important}
+.rmTimeInput:focus-visible{outline:2px solid #087f5b!important;outline-offset:2px}
+@media(max-width:600px){
+ #shift-lunch-start.rmTimeInput,#shift-lunch-end.rmTimeInput,#shift-dinner-start.rmTimeInput,#shift-dinner-end.rmTimeInput{width:100%!important;max-width:none!important;display:block!important}
+ .rmTimeDialog{padding:20px;gap:12px}
+ .rmTimeGrid{max-height:230px}
+}
