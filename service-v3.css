@@ -1095,3 +1095,5 @@ html[data-theme="dark"] .rmTimeActions button{background:#294b3d!important;color
 html[data-theme="dark"] .rmTimeActions .rmTimeSave{background:#078b62!important;color:#fff!important;border-color:#078b62!important}
 html[data-theme="dark"] .rmTimeDialog button:focus-visible{outline:3px solid #a0edc0!important;outline-offset:2px}
 @media(max-width:600px){.rmTimeDialog{width:min(100%,420px);max-height:calc(100dvh - 24px)}}
+
+.walkinInstallNotice{position:fixed;z-index:100050;left:50%;bottom:90px;transform:translateX(-50%);width:min(94%,460px);display:none;align-items:center;gap:12px;padding:15px;border-radius:15px;background:#086444;color:white;box-shadow:0 12px 36px #071b15aa;font-weight:700}.walkinInstallNotice.isVisible{display:flex}.walkinInstallNotice.isError{background:#942d35}.walkinInstallNoticeIcon{border:2px solid currentColor;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;flex:none}.walkinInstallNotice>span:nth-child(2){flex:1}.walkinInstallNotice button{background:transparent;border:0;color:inherit;font-size:24px;min-width:40px;min-height:40px}@media(min-width:901px){.walkinInstallNotice{bottom:28px}}
