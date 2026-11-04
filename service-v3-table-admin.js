@@ -5,7 +5,7 @@ const form=$('tableAdminForm'),list=$('tableAdminList'),feedback=$('tableAdminFe
 let editId=null;
 function bookings(){return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
- const plan=FloorPlan.get();list.replaceChildren();const rooms=$('tableAdminRoom');rooms.replaceChildren();
+ const plan=FloorPlan.get();list.replaceChildren();list.lastRoom=null;const rooms=$('tableAdminRoom');rooms.replaceChildren();
  const selectedRoom=rooms.value;plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
  plan.tables.slice().sort((a,b)=>a.roomId.localeCompare(b.roomId)||a.number-b.number).forEach(t=>{
  if(!list.lastRoom||list.lastRoom!==t.roomId){const heading=document.createElement('h4');heading.textContent=plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle';list.append(heading);list.lastRoom=t.roomId}
