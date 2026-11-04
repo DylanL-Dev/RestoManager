@@ -930,3 +930,25 @@ html,body,button,a,input,select,textarea,summary,label,
 .v3-picker-panel,.v3-picker-panel *{
  -webkit-tap-highlight-color:transparent;
 }
+
+
+/* Management accordion: prevent Android text selection and blue pressed/focus fill. */
+.managementGroup > .managementGroupHead{
+ -webkit-user-select:none;user-select:none;
+ -webkit-touch-callout:none;
+ -webkit-tap-highlight-color:transparent!important;
+ background:transparent!important;
+}
+.managementGroup > .managementGroupHead :is(strong,small,span,svg){
+ -webkit-user-select:none;user-select:none;
+ -webkit-tap-highlight-color:transparent!important;
+}
+.managementGroup > .managementGroupHead:is(:hover,:active,:focus,:focus-visible){
+ background:transparent!important;
+}
+.managementGroup > .managementGroupHead:focus-visible{
+ outline:2px solid #087f60!important;outline-offset:-3px!important;
+}
+html[data-theme="dark"] .managementGroup > .managementGroupHead:focus-visible{
+ outline-color:#72d8aa!important;
+}
