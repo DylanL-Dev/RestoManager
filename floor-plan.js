@@ -4,7 +4,7 @@
 // storage key and back up legacy data before its first save in the new format.
 const FloorPlan = (() => {
     const key='restomanager_floor_plan_v1', backupKey=key+'_backup_before_v4', epsilon=1e-7;
-    const elementTypes=['bar','wall','door','window','pillar','plant','kitchen','toilets','zone','chair','armchair','bench','partition','lamp','counter'];
+    const elementTypes=['bar','buffet','wall','door','window','pillar','plant','kitchen','toilets','zone','chair','armchair','bench','partition','lamp','counter'];
     const floors=['plain','wood','tile','stone'];
     const passableTypes=new Set(['zone','door','window','lamp']);
     const positive=n=>Number.isFinite(n)&&n>0;
