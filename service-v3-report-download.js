@@ -28,7 +28,7 @@ function page(){if(y>265){pdf.addPage();y=20}}
 pdf.setFillColor(8,127,91);pdf.rect(0,0,210,32,'F');pdf.setTextColor(255,255,255);text('RestoManager',16,16,20,true);text('Simplifiez votre service',16,24,10);pdf.setTextColor(28,58,47);
 y=45;text(title,16,y,20,true);y+=9;text(from===to?frenchDate(from):'Du '+frenchDate(from)+' au '+frenchDate(to),16,y,11);y+=7;text('Édité le '+new Date().toLocaleString('fr-FR'),16,y,9);y+=14;
 text('Synthèse du service',16,y,14,true);y+=9;
-const metrics=[['Couverts accueillis',welcomedCovers],['Servis et terminés',covers],['Encore en salle',inRoomCovers],['Tables / groupes terminés',served.length],['Couverts hôtel (terminés)',hotel],['Couverts extérieurs (terminés)',covers-hotel],['Groupes sans réservation',walkinPassages],['Personnes sans réservation (incluses)',walkins],['Absences',noShow],['Annulations',cancelled]];
+const metrics=[['Couverts accueillis',welcomedCovers],['Servis et terminés',covers],['Encore en salle',inRoomCovers],['Tables / groupes terminés',served.length],['Couverts hôtel (terminés)',hotel],['Couverts extérieurs (terminés)',covers-hotel],['Sans réservation · personnes / groupes',walkins+' / '+walkinPassages],['Absences',noShow],['Annulations',cancelled]];
 for(let i=0;i<metrics.length;i++){const col=i%2,row=Math.floor(i/2),x=16+col*92,yy=y+row*24;pdf.setDrawColor(215,232,221);pdf.roundedRect(x,yy,86,20,2,2);text(metrics[i][0],x+4,yy+7,9);pdf.setTextColor(8,127,91);text(metrics[i][1],x+4,yy+16,15,true);pdf.setTextColor(28,58,47)}y+=127;
 if(y>190){pdf.addPage();y=22}
 // Répartition graphique des couverts
@@ -39,7 +39,7 @@ if(covers){pdf.setFillColor(8,127,91);pdf.rect(16,y,178*hotelPct,9,'F');pdf.setF
 y+=16;pdf.setFillColor(8,127,91);pdf.circle(19,y-1,2,'F');text('Hôtel : '+hotel+' ('+(hotelPct*100).toFixed(1)+' %)',24,y,10);
 pdf.setFillColor(209,159,71);pdf.circle(110,y-1,2,'F');text('Extérieurs : '+(covers-hotel)+' ('+externalPct.toFixed(1)+' %)',115,y,10);y+=15;
 text('Bilan du service',16,y,13,true);y+=8;
-const summary='Au total, '+welcomedCovers+' couverts accueillis : '+covers+' servis et terminés et '+inRoomCovers+' encore en salle. '+served.length+' tables ou groupes terminés. Les '+walkins+' couverts sans réservation sont déjà inclus dans les couverts terminés. '+noShow+' absence(s) et '+cancelled+' annulation(s).';
+const summary='Au total, '+welcomedCovers+' couverts accueillis : '+covers+' servis et terminés et '+inRoomCovers+' encore en salle. '+served.length+' tables ou groupes terminés. Les '+walkins+' personnes sans réservation ('+walkinPassages+' groupes) sont déjà incluses dans les couverts terminés. '+noShow+' absence(s) et '+cancelled+' annulation(s).';
 const lines=pdf.splitTextToSize(summary,178);for(const line of lines){page();text(line,16,y,10);y+=5}y+=9;
 if(period==='month'){text('Moyenne par jour avec service : '+(days?(covers/days).toFixed(1):'0')+' couverts ('+days+' jours)',16,y,10);y+=10}
 if(pending){pdf.setTextColor(155,93,22);text('Rapport provisoire : '+pending+' réservation(s) non finalisée(s).',16,y,10);pdf.setTextColor(28,58,47);y+=10}
