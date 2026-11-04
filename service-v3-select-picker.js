@@ -13,7 +13,7 @@
     source=select;focusBefore=document.activeElement;choice=select.value;
     const associated=select.labels?.[0];
     const explicit=select.getAttribute('aria-label')?.trim();
-    const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\\s+/g,' ').trim() : '';
+    const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\s+/g,' ').trim() : '';
     const label=explicit||labelText||'Choisir une option';
     dialog.querySelector('header strong').textContent=label;
     items.replaceChildren();
