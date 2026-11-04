@@ -220,6 +220,8 @@ $('bookingForm').addEventListener('submit',async event=>{
  if(!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
  const latest=readReservations(),again=ReservationEngine.validate(candidate,latest);
  if(!again.valid){feedback.textContent=again.errors.join(' ');refreshAvailability();return}
+ const loadState=window.RestoRush.evaluate(candidate,latest);
+ if(loadState.blocked){const ok=await window.RestoRush.confirm(candidate,latest);if(!ok){feedback.textContent='Créneau refusé.';return}const fresh=readReservations();if(!ReservationEngine.validate(candidate,fresh).valid||window.RestoRush.evaluate(candidate,fresh).current!==loadState.current){feedback.textContent='Situation modifiée : réessayez.';return}candidate.rushOverride={confirmedAt:new Date().toISOString(),range:loadState.range}}
  const warnings=ReservationEngine.seatingWarnings(candidate,latest);
  if(warnings.length){
   const accepted=await window.RestoConfirmSeating(warnings,candidate.client,candidate.time);
