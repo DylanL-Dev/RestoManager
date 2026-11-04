@@ -1074,3 +1074,24 @@ body>header.top>.headerQuickActions .refreshAppBtn svg{width:21px;height:21px}
 .walkinTypeChoices label:has(input:checked){background:#d8f3e4;color:#11583e;border-color:#087f5b}
 html[data-theme="dark"] .walkinTypeChoices label:has(input:checked){background:#245843;color:#f4fff7;border-color:#75b994}
 @media(max-width:380px){.walkinTypeChoices{grid-template-columns:1fr}}
+
+/* Shared dark visual language for the custom time picker (phone/tablet/desktop). */
+html[data-theme="dark"] .rmTimeDialog{background:#132b25!important;color:#f2faf5!important;border:1px solid #3c6253!important;color-scheme:dark}
+html[data-theme="dark"] .rmTimeDialog h2{color:#f2faf5!important}
+html[data-theme="dark"] .rmTimeEyebrow{color:#80d9ad!important}
+html[data-theme="dark"] .rmTimeClose{background:#294b3d!important;color:#f2faf5!important}
+html[data-theme="dark"] .rmTimePreview{background:#1e3b31!important;color:#a0edc0!important}
+html[data-theme="dark"] .rmTimePreview button{color:#f2faf5!important}
+html[data-theme="dark"] .rmTimePreview button.isActive{background:#087f5b!important;color:#fff!important}
+html[data-theme="dark"] .rmTimeFields label{color:#f2faf5!important}
+html[data-theme="dark"] .rmTimeFields select{background:#254438!important;color:#f2faf5!important;border-color:#527564!important}
+html[data-theme="dark"] .rmTimePrecision{color:#c2d5c9!important}
+html[data-theme="dark"] .rmTimeSwitch{background:#1e3b31!important}
+html[data-theme="dark"] .rmTimeSwitch button{color:#c2d5c9!important}
+html[data-theme="dark"] .rmTimeSwitch button.isActive{background:#087f5b!important;color:#fff!important}
+html[data-theme="dark"] .rmTimeNumber{background:#254438!important;color:#f2faf5!important;border-color:#3d6352!important}
+html[data-theme="dark"] .rmTimeNumber.isSelected{background:#079568!important;color:#fff!important;border-color:#9bf2c0!important}
+html[data-theme="dark"] .rmTimeActions button{background:#294b3d!important;color:#f2faf5!important;border-color:#527564!important}
+html[data-theme="dark"] .rmTimeActions .rmTimeSave{background:#078b62!important;color:#fff!important;border-color:#078b62!important}
+html[data-theme="dark"] .rmTimeDialog button:focus-visible{outline:3px solid #a0edc0!important;outline-offset:2px}
+@media(max-width:600px){.rmTimeDialog{width:min(100%,420px);max-height:calc(100dvh - 24px)}}
