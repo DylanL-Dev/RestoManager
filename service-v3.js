@@ -51,7 +51,7 @@ function shortcut(label,id,tableId){
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
  });actions.append(button);
 }
-if(s.key==='free'){shortcut('＋ Réserver cette table','reservationForm','bookingTable');shortcut('＋ Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Cette table est réservée. Pour accueillir le client, choisissez « Client arrivé » ou « Installer » ci-dessous.'))}
+if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Cette table est réservée. Pour accueillir le client, choisissez « Client arrivé » ou « Installer » ci-dessous.'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 const choices={reserved:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['arrived','✓ Client arrivé'],['seated','Installer'],['late','Signaler un retard'],['no_show','Absent']],late:[['arrived','✓ Client arrivé'],['seated','Installer'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['completed','Terminer le passage'],['released','Libérer la table']]};
@@ -83,7 +83,7 @@ function confirmTableDeparture(kind,r){
   const overlay=document.createElement('div');overlay.id='restoDepartureConfirm';overlay.className='restoDepartureOverlay';
   const dialog=document.createElement('section');dialog.className='restoDepartureDialog';dialog.setAttribute('role','alertdialog');dialog.setAttribute('aria-modal','true');
   dialog.setAttribute('aria-labelledby','restoDepartureTitle');
-  const icon=document.createElement('div');icon.className='restoDepartureIcon';icon.textContent=kind==='no_show'?'!':'✓';
+  const icon=document.createElement('div');icon.className='restoDepartureIcon';icon.innerHTML='<i data-lucide="'+(kind==='no_show'?'alert-circle':'check')+'"></i>';
   const eyebrow=document.createElement('div');eyebrow.className='restoDepartureEyebrow';eyebrow.textContent='GESTION DU SERVICE';
   const title=document.createElement('h2');title.id='restoDepartureTitle';title.textContent=kind==='completed'?'Terminer le passage ?':kind==='released'?'Libérer la table ?':'Signaler le client absent ?';
   const description=document.createElement('p');description.textContent=kind==='completed'?'Le passage sera marqué comme terminé dans le suivi des réservations.':kind==='released'?'Confirmez que les clients sont partis. Les tables seront libérées pour une nouvelle attribution.':'La réservation sera marquée comme absente.';
@@ -162,7 +162,7 @@ function showBookingSuccess(reservation){
  const old=document.getElementById('bookingSuccessDialog');if(old)old.remove();
  const overlay=document.createElement('div');overlay.id='bookingSuccessDialog';overlay.className='bookingSuccessOverlay';
  const dialog=document.createElement('section');dialog.className='bookingSuccessCard';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','bookingSuccessTitle');
- const mark=document.createElement('div');mark.className='bookingSuccessIcon';mark.textContent='✓';
+ const mark=document.createElement('div');mark.className='bookingSuccessIcon';mark.innerHTML='<i data-lucide="check"></i>';
  const heading=document.createElement('h2');heading.id='bookingSuccessTitle';heading.textContent='Réservation enregistrée !';
  const summary=document.createElement('p');summary.textContent=reservation.client+' · '+reservation.guests+' couvert(s) · '+reservation.time+' · '+(reservation.tables.length>1?'Tables ':'Table ')+reservation.tables.join(' + ');
  const note=document.createElement('p');note.className='bookingSuccessSub';note.textContent='La réservation a bien été ajoutée au service.';if(reservation.allergies||reservation.notes){const extra=document.createElement('p');extra.className='bookingSuccessSub';extra.textContent=(reservation.allergies?'⚠ Allergies : '+reservation.allergies+'  ':'')+(reservation.notes?'Notes : '+reservation.notes:'');dialog.append(extra)}
