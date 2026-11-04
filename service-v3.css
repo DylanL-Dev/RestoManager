@@ -864,3 +864,24 @@ html[data-theme="dark"] .closurePanel #closureManual:focus-visible,
 html[data-theme="dark"] .closurePanel summary:focus-visible{
  outline:2px solid #92dfba!important;outline-offset:2px!important;
 }
+
+
+/* Native-select replacement: V3 branded modal */
+.v3-picker-backdrop[hidden]{display:none!important}
+.v3-picker-backdrop{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.65)}
+.v3-picker-panel{box-sizing:border-box;width:min(480px,100%);max-height:80dvh;display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:20px;background:#fff;color:#173d31;border:1px solid #bdd9cb;box-shadow:0 20px 70px #0005}
+.v3-picker-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.v3-picker-panel header strong{font-size:1.1rem}
+.v3-picker-panel header button{font-size:26px;width:42px;height:42px}
+.v3-picker-items{overflow:auto;display:grid;gap:8px;overscroll-behavior:contain}
+.v3-picker-panel button{font:inherit;border:1px solid #a7c8b6;border-radius:12px;padding:12px;cursor:pointer;background:#eff8f2;color:#173d31}
+.v3-picker-items button{text-align:left;min-height:48px}
+.v3-picker-items button.selected{background:#bcebd3;border:2px solid #087f60;font-weight:700}
+.v3-picker-panel footer{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v3-picker-panel footer [data-confirm]{background:#087f60;color:#fff}
+.v3-picker-panel button:focus-visible{outline:3px solid #58cda1;outline-offset:2px}
+html[data-theme="dark"] .v3-picker-panel,body[data-theme="dark"] .v3-picker-panel{background:#192f29;color:#f1fff7;border-color:#426e5c}
+html[data-theme="dark"] .v3-picker-panel button,body[data-theme="dark"] .v3-picker-panel button{background:#27473a;color:#f1fff7;border-color:#426e5c}
+html[data-theme="dark"] .v3-picker-items button.selected,body[data-theme="dark"] .v3-picker-items button.selected{background:#087f60;color:#fff;border-color:#72d8aa}
+html[data-theme="dark"] .v3-picker-panel footer [data-confirm],body[data-theme="dark"] .v3-picker-panel footer [data-confirm]{background:#087f60;color:#fff}
+@media(max-width:600px){.v3-picker-backdrop{align-items:flex-end;padding:10px}.v3-picker-panel{width:100%;max-height:78dvh}}
