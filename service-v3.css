@@ -526,3 +526,22 @@ html{scroll-padding-bottom:110px}
 .tableSecondaryActions[open] summary:after{content:'⌃'}
 .tableSecondaryActions .tableStatusAction{margin:6px;min-height:42px}
 .tableStatusActions>.tableStatusAction:first-child{background:#087f5b;color:white;border-color:#087f5b;font-weight:750}
+
+/* Choix rapide du bouton Ajouter */
+.restoAddChoiceOverlay[hidden]{display:none!important}
+.restoAddChoiceOverlay{position:fixed;inset:0;z-index:15000;display:flex;align-items:center;justify-content:center;padding:18px}
+.restoAddChoiceBackdrop{position:absolute;inset:0;background:rgba(11,35,28,.56)}
+.restoAddChoiceDialog{position:relative;width:min(100%,470px);background:#fff;border-radius:23px;padding:23px;box-shadow:0 22px 65px #09281b44;display:grid;gap:12px}
+.restoAddChoiceTop{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;gap:10px}
+.restoAddChoiceTop p{color:#087f5b;font-weight:800;letter-spacing:.11em;font-size:11px;margin:0 0 8px}
+.restoAddChoiceTop h2{color:#173e33;font-size:25px;margin:0 0 6px}
+.restoAddChoiceTop span{color:#718078;font-size:14px}
+.restoAddChoiceClose{border:0;border-radius:12px;background:#eaf5ee;color:#235d49;width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
+.restoAddChoiceOption{border:1px solid #d9e6dd;border-radius:15px;background:#f8fbf9;color:#164637;padding:16px;display:flex;align-items:center;gap:13px;text-align:left;min-height:92px;cursor:pointer}
+.restoAddChoiceOption:active{background:#eaf7ef}
+.restoAddChoiceOption>svg:first-child{width:26px;height:26px;flex-shrink:0;color:#087f5b}
+.restoAddChoiceOption>svg:last-child{width:19px;height:19px;flex-shrink:0;color:#77968a}
+.restoAddChoiceOption span{flex:1;display:grid;gap:5px}
+.restoAddChoiceOption strong{font-size:16px}
+.restoAddChoiceOption small{font-size:13px;color:#718078;line-height:1.4}
+.restoAddChoiceOpen{overflow:hidden}
