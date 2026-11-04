@@ -5,7 +5,7 @@ const $=id=>document.getElementById(id);
 const mins=s=>Number(String(s).slice(0,2))*60+Number(String(s).slice(3,5));
 const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
 function settings(){try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return {percent:[40,50,55,60,65,70,75,80,85,90].includes(Number(v.percent))?Number(v.percent):60,window:60,step:15}}catch(_){return {...DEFAULT}}}
-function capacity(){return FloorPlan.get().tables.reduce((sum,t)=>sum+Number(t.capacity||0),0)}
+function capacity(){return TableStore.get().tables.reduce((sum,t)=>sum+Number(t.capacity||0),0)}
 function service(time){const m=mins(time);return Object.values(ReservationEngine.getShifts()).find(s=>s.enabled&&m>=mins(s.start)&&m<=mins(s.end))||null}
 function relevant(r,date){return r.date===date&&ReservationEngine.isBlocking(r)&&!r.walkIn&&typeof r.time==='string'}
 function windowFor(time){const shift=service(time);if(!shift)return null;const start=Math.max(mins(shift.start),Math.floor(mins(time)/60)*60),end=Math.min(mins(shift.end)+1,start+settings().window);return {start,end,shift}}
@@ -28,7 +28,7 @@ window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 const date=today();$('serviceDate').textContent=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-let plan,bookings;try{plan=FloorPlan.get();const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');bookings=ReservationEngine.normalizeReservations(raw).filter(r=>r.date===date)}catch(e){$('tableGrid').textContent='Données indisponibles : '+e.message;return}
+let plan,bookings;try{plan=TableStore.get();const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');bookings=ReservationEngine.normalizeReservations(raw).filter(r=>r.date===date)}catch(e){$('tableGrid').textContent='Données indisponibles : '+e.message;return}
 const rooms=plan.rooms||[];rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;$('roomFilter').append(o)});
 let filter='all',selected=null;
 const detailNode=$('detail');
@@ -239,7 +239,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  }catch(error){feedback.textContent='Enregistrement impossible : '+error.message}
 });
 refreshAvailability();
-window.addEventListener('restomanager:v3-tables',()=>{plan=FloorPlan.get();const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.name;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;refreshAvailability();render()});
+window.addEventListener('restomanager:v3-tables',()=>{plan=TableStore.get();const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.name;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;refreshAvailability();render()});
 window.addEventListener('restomanager:v3-change',()=>{try{bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});
 setInterval(()=>{if(!modal.hidden&&selected){const t=plan.tables.find(x=>x.number===selected);if(t)detail(t,state(t))}},60000);
