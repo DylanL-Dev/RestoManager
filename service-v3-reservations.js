@@ -62,6 +62,7 @@ async function action(id,kind){
  }
  if(kind==='delete'){if(!confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.'))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
  if(kind==='cancel'&&!confirm('Annuler la réservation de '+r.client+' ?'))return;
+ if(kind==='seated'&&window.RestoCheckOccupiedTables?.(r,all))return;
  if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(r)))return;
  const next=E.transition(r,kind==='cancel'?'cancelled':kind,undefined,all);
  if(!next.valid)return notify(next.error);
