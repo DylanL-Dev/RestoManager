@@ -18,7 +18,7 @@ if(period==='month'){start=new Date(d.getFullYear(),d.getMonth(),1,12);end=new D
 const from=fmt(start),to=fmt(end),records=ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem('restomanager_reservations')||'[]')).filter(r=>r.date>=from&&r.date<=to).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
 const served=records.filter(r=>['completed','released'].includes(r.status)),covers=served.reduce((n,r)=>n+r.guests,0),hotel=served.filter(r=>r.type==='hotel').reduce((n,r)=>n+r.guests,0),walkins=served.filter(r=>r.walkIn).reduce((n,r)=>n+r.guests,0),noShow=records.filter(r=>r.status==='no_show').length,cancelled=records.filter(r=>r.status==='cancelled').length,pending=records.filter(r=>!['completed','released','no_show','cancelled'].includes(r.status)).length,days=new Set(served.map(r=>r.date)).size;
 const frenchDate=value=>new Date(value+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-const serviceOf=r=>r.time>='12:00'&&r.time<='14:30'?'midi':r.time>='17:00'&&r.time<='21:30'?'soir':'autre';
+const serviceOf=r=>r.time>='12:00'&&r.time<='14:30'?'midi':r.time>='19:00'&&r.time<='21:30'?'soir':'autre';
 const lunch=served.filter(r=>serviceOf(r)==='midi'),dinner=served.filter(r=>serviceOf(r)==='soir');
 const sum=arr=>arr.reduce((n,r)=>n+r.guests,0);
 const title=period==='month'?'Rapport mensuel':period==='week'?'Rapport hebdomadaire':'Rapport journalier';
@@ -44,7 +44,7 @@ if(period==='month'){text('Moyenne par jour avec service : '+(days?(covers/days)
 if(pending){pdf.setTextColor(155,93,22);text('Rapport provisoire : '+pending+' réservation(s) non finalisée(s).',16,y,10);pdf.setTextColor(28,58,47);y+=10}
 y+=4;text('Répartition par service',16,y,13,true);y+=9;
 text('Midi (12h - 14h30) : '+sum(lunch)+' couverts, '+lunch.length+' passages',16,y,10);y+=7;
-text('Soir (17h - 21h30) : '+sum(dinner)+' couverts, '+dinner.length+' passages',16,y,10);y+=8;
+text('Soir (19h - 21h30) : '+sum(dinner)+' couverts, '+dinner.length+' passages',16,y,10);y+=8;
 y+=5;text('Détail par journée',16,y,14,true);y+=10;
 pdf.setFillColor(236,247,240);pdf.rect(16,y-6,178,9,'F');text('Date',19,y,10,true);text('Couverts',80,y,10,true);text('Passages',120,y,10,true);text('Absences',158,y,10,true);y+=10;
 const dates=[...new Set(records.map(r=>r.date))].sort();
