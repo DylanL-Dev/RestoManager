@@ -741,3 +741,26 @@ html[data-theme="dark"] :is(.bookingExtraFields,.tableAdminPanel,.historyPanel) 
 html[data-theme="dark"] .tableAdminPanel .roomManager{background:#20382f!important;border-color:#426352!important}
 html[data-theme="dark"] .tableAdminPanel .roomManagerItem{border-color:#426352}
 html[data-theme="dark"] .tableAdminPanel .roomManagerForm button{background:#14795b!important;color:#fff!important;border-color:#14795b!important}
+
+/* Dark theme: add-client dialog and walk-in controls */
+html[data-theme="dark"] .restoAddChoiceDialog{background:#1b342b;color:#f0f8f3;border:1px solid #476759;box-shadow:0 24px 70px #06150fcc}
+html[data-theme="dark"] .restoAddChoiceTop p{color:#7be1b7}
+html[data-theme="dark"] .restoAddChoiceTop h2{color:#f0f8f3}
+html[data-theme="dark"] .restoAddChoiceTop span{color:#c1d4c9}
+html[data-theme="dark"] .restoAddChoiceClose{background:#315347;color:#f0f8f3}
+html[data-theme="dark"] .restoAddChoiceOption{background:#254438;color:#f0f8f3;border-color:#4b7060}
+html[data-theme="dark"] .restoAddChoiceOption:hover,html[data-theme="dark"] .restoAddChoiceOption:focus-visible{background:#315c4a;border-color:#77c4a0}
+html[data-theme="dark"] .restoAddChoiceOption:active{background:#366c54}
+html[data-theme="dark"] .restoAddChoiceOption strong{color:#f0f8f3}
+html[data-theme="dark"] .restoAddChoiceOption small{color:#c1d4c9}
+html[data-theme="dark"] .restoAddChoiceOption>svg:first-child{color:#67d8a5}
+html[data-theme="dark"] .restoAddChoiceOption>svg:last-child{color:#b3d7c5}
+html[data-theme="dark"] .walkinPanel :is(label,.muted,.actionPanelBody>p){color:#c4d8cd!important}
+html[data-theme="dark"] .walkinPanel #walkinGuests{background:#203c31!important;color:#f0f8f3!important;border-color:#567969!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinPaxButtons button{background:#2a483c!important;color:#eef8f1!important;border-color:#4b7060!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinPaxButtons button.selected{background:#098363!important;color:#fff!important;border-color:#4bd5a2!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinRecommendation{background:#29493b!important;color:#e6f7ed!important;border:1px solid #496c59}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinInstall{background:#14795b!important;color:#fff!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinInstall:disabled{background:#355449!important;color:#c5d6ce!important;opacity:.75}
+html[data-theme="dark"] .walkinPanel #walkinForm :is(.tableChoiceTrigger,.tablePickerOpen){background:#29493b!important;color:#f0f8f3!important;border-color:#4b7060!important}
+html[data-theme="dark"] :is(.restoAddChoiceClose,.restoAddChoiceOption,.walkinPaxButtons button):focus-visible{outline:3px solid #7be1b7;outline-offset:2px}
