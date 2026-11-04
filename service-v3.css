@@ -1062,3 +1062,15 @@ body>header.top>.headerQuickActions .refreshAppBtn svg{width:21px;height:21px}
  body>header.top>.headerQuickActions{gap:7px}
  body>header.top>.headerQuickActions :is(.refreshAppBtn,.serviceBell){width:42px;height:42px;min-width:42px}
 }
+
+/* Fast walk-in client origin selector, accessible on POS, tablet and phone. */
+.walkinTypeField{border:0;padding:0;margin:0 0 12px;min-width:0}
+.walkinTypeField legend{font-size:13px;font-weight:750;margin-bottom:8px}
+.walkinTypeChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.walkinTypeChoices label{display:flex;align-items:center;justify-content:center;gap:8px;
+ min-height:44px;padding:9px 12px;border:1px solid var(--border,#a4b5a9);
+ border-radius:12px;cursor:pointer;font-weight:650}
+.walkinTypeChoices input{accent-color:#087f5b;width:17px;height:17px;flex:none}
+.walkinTypeChoices label:has(input:checked){background:#d8f3e4;color:#11583e;border-color:#087f5b}
+html[data-theme="dark"] .walkinTypeChoices label:has(input:checked){background:#245843;color:#f4fff7;border-color:#75b994}
+@media(max-width:380px){.walkinTypeChoices{grid-template-columns:1fr}}
