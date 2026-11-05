@@ -43,6 +43,18 @@ jobs:
           Point d'entree: login.html
           N'utilisez jamais les comptes ou donnees de production pour les essais.
           EOF
+      - name: Smoke-test staging over HTTP
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory staging >/tmp/restomanager-staging-http.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for i in 1 2 3 4 5; do
+            if curl --silent --fail http://127.0.0.1:8765/login.html >/dev/null; then break; fi
+            sleep 1
+          done
+          for file in login.html reservations-preview.html admin-users.html room-config.html supabase-login.js supabase-service-bridge.js supabase-reservations-preview.js supabase-reservation-actions.js supabase-room-config.js supabase-admin-users.js; do
+            curl --fail --silent --show-error "http://127.0.0.1:8765/$file" >/dev/null
+          done
       - uses: actions/upload-artifact@v4
         with:
           name: restomanager-v3-staging
