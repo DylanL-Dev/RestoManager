@@ -1219,3 +1219,16 @@ html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;
  #tables #filters.tableFiltersToolbar>button{min-height:44px}
  #tables .tableGrid{clear:both}
 }
+
+/* Harmonisation des filtres de statut avec les sélecteurs de tables. */
+#tables #filters.tableFiltersToolbar>button{
+ border-radius:12px!important;
+ min-height:44px;
+ padding:8px 15px;
+ font-weight:650;
+ transition:background-color .15s,border-color .15s;
+}
+#tables #filters.tableFiltersToolbar>button:focus-visible{
+ outline:2px solid #83c9ab;
+ outline-offset:2px;
+}
