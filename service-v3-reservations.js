@@ -52,6 +52,14 @@ function notify(msg){$('reservationMessage').textContent=msg}
 function save(all){if(window.RestoSharedReservations)throw Error('Mode Supabase : modifications locales désactivées.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
 async function action(id,kind){
  if(window.RestoSharedReservations){
+  if(kind==='edit'){
+   const r=load().find(item=>item.id===id);
+   if(!r)return notify('Réservation introuvable.');
+   editing=id;chosenTables=r.tables.slice();
+   $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
+   $('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
+   editChoices();$('editForm').hidden=false;$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return;
+  }
   if(kind==='delete'){
    const current=load().find(r=>r.id===id);
    if(!current)return notify('Réservation introuvable.');
@@ -144,6 +152,18 @@ $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value
 $('editCancel').addEventListener('click',()=>{editing=null;chosenTables=[];$('editForm').hidden=true});
 $('editForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!editing)return;
+ if(window.RestoSharedReservations){
+  try{
+   const previous=load().find(r=>r.id===editing);if(!previous)throw Error('Réservation introuvable');
+   const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests:Number($('editGuests').value),tables:chosenTables.slice(),notes:$('editNotes').value.trim()};
+   if(!updated.tables.length)throw Error('Choisissez une table');
+   notify('Enregistrement dans Supabase…');
+   await window.RestoUpdateSharedBooking(updated);
+   await window.RestoRefreshSharedService?.();
+   editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée dans Supabase.');
+  }catch(err){notify('Modification impossible : '+err.message)}
+  return;
+ }
  try{
  const all=load(),i=all.findIndex(r=>r.id===editing);if(i<0)throw Error('Réservation introuvable');
  const previous=all[i];if($('editDate').value<new Date().toLocaleDateString('en-CA')&&$('editDate').value!==previous.date)throw Error('Impossible de déplacer une réservation vers une date passée.');if(!E.isBlocking(previous))throw Error('Une réservation terminée ou annulée ne peut pas être réactivée par modification.');
