@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion · RestoManager V3</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:light;background:#f3f8f5;color:#163c30}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:22px}
+main{width:min(100%,420px);background:white;border:1px solid #dce9e1;border-radius:22px;padding:32px;box-shadow:0 20px 60px #0c4c2920}
+h1{margin:0;font-size:1.65rem}p{line-height:1.5;color:#587469}label{display:block;font-weight:650;margin-top:18px}
+input{width:100%;padding:14px;border:1px solid #b8cfc2;border-radius:12px;margin-top:7px;font:inherit}
+button{width:100%;border:0;border-radius:12px;padding:14px;background:#087f5b;color:white;font:inherit;font-weight:700;margin-top:24px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}#message{min-height:1.5em}small{color:#637b70}
+</style></head><body><main><h1>RestoManager <span style="color:#087f5b">V3</span></h1>
+<p>Accès sécurisé du personnel · Réception et F&amp;B</p>
+<form id="login"><label for="email">Adresse e-mail</label><input id="email" type="email" autocomplete="username" required>
+<label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password" required>
+<button id="submit" type="submit">Se connecter</button></form>
+<p id="message" role="status" aria-live="polite"></p><small>Version de test : l'accès au service sera activé après raccordement complet de la V3.</small>
+</main><script type="module" src="supabase-login.js"></script></body></html>
