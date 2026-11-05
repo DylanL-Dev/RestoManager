@@ -58,7 +58,8 @@ try{
   for(const a of snapshot.assignments){
    if(!assigned.has(a.reservation_id))assigned.set(a.reservation_id,[]);
    const label=byTable.get(a.table_id);
-   if(label && /^\d+$/.test(label))assigned.get(a.reservation_id).push(Number(label));
+   const tableNumber=Number(String(label||'').trim().replace(/^table\s*/i,''));
+   if(Number.isInteger(tableNumber)&&tableNumber>0)assigned.get(a.reservation_id).push(tableNumber);
   }
   window.RestoSharedReservations=snapshot.reservations.map(r=>{
    const dt=new Date(r.starts_at);
