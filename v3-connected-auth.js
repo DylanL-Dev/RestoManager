@@ -24,7 +24,7 @@ try{
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form){e.preventDefault();e.stopImmediatePropagation();label.textContent='Action désactivée : raccordement Supabase en cours';return;}
+  if(e.type==='submit' && form && form.id!=='bookingForm'){e.preventDefault();e.stopImmediatePropagation();label.textContent='Action désactivée : raccordement Supabase en cours';return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
