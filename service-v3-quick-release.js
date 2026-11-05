@@ -21,8 +21,54 @@ function render(){
  for(const r of shown){
   const row=el('article','quickReleaseRow'),info=el('div','quickReleaseInfo'),top=el('strong','', 'Table '+(r.tables||[]).join(' + ')),sub=el('span','',r.client+(room(r)?' · Chambre '+room(r):'')+' · '+r.guests+' pers. · '+r.time);
   info.append(top,sub);const btn=el('button','quickReleaseButton','Libérer');btn.type='button';btn.setAttribute('aria-label','Libérer la table '+(r.tables||[]).join(' et ')+' de '+r.client);
-  btn.addEventListener('click',()=>release(r.id));row.append(info,btn);container.append(row);
+  btn.addEventListener('click',()=>release(r.id));
+  const edit=el('button','quickReleaseEdit','Modifier');edit.type='button';edit.setAttribute('aria-label','Modifier la table et la durée de '+r.client);
+  edit.addEventListener('click',()=>openQuickEdit(r.id));
+  const actions=el('div','quickReleaseActions');actions.append(edit,btn);row.append(info,actions);container.append(row);
  }
+}
+
+function openQuickEdit(id){
+ const current=read().find(r=>r.id===id&&r.status==='seated');if(!current)return;
+ document.getElementById('quickEditOverlay')?.remove();
+ const overlay=el('div','quickEditOverlay'),panel=el('section','quickEditPanel');
+ panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Modifier la table et la durée');
+ const heading=el('h2','','Modifier l’installation');
+ const subtitle=el('p','',current.client+' · '+current.guests+' personne(s)');
+ const tableLabel=el('label','','Table');const tableSelect=el('select');
+ const plan=TableStore.get();for(const t of plan.tables){const option=el('option','', 'Table '+t.number+' · '+t.capacity+' places');option.value=String(t.number);tableSelect.append(option)}
+ if(current.tables.length===1)tableSelect.value=String(current.tables[0]);
+ else{const option=el('option','','Fusion actuelle : '+current.tables.join(' + '));option.value=current.tables.join(',');tableSelect.prepend(option);tableSelect.value=option.value}
+ tableLabel.append(tableSelect);
+ const durationLabel=el('label','','Durée prévue');const durationSelect=el('select');
+ for(const mins of [30,45,60,75,90,105,120,150,180]){const option=el('option','',mins%60?Math.floor(mins/60)+' h '+String(mins%60).padStart(2,'0'):mins/60+' h');option.value=String(mins);durationSelect.append(option)}
+ if(![30,45,60,75,90,105,120,150,180].includes(Number(current.duration))){const option=el('option','',current.duration+' min (actuelle)');option.value=String(current.duration);durationSelect.append(option)}
+ durationSelect.value=String(current.duration);
+ durationLabel.append(durationSelect);
+ const hint=el('p','quickEditHint');const start=current.seatedAt?new Date(current.seatedAt):null;
+ function preview(){if(start&&!Number.isNaN(start.getTime())){const end=new Date(start.getTime()+Number(durationSelect.value)*60000);hint.textContent='Fin prévue : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · La table reste occupée jusqu’à sa libération.'}else hint.textContent='La table reste occupée jusqu’à sa libération.'}
+ durationSelect.addEventListener('change',preview);preview();
+ const error=el('p','quickEditError');error.setAttribute('role','alert');
+ const controls=el('div','quickEditControls'),cancel=el('button','','Annuler'),save=el('button','','Enregistrer');
+ cancel.type='button';save.type='button';save.className='quickEditSave';
+ function close(){overlay.remove()}
+ cancel.addEventListener('click',close);
+ overlay.addEventListener('click',e=>{if(e.target===overlay)close()});
+ save.addEventListener('click',()=>{
+  const all=read(),index=all.findIndex(r=>r.id===id&&r.status==='seated');if(index<0){error.textContent='Installation introuvable.';return}
+  const previous=all[index],tables=tableSelect.value.split(',').map(Number),duration=Number(durationSelect.value);
+  const candidate={...previous,tables,duration};
+  const capacity=tables.reduce((n,number)=>n+(plan.tables.find(t=>t.number===number)?.capacity||0),0);
+  if(capacity<previous.guests){error.textContent='Capacité insuffisante pour '+previous.guests+' personne(s).';return}
+  const validation=ReservationEngine.validate(candidate,all,id);
+  if(!validation.valid){error.textContent=validation.errors.join(' ');return}
+  const occupied=all.find(r=>r.id!==id&&r.status==='seated'&&r.date===candidate.date&&r.tables.some(t=>tables.includes(t)));
+  if(occupied){error.textContent='Cette table est encore occupée par '+occupied.client+'.';return}
+  all[index]=candidate;
+  try{localStorage.setItem(KEY,JSON.stringify(all))}catch(e){error.textContent='Enregistrement impossible : '+e.message;return}
+  close();$('quickReleaseFeedback').textContent='✓ Table et durée mises à jour pour '+previous.client+'.';window.dispatchEvent(new Event('restomanager:v3-change'));render();
+ });
+ controls.append(cancel,save);panel.append(heading,subtitle,tableLabel,durationLabel,hint,error,controls);overlay.append(panel);document.body.append(overlay);tableSelect.focus();
 }
 function release(id){
  const all=read(),index=all.findIndex(r=>r.id===id&&r.status==='seated'&&r.date===serviceDay());if(index<0){render();return}
