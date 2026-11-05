@@ -111,10 +111,10 @@ async function start(){
   $('adminLink').hidden=profile.role!=='fb_admin';
   $('refresh').disabled=false;
   stop=await subscribeSharedService(showSnapshot,showError);
- }catch(error){showError(error);$('detail').textContent='Connectez-vous avec un compte autorisé pour accéder aux réservations.';}
+ }catch(error){showError(error);$('content').classList.add('hidden');$('refresh').disabled=true;$('detail').textContent='Accès réservé au personnel autorisé. Redirection vers la connexion…';window.location.replace('login.html');}
 }
 $('refresh').addEventListener('click',refresh);
-$('logout').addEventListener('click',async()=>{++selectSeq;await abandonHold();if(stop)stop();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
+$('logout').addEventListener('click',async()=>{++selectSeq;$('content').classList.add('hidden');$('refresh').disabled=true;await abandonHold();if(stop)stop();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
 window.addEventListener('pagehide',()=>{clearInterval(holdRenewalTimer);if(stop)stop();});
 start();
 
