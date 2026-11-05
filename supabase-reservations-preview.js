@@ -73,7 +73,20 @@ async function renewSelectedHolds(){
  }finally{renewing=false;}
 }
 const holdRenewalTimer=setInterval(()=>{void renewSelectedHolds();},60000);
-let stop=null,loading=false;
+let stop=null,loading=false,authRedirecting=false;
+function leaveProtectedScreen(){
+ if(authRedirecting)return;
+ authRedirecting=true;
+ ++selectSeq;
+ resetHoldState();
+ $('content').classList.add('hidden');
+ $('refresh').disabled=true;
+ if(stop)stop();
+ window.location.replace('login.html');
+}
+supabase.auth.onAuthStateChange((event,session)=>{
+ if(event==='SIGNED_OUT'||(event==='USER_DELETED')||(!session&&event==='INITIAL_SESSION'))leaveProtectedScreen();
+});
 function showError(error){$('connection').textContent='Connexion aux données indisponible';$('detail').textContent=error?.message||'Erreur de synchronisation';$('detail').classList.add('error');}
 function showSnapshot(data){
  latestSnapshot=data;
@@ -111,7 +124,7 @@ async function start(){
   $('adminLink').hidden=profile.role!=='fb_admin';
   $('refresh').disabled=false;
   stop=await subscribeSharedService(showSnapshot,showError);
- }catch(error){showError(error);$('content').classList.add('hidden');$('refresh').disabled=true;$('detail').textContent='Accès réservé au personnel autorisé. Redirection vers la connexion…';window.location.replace('login.html');}
+ }catch(error){showError(error);$('content').classList.add('hidden');$('refresh').disabled=true;$('detail').textContent='Accès réservé au personnel autorisé. Redirection vers la connexion…';leaveProtectedScreen();}
 }
 $('refresh').addEventListener('click',refresh);
 $('logout').addEventListener('click',async()=>{++selectSeq;$('content').classList.add('hidden');$('refresh').disabled=true;await abandonHold();if(stop)stop();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
