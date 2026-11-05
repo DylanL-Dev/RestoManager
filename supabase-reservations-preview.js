@@ -98,6 +98,21 @@ $('bookingForm').addEventListener('submit',async e=>{
  finally{submitting=false;}
 });
 
+function fusionAllowed(data,ids){
+ if(ids.length<=1)return true;
+ const rooms=new Set(ids.map(id=>data.tables.find(t=>t.id===id)?.room_id));
+ if(rooms.size!==1)return false;
+ const seen=new Set([ids[0]]);
+ let changed=true;
+ while(changed){
+  changed=false;
+  for(const edge of data.fusionLinks||[]){
+   if(seen.has(edge.table_a)&&ids.includes(edge.table_b)&&!seen.has(edge.table_b)){seen.add(edge.table_b);changed=true;}
+   if(seen.has(edge.table_b)&&ids.includes(edge.table_a)&&!seen.has(edge.table_a)){seen.add(edge.table_a);changed=true;}
+  }
+ }
+ return seen.size===ids.length;
+}
 function suggestTables(data,partySize,start,end){
  const conflicts=new Set();
  for(const r of data.reservations){
@@ -116,6 +131,7 @@ function suggestTables(data,partySize,start,end){
  const candidates=tables.sort((a,b)=>Number(b.seats)-Number(a.seats)).slice(0,32);
  function walk(index,chosen,seats){
   if(seats>=partySize){
+   if(!fusionAllowed(data,chosen.map(t=>t.id)))return;
    const score=[chosen.length,seats-partySize];
    if(!best||score[0]<best.score[0]||(score[0]===best.score[0]&&score[1]<best.score[1]))
     best={ids:chosen.map(t=>t.id),score};
