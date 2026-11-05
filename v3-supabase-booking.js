@@ -17,7 +17,7 @@ function parisDateTime(date,time){
 }
 export async function createSharedBooking(candidate){
  const snapshot=await loadSharedService();
- const byNumber=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(t.label),t]));
+ const byNumber=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t]));
  const tableIds=candidate.tables.map(n=>{
   const table=byNumber.get(Number(n));
   if(!table)throw Error('Table '+n+' absente de Supabase : vérifier la configuration des salles');
