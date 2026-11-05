@@ -28,7 +28,7 @@ export async function createSharedBooking(candidate){
  const endsAt=new Date(Date.parse(startsAt)+Number(candidate.duration||90)*60000).toISOString();
  const name=candidate.client.trim();
  if(!name)throw Error('Nom ou chambre requis');
- const hotelRoom=candidate.type==='hotel'?name:null;
+ const hotelRoom=candidate.type==='hotel'&&/^\d{1,6}[A-Za-z]?$/.test(name)?name:null;
  const notes=[candidate.notes,candidate.allergies?'ALLERGIES À VÉRIFIER : '+candidate.allergies:''].filter(Boolean).join('\n');
  return confirmReservation({guestName:name,hotelRoom,partySize:Number(candidate.guests),startsAt,endsAt,tableIds,notes});
 }
