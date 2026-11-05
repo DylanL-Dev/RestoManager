@@ -1145,3 +1145,12 @@ html[data-theme="dark"] .restoDepartureDialog :is(.restoDepartureClient,.restoDe
 html[data-theme="dark"] .restoDepartureDialog .restoDepartureInfo{background:#294b3c;color:#f4fff7;border:1px solid #628873}
 html[data-theme="dark"] .restoDepartureDialog .restoDepartureActions .restoDepartureCancel{background:#294638;color:#edf8f0;border:1px solid #739584}
 html[data-theme="dark"] .restoDepartureDialog .restoDepartureActions .restoDepartureAccept{background:#0b986a;color:#fff;border:1px solid #0b986a}
+
+/* Occupied tables: explicit card surfaces and readable text in dark mode. */
+html[data-theme="dark"] .quickReleasePanel .quickReleaseRow{background:#244236!important;border:1px solid #557a65!important;color:#f2faf5!important;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo strong{color:#f2faf5!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo>span:not(.quickReleaseStatus){color:#d2e5d9!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseTiming{color:#c4dfce!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseStatusOccupied{background:#145b40!important;color:#e3fff0!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseStatusOverdue{background:#66501f!important;color:#fff0b7!important}
+html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;color:#173e33}
