@@ -25,14 +25,14 @@ try{
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (form.id!=='bookingForm'||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();label.textContent='Action désactivée : raccordement Supabase en cours';return;}
+  if(e.type==='submit' && form && (form.id!=='bookingForm'||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion Supabase en cours : attendez la synchronisation avant d’enregistrer.':'Cette fonction de Gestion n’est pas encore raccordée à Supabase.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
    const id=btn.id||'';
    // Let view navigation, date selection, search and tabs work; block mutation buttons.
    if(/(?:save|submit|delete|remove|release|cancelReservation|confirmReservation|install|arrive|seated|noShow|complete|closure)/i.test(id)){
-    e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification bloquée · Supabase reste la source officielle';
+    e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification bloquée · Supabase reste la source officielle';const feedback=document.getElementById('bookingFeedback');if(feedback)feedback.textContent='Cette action nécessite encore un raccordement à Supabase.';
    }
   }
  };
