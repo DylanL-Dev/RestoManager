@@ -1,16 +1,30 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const client=createClient('https://tnsrkargogckgtsxipwd.supabase.co','sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7');
+// Public technical aliases only. No real employee emails or passwords are embedded.
+// Accounts must be created and confirmed by an admin in Supabase Auth.
+const accounts=Object.freeze({
+ 'reception':{email:'reception@accounts.restomanager.example.com',role:'reception'},
+ 'admin-fb':{email:'admin-fb@accounts.restomanager.example.com',role:'fb_admin'}
+});
 const form=document.getElementById('login'),button=document.getElementById('submit'),message=document.getElementById('message');
 form.addEventListener('submit',async event=>{
  event.preventDefault();button.disabled=true;message.textContent='Connexion en cours…';
+ const username=document.getElementById('username').value.trim().toLowerCase();
+ const account=Object.hasOwn(accounts,username)?accounts[username]:null;
  try {
-  const {error}=await client.auth.signInWithPassword({email:document.getElementById('email').value.trim(),password:document.getElementById('password').value});
+  if(!account) throw new Error('Unknown username');
+  const {error}=await client.auth.signInWithPassword({email:account.email,password:document.getElementById('password').value});
   if(error) throw error;
-  const {data, error:profileError}=await client.from('staff_profiles').select('role,display_name,active').single();
-  if(profileError||!data?.active||!['reception','fb_admin'].includes(data.role)){
-   await client.auth.signOut();message.textContent='Compte non autorisé. Contactez votre administrateur.';return;
+  const {data:{user},error:userError}=await client.auth.getUser();
+  if(userError||!user) throw new Error('Invalid session');
+  const {data,error:profileError}=await client.from('staff_profiles').select('role,display_name,active').eq('user_id',user.id).single();
+  if(profileError||!data?.active||data.role!==account.role){
+   await client.auth.signOut();
+   message.textContent='Compte non autorisé. Contactez votre administrateur.';return;
   }
   message.textContent='Connexion validée ('+(data.role==='fb_admin'?'F&B':'Réception')+'). L’espace de service sera ouvert après intégration.';
- } catch(_error){message.textContent='Connexion impossible. Vérifiez vos identifiants ou contactez votre administrateur.';}
- finally{button.disabled=false;}
+ } catch(_error){
+  await client.auth.signOut();
+  message.textContent='Connexion impossible. Vérifiez vos identifiants ou contactez votre administrateur.';
+ } finally{button.disabled=false;}
 });
