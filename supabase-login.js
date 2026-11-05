@@ -30,3 +30,18 @@ form.addEventListener('submit',async event=>{
   message.textContent='Connexion impossible. Vérifiez vos identifiants ou contactez votre administrateur.';
  } finally{button.disabled=false;}
 });
+ // Skip the login form only when an existing session still has an active staff role.
+async function resumeExistingSession(){
+ try{
+  const {data:{user},error}=await client.auth.getUser();
+  if(error||!user)return;
+  const {data:profile,error:profileError}=await client.from('staff_profiles')
+   .select('role,active').eq('user_id',user.id).single();
+  if(!profileError&&profile?.active&&['reception','fb_admin'].includes(profile.role)){
+   window.location.replace('reservations-preview.html');
+  }
+ }catch{
+  // Leave the login form available if session validation fails.
+ }
+}
+void resumeExistingSession();
