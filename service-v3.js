@@ -137,7 +137,7 @@ function refreshAvailability(){
  if(fusionPanel)fusionPanel.replaceChildren();
  select.replaceChildren();window.RestoFusionSelected=null;select.required=true;
  if(!dateValue||!time||!Number.isInteger(guests)||guests<1)return;
- const reservationsAll=readReservations(),duration=ReservationEngine.DEFAULT_DURATION;
+ const reservationsAll=readReservations(),duration=ReservationEngine.getDefaultDuration();
  const suitable=plan.tables.filter(t=>t.capacity>=guests&&(t.capacityMin||1)<=guests).sort((a,b)=>a.capacity-b.capacity||a.number-b.number);
  const pairs=window.RestoFusion?window.RestoFusion.pairs():[];
  const configured=pairs.map(pair=>{
@@ -217,7 +217,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  try{
  const existing=readReservations(),table=Number($('bookingTable').value),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<today())throw Error('Impossible de créer une réservation à une date passée.');
- const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.DEFAULT_DURATION,tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
+ const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.getDefaultDuration(),tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
  if(!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
