@@ -52,3 +52,17 @@ export async function deleteCancelledSharedBooking(id){
  return data;
 }
 window.RestoDeleteCancelledSharedBooking=deleteCancelledSharedBooking;
+
+export async function updateSharedBooking(candidate){
+ const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js');
+ await requireStaff();
+ const snapshot=await loadSharedService();
+ const byNumber=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t.id]));
+ const ids=candidate.tables.map(n=>{const id=byNumber.get(Number(n));if(!id)throw Error('Table '+n+' introuvable dans Supabase');return id;});
+ const start=parisDateTime(candidate.date,candidate.time);
+ const end=new Date(Date.parse(start)+(Number(candidate.duration)||90)*60000).toISOString();
+ const {data,error}=await supabase.rpc('update_reservation_v3',{p_reservation_id:candidate.id,p_guest_name:candidate.client,p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:end,p_table_ids:ids,p_notes:candidate.notes||null});
+ if(error)throw error;
+ return data;
+}
+window.RestoUpdateSharedBooking=updateSharedBooking;
