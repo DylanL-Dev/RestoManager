@@ -1246,3 +1246,10 @@ html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;
   clear:both!important;
  }
 }
+
+/* Wide desktops have enough room for a single row without collision. */
+@media(min-width:1500px){
+ #tables .tableToolbar{float:left!important;width:auto!important;max-width:calc(100% - 390px)!important;margin:12px 18px 14px 0!important;flex-wrap:nowrap!important}
+ #tables #filters.tableFiltersToolbar{clear:none!important;min-height:77px!important;padding:29px 0 14px!important;margin:0!important}
+ #tables .tableGrid{clear:both}
+}
