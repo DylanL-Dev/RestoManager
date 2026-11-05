@@ -19,7 +19,7 @@ export async function releaseHold(holdId){
 export async function confirmReservation({guestName,hotelRoom,partySize,startsAt,endsAt,tableIds,notes}){
  await requireStaff();
  if(!Array.isArray(tableIds)||tableIds.length===0)throw new Error('Sélectionnez une table');
- const {data,error}=await supabase.rpc('confirm_reservation_v2',{
+ const {data,error}=await supabase.rpc('confirm_reservation_v3',{
   p_guest_name:guestName,p_hotel_room:hotelRoom||null,
   p_party_size:partySize,p_starts_at:startsAt,p_ends_at:endsAt,
   p_table_ids:tableIds,p_owner_token:ownerToken,p_notes:notes||null
