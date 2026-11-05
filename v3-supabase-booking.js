@@ -33,3 +33,12 @@ export async function createSharedBooking(candidate){
  return confirmReservation({guestName:name,hotelRoom,partySize:Number(candidate.guests),startsAt,endsAt,tableIds,notes});
 }
 window.RestoCreateSharedBooking=createSharedBooking;
+
+export async function cancelSharedBooking(id){
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js');
+ await requireStaff();
+ const {data,error}=await supabase.rpc('cancel_reservation_v3',{p_reservation_id:id});
+ if(error)throw error;
+ return data;
+}
+window.RestoCancelSharedBooking=cancelSharedBooking;
