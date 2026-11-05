@@ -1,7 +1,7 @@
 import {supabase,requireStaff,loadSharedService,subscribeSharedService} from './supabase-service-bridge.js';
 import {acquireHold,releaseHold,confirmReservation} from './supabase-reservation-actions.js';
 const $=id=>document.getElementById(id);
-let held=[],holdExpiry=0,selectSeq=0,submitting=false,tableCapacity=new Map(),latestSnapshot=null;
+let held=[],holdExpiry=0,selectSeq=0,submitting=false,renewing=false,tableCapacity=new Map(),latestSnapshot=null;
 const selectedIds=()=>Array.from($('tableId').selectedOptions,option=>option.value);
 const isoLocal=id=>{const v=$(id).value;return v?new Date(v).toISOString():null;};
 function bookingMessage(s){$('bookingStatus').textContent=s;}
@@ -39,6 +39,36 @@ async function selectTable(){
  }
 }
 
+// Refresh the server's three-minute hold lease while the booking form stays open.
+// Renewal is serialized and guarded by the current selection generation.
+async function renewSelectedHolds(){
+ if(renewing||submitting||!held.length)return;
+ const generation=selectSeq;
+ const current=held.slice();
+ const ids=selectedIds();
+ const start=isoLocal('startsAt'),end=isoLocal('endsAt');
+ if(current.some(h=>!ids.includes(h.tableId)||h.start!==start||h.end!==end))return;
+ renewing=true;
+ try{
+  const renewed=[];
+  for(const h of current){
+   if(generation!==selectSeq)return;
+   const id=await acquireHold({tableId:h.tableId,startsAt:start,endsAt:end});
+   renewed.push({...h,id});
+  }
+  if(generation!==selectSeq)return;
+  held=renewed;
+  holdExpiry=Date.now()+165000;
+  bookingMessage('Tables maintenues disponibles pendant votre saisie.');
+ }catch(error){
+  if(generation===selectSeq){
+   ++selectSeq;
+   await abandonHold();
+   bookingMessage('Le verrouillage a expiré ou a été refusé : sélectionnez à nouveau les tables.');
+  }
+ }finally{renewing=false;}
+}
+const holdRenewalTimer=setInterval(()=>{void renewSelectedHolds();},60000);
 let stop=null,loading=false;
 function showError(error){$('connection').textContent='Connexion aux données indisponible';$('detail').textContent=error?.message||'Erreur de synchronisation';$('detail').classList.add('error');}
 function showSnapshot(data){
@@ -81,7 +111,7 @@ async function start(){
 }
 $('refresh').addEventListener('click',refresh);
 $('logout').addEventListener('click',async()=>{++selectSeq;await abandonHold();if(stop)stop();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
-window.addEventListener('pagehide',()=>{if(stop)stop();});
+window.addEventListener('pagehide',()=>{clearInterval(holdRenewalTimer);if(stop)stop();});
 start();
 
 for(const id of ['tableId','startsAt','endsAt','partySize'])$(id).addEventListener('change',()=>{void selectTable();});
