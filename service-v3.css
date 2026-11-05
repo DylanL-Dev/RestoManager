@@ -1200,3 +1200,11 @@ html[data-theme="dark"] #tables .tableToolbar .roomFilterLabel .srOnlyRoom,html[
 html,body{max-width:100%;overflow-x:clip}
 .shell,main,.content,#tables{min-width:0;max-width:100%}
 @media(max-width:900px){.mobileBottomNav{box-sizing:border-box;width:100%;max-width:100%;overflow:hidden}.mobileBottomNav .mobileNavItem{min-width:0}}
+
+/* Android renders room selector text larger than sorting despite inherited rules.
+   Normalize visually and align label baselines on the same row. */
+#tables .tableToolbar{align-items:end!important}
+#tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{display:grid!important;grid-template-rows:20px 46px!important;align-content:end!important;gap:6px!important}
+#tables .tableToolbar #roomFilter{font-size:11px!important;font-weight:500!important}
+#tables .tableToolbar #tableSort{font-size:13px!important;font-weight:600!important}
+#tables .tableToolbar .roomFilterLabel .srOnlyRoom,#tables .tableToolbar .tableSortLabel span{align-self:end!important;line-height:20px!important}
