@@ -1183,3 +1183,20 @@ html[data-theme="dark"] #tables .tableToolbar .roomFilterLabel .srOnlyRoom,html[
  html[data-theme="dark"] .mobileBottomNav .mobileNavAdd.active .mobileNavIcon{background:#21a37a!important}
 }
 #tables .tableToolbar #roomFilter{font-size:13px!important;font-weight:650!important;line-height:20px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+
+/* Mobile toolbar: normalize native Android select typography and arrows. */
+#tables .tableToolbar #roomFilter,#tables .tableToolbar #tableSort{
+ -webkit-appearance:none!important;appearance:none!important;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9e4d4' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;
+ background-repeat:no-repeat!important;background-position:right 10px center!important;background-size:16px!important;
+ font-family:Arial,Helvetica,sans-serif!important;font-size:13px!important;font-weight:600!important;
+ letter-spacing:0!important;line-height:normal!important;text-transform:none!important;
+ padding:0 30px 0 12px!important;height:46px!important;min-height:46px!important;max-height:46px!important;
+ border-radius:12px!important;
+}
+#tables .tableToolbar{min-width:0;max-width:100%;overflow:visible}
+#tables .tableToolbar>*{min-width:0;max-width:100%}
+/* Prevent document-wide sideways dragging without blocking local horizontal scrollers. */
+html,body{max-width:100%;overflow-x:clip}
+.shell,main,.content,#tables{min-width:0;max-width:100%}
+@media(max-width:900px){.mobileBottomNav{box-sizing:border-box;width:100%;max-width:100%;overflow:hidden}.mobileBottomNav .mobileNavItem{min-width:0}}
