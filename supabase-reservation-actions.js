@@ -19,6 +19,13 @@ export async function releaseHold(holdId){
 export async function confirmReservation({guestName,hotelRoom,partySize,startsAt,endsAt,tableIds,notes}){
  await requireStaff();
  if(!Array.isArray(tableIds)||tableIds.length===0)throw new Error('Sélectionnez une table');
+ const holdIds=[];
+ try{
+  for(const tableId of [...tableIds].sort()){
+   const holdId=await acquireHold({tableId,startsAt,endsAt});
+   if(!holdId)throw new Error('Impossible de verrouiller la table sélectionnée');
+   holdIds.push(holdId);
+  }
  const {data,error}=await supabase.rpc('confirm_reservation_v3',{
   p_guest_name:guestName,p_hotel_room:hotelRoom||null,
   p_party_size:partySize,p_starts_at:startsAt,p_ends_at:endsAt,
@@ -26,4 +33,8 @@ export async function confirmReservation({guestName,hotelRoom,partySize,startsAt
  });
  if(error)throw error;
  return data;
+ }finally{
+  // The confirmation RPC may already consume the holds; cleanup is best-effort.
+  await Promise.allSettled(holdIds.map(id=>releaseHold(id)));
+ }
 }
