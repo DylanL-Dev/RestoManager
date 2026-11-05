@@ -29,21 +29,24 @@ try{
  };
  document.addEventListener('submit',forbidden,true);
  document.addEventListener('click',forbidden,true);
- const shared=document.createElement('section');
- shared.id='supabaseReadOnlyReservations';
- shared.style.cssText='margin:12px 0;padding:14px;border:1px solid #a6d8bc;border-radius:14px;background:#eef8f1';
- const heading=document.createElement('h3');heading.textContent='Réservations Supabase · Lecture seule';
- const body=document.createElement('div');body.textContent='Chargement…';shared.append(heading,body);
- document.getElementById('reservations')?.prepend(shared);
+ // The native reservation list now consumes the shared snapshot directly.
+ // No duplicate prototype panel or independent local reservation list.
  await subscribeSharedService(snapshot=>{
-  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables';
-  body.replaceChildren();
-  if(!snapshot.reservations.length){body.textContent='Aucune réservation dans la base Supabase.';return;}
-  for(const r of snapshot.reservations){
-   const p=document.createElement('p');
-   p.textContent=[r.starts_at?new Date(r.starts_at).toLocaleString('fr-FR'):'',r.client_name||r.guest_name||'Client',String(r.guest_count||r.party_size||'?')+' couverts'].filter(Boolean).join(' · ');
-   body.append(p);
+  const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
+  const assigned=new Map();
+  for(const a of snapshot.assignments){
+   if(!assigned.has(a.reservation_id))assigned.set(a.reservation_id,[]);
+   const label=byTable.get(a.table_id);
+   if(label && /^\\d+$/.test(label))assigned.get(a.reservation_id).push(Number(label));
   }
+  window.RestoSharedReservations=snapshot.reservations.map(r=>{
+   const dt=new Date(r.starts_at);
+   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(dt);
+   const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hour12:false}).format(dt);
+   return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status||'reserved',notes:r.notes||'',hotelRoom:r.hotel_room||''};
+  });
+  window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
+  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · lecture seule';
  },err=>{label.textContent='Supabase indisponible · Ne pas utiliser pour le service';console.error(err)});
 }catch(error){
  location.replace('login.html');
