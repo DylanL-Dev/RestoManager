@@ -24,7 +24,7 @@ export async function loadSharedService(){
   supabase.from('reservation_tables').select('*'),
   supabase.from('restaurant_rooms').select('*').order('sort_order'),
   supabase.from('restaurant_tables').select('*'),
-  supabase.from('table_holds').select('*'),
+  supabase.from('table_holds').select('id,table_id,held_by,starts_at,ends_at,expires_at,created_at'),
   supabase.from('table_fusion_links').select('table_a,table_b')
  ]);
  const results=[reservations,assignments,rooms,restaurantTables,holds,fusionLinks];
