@@ -230,6 +230,8 @@ $('bookingForm').addEventListener('submit',async event=>{
   feedback.textContent='Enregistrement sécurisé dans Supabase…';
   await window.RestoCreateSharedBooking(candidate);
   feedback.textContent='✓ Réservation enregistrée dans Supabase : '+candidate.client+' · '+candidate.time+'.';
+  try{if(typeof window.RestoRefreshSharedService==='function')await window.RestoRefreshSharedService();}
+  catch(syncError){feedback.textContent+=' Actualisation en attente : '+syncError.message;}
   window.RestoFusionSelected=null;
   return;
  }
