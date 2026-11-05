@@ -22,7 +22,9 @@ form.addEventListener('submit',async event=>{
    await client.auth.signOut();
    message.textContent='Compte non autorisé. Contactez votre administrateur.';return;
   }
-  if(data.role==='fb_admin'){message.replaceChildren(document.createTextNode('Connexion F&B validée. '));const link=document.createElement('a');link.href='admin-users.html';link.textContent='Ouvrir la gestion des accès';message.append(link);}else{message.textContent='Connexion Réception validée. L’espace de service sera ouvert après intégration.';}
+  // Navigate only after the server-authorized profile matches the login role.
+  window.location.assign('reservations-preview.html');
+
  } catch(_error){
   await client.auth.signOut();
   message.textContent='Connexion impossible. Vérifiez vos identifiants ou contactez votre administrateur.';
