@@ -51,7 +51,20 @@ function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefine
 function notify(msg){$('reservationMessage').textContent=msg}
 function save(all){if(window.RestoSharedReservations)throw Error('Mode Supabase : modifications locales désactivées.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
 async function action(id,kind){
- if(window.RestoSharedReservations){notify('Action indisponible : synchronisation Supabase en cours de raccordement.');return;}
+ if(window.RestoSharedReservations){
+  if(kind==='cancel'){
+   const current=load().find(r=>r.id===id);
+   if(!current)return notify('Réservation introuvable.');
+   if(!await window.RestoDialog.confirm('Annuler la réservation de '+current.client+' ?',{title:'Annuler la réservation',danger:true,acceptLabel:'Annuler la réservation'}))return;
+   try{
+    if(typeof window.RestoCancelSharedBooking!=='function')throw Error('Module Supabase indisponible');
+    notify('Annulation en cours…');await window.RestoCancelSharedBooking(id);
+    await window.RestoRefreshSharedService?.();notify('Réservation annulée dans Supabase.');
+   }catch(e){notify('Annulation impossible : '+e.message)}
+   return;
+  }
+  notify('Action '+kind+' indisponible : raccordement Supabase en cours.');return;
+ }
  try{
  const all=load(),i=all.findIndex(r=>r.id===id);if(i<0)return notify('Réservation introuvable.');
  const r=all[i];
