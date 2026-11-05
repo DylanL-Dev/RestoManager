@@ -52,6 +52,21 @@ function notify(msg){$('reservationMessage').textContent=msg}
 function save(all){if(window.RestoSharedReservations)throw Error('Mode Supabase : modifications locales désactivées.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
 async function action(id,kind){
  if(window.RestoSharedReservations){
+  if(kind==='delete'){
+   const current=load().find(r=>r.id===id);
+   if(!current)return notify('Réservation introuvable.');
+   if(current.status!=='cancelled')return notify('Annulez la réservation avant de la supprimer.');
+   const accepted=await window.RestoDialog.confirm('Supprimer définitivement la réservation de '+current.client+' ? Les données liées seront également supprimées.',{title:'Suppression définitive',danger:true,acceptLabel:'Supprimer définitivement'});
+   if(!accepted)return;
+   try{
+    if(typeof window.RestoDeleteCancelledSharedBooking!=='function')throw Error('Module Supabase indisponible');
+    notify('Suppression en cours…');
+    await window.RestoDeleteCancelledSharedBooking(id);
+    await window.RestoRefreshSharedService?.();
+    notify('Réservation supprimée définitivement de Supabase.');
+   }catch(e){notify('Suppression impossible : '+e.message)}
+   return;
+  }
   if(kind==='cancel'){
    const current=load().find(r=>r.id===id);
    if(!current)return notify('Réservation introuvable.');
