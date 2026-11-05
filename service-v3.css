@@ -1270,3 +1270,10 @@ html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns
 :is(#roomFilter,.tableSortLabel select,#historyPeriod,#tableAdminRoom,#historyStats select,.themeModeControl select,#bookingTable,#editTable,#walkinTable):focus-visible{
  outline:2px solid #28a37a;outline-offset:2px;
 }
+
+/* V3 Supabase: keep unavailable table cards legible in dark picker (mobile/tablet/desktop). */
+.tablePickerSheet .tablePickerCard:not(.selected):not(.unavailable){background:#f7fbf8!important;color:#183e32!important;border-color:#cddfd4!important}
+.tablePickerSheet .tablePickerCard:not(.selected):not(.unavailable) :is(strong,small,.tablePickerIndicator){color:#183e32!important}
+.tablePickerSheet .tablePickerCard.unavailable{background:#e8eeea!important;color:#43594d!important;border-color:#c0cec5!important;opacity:1!important}
+.tablePickerSheet .tablePickerCard.unavailable :is(strong,small){color:#43594d!important;opacity:1!important}
+.tablePickerSheet .tablePickerCard.unavailable .tablePickerIndicator{color:#8b3d26!important;opacity:1!important}
