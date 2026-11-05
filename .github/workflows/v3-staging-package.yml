@@ -26,11 +26,16 @@ jobs:
           test -f room-config.html
           ! grep -q 'service_role' supabase-login.js
           ! grep -q 'service_role' supabase-service-bridge.js
+      - name: Validate JavaScript modules
+        run: |
+          for file in supabase-*.js; do node --check "$file"; done
       - name: Package standalone V3 staging files
         run: |
           mkdir -p staging
           cp login.html reservations-preview.html admin-users.html room-config.html staging/
           cp supabase-*.js staging/
+          test -f staging/supabase-room-config.js
+          test -f staging/supabase-admin-users.js
           cat > staging/README.txt <<'EOF'
           RESTOMANAGER V3 - PREVERSION
           Ceci est un paquet de previsualisation, pas un site publie.
