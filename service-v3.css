@@ -1097,3 +1097,13 @@ html[data-theme="dark"] .rmTimeDialog button:focus-visible{outline:3px solid #a0
 @media(max-width:600px){.rmTimeDialog{width:min(100%,420px);max-height:calc(100dvh - 24px)}}
 
 .walkinInstallNotice{position:fixed;z-index:100050;left:50%;bottom:90px;transform:translateX(-50%);width:min(94%,460px);display:none;align-items:center;gap:12px;padding:15px;border-radius:15px;background:#086444;color:white;box-shadow:0 12px 36px #071b15aa;font-weight:700}.walkinInstallNotice.isVisible{display:flex}.walkinInstallNotice.isError{background:#942d35}.walkinInstallNoticeIcon{border:2px solid currentColor;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;flex:none}.walkinInstallNotice>span:nth-child(2){flex:1}.walkinInstallNotice button{background:transparent;border:0;color:inherit;font-size:24px;min-width:40px;min-height:40px}@media(min-width:901px){.walkinInstallNotice{bottom:28px}}
+
+/* Dark-mode legibility: table picker and quick release. */
+html[data-theme="dark"] .tablePickerCard.selected{background:#245943!important;border:2px solid #8fe3b4!important;color:#f6fff9!important}
+html[data-theme="dark"] .tablePickerCard.selected :is(strong,small,.tablePickerIndicator,.tablePickerBest){color:#f6fff9!important}
+html[data-theme="dark"] .tablePickerCard.selected .tablePickerBest{background:#146b4d!important;border:1px solid #8fe3b4!important}
+html[data-theme="dark"] .tablePickerCard:not(.selected) :is(strong,small,.tablePickerIndicator){color:#eaf8ef!important}
+html[data-theme="dark"] .tablePickerHeader :is(h2,p,.tablePickerEyebrow),html[data-theme="dark"] .tablePickerFooter{color:#eaf8ef!important}
+html[data-theme="dark"] .quickReleasePanel :is(.quickReleaseHeader p,.quickReleaseTools label){color:#c8ddd1!important}
+html[data-theme="dark"] .quickReleasePanel :is(.quickReleaseHeader h2,.quickReleaseInfo strong){color:#f2faf5!important}
+html[data-theme="dark"] .quickReleasePanel :is(.quickReleaseTools input,.quickReleaseTools select){background:#254438!important;color:#f2faf5!important;border-color:#527564!important}
