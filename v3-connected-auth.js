@@ -7,6 +7,7 @@ logout.addEventListener('click',async()=>{await supabase.auth.signOut();location
 banner.append(label,logout);
 try{
  const {profile}=await requireStaff();
+ window.RestoSharedReservations=[];
  document.body.appendChild(banner);
  style.textContent=style.textContent.replace('body{visibility:hidden}','');
  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
@@ -41,7 +42,8 @@ try{
   }
   window.RestoSharedReservations=snapshot.reservations.map(r=>{
    const dt=new Date(r.starts_at);
-   const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).format(dt);
+   const dateParts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(dt).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+   const parts=dateParts.year+'-'+dateParts.month+'-'+dateParts.day;
    const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hour12:false}).format(dt);
    return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status||'reserved',notes:r.notes||'',hotelRoom:r.hotel_room||''};
   });
