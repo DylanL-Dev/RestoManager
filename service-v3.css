@@ -1139,3 +1139,9 @@ html[data-theme="dark"] .restoDepartureDialog .restoDepartureCancel{background:#
 html[data-theme="dark"] .restoDepartureDialog .restoDepartureAccept{background:#12a473;color:#fff;border-color:#12a473}
 html[data-theme="dark"] .restoDepartureDialog .restoDepartureIcon{background:#285441;color:#a8f4c9}
 html[data-theme="dark"] .restoDepartureDialog :is(.restoDepartureClient,.restoDepartureSummary){background:#294b3c;color:#f4fff7}
+
+/* Exact info class used by departure dialog (not the unused Client/Summary aliases). */
+.restoDepartureDialog .restoDepartureInfo{background:#edf6f0;color:#173f32;border:1px solid #c9dfd1}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureInfo{background:#294b3c;color:#f4fff7;border:1px solid #628873}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureActions .restoDepartureCancel{background:#294638;color:#edf8f0;border:1px solid #739584}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureActions .restoDepartureAccept{background:#0b986a;color:#fff;border:1px solid #0b986a}
