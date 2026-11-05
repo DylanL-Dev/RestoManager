@@ -8,6 +8,7 @@ banner.append(label,logout);
 try{
  const {profile}=await requireStaff();
  window.RestoSharedReservations=[];
+ window.RestoSupabaseReady=false;
  const management=document.querySelector('[data-screen="administration"]')||document.getElementById('administration');
  if(!management)throw new Error('Espace Gestion introuvable');
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
@@ -24,7 +25,7 @@ try{
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && form.id!=='bookingForm'){e.preventDefault();e.stopImmediatePropagation();label.textContent='Action désactivée : raccordement Supabase en cours';return;}
+  if(e.type==='submit' && form && (form.id!=='bookingForm'||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();label.textContent='Action désactivée : raccordement Supabase en cours';return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
@@ -54,10 +55,12 @@ try{
    const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hour12:false}).format(dt);
    return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status||'reserved',notes:r.notes||'',hotelRoom:r.hotel_room||''};
   });
+  window.RestoSupabaseReady=true;
   window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
+  window.dispatchEvent(new Event('restomanager:v3-change'));
   lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleTimeString('fr-FR');
-  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · lecture seule';
- },err=>{label.textContent='Supabase indisponible · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
+  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · création de réservations active';
+ },err=>{window.RestoSupabaseReady=false;label.textContent='Supabase indisponible · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
 }catch(error){
  location.replace('login.html');
 }
