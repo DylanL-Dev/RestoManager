@@ -145,5 +145,5 @@ $('editForm').addEventListener('submit',async e=>{
 window.addEventListener('restomanager:v3-change',()=>{render();updateEditChoiceAvailability()});
 window.addEventListener('storage',e=>{if(e.key===KEY)render()});
 render();
-})();
 window.addEventListener('restomanager:supabase-snapshot',()=>{if(window.RestoSharedReservations)render()});
+})();
