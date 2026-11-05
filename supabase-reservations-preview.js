@@ -1,4 +1,4 @@
-import {requireStaff,loadSharedService,subscribeSharedService} from './supabase-service-bridge.js';
+import {supabase,requireStaff,loadSharedService,subscribeSharedService} from './supabase-service-bridge.js';
 import {acquireHold,releaseHold,confirmReservation} from './supabase-reservation-actions.js';
 const $=id=>document.getElementById(id);
 let held=[],holdExpiry=0,selectSeq=0,submitting=false,tableCapacity=new Map(),latestSnapshot=null;
@@ -74,11 +74,13 @@ async function start(){
  try{
   const {profile}=await requireStaff();
   $('connection').textContent='Connecté : '+(profile.role==='fb_admin'?'F&B':'Réception');
+  $('adminLink').hidden=profile.role!=='fb_admin';
   $('refresh').disabled=false;
   stop=await subscribeSharedService(showSnapshot,showError);
  }catch(error){showError(error);$('detail').textContent='Connectez-vous avec un compte autorisé pour accéder aux réservations.';}
 }
 $('refresh').addEventListener('click',refresh);
+$('logout').addEventListener('click',async()=>{++selectSeq;await abandonHold();if(stop)stop();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
 window.addEventListener('pagehide',()=>{if(stop)stop();});
 start();
 
