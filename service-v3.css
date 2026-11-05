@@ -1210,3 +1210,12 @@ html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;
  #tables #filters.tableFiltersToolbar>button{min-height:40px;padding:8px 12px}
 }
 @media(max-width:370px){#tables .tableToolbar{gap:8px}#tables .tableToolbar :is(#roomFilter,#tableSort){font-size:12px!important;padding-left:9px!important}}
+
+/* Desktop: salle, tri et statuts sur une même ligne; mobile inchangé. */
+@media(min-width:1100px){
+ #tables .tableToolbar{float:left;display:flex;flex-wrap:nowrap;width:auto;max-width:calc(100% - 390px);margin:12px 18px 14px 0;gap:10px}
+ #tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{flex:0 0 170px;width:170px}
+ #tables #filters.tableFiltersToolbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:7px;min-height:77px;padding:29px 0 14px;margin:0}
+ #tables #filters.tableFiltersToolbar>button{min-height:44px}
+ #tables .tableGrid{clear:both}
+}
