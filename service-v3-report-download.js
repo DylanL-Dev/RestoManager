@@ -18,8 +18,9 @@ if(period==='month'){start=new Date(d.getFullYear(),d.getMonth(),1,12);end=new D
 const from=fmt(start),to=fmt(end),records=ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem('restomanager_reservations')||'[]')).filter(r=>r.date>=from&&r.date<=to).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
 const served=records.filter(r=>['completed','released'].includes(r.status)),covers=served.reduce((n,r)=>n+r.guests,0),hotel=served.filter(r=>r.type==='hotel').reduce((n,r)=>n+r.guests,0),walkins=served.filter(r=>r.walkIn).reduce((n,r)=>n+r.guests,0),noShow=records.filter(r=>r.status==='no_show').length,cancelled=records.filter(r=>r.status==='cancelled').length,inRoom=records.filter(r=>r.status==='seated'),inRoomCovers=inRoom.reduce((n,r)=>n+r.guests,0),welcomedCovers=covers+inRoomCovers,walkinPassages=served.filter(r=>r.walkIn).length,pending=records.filter(r=>!['completed','released','no_show','cancelled'].includes(r.status)).length,days=new Set(served.map(r=>r.date)).size;
 const frenchDate=value=>new Date(value+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-const serviceOf=r=>r.time>='12:00'&&r.time<='14:30'?'midi':r.time>='19:00'&&r.time<='21:30'?'soir':'autre';
-const lunch=served.filter(r=>serviceOf(r)==='midi'),dinner=served.filter(r=>serviceOf(r)==='soir');
+const shifts=ReservationEngine.getShifts();
+const serviceOf=r=>{const t=r.time||'';return shifts.lunch.enabled&&t>=shifts.lunch.start&&t<=shifts.lunch.end?'midi':shifts.dinner.enabled&&t>=shifts.dinner.start&&t<=shifts.dinner.end?'soir':'autre'};
+const lunch=served.filter(r=>serviceOf(r)==='midi'),dinner=served.filter(r=>serviceOf(r)==='soir'),other=served.filter(r=>serviceOf(r)==='autre');
 const sum=arr=>arr.reduce((n,r)=>n+r.guests,0);
 const title=period==='month'?'Rapport mensuel':period==='week'?'Rapport hebdomadaire':'Rapport journalier';
 const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4'});let y=18;
@@ -39,15 +40,17 @@ if(covers){pdf.setFillColor(8,127,91);pdf.rect(16,y,178*hotelPct,9,'F');pdf.setF
 y+=16;pdf.setFillColor(8,127,91);pdf.circle(19,y-1,2,'F');text('Hôtel : '+hotel+' ('+(hotelPct*100).toFixed(1)+' %)',24,y,10);
 pdf.setFillColor(209,159,71);pdf.circle(110,y-1,2,'F');text('Extérieurs : '+(covers-hotel)+' ('+externalPct.toFixed(1)+' %)',115,y,10);y+=15;
 text('Bilan du service',16,y,13,true);y+=8;
-const summary='Au total, '+welcomedCovers+' couverts accueillis : '+covers+' servis et terminés et '+inRoomCovers+' encore en salle. '+served.length+' tables ou groupes terminés. Les '+walkins+' personnes sans réservation ('+walkinPassages+' installations) sont déjà incluses dans les couverts terminés. '+noShow+' absence(s) et '+cancelled+' annulation(s).';
+const summary='Au total, '+welcomedCovers+' couverts accueillis : '+covers+' servis et terminés et '+inRoomCovers+' encore en salle. '+served.length+' tables ou groupes terminés. Les '+walkins+' personnes sans réservation ('+walkinPassages+' groupes) sont déjà incluses dans les couverts terminés. '+noShow+' absence(s) et '+cancelled+' annulation(s).';
 const lines=pdf.splitTextToSize(summary,178);for(const line of lines){page();text(line,16,y,10);y+=5}y+=9;
 if(period==='month'){text('Moyenne par jour avec service : '+(days?(covers/days).toFixed(1):'0')+' couverts ('+days+' jours)',16,y,10);y+=10}
 if(pending){pdf.setTextColor(155,93,22);text('Rapport provisoire : '+pending+' réservation(s) non finalisée(s).',16,y,10);pdf.setTextColor(28,58,47);y+=10}
 y+=4;text('Répartition par service',16,y,13,true);y+=9;
-text('Midi (12h - 14h30) : '+sum(lunch)+' couverts, '+lunch.length+' installations',16,y,10);y+=7;
-text('Soir (19h - 21h30) : '+sum(dinner)+' couverts, '+dinner.length+' passages',16,y,10);y+=8;
+text('Midi ('+shifts.lunch.start+' - '+shifts.lunch.end+') : '+sum(lunch)+' couverts, '+lunch.length+' tables servies',16,y,10);y+=7;
+text('Soir ('+shifts.dinner.start+' - '+shifts.dinner.end+') : '+sum(dinner)+' couverts, '+dinner.length+' tables servies',16,y,10);y+=7;
+if(other.length){text('Hors créneaux : '+sum(other)+' couverts, '+other.length+' tables servies',16,y,10);y+=7}
+y+=1;
 y+=5;text('Détail par journée',16,y,14,true);y+=10;
-pdf.setFillColor(236,247,240);pdf.rect(16,y-6,178,9,'F');text('Date',19,y,10,true);text('Couverts',80,y,10,true);text('Installations',120,y,10,true);text('Absences',158,y,10,true);y+=10;
+pdf.setFillColor(236,247,240);pdf.rect(16,y-6,178,9,'F');text('Date',19,y,10,true);text('Couverts',80,y,10,true);text('Tables servies',120,y,10,true);text('Absences',158,y,10,true);y+=10;
 const dates=[...new Set(records.map(r=>r.date))].sort();
 for(const date of dates){page();const all=records.filter(r=>r.date===date),done=all.filter(r=>['completed','released'].includes(r.status));text(new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),19,y,10);text(done.reduce((n,r)=>n+r.guests,0),80,y,10);text(done.length,120,y,10);text(all.filter(r=>r.status==='no_show').length,158,y,10);pdf.setDrawColor(227,235,229);pdf.line(16,y+3,194,y+3);y+=11}
 if(!dates.length){text('Aucune donnée pour cette période.',19,y,10);y+=12}
