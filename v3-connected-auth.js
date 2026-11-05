@@ -1,4 +1,4 @@
-import {supabase,requireStaff,subscribeSharedService} from './supabase-service-bridge.js';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='V3 · Connexion Supabase en cours';
@@ -52,7 +52,7 @@ try{
  document.addEventListener('click',forbidden,true);
  // The native reservation list now consumes the shared snapshot directly.
  // No duplicate prototype panel or independent local reservation list.
- await subscribeSharedService(snapshot=>{
+ const applySharedSnapshot=snapshot=>{
   const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
   const assigned=new Map();
   for(const a of snapshot.assignments){
@@ -73,7 +73,9 @@ try{
   window.dispatchEvent(new Event('restomanager:v3-change'));
   lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleTimeString('fr-FR');
   label.textContent='Supabase · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · création de réservations active';
- },err=>{window.RestoSupabaseReady=false;label.textContent='Supabase indisponible · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
+ };
+ window.RestoRefreshSharedService=async()=>{const snapshot=await loadSharedService();applySharedSnapshot(snapshot);return snapshot;};
+ await subscribeSharedService(applySharedSnapshot,err=>{window.RestoSupabaseReady=false;label.textContent='Supabase indisponible · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
 }catch(error){
  location.replace('login.html');
 }
