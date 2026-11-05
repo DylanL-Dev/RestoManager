@@ -10,6 +10,8 @@
     root.ReservationEngine = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     const DEFAULT_DURATION = 90;
+    const DURATION_KEY = 'restomanager_default_duration_v1';
+    function getDefaultDuration(){try{const saved=Number(localStorage.getItem(DURATION_KEY));return [30,45,60,75,90,105,120,150,180].includes(saved)?saved:DEFAULT_DURATION}catch(e){return DEFAULT_DURATION}}
     const LUNCH_START = 12 * 60;
     const LUNCH_LAST_ORDER = 14 * 60 + 30;
     const DINNER_START = 19 * 60;
@@ -69,7 +71,7 @@
         return minutes(reservation.time);
     }
     function endMinutes(reservation) {
-        return startMinutes(reservation) + Number(reservation.duration || DEFAULT_DURATION);
+        return startMinutes(reservation) + Number(reservation.duration || getDefaultDuration());
     }
 
     function isBlocking(reservation) {
@@ -127,7 +129,7 @@
             date: typeof source.date === 'string' ? source.date : '',
             time: typeof source.time === 'string' ? source.time : '',
             guests: Math.max(1, Number(source.guests) || 1),
-            duration: Math.max(1, Number(source.duration) || DEFAULT_DURATION),
+            duration: Math.max(1, Number(source.duration) || getDefaultDuration()),
             tables: tables,
             status: status,
         });
@@ -167,7 +169,7 @@
         if (!Number.isInteger(Number(candidate.guests)) || Number(candidate.guests) < 1) {
             errors.push('Le nombre de personnes doit être supérieur à 0.');
         }
-        const duration = Number(candidate.duration == null ? DEFAULT_DURATION : candidate.duration);
+        const duration = Number(candidate.duration == null ? getDefaultDuration() : candidate.duration);
         if (!Number.isInteger(duration) || duration < 1) errors.push('Durée de réservation invalide.');
         if (!Array.isArray(candidate.tables) || candidate.tables.length === 0) {
             errors.push('Sélectionnez au moins une table.');
@@ -260,6 +262,7 @@
         CAPACITY: CAPACITY,
         STATUS: STATUS,
         DEFAULT_DURATION: DEFAULT_DURATION,
+        getDefaultDuration: getDefaultDuration,
         CLOSING_MINUTES: CLOSING_MINUTES,
         TERMINAL_STATUSES: TERMINAL_STATUSES,
         isBlocking: isBlocking,
