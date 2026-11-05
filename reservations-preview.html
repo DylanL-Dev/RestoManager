@@ -1,0 +1,21 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Réservations partagées · RestoManager V3</title><style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#153b2e;background:#f4f8f5}
+*{box-sizing:border-box}body{margin:0;padding:20px}main{max-width:1080px;margin:auto}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+h1{font-size:1.55rem;margin:0}h2{font-size:1.05rem;margin:0 0 12px}
+a{color:#087f5b}.muted{color:#617b6c}.panel{background:white;border:1px solid #dce9e1;border-radius:16px;padding:18px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:16px}
+.stat{font-size:1.8rem;font-weight:750}.label{font-size:.88rem;color:#587366}
+table{width:100%;border-collapse:collapse}th,td{padding:11px 8px;border-bottom:1px solid #e6eee8;text-align:left;font-size:.94rem}
+.wrap{overflow-x:auto}.hidden{display:none!important}.error{color:#a02828}button{background:#087f5b;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}
+@media(max-width:620px){body{padding:12px}th,td{font-size:.83rem;padding:9px 5px}}
+</style></head><body><main><header><div><h1>Réservations partagées</h1><div class="muted">RestoManager V3 · Aperçu Supabase en lecture seule</div></div><div><a href="login.html">Connexion</a> · <a href="admin-users.html">Gestion des accès</a></div></header>
+<div class="panel"><strong id="connection">Vérification des accès…</strong><p id="detail" class="muted" role="status" aria-live="polite">Aucune donnée locale n'est utilisée sur cet écran.</p><button id="refresh" type="button" disabled>Actualiser</button></div>
+<div id="content" class="hidden"><div class="grid">
+<div class="panel"><div class="label">Réservations</div><div id="reservationsCount" class="stat">—</div></div>
+<div class="panel"><div class="label">Tables</div><div id="tablesCount" class="stat">—</div></div>
+<div class="panel"><div class="label">Salles</div><div id="roomsCount" class="stat">—</div></div>
+<div class="panel"><div class="label">Verrouillages actifs</div><div id="holdsCount" class="stat">—</div></div></div>
+<section class="panel"><h2>Réservations enregistrées</h2><div class="wrap"><table><thead><tr><th>Client</th><th>Chambre</th><th>Personnes</th><th>Arrivée prévue</th><th>Statut</th><th>Table(s)</th></tr></thead><tbody id="reservationRows"></tbody></table></div><p id="empty" class="muted">Aucune réservation enregistrée.</p></section></div>
+</main><script type="module" src="supabase-reservations-preview.js"></script></body></html>
