@@ -11,6 +11,7 @@ async function abandonHold(){
  await Promise.allSettled(previous.map(h=>releaseHold(h.id)));
 }
 async function selectTable(){
+ if(submitting)return;
  const seq=++selectSeq;
  await abandonHold();
  if(seq!==selectSeq)return;
@@ -56,7 +57,10 @@ async function renewSelectedHolds(){
    const id=await acquireHold({tableId:h.tableId,startsAt:start,endsAt:end});
    renewed.push({...h,id});
   }
-  if(generation!==selectSeq)return;
+  if(generation!==selectSeq){
+   await Promise.allSettled(renewed.filter(h=>!current.some(old=>old.id===h.id)).map(h=>releaseHold(h.id)));
+   return;
+  }
   held=renewed;
   holdExpiry=Date.now()+165000;
   bookingMessage('Tables maintenues disponibles pendant votre saisie.');
@@ -117,7 +121,7 @@ start();
 for(const id of ['tableId','startsAt','endsAt','partySize'])$(id).addEventListener('change',()=>{void selectTable();});
 $('cancelHold').addEventListener('click',async()=>{++selectSeq;await abandonHold();for(const option of $('tableId').options)option.selected=false;bookingMessage('Sélection annulée.');});
 $('bookingForm').addEventListener('submit',async e=>{
- e.preventDefault();if(submitting)return;
+ e.preventDefault();if(submitting||renewing){bookingMessage('Patientez pendant la vérification des tables.');return;}
  const ids=selectedIds(),start=isoLocal('startsAt'),end=isoLocal('endsAt');
  if(!held.length||Date.now()>holdExpiry||held.length!==ids.length||held.some(h=>!ids.includes(h.tableId)||h.start!==start||h.end!==end)){
   bookingMessage('Verrouillage absent ou expiré. Sélectionnez à nouveau les tables.');await abandonHold();return;
@@ -125,7 +129,7 @@ $('bookingForm').addEventListener('submit',async e=>{
  submitting=true;$('confirmBooking').disabled=true;
  try{
   const id=await confirmReservation({guestName:$('guest').value.trim(),hotelRoom:$('hotelRoom').value.trim(),partySize:Number($('partySize').value),startsAt:start,endsAt:end,tableIds:ids,notes:$('notes').value.trim()});
-  resetHoldState();$('bookingForm').reset();bookingMessage('Réservation enregistrée : '+id);await refresh();
+  ++selectSeq;resetHoldState();$('bookingForm').reset();bookingMessage('Réservation enregistrée : '+id);await refresh();
  }catch(error){bookingMessage('Confirmation refusée : '+error.message);await abandonHold();}
  finally{submitting=false;}
 });
