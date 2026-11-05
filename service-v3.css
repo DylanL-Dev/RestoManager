@@ -1166,3 +1166,10 @@ html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;
 #tables #filters.tableFiltersToolbar>button{padding:9px 13px;min-height:42px}
 @media(max-width:390px){#tables .tableToolbar{gap:8px}#tables .tableToolbar .roomFilterLabel select,#tables .tableToolbar .tableSortLabel select{font-size:12px;padding-left:8px}#tables #filters.tableFiltersToolbar>button{padding:8px 10px;font-size:12px}}
 html[data-theme="dark"] #tables .tableToolbar .roomFilterLabel .srOnlyRoom,html[data-theme="dark"] #tables .tableToolbar .tableSortLabel span{color:#cde4d5}
+
+/* Mobile table selectors: single-line compact controls, equal heights. */
+#tables .tableToolbar{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:stretch;gap:10px}
+#tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{justify-content:flex-end;gap:6px}
+#tables .tableToolbar .roomFilterLabel select,#tables .tableToolbar .tableSortLabel select{display:block;width:100%!important;height:48px!important;min-height:48px!important;max-height:48px!important;box-sizing:border-box!important;padding:8px 25px 8px 10px!important;font-size:13px!important;line-height:20px!important;font-weight:650!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;border-radius:12px!important}
+#tables .tableToolbar .roomFilterLabel .srOnlyRoom,#tables .tableToolbar .tableSortLabel span{font-size:12px!important;line-height:17px!important;font-weight:650!important}
+@media(max-width:390px){#tables .tableToolbar{gap:8px}#tables .tableToolbar .roomFilterLabel select,#tables .tableToolbar .tableSortLabel select{font-size:12px!important;padding-left:8px!important;padding-right:22px!important}}
