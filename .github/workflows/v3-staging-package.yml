@@ -1,0 +1,45 @@
+name: V3 staging package (no production deploy)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - feature/supabase-auth-realtime-v3
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check staging entrypoints
+        run: |
+          test -f login.html
+          test -f reservations-preview.html
+          test -f supabase-login.js
+          test -f supabase-service-bridge.js
+          test -f supabase-reservations-preview.js
+          test -f supabase-reservation-actions.js
+          test -f admin-users.html
+          test -f room-config.html
+          ! grep -q 'service_role' supabase-login.js
+          ! grep -q 'service_role' supabase-service-bridge.js
+      - name: Package standalone V3 staging files
+        run: |
+          mkdir -p staging
+          cp login.html reservations-preview.html admin-users.html room-config.html staging/
+          cp supabase-*.js staging/
+          cat > staging/README.txt <<'EOF'
+          RESTOMANAGER V3 - PREVERSION
+          Ceci est un paquet de previsualisation, pas un site publie.
+          Hebergez ce dossier sur un domaine de test HTTPS distinct du site officiel.
+          Point d'entree: login.html
+          N'utilisez jamais les comptes ou donnees de production pour les essais.
+          EOF
+      - uses: actions/upload-artifact@v4
+        with:
+          name: restomanager-v3-staging
+          path: staging/
+          retention-days: 14
