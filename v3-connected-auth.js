@@ -14,7 +14,7 @@ try{
  const summary=document.createElement('summary');summary.className='managementGroupHead';summary.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="wifi"></i></span><span class="managementGroupWords"><strong>Réseau et synchronisation</strong><small>Connexion, compte et données partagées</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
  const content=document.createElement('div');content.className='managementGroupBody';
  const description=document.createElement('p');description.textContent='État de Supabase et compte actuellement connecté.';
- content.append(description,banner);network.append(summary,content);management.append(network);
+ const lastSync=document.createElement('p');lastSync.className='muted';lastSync.textContent='Dernière synchronisation : en attente';content.append(description,banner,lastSync);network.append(summary,content);management.append(network);
  if(window.lucide?.createIcons)window.lucide.createIcons();
  style.textContent=style.textContent.replace('body{visibility:hidden}','');
  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
@@ -45,7 +45,7 @@ try{
   for(const a of snapshot.assignments){
    if(!assigned.has(a.reservation_id))assigned.set(a.reservation_id,[]);
    const label=byTable.get(a.table_id);
-   if(label && /^\\d+$/.test(label))assigned.get(a.reservation_id).push(Number(label));
+   if(label && /^\d+$/.test(label))assigned.get(a.reservation_id).push(Number(label));
   }
   window.RestoSharedReservations=snapshot.reservations.map(r=>{
    const dt=new Date(r.starts_at);
@@ -55,8 +55,9 @@ try{
    return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status||'reserved',notes:r.notes||'',hotelRoom:r.hotel_room||''};
   });
   window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
+  lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleTimeString('fr-FR');
   label.textContent='Supabase · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · lecture seule';
- },err=>{label.textContent='Supabase indisponible · Ne pas utiliser pour le service';console.error(err)});
+ },err=>{label.textContent='Supabase indisponible · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
 }catch(error){
  location.replace('login.html');
 }
