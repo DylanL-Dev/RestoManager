@@ -36,6 +36,7 @@ export async function loadSharedService(){
 export async function subscribeSharedService(onSnapshot,onError=console.error){
  await requireStaff();
  let stopped=false,busy=false,dirty=false;
+ let connectionState='connecting';
  async function refresh(){
   if(stopped)return;
   if(busy){dirty=true;return;}
@@ -52,8 +53,18 @@ export async function subscribeSharedService(onSnapshot,onError=console.error){
  const channel=supabase.channel('restomanager-v3-shared-service');
  for(const table of tables)channel.on('postgres_changes',{event:'*',schema:'public',table},refresh);
  channel.subscribe(status=>{
-  if(status==='SUBSCRIBED')void refresh();
-  if(status==='CHANNEL_ERROR'||status==='TIMED_OUT')onError(new Error('Synchronisation interrompue'));
+  if(stopped)return;
+  if(status==='SUBSCRIBED'){
+   connectionState='connected';
+   void refresh();
+  }
+  if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+   connectionState='disconnected';
+   onError(new Error('Synchronisation temps réel interrompue ('+status+'). Actualisez après reconnexion.'));
+  }
  });
- return ()=>{stopped=true;void supabase.removeChannel(channel);};
+ // On browser resume, refresh even when the websocket silently missed changes.
+ const resume=()=>{if(!stopped&&document.visibilityState==='visible')void refresh();};
+ document.addEventListener('visibilitychange',resume);
+ return ()=>{stopped=true;document.removeEventListener('visibilitychange',resume);void supabase.removeChannel(channel);};
 }
