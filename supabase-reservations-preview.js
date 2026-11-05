@@ -82,6 +82,7 @@ function leaveProtectedScreen(){
  $('content').classList.add('hidden');
  $('refresh').disabled=true;
  if(stop)stop();
+ if(stopAlerts)stopAlerts();
  window.location.replace('login.html');
 }
 supabase.auth.onAuthStateChange((event,session)=>{
@@ -117,18 +118,58 @@ async function refresh(){
  if(loading)return;loading=true;
  try{showSnapshot(await loadSharedService());}catch(error){showError(error);}finally{loading=false;}
 }
+async function startFbAlerts(){
+ let stopped=false;
+ const panel=$('fbAlertItems');
+ async function reload(){
+  if(stopped)return;
+  const {data,error}=await supabase.from('fb_reservation_alerts')
+   .select('id,guest_name,hotel_room,party_size,starts_at,created_at,read_at')
+   .is('read_at',null).order('created_at',{ascending:false}).limit(30);
+  if(error){panel.textContent='Notifications indisponibles : '+error.message;return;}
+  if(stopped)return;
+  $('fbAlertCount').textContent=String(data.length);
+  panel.replaceChildren();
+  if(!data.length){panel.textContent='Aucune nouvelle réservation de la Réception.';return;}
+  for(const alert of data){
+   const line=document.createElement('div');
+   line.style.cssText='padding:12px 0;border-bottom:1px solid #e6eee8';
+   const details=document.createElement('span');
+   details.textContent=alert.guest_name+' · '+alert.party_size+' couvert(s) · '+new Date(alert.starts_at).toLocaleString('fr-FR')+(alert.hotel_room?' · Chambre '+alert.hotel_room:'');
+   const button=document.createElement('button');
+   button.type='button';button.className='secondary';button.textContent='Marquer comme lu';
+   button.style.marginLeft='12px';
+   button.addEventListener('click',async()=>{
+    button.disabled=true;
+    const {error}=await supabase.from('fb_reservation_alerts').update({read_at:new Date().toISOString()}).eq('id',alert.id);
+    if(error){button.disabled=false;panel.textContent='Impossible de marquer comme lu : '+error.message;return;}
+    await reload();
+   });
+   line.append(details,button);panel.append(line);
+  }
+ }
+ const channel=supabase.channel('restomanager-v3-fb-alerts')
+  .on('postgres_changes',{event:'*',schema:'public',table:'fb_reservation_alerts'},()=>{void reload();});
+ channel.subscribe(status=>{if(status==='SUBSCRIBED')void reload();});
+ await reload();
+ return ()=>{stopped=true;void supabase.removeChannel(channel);};
+}
 async function start(){
  try{
   const {profile}=await requireStaff();
   $('connection').textContent='Connecté : '+(profile.role==='fb_admin'?'F&B':'Réception');
   $('adminLink').hidden=profile.role!=='fb_admin';
+  if(profile.role==='fb_admin'){
+   $('fbAlerts').classList.remove('hidden');
+   stopAlerts=await startFbAlerts();
+  }
   $('refresh').disabled=false;
   stop=await subscribeSharedService(showSnapshot,showError);
  }catch(error){showError(error);$('content').classList.add('hidden');$('refresh').disabled=true;$('detail').textContent='Accès réservé au personnel autorisé. Redirection vers la connexion…';leaveProtectedScreen();}
 }
 $('refresh').addEventListener('click',refresh);
-$('logout').addEventListener('click',async()=>{++selectSeq;$('content').classList.add('hidden');$('refresh').disabled=true;await abandonHold();if(stop)stop();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
-window.addEventListener('pagehide',()=>{clearInterval(holdRenewalTimer);if(stop)stop();});
+$('logout').addEventListener('click',async()=>{++selectSeq;$('content').classList.add('hidden');$('refresh').disabled=true;await abandonHold();if(stop)stop();if(stopAlerts)stopAlerts();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
+window.addEventListener('pagehide',()=>{clearInterval(holdRenewalTimer);if(stop)stop();if(stopAlerts)stopAlerts();});
 start();
 
 for(const id of ['tableId','startsAt','endsAt','partySize'])$(id).addEventListener('change',()=>{void selectTable();});
