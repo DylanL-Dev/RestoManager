@@ -1,7 +1,7 @@
 import {requireStaff,loadSharedService,subscribeSharedService} from './supabase-service-bridge.js';
 import {acquireHold,releaseHold,confirmReservation} from './supabase-reservation-actions.js';
 const $=id=>document.getElementById(id);
-let held=[],holdExpiry=0,selectSeq=0,submitting=false,tableCapacity=new Map();
+let held=[],holdExpiry=0,selectSeq=0,submitting=false,tableCapacity=new Map(),latestSnapshot=null;
 const selectedIds=()=>Array.from($('tableId').selectedOptions,option=>option.value);
 const isoLocal=id=>{const v=$(id).value;return v?new Date(v).toISOString():null;};
 function bookingMessage(s){$('bookingStatus').textContent=s;}
@@ -42,6 +42,7 @@ async function selectTable(){
 let stop=null,loading=false;
 function showError(error){$('connection').textContent='Connexion aux données indisponible';$('detail').textContent=error?.message||'Erreur de synchronisation';$('detail').classList.add('error');}
 function showSnapshot(data){
+ latestSnapshot=data;
  $('content').classList.remove('hidden');$('connection').textContent='Données Supabase chargées';
  $('detail').textContent='Synchronisation active · Dernière mise à jour : '+new Date().toLocaleTimeString('fr-FR');
  $('detail').classList.remove('error');
@@ -95,4 +96,49 @@ $('bookingForm').addEventListener('submit',async e=>{
   resetHoldState();$('bookingForm').reset();bookingMessage('Réservation enregistrée : '+id);await refresh();
  }catch(error){bookingMessage('Confirmation refusée : '+error.message);await abandonHold();}
  finally{submitting=false;}
+});
+
+function suggestTables(data,partySize,start,end){
+ const conflicts=new Set();
+ for(const r of data.reservations){
+  if(!['reserved','arrived','seated'].includes(r.status))continue;
+  if(Date.parse(r.starts_at)<end&&Date.parse(r.ends_at)>start){
+   for(const a of data.assignments)if(a.reservation_id===r.id)conflicts.add(a.table_id);
+  }
+ }
+ for(const hold of data.holds){
+  if(Date.parse(hold.expires_at)>Date.now()&&Date.parse(hold.starts_at)<end&&Date.parse(hold.ends_at)>start)
+   conflicts.add(hold.table_id);
+ }
+ const tables=data.tables.filter(t=>t.active&&!conflicts.has(t.id)&&Number(t.seats)>0);
+ let best=null;
+ // Bounded combination search: avoid blocking mobile browsers with large floor plans.
+ const candidates=tables.sort((a,b)=>Number(b.seats)-Number(a.seats)).slice(0,32);
+ function walk(index,chosen,seats){
+  if(seats>=partySize){
+   const score=[chosen.length,seats-partySize];
+   if(!best||score[0]<best.score[0]||(score[0]===best.score[0]&&score[1]<best.score[1]))
+    best={ids:chosen.map(t=>t.id),score};
+   return;
+  }
+  if(chosen.length>=4||index>=candidates.length||(best&&chosen.length>=best.score[0]))return;
+  for(let i=index;i<candidates.length;i++)walk(i+1,[...chosen,candidates[i]],seats+Number(candidates[i].seats));
+ }
+ walk(0,[],0);
+ return best;
+}
+$('suggestTables').addEventListener('click',async()=>{
+ const status=$('suggestion');
+ try{
+  const start=Date.parse(isoLocal('startsAt')),end=Date.parse(isoLocal('endsAt')),party=Number($('partySize').value);
+  if(!Number.isFinite(start)||!Number.isFinite(end)||end<=start||!Number.isInteger(party)||party<1)throw Error('Renseignez les horaires et le nombre de personnes.');
+  status.textContent='Recherche de tables…';
+  // Fresh server snapshot is necessary; suggestions are advisory, never a guarantee.
+  const snapshot=await loadSharedService();latestSnapshot=snapshot;
+  const choice=suggestTables(snapshot,party,start,end);
+  if(!choice){status.textContent='Aucune combinaison trouvée parmi les tables disponibles (4 tables maximum).';return;}
+  for(const option of $('tableId').options)option.selected=choice.ids.includes(option.value);
+  status.textContent='Suggestion : '+choice.ids.map(id=>snapshot.tables.find(t=>t.id===id)?.label||'?').join(' + ')+'. Vérification et verrouillage en cours.';
+  await selectTable();
+ }catch(error){status.textContent=error.message;}
 });
