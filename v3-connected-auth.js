@@ -1,6 +1,6 @@
 import {supabase,requireStaff,subscribeSharedService} from './supabase-service-bridge.js';
 const style=document.getElementById('integrationGate');
-const banner=document.createElement('aside');banner.id='integrationBanner';
+const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='V3 · Connexion Supabase en cours';
 const logout=document.createElement('button');logout.type='button';logout.textContent='Déconnexion';
 logout.addEventListener('click',async()=>{await supabase.auth.signOut();location.replace('login.html')});
@@ -8,7 +8,13 @@ banner.append(label,logout);
 try{
  const {profile}=await requireStaff();
  window.RestoSharedReservations=[];
- document.body.appendChild(banner);
+ const management=document.querySelector('[data-screen="administration"]')||document.getElementById('administration');
+ if(!management)throw new Error('Espace Gestion introuvable');
+ const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
+ const summary=document.createElement('summary');summary.className='managementGroupHead';summary.textContent='🌐 Réseau et synchronisation';
+ const content=document.createElement('div');content.className='managementGroupBody';
+ const description=document.createElement('p');description.textContent='État de Supabase et compte actuellement connecté.';
+ content.append(description,banner);network.append(summary,content);management.append(network);
  style.textContent=style.textContent.replace('body{visibility:hidden}','');
  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
