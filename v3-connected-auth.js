@@ -11,10 +11,11 @@ try{
  const management=document.querySelector('[data-screen="administration"]')||document.getElementById('administration');
  if(!management)throw new Error('Espace Gestion introuvable');
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
- const summary=document.createElement('summary');summary.className='managementGroupHead';summary.textContent='🌐 Réseau et synchronisation';
+ const summary=document.createElement('summary');summary.className='managementGroupHead';summary.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="wifi"></i></span><span class="managementGroupWords"><strong>Réseau et synchronisation</strong><small>Connexion, compte et données partagées</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
  const content=document.createElement('div');content.className='managementGroupBody';
  const description=document.createElement('p');description.textContent='État de Supabase et compte actuellement connecté.';
  content.append(description,banner);network.append(summary,content);management.append(network);
+ if(window.lucide?.createIcons)window.lucide.createIcons();
  style.textContent=style.textContent.replace('body{visibility:hidden}','');
  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
