@@ -80,6 +80,8 @@ function leaveProtectedScreen(){
  ++selectSeq;
  resetHoldState();
  $('content').classList.add('hidden');
+ $('fbAlerts').hidden=true;
+ $('fbBell').hidden=true;
  $('refresh').disabled=true;
  if(stop)stop();
  if(stopAlerts)stopAlerts();
@@ -160,7 +162,7 @@ async function start(){
   $('connection').textContent='Connecté : '+(profile.role==='fb_admin'?'F&B':'Réception');
   $('adminLink').hidden=profile.role!=='fb_admin';
   if(profile.role==='fb_admin'){
-   $('fbAlerts').classList.remove('hidden');
+   $('fbBell').hidden=false;
    stopAlerts=await startFbAlerts();
   }
   $('refresh').disabled=false;
@@ -168,6 +170,7 @@ async function start(){
  }catch(error){showError(error);$('content').classList.add('hidden');$('refresh').disabled=true;$('detail').textContent='Accès réservé au personnel autorisé. Redirection vers la connexion…';leaveProtectedScreen();}
 }
 $('refresh').addEventListener('click',refresh);
+$('fbBell').addEventListener('click',()=>{const panel=$('fbAlerts');panel.hidden=!panel.hidden;$('fbBell').setAttribute('aria-expanded',String(!panel.hidden));});
 $('logout').addEventListener('click',async()=>{++selectSeq;$('content').classList.add('hidden');$('refresh').disabled=true;await abandonHold();if(stop)stop();if(stopAlerts)stopAlerts();const {error}=await supabase.auth.signOut();if(error){showError(error);return;}window.location.replace('login.html');});
 window.addEventListener('pagehide',()=>{clearInterval(holdRenewalTimer);if(stop)stop();if(stopAlerts)stopAlerts();});
 start();
