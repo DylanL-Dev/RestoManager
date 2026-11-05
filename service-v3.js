@@ -32,7 +32,7 @@ let plan,bookings;try{plan=TableStore.get();const raw=JSON.parse(localStorage.ge
 const rooms=plan.rooms||[];rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;$('roomFilter').append(o)});
 let filter='all',selected=null;
 const tableSort=document.createElement('select');tableSort.id='tableSort';tableSort.setAttribute('aria-label','Trier les tables');for(const [value,label] of [['number-asc','Numéro croissant'],['number-desc','Numéro décroissant'],['capacity-asc','Capacité croissante'],['capacity-desc','Capacité décroissante'],['status','Statut']]){const option=document.createElement('option');option.value=value;option.textContent=label;tableSort.append(option)}
-const sortLabel=document.createElement('label');sortLabel.className='tableSortLabel';const sortText=document.createElement('span');sortText.textContent='Trier';sortLabel.append(sortText,tableSort);$('filters').classList.add('tableFiltersToolbar');$('filters').append(sortLabel);tableSort.addEventListener('change',render);
+const sortLabel=document.createElement('label');sortLabel.className='tableSortLabel';const sortText=document.createElement('span');sortText.textContent='Trier';sortLabel.append(sortText,tableSort);$('filters').classList.add('tableFiltersToolbar');const toolsRow=document.createElement('div');toolsRow.className='tableToolbar';const roomControl=document.querySelector('#tables .roomFilterLabel');if(roomControl)toolsRow.append(roomControl);toolsRow.append(sortLabel);$('filters').parentNode.insertBefore(toolsRow,$('filters'));tableSort.addEventListener('change',render);
 
 const detailNode=$('detail');
 const modal=document.createElement('div');modal.className='tableDetailModal';modal.hidden=true;
