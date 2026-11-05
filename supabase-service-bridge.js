@@ -7,7 +7,7 @@ export const supabase=createClient(
  'sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7',
  {auth:{persistSession:true,autoRefreshToken:true}}
 );
-const tables=['reservations','reservation_tables','restaurant_rooms','restaurant_tables','table_holds'];
+const tables=['reservations','reservation_tables','restaurant_rooms','restaurant_tables','table_holds','table_fusion_links'];
 export async function requireStaff(){
  const {data:{user},error}=await supabase.auth.getUser();
  if(error||!user)throw new Error('Connexion requise');
@@ -19,16 +19,17 @@ export async function requireStaff(){
 }
 export async function loadSharedService(){
  await requireStaff();
- const [reservations,assignments,rooms,restaurantTables,holds]=await Promise.all([
+ const [reservations,assignments,rooms,restaurantTables,holds,fusionLinks]=await Promise.all([
   supabase.from('reservations').select('*').order('starts_at'),
   supabase.from('reservation_tables').select('*'),
   supabase.from('restaurant_rooms').select('*').order('sort_order'),
   supabase.from('restaurant_tables').select('*'),
-  supabase.from('table_holds').select('*')
+  supabase.from('table_holds').select('*'),
+  supabase.from('table_fusion_links').select('table_a,table_b')
  ]);
- const results=[reservations,assignments,rooms,restaurantTables,holds];
+ const results=[reservations,assignments,rooms,restaurantTables,holds,fusionLinks];
  for(const result of results)if(result.error)throw result.error;
- return {reservations:reservations.data,assignments:assignments.data,rooms:rooms.data,tables:restaurantTables.data,holds:holds.data};
+ return {reservations:reservations.data,assignments:assignments.data,rooms:rooms.data,tables:restaurantTables.data,holds:holds.data,fusionLinks:fusionLinks.data};
 }
 // Postgres Changes events can arrive out of order. Reload the full authorized
 // snapshot after each event instead of applying unsafe partial state mutations.
