@@ -46,11 +46,12 @@ function editChoices(){
  const notice=$('editFusionNotice');if(notice){notice.hidden=current.length<2;notice.textContent=current.length>1?'Fusion sélectionnée : '+current.join(' + '):''}
 }
 
-function load(){return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
+function load(){if(window.RestoSharedReservations)return E.normalizeReservations(window.RestoSharedReservations);return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);if(cls)n.className=cls;return n}
 function notify(msg){$('reservationMessage').textContent=msg}
-function save(all){localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
+function save(all){if(window.RestoSharedReservations)throw Error('Mode Supabase : modifications locales désactivées.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
 async function action(id,kind){
+ if(window.RestoSharedReservations){notify('Action indisponible : synchronisation Supabase en cours de raccordement.');return;}
  try{
  const all=load(),i=all.findIndex(r=>r.id===id);if(i<0)return notify('Réservation introuvable.');
  const r=all[i];
@@ -145,3 +146,4 @@ window.addEventListener('restomanager:v3-change',()=>{render();updateEditChoiceA
 window.addEventListener('storage',e=>{if(e.key===KEY)render()});
 render();
 })();
+window.addEventListener('restomanager:supabase-snapshot',()=>{if(window.RestoSharedReservations)render()});
