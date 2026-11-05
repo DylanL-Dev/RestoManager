@@ -1232,3 +1232,17 @@ html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;
  outline:2px solid #83c9ab;
  outline-offset:2px;
 }
+
+/* Prevent tablet/desktop filter collision: use a single wrapping flex row. */
+@media(min-width:901px){
+ #tables .tableToolbar{
+  float:none!important;display:flex!important;flex-wrap:wrap!important;
+  width:100%!important;max-width:100%!important;
+  margin:12px 0 10px!important;gap:10px!important;
+ }
+ #tables #filters.tableFiltersToolbar{
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+  min-height:0!important;margin:0 0 14px!important;padding:0!important;
+  clear:both!important;
+ }
+}
