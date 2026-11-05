@@ -27,6 +27,8 @@ try{
  // Replay all original scripts in their original order, preserving UI rendering.
  // External classic scripts must load sequentially (async=false).
  for(const original of parsed.querySelectorAll('script')){
+  // Do not register the production service worker in the integration preview.
+  if(!original.src && original.textContent.includes('serviceWorker.register'))continue;
   const script=document.createElement('script');
   if(original.src){
    script.src=original.getAttribute('src');
