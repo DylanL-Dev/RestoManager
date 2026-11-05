@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connexion · RestoManager V3</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color-scheme:light;background:#f3f8f5;color:#163c30}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:22px}
+main{width:min(100%,420px);background:white;border:1px solid #dce9e1;border-radius:22px;padding:32px;box-shadow:0 20px 60px #0c4c2920}
+h1{margin:0;font-size:1.65rem}p{line-height:1.5;color:#587469}label{display:block;font-weight:650;margin-top:18px}
+input{width:100%;padding:14px;border:1px solid #b8cfc2;border-radius:12px;margin-top:7px;font:inherit}
+button{width:100%;border:0;border-radius:12px;padding:14px;background:#087f5b;color:white;font:inherit;font-weight:700;margin-top:24px;cursor:pointer}
+button:disabled{opacity:.6;cursor:wait}.help{background:none;color:#087f5b;border:0;padding:10px;margin-top:10px;text-decoration:underline}.recovery{background:#eef7f1;padding:15px;border-radius:12px;margin-top:8px}.recovery p{margin:0;font-size:.92rem}#message{min-height:1.5em}small{color:#637b70}
+</style></head><body><main><h1>RestoManager <span style="color:#087f5b">V3</span></h1>
+<p>Accès sécurisé du personnel · Réception et F&amp;B</p>
+<form id="login"><label for="username">Identifiant</label><input id="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="reception ou admin-fb" required>
+<label for="password">Mot de passe</label><input id="password" type="password" autocomplete="current-password" required>
+<button id="submit" type="submit">Se connecter</button></form><button class="help" id="forgot" type="button" aria-expanded="false" aria-controls="recovery">Mot de passe oublié ?</button><section id="recovery" class="recovery" hidden><p>Pour réinitialiser le mot de passe du compte Réception ou F&amp;B, contactez un administrateur habilité. Il vérifiera votre identité et définira un nouveau mot de passe. L’ancien mot de passe ne peut pas être affiché.</p></section>
+<p id="message" role="status" aria-live="polite"></p><small>Version de test : connexion Supabase et consultation du service partagé. Les modifications sont temporairement désactivées.</small>
+</main><script>document.getElementById("forgot").addEventListener("click",function(){const panel=document.getElementById("recovery");panel.hidden=!panel.hidden;this.setAttribute("aria-expanded",String(!panel.hidden));});</script><script type="module" src="supabase-login.js"></script></body></html>
