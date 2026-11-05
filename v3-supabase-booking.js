@@ -42,3 +42,13 @@ export async function cancelSharedBooking(id){
  return data;
 }
 window.RestoCancelSharedBooking=cancelSharedBooking;
+
+export async function deleteCancelledSharedBooking(id){
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js');
+ const {profile}=await requireStaff();
+ if(profile.role!=='fb_admin')throw Error('Suppression réservée aux administrateurs');
+ const {data,error}=await supabase.rpc('delete_cancelled_reservation_v3',{p_reservation_id:id});
+ if(error)throw error;
+ return data;
+}
+window.RestoDeleteCancelledSharedBooking=deleteCancelledSharedBooking;
