@@ -10,7 +10,7 @@ a{color:#087f5b}.muted{color:#617b6c}.panel{background:white;border:1px solid #d
 input,select{display:block;width:100%;padding:10px;border:1px solid #b6ccbe;border-radius:9px;margin-top:6px;font:inherit}label{font-size:.9rem;font-weight:600}button:disabled{opacity:.5;cursor:not-allowed}.secondary{background:#e5f1ea;color:#146a4a}table{width:100%;border-collapse:collapse}th,td{padding:11px 8px;border-bottom:1px solid #e6eee8;text-align:left;font-size:.94rem}
 .wrap{overflow-x:auto}.hidden{display:none!important}.error{color:#a02828}button{background:#087f5b;color:white;border:0;border-radius:10px;padding:10px 15px;cursor:pointer}
 @media(max-width:620px){body{padding:12px}th,td{font-size:.83rem;padding:9px 5px}}
-</style></head><body><main><header><div><h1>Réservations partagées</h1><div class="muted">RestoManager V3 · Aperçu Supabase en lecture seule</div></div><div><a href="login.html">Connexion</a> · <a href="admin-users.html">Gestion des accès</a></div></header>
+</style></head><body><main><header><div><h1>Réservations partagées</h1><div class="muted">RestoManager V3 · Aperçu sécurisé Supabase</div></div><div><a href="login.html">Connexion</a> · <a href="admin-users.html" id="adminLink" hidden>Gestion des accès</a> <button type="button" id="logout" class="secondary">Déconnexion</button></div></header>
 <div class="panel"><strong id="connection">Vérification des accès…</strong><p id="detail" class="muted" role="status" aria-live="polite">Aucune donnée locale n'est utilisée sur cet écran.</p><button id="refresh" type="button" disabled>Actualiser</button></div>
 <div id="content" class="hidden"><div class="grid">
 <div class="panel"><div class="label">Réservations</div><div id="reservationsCount" class="stat">—</div></div>
