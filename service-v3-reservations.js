@@ -157,6 +157,11 @@ $('editForm').addEventListener('submit',async e=>{
    const previous=load().find(r=>r.id===editing);if(!previous)throw Error('Réservation introuvable');
    const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests:Number($('editGuests').value),tables:chosenTables.slice(),notes:$('editNotes').value.trim()};
    if(!updated.tables.length)throw Error('Choisissez une table');
+   if(!updated.client)throw Error('Le nom du client est obligatoire.');
+   if(!Number.isInteger(updated.guests)||updated.guests<1||updated.guests>50)throw Error('Nombre de couverts invalide.');
+   const availability=editAvailability(updated.tables);
+   if(!availability.available)throw Error(availability.reason||'Table indisponible');
+   if(availability.caution&&!await window.RestoDialog.confirm('Attention : '+availability.reason+'. Confirmer la modification ?', {title:'Disponibilité à confirmer',acceptLabel:'Confirmer'}))return;
    notify('Enregistrement dans Supabase…');
    await window.RestoUpdateSharedBooking(updated);
    await window.RestoRefreshSharedService?.();
