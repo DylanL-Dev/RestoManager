@@ -73,7 +73,7 @@ async function renewSelectedHolds(){
  }finally{renewing=false;}
 }
 const holdRenewalTimer=setInterval(()=>{void renewSelectedHolds();},60000);
-let stop=null,loading=false,authRedirecting=false;
+let stop=null,stopAlerts=null,loading=false,authRedirecting=false;
 function leaveProtectedScreen(){
  if(authRedirecting)return;
  authRedirecting=true;
