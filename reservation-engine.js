@@ -98,7 +98,7 @@
     }
 
     function findRoomConflict(candidate, reservations, ignoredId) {
-        if (candidate.type !== 'hotel' || !normalizeRoom(candidate.client)) return null;
+        if (candidate.type !== 'hotel' || !normalizeRoom(candidate.client) || (candidate.walkIn && normalizeRoom(candidate.client) === 'CLIENT DE PASSAGE')) return null;
         return normalizeReservations(reservations).find(function (other) {
             return other.id !== ignoredId && other.type === 'hotel' &&
                 other.date === candidate.date && isBlocking(other) &&
