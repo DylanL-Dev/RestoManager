@@ -1154,3 +1154,15 @@ html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseTiming
 html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseStatusOccupied{background:#145b40!important;color:#e3fff0!important}
 html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseStatusOverdue{background:#66501f!important;color:#fff0b7!important}
 html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;color:#173e33}
+
+/* Tables toolbar: room + sort aligned beneath heading, before status filters. */
+#tables .panelHead{display:block}
+#tables .tableToolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:12px;margin:15px 0 10px}
+#tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{margin:0;min-width:0;width:100%;display:flex;flex-direction:column;align-items:stretch;gap:6px}
+#tables .tableToolbar .roomFilterLabel select,#tables .tableToolbar .tableSortLabel select{box-sizing:border-box;width:100%;min-width:0;max-width:none;min-height:44px;border-radius:12px;font-size:14px;padding:9px 30px 9px 12px}
+#tables .tableToolbar .roomFilterLabel .srOnlyRoom{position:static;width:auto;height:auto;clip:auto;clip-path:none;overflow:visible;white-space:normal;color:inherit;font-size:12px;font-weight:700}
+#tables .tableToolbar .tableSortLabel span{font-size:12px;font-weight:700}
+#tables #filters.tableFiltersToolbar{margin:4px 0 12px;padding:0;gap:7px}
+#tables #filters.tableFiltersToolbar>button{padding:9px 13px;min-height:42px}
+@media(max-width:390px){#tables .tableToolbar{gap:8px}#tables .tableToolbar .roomFilterLabel select,#tables .tableToolbar .tableSortLabel select{font-size:12px;padding-left:8px}#tables #filters.tableFiltersToolbar>button{padding:8px 10px;font-size:12px}}
+html[data-theme="dark"] #tables .tableToolbar .roomFilterLabel .srOnlyRoom,html[data-theme="dark"] #tables .tableToolbar .tableSortLabel span{color:#cde4d5}
