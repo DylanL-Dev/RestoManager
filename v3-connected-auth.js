@@ -36,6 +36,18 @@ try{
    }
   }
  };
+ // Native HTML validation can prevent submit events entirely (e.g. an empty table select).
+ // Explain the blocked action directly beside the reservation form.
+ const bookingForm=document.getElementById('bookingForm');
+ const bookingButton=bookingForm?.querySelector('button[type="submit"]');
+ bookingButton?.addEventListener('click',()=>{
+  const feedback=document.getElementById('bookingFeedback');
+  if(!feedback)return;
+  if(!window.RestoSupabaseReady){feedback.textContent='Synchronisation Supabase non terminée. Vérifiez Réseau et synchronisation dans Gestion.';return;}
+  const invalid=[...bookingForm.elements].find(field=>field.willValidate&&!field.checkValidity());
+  if(invalid){feedback.textContent=invalid.id==='bookingTable'?'Aucune table disponible sélectionnée : impossible de créer la réservation.':'Champ obligatoire ou invalide : '+(invalid.closest('label')?.textContent?.trim()||invalid.name||invalid.id);return;}
+  feedback.textContent='Vérification et enregistrement de la réservation…';
+ });
  document.addEventListener('submit',forbidden,true);
  document.addEventListener('click',forbidden,true);
  // The native reservation list now consumes the shared snapshot directly.
