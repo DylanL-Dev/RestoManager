@@ -1173,3 +1173,13 @@ html[data-theme="dark"] #tables .tableToolbar .roomFilterLabel .srOnlyRoom,html[
 #tables .tableToolbar .roomFilterLabel select,#tables .tableToolbar .tableSortLabel select{display:block;width:100%!important;height:48px!important;min-height:48px!important;max-height:48px!important;box-sizing:border-box!important;padding:8px 25px 8px 10px!important;font-size:13px!important;line-height:20px!important;font-weight:650!important;white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;border-radius:12px!important}
 #tables .tableToolbar .roomFilterLabel .srOnlyRoom,#tables .tableToolbar .tableSortLabel span{font-size:12px!important;line-height:17px!important;font-weight:650!important}
 @media(max-width:390px){#tables .tableToolbar{gap:8px}#tables .tableToolbar .roomFilterLabel select,#tables .tableToolbar .tableSortLabel select{font-size:12px!important;padding-left:8px!important;padding-right:22px!important}}
+
+/* Same dark navigation in portrait AND landscape; landscape width often exceeds 768px. */
+@media(max-width:900px){
+ html[data-theme="dark"] .mobileBottomNav{background:#152b24!important;border-top:1px solid #3a5b4b!important;box-shadow:0 -6px 24px rgba(0,0,0,.35)!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem{background:transparent;color:#b8d5c6!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem.active{background:#294a3d!important;color:#f0fff6!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd .mobileNavIcon{background:#168665!important;color:#fff!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd.active .mobileNavIcon{background:#21a37a!important}
+}
+#tables .tableToolbar #roomFilter{font-size:13px!important;font-weight:650!important;line-height:20px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
