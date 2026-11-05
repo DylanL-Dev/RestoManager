@@ -20,6 +20,9 @@ banner='''<style>
 #previewNotice{position:fixed;z-index:999999;top:0;left:0;right:0;padding:12px 18px;background:#103e31;color:#fff;font:600 14px system-ui;text-align:center;box-shadow:0 3px 16px #0003}
 body{padding-top:52px!important}body>*:not(#previewNotice){pointer-events:none!important}
 </style><div id="previewNotice" role="status">Préversion visuelle V3 · interactions désactivées jusqu’au raccordement sécurisé Supabase</div>'''
+# Inline complete V3 styles as a reliable fallback for the visual preview.
+styles = '\n'.join((root / name).read_text(encoding='utf-8') for name in ('service-v3.css', 'service-v3-calendar-picker.css'))
+html = html.replace('</head>', '<style id="v3-preview-inline-styles">\n'+styles+'\n</style></head>', 1)
 html=html.replace('<body>', '<body>'+banner,1)
 (out/'index.html').write_text(html,encoding='utf-8')
 print('Visual-only V3 staging ready:',out)
