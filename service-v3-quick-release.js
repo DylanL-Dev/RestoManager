@@ -2,7 +2,7 @@
 (function(){
 const KEY='restomanager_reservations',host=document.getElementById('passages');if(!host||!window.ReservationEngine)return;
 const section=document.createElement('section');section.className='quickReleasePanel';
-section.innerHTML='<div class="quickReleaseHeader"><div><h2><i data-lucide="users"></i> Clients installés <span id="quickReleaseCount"></span></h2><p>Après facturation, libérez la table ici en un geste.</p></div></div><div class="quickReleaseTools"><label>Rechercher <input id="quickReleaseSearch" type="search" placeholder="Chambre, nom, table…" autocomplete="off"></label><label>Trier par <select id="quickReleaseSort"><option value="table">Table croissante</option><option value="room">Chambre croissante</option><option value="name">Nom A → Z</option><option value="time">Installation ancienne</option></select></label></div><div id="quickReleaseUndo" role="status" aria-live="polite"></div><div id="quickReleaseList" class="quickReleaseList"></div><p id="quickReleaseFeedback" role="status" aria-live="polite"></p>';
+section.innerHTML='<div class="quickReleaseHeader"><div><h2><i data-lucide="utensils"></i> Tables occupées <span id="quickReleaseCount"></span></h2><p>Consultez les heures prévues et libérez la table après le départ des clients.</p></div></div><div class="quickReleaseTools"><label>Rechercher <input id="quickReleaseSearch" type="search" placeholder="Chambre, nom, table…" autocomplete="off"></label><label>Trier par <select id="quickReleaseSort"><option value="table">Table croissante</option><option value="room">Chambre croissante</option><option value="name">Nom A → Z</option><option value="time">Installation ancienne</option></select></label></div><div id="quickReleaseUndo" role="status" aria-live="polite"></div><div id="quickReleaseList" class="quickReleaseList"></div><p id="quickReleaseFeedback" role="status" aria-live="polite"></p>';
 host.parentNode.insertBefore(section,host);
 const $=id=>document.getElementById(id),collator=new Intl.Collator('fr',{numeric:true,sensitivity:'base'});
 function read(){try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}}
@@ -17,10 +17,18 @@ function render(){
  $('quickReleaseCount').textContent=list.length;
  const container=$('quickReleaseList');container.replaceChildren();
  const shown=list.filter(r=>[r.client,room(r),(r.tables||[]).join(' '),r.time].join(' ').toLocaleLowerCase('fr').includes(q));
- if(!shown.length){container.append(el('p','quickReleaseEmpty',list.length?'Aucun client ne correspond à la recherche.':'Aucun client installé actuellement.'));return}
+ if(!shown.length){container.append(el('p','quickReleaseEmpty',list.length?'Aucun client ne correspond à la recherche.':'Aucune table occupée actuellement.'));return}
  for(const r of shown){
   const row=el('article','quickReleaseRow'),info=el('div','quickReleaseInfo'),top=el('strong','', 'Table '+(r.tables||[]).join(' + ')),sub=el('span','',r.client+(room(r)?' · Chambre '+room(r):'')+' · '+r.guests+' pers. · '+r.time);
-  info.append(top,sub);const btn=el('button','quickReleaseButton','Libérer');btn.type='button';btn.setAttribute('aria-label','Libérer la table '+(r.tables||[]).join(' et ')+' de '+r.client);
+  const start=r.seatedAt?new Date(r.seatedAt):new Date(r.date+'T'+r.time+':00');
+  const validStart=!Number.isNaN(start.getTime());
+  const mins=Number(r.duration)||ReservationEngine.getDefaultDuration();
+  const end=validStart?new Date(start.getTime()+mins*60000):null;
+  const format=d=>d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const timing=el('span','quickReleaseTiming',validStart?'Installés à '+format(start)+' · Fin prévue '+format(end):'Horaire à vérifier');
+  const overdue=end&&Date.now()>end.getTime();
+  const state=el('span','quickReleaseStatus '+(overdue?'quickReleaseStatusOverdue':'quickReleaseStatusOccupied'),overdue?'Fin prévue dépassée':'Occupée');
+  info.append(top,sub,timing,state);const btn=el('button','quickReleaseButton','Libérer');btn.type='button';btn.setAttribute('aria-label','Libérer la table '+(r.tables||[]).join(' et ')+' de '+r.client);
   btn.addEventListener('click',()=>release(r.id));
   const edit=el('button','quickReleaseEdit','Modifier');edit.type='button';edit.setAttribute('aria-label','Modifier la table et la durée de '+r.client);
   edit.addEventListener('click',()=>openQuickEdit(r.id));
