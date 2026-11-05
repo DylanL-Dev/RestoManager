@@ -23,7 +23,7 @@ form.addEventListener('submit',async event=>{
    message.textContent='Compte non autorisé. Contactez votre administrateur.';return;
   }
   // Navigate only after the server-authorized profile matches the login role.
-  window.location.assign('service-connected.html');
+  window.location.assign('v3-connected.html');
 
  } catch(_error){
   await client.auth.signOut();
@@ -38,7 +38,7 @@ async function resumeExistingSession(){
   const {data:profile,error:profileError}=await client.from('staff_profiles')
    .select('role,active').eq('user_id',user.id).single();
   if(!profileError&&profile?.active&&['reception','fb_admin'].includes(profile.role)){
-   window.location.replace('service-connected.html');
+   window.location.replace('v3-connected.html');
   }
  }catch{
   // Leave the login form available if session validation fails.
