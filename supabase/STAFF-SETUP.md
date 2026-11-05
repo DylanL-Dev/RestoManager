@@ -1,51 +1,55 @@
-# RestoManager V3 — activation des comptes de test
+# RestoManager V3 — comptes par identifiant + mot de passe
 
-La V3 publiée sur GitHub Pages reste indépendante de cette branche de développement.
+## Décision retenue
 
-## Comptes à créer dans Supabase
+L'interface de connexion demande un **identifiant**, pas une adresse e-mail.
+Supabase Auth utilise néanmoins en interne des adresses **techniques fictives** réservées aux deux comptes, créées manuellement par un administrateur :
 
-Dans **Authentication → Users → Add user**, créer deux comptes avec des adresses e-mail distinctes :
+| Identifiant saisi | Adresse technique Auth | Rôle attendu |
+|---|---|---|
+| `reception` | `reception@accounts.restomanager.example.com` | `reception` |
+| `admin-fb` | `admin-fb@accounts.restomanager.example.com` | `fb_admin` |
 
-- **Réception** : un compte partagé par le personnel de réception.
-- **F&B** : un compte administrateur pour le restaurant.
+Ces adresses sont des identifiants techniques, **pas des boîtes mail**. Le domaine `example.com` est réservé à la documentation. Aucune validation d'e-mail par les employés n'est possible ou requise : l'administrateur doit créer et confirmer les comptes via **Supabase → Authentication → Users → Add user** avec confirmation automatique, si l'interface le permet. Ne pas utiliser l'inscription publique pour ces comptes.
 
-Utiliser des mots de passe robustes, uniques, et les communiquer hors de GitHub et de ChatGPT. Vérifier les comptes avant de leur attribuer un rôle.
+Définir **deux mots de passe longs et distincts**, jamais dans GitHub, ChatGPT ou les scripts SQL. Les adresses techniques ne sont **pas des secrets** ; seule l'authentification Supabase protège l'accès. La récupération par e-mail ne fonctionne pas avec ces alias : prévoir une réinitialisation manuelle par un administrateur. Si Supabase refuse ces adresses fictives, il faudra choisir une autre stratégie d'authentification sécurisée plutôt que d'activer une fausse validation.
 
 ## Attribution des rôles
 
-Dans le **SQL Editor** du projet Supabase, remplacer les deux adresses ci-dessous par les adresses exactes des comptes créés. Ne jamais insérer un mot de passe dans ce script.
+Après avoir créé les deux utilisateurs dans Auth, exécuter dans le SQL Editor :
 
 ```sql
 begin;
-insert into public.staff_profiles (user_id, role, display_name, active)
-select id, 'reception', 'Réception', true
-from auth.users where lower(email) = lower('RECEPTION_EMAIL_A_REMPLACER')
-on conflict (user_id) do update
-set role = excluded.role, display_name = excluded.display_name, active = true;
+insert into public.staff_profiles(user_id,role,display_name,active)
+select id,'reception','Réception',true
+from auth.users where lower(email)='reception@accounts.restomanager.example.com'
+on conflict(user_id) do update set role=excluded.role,display_name=excluded.display_name,active=true;
 
-insert into public.staff_profiles (user_id, role, display_name, active)
-select id, 'fb_admin', 'Administration F&B', true
-from auth.users where lower(email) = lower('FB_EMAIL_A_REMPLACER')
-on conflict (user_id) do update
-set role = excluded.role, display_name = excluded.display_name, active = true;
+insert into public.staff_profiles(user_id,role,display_name,active)
+select id,'fb_admin','Administration F&B',true
+from auth.users where lower(email)='admin-fb@accounts.restomanager.example.com'
+on conflict(user_id) do update set role=excluded.role,display_name=excluded.display_name,active=true;
 commit;
 ```
 
-**Contrôle obligatoire :** les deux comptes doivent apparaître avec leurs rôles respectifs :
+Vérifier ensuite :
 
 ```sql
-select u.email, p.role, p.active
-from public.staff_profiles p
-join auth.users u on u.id = p.user_id
-where p.role in ('reception', 'fb_admin');
+select u.email,p.role,p.active
+from public.staff_profiles p join auth.users u on u.id=p.user_id
+where u.email in (
+'reception@accounts.restomanager.example.com',
+'admin-fb@accounts.restomanager.example.com'
+);
 ```
 
-Si l'une des adresses ne correspond à aucun compte Auth, l'insertion correspondante ne crée aucune ligne : vérifier le résultat avant de poursuivre.
+Il faut **exactement deux lignes**, actives, avec les rôles correspondants. Si l'une manque, arrêter et vérifier le compte Auth avant de continuer.
 
-## Sécurité et périmètre
+## Limites de cette première version
 
-- Ne pas mettre de clé `service_role`, de mot de passe ni de jeton secret dans les fichiers GitHub.
-- Le rôle est attribué côté serveur dans `staff_profiles`, jamais depuis les métadonnées modifiables par l'utilisateur.
-- L'accès Réception est partagé : l'historique ne permet pas de distinguer individuellement les employés utilisant le même compte.
-- Ne pas basculer GitHub Pages vers cette branche avant validation de la connexion, de la synchronisation, de la gestion des conflits et des tests multi-appareils.
-- Les réservations de l'interface officielle sont encore locales : aucune synchronisation de production n'est active.
+- Le choix d'identifiant est **limité aux deux comptes prédéfinis**. Pour davantage d'utilisateurs, prévoir une résolution sécurisée côté serveur, avec contrôle anti-abus.
+- La page de connexion est une **préversion isolée** : elle ne protège pas encore `index.html` ni les anciens mécanismes de stockage local.
+- Le compte Réception est partagé : l'audit ne permet pas d'identifier individuellement l'employé.
+- Les droits sont contrôlés par les politiques RLS et les fonctions SQL, pas par le seul JavaScript.
+- Aucun mot de passe ou clé `service_role` ne doit être intégré au dépôt.
+- Ne pas modifier la branche GitHub Pages officielle avant les tests de connexion, de concurrence, des droits et du temps réel.
