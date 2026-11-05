@@ -208,7 +208,7 @@ function showBookingSuccess(reservation){
  again.addEventListener('click',()=>{close();$('bookingClient').value='';$('bookingAllergies').value='';$('bookingNotes').value='';$('bookingClient').focus();refreshAvailability()});
  actions.append(view,again);dialog.append(mark,heading,summary,note,actions);overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',escape);view.focus();
 }
-function readReservations(){const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
+function readReservations(){const raw=window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
 $('bookingDate').value=date;
 $('bookingTime').value='19:00';
 ['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient'].forEach(id=>$(id).addEventListener('change',refreshAvailability));
