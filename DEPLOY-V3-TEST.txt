@@ -1,0 +1,2 @@
+RestoManager V3 test deployment marker.
+Supabase integration branch only; official V3 unchanged.
