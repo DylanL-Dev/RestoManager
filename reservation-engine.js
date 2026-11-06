@@ -11,7 +11,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     const DEFAULT_DURATION = 90;
     const DURATION_KEY = 'restomanager_default_duration_v1';
-    function getDefaultDuration(){try{const saved=Number(localStorage.getItem(DURATION_KEY));return [30,45,60,75,90,105,120,150,180].includes(saved)?saved:DEFAULT_DURATION}catch(e){return DEFAULT_DURATION}}
+    function getDefaultDuration(){if(globalThis.RestoSharedHours)return globalThis.RestoSharedHours.duration;try{const saved=Number(localStorage.getItem(DURATION_KEY));return [30,45,60,75,90,105,120,150,180].includes(saved)?saved:DEFAULT_DURATION}catch(e){return DEFAULT_DURATION}}
     const LUNCH_START = 12 * 60;
     const LUNCH_LAST_ORDER = 14 * 60 + 30;
     const DINNER_START = 19 * 60;
@@ -79,6 +79,10 @@
     }
 
     function tableCapacity(tables) {
+        if(globalThis.RestoSharedReservations){
+            const plan=TableStore.get().tables;
+            return tables.reduce((sum,n)=>sum+(plan.find(t=>t.number===Number(n))?.capacity||0),0);
+        }
         return tables.reduce(function (total, table) {
             return total + (CAPACITY[table] || 0);
         }, 0);
@@ -150,6 +154,7 @@
     const SHIFT_KEY = 'restomanager_shifts_v1';
     const SHIFT_DEFAULTS = {lunch:{enabled:true,start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'21:30'}};
     function getShifts(){
+        if(globalThis.RestoSharedHours)return globalThis.RestoSharedHours.shifts;
         let stored={};
         try{if(typeof localStorage!=='undefined')stored=JSON.parse(localStorage.getItem(SHIFT_KEY)||'{}')||{}}catch(e){}
         const result={};
@@ -179,7 +184,7 @@
             new Set(selectedTables.map(Number)).size !== selectedTables.length) {
             errors.push('Les numéros de tables doivent être uniques et valides.');
         }
-        if (selectedTables.some(function (table) { return !TABLES.includes(Number(table)); })) {
+        if (selectedTables.some(function (table) { return !(globalThis.RestoSharedReservations ? TableStore.get().tables.some(t=>t.number===Number(table)) : TABLES.includes(Number(table))); })) {
             errors.push('Une table sélectionnée est inconnue.');
         }
         if (tableCapacity([...new Set(selectedTables.map(Number))]) < Number(candidate.guests)) {

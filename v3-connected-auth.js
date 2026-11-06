@@ -1,4 +1,4 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=hours1';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
@@ -25,7 +25,7 @@ try{
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (!['bookingForm','editForm','tableAdminForm'].includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
+  if(e.type==='submit' && form && (!['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm'].includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
@@ -53,7 +53,31 @@ try{
  document.addEventListener('click',forbidden,true);
  // The native reservation list now consumes the shared snapshot directly.
  // No duplicate prototype panel or independent local reservation list.
+ window.RestoSaveSharedHours=async(shifts,duration)=>{
+  if(profile.role!=='fb_admin')throw Error('La modification des horaires est réservée au responsable.');
+  const values={duration};
+  for(const key of ['lunch','dinner']){
+   for(const field of ['enabled','start','end'])values[key+'_'+field]=shifts[key][field];
+  }
+  const {error}=await supabase.from('restaurant_hours').update(values).eq('id',1).select('id').single();
+  if(error)throw Error('Impossible d’enregistrer les horaires. Vérifiez votre connexion et réessayez.');
+  await window.RestoRefreshSharedService();
+ };
+ window.RestoInstallWalkin=async r=>{
+  const table=TableStore.get().tables.find(t=>t.number===r.tables[0]);
+  if(!table)throw Error('Table introuvable.');
+  const {error}=await supabase.rpc('install_walkin_v3',{p_table:table.id,p_guests:r.guests,p_name:r.client,p_type:r.type});
+  if(error)throw Error(error.message);
+  await window.RestoRefreshSharedService();
+ };
  const applySharedSnapshot=snapshot=>{
+  const hours=snapshot.hours, shifts={};
+  for(const key of ['lunch','dinner'])shifts[key]={enabled:hours[key+'_enabled'],start:hours[key+'_start'].slice(0,5),end:hours[key+'_end'].slice(0,5)};
+  const settings={shifts,duration:hours.duration};
+  if(JSON.stringify(settings)!==JSON.stringify(window.RestoSharedHours)){
+   window.RestoSharedHours=settings;
+   window.dispatchEvent(new Event('restomanager:hours'));
+  }
   const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
   // Supabase is the authoritative table configuration on the connected preview.
   // Keep localStorage intact as a backup; do not persist this shared snapshot locally.
@@ -86,7 +110,7 @@ try{
    const parts=dateParts.year+'-'+dateParts.month+'-'+dateParts.day;
    const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hour12:false}).format(dt);
    return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status==='departed'?'released':r.status,
-    confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
+    walkIn:!!r.walkin_type,type:r.walkin_type||undefined,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
     duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:r.notes||'',hotelRoom:r.hotel_room||''};
   });
   window.RestoSupabaseReady=true;

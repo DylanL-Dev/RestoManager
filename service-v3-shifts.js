@@ -10,7 +10,24 @@ for(const [mins,label] of [[30,'30 min'],[45,'45 min'],[60,'1 h'],[75,'1 h 15'],
 durationSelect.value=String(ReservationEngine.getDefaultDuration());
 const help=document.createElement('p');help.className='muted';help.textContent='Appliquée à toutes les nouvelles réservations et installations, sans modifier celles déjà enregistrées.';
 durationLabel.append(durationSelect);durationBox.append(durationLabel,help);form.prepend(durationBox);
-form.addEventListener('submit',event=>{event.preventDefault();const next={};for(const key of names){const enabled=document.getElementById('shift-'+key+'-enabled').checked,start=document.getElementById('shift-'+key+'-start').value,end=document.getElementById('shift-'+key+'-end').value;if(!start||!end||start>=end){document.getElementById('shiftFeedback').textContent='Horaires invalides : vérifiez les heures de début et de dernière commande.';return}next[key]={enabled,start,end}}
+window.addEventListener('restomanager:hours',()=>{
+ const {shifts,duration}=window.RestoSharedHours;
+ for(const key of names){
+  document.getElementById('shift-'+key+'-enabled').checked=shifts[key].enabled;
+  for(const field of ['start','end'])document.getElementById('shift-'+key+'-'+field).value=shifts[key][field];
+ }
+ durationSelect.value=String(duration);
+});
+form.addEventListener('submit',async event=>{event.preventDefault();const next={};for(const key of names){const enabled=document.getElementById('shift-'+key+'-enabled').checked,start=document.getElementById('shift-'+key+'-start').value,end=document.getElementById('shift-'+key+'-end').value;if(!start||!end||start>=end){document.getElementById('shiftFeedback').textContent='Horaires invalides : vérifiez les heures de début et de dernière commande.';return}next[key]={enabled,start,end}}
 if(next.lunch.enabled&&next.dinner.enabled&&next.lunch.end>=next.dinner.start){document.getElementById('shiftFeedback').textContent='Les deux services ne doivent pas se chevaucher.';return}
+if(window.RestoSharedReservations){
+ const feedback=document.getElementById('shiftFeedback'),button=form.querySelector('[type=submit]');
+ button.disabled=true;
+ try{
+  await window.RestoSaveSharedHours(next,Number(durationSelect.value));
+  feedback.textContent='Horaires et durée enregistrés pour toute l’équipe.';
+ }catch(error){feedback.textContent=error.message}finally{button.disabled=false}
+ return;
+}
 localStorage.setItem(KEY,JSON.stringify(next));localStorage.setItem('restomanager_default_duration_v1',durationSelect.value);document.getElementById('shiftFeedback').textContent='Horaires et durée standard enregistrés. Les nouvelles réservations et installations utilisent ces réglages.';window.dispatchEvent(new Event('restomanager:v3-change'))});
 })();
