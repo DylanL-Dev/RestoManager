@@ -78,3 +78,22 @@ export async function updateRestaurantTableShared({id,label,seats,roomId}){
  return data;
 }
 window.RestoUpdateRestaurantTable=updateRestaurantTableShared;
+
+export async function createRestaurantTableShared({label,seats,roomId}){
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js');
+ const {profile}=await requireStaff();
+ if(profile.role!=='fb_admin')throw Error('Action réservée aux administrateurs.');
+ const {data,error}=await supabase.rpc('create_restaurant_table_v3',{p_label:label,p_seats:Number(seats),p_room_id:roomId});
+ if(error)throw error;
+ return data;
+}
+export async function setRestaurantTableActiveShared(id,active){
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js');
+ const {profile}=await requireStaff();
+ if(profile.role!=='fb_admin')throw Error('Action réservée aux administrateurs.');
+ const {data,error}=await supabase.rpc('set_restaurant_table_active_v3',{p_table_id:id,p_active:active});
+ if(error)throw error;
+ return data;
+}
+window.RestoCreateRestaurantTable=createRestaurantTableShared;
+window.RestoSetRestaurantTableActive=setRestaurantTableActiveShared;
