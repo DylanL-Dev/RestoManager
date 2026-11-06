@@ -57,6 +57,7 @@ try{
   const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
   // Supabase is the authoritative table configuration on the connected preview.
   // Keep localStorage intact as a backup; do not persist this shared snapshot locally.
+  window.RestoInactiveRestaurantTables=snapshot.tables.filter(t=>!t.active);
   const activeRooms=snapshot.rooms.filter(r=>r.active);
   const primary=activeRooms[0];
   if(primary){
