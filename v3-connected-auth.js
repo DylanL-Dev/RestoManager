@@ -36,7 +36,6 @@ try{
   text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
   document.querySelector('#bookingTable').closest('label').after(text);
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
-  if(location.hash==='#passages')window.RestoScreens.show('tables');
  }
  window.RestoSharedReservations=[];
  window.RestoSupabaseReady=false;
