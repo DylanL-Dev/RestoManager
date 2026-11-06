@@ -28,6 +28,19 @@ function refresh(){
  }catch(e){feedback.textContent=e.message}};
  row.append(info,edit,remove);list.append(row);
  });
+ if(window.RestoSharedReservations&&window.RestoInactiveRestaurantTables?.length){
+  const heading=document.createElement('h4');heading.textContent='Tables désactivées';list.append(heading);
+  for(const t of window.RestoInactiveRestaurantTables){
+   const row=document.createElement('div');row.className='tableAdminItem';
+   const info=document.createElement('span');info.textContent=t.label+' · '+t.seats+' places · désactivée';
+   const restore=document.createElement('button');restore.type='button';restore.textContent='Réactiver';
+   restore.addEventListener('click',async()=>{try{
+    if(!await window.RestoDialog.confirm('Réactiver '+t.label+' ?', {title:'Réactiver une table',acceptLabel:'Réactiver'}))return;
+    await window.RestoSetRestaurantTableActive(t.id,true);await window.RestoRefreshSharedService();feedback.textContent='✓ '+t.label+' réactivée.';
+   }catch(err){feedback.textContent='Réactivation impossible : '+err.message}});
+   row.append(info,restore);list.append(row);
+  }
+ }
 }
 $('tableAdminNew').textContent='Réinitialiser le formulaire';
 $('tableAdminNew').addEventListener('click',()=>{editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';$('tableAdminMin').value=1;$('tableAdminMax').value=2;feedback.textContent='Formulaire prêt pour une nouvelle table.';$('tableAdminNumber').focus()});
