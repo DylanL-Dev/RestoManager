@@ -62,7 +62,7 @@ begin
      v_res.walkin_type is not null then
    raise exception 'Une réservation a changé. Actualisez avant de confirmer.' using errcode='40001';
   end if;
-  select count(*),min(table_id) into v_seats,v_current_table
+  select count(*),(array_agg(table_id))[1] into v_seats,v_current_table
     from public.reservation_tables where reservation_id=v_entry.id and restaurant_id=v_restaurant;
   if v_seats<>1 or v_current_table is distinct from v_entry.from_table then
    raise exception 'L’attribution a changé ou contient une fusion. Actualisez.' using errcode='40001';
