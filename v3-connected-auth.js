@@ -25,7 +25,7 @@ try{
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (!['bookingForm','editForm'].includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion Supabase en cours : attendez la synchronisation avant d’enregistrer.':'Cette fonction de Gestion n’est pas encore raccordée à Supabase.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
+  if(e.type==='submit' && form && (!['bookingForm','editForm','tableAdminForm'].includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion Supabase en cours : attendez la synchronisation avant d’enregistrer.':'Cette fonction de Gestion n’est pas encore raccordée à Supabase.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
@@ -61,6 +61,7 @@ try{
   if(primary){
    const rooms=activeRooms.map((r,i)=>({id:i===0?'main':r.id,name:r.name}));
    const roomIds=new Map(activeRooms.map((r,i)=>[r.id,i===0?'main':r.id]));
+   window.RestoSharedRoomIds=new Map(activeRooms.map((r,i)=>[i===0?'main':r.id,r.id]));
    const tables=snapshot.tables.filter(t=>t.active&&roomIds.has(t.room_id)).map(t=>({
     id:t.id,number:Number(String(t.label).trim().replace(/^table\s*/i,'')),
     capacityMin:1,capacity:t.seats,roomId:roomIds.get(t.room_id)
