@@ -102,6 +102,40 @@ async function action(id,kind){
  all[i]=next.reservation;save(all);notify('Statut mis à jour : '+statuses[all[i].status]+'.');
  }catch(e){notify('Erreur : '+e.message)}
 }
+function showSmartPlacement(id){
+ if(window.RestoReception||!window.RestoSharedReservations||!window.RestoSupabaseReady){notify('La simulation nécessite le compte Restaurant connecté.');return;}
+ const target=load().find(r=>r.id===id);
+ if(!target){notify('Réservation introuvable.');return;}
+ if(!['reserved','confirmed','late','arrived'].includes(target.status)){notify('Le client est déjà installé ou la réservation est terminée.');return;}
+ const plan=TableStore.get().tables||[];
+ const dialog=document.createElement('div');dialog.className='smartPlacementOverlay';
+ dialog.setAttribute('role','presentation');
+ const panel=document.createElement('section');panel.className='smartPlacementDialog';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Simulation de placement intelligent');
+ const heading=el('h2','Placement intelligent · Simulation');
+ const subtitle=el('p',target.client+' · '+target.guests+' couvert(s) · Table prévue '+target.tables.join(' + '),'muted');
+ const hint=el('p','Choisissez la table où le client souhaite réellement s’installer. Aucune modification ne sera enregistrée.','muted');
+ const select=el('select');select.setAttribute('aria-label','Table réellement choisie');
+ const option=el('option','Sélectionner une autre table');option.value='';select.append(option);
+ plan.filter(t=>t.capacity>=target.guests&&(t.capacityMin||1)<=target.guests).forEach(t=>{const o=el('option','Table '+t.number+' · '+t.capacity+' places');o.value=String(t.number);select.append(o)});
+ const result=el('div',undefined,'smartPlacementResult');result.setAttribute('aria-live','polite');
+ const buttons=el('div',undefined,'smartPlacementButtons');const close=el('button','Fermer');close.type='button';
+ close.addEventListener('click',()=>dialog.remove());
+ const simulate=el('button','Simuler le replacement');simulate.type='button';
+ simulate.addEventListener('click',()=>{
+  result.replaceChildren();
+  const reservations=load();
+  const data=window.RestoSmartPlacement?.simulate({reservations,tablePlan:TableStore.get().tables,reservationId:id,targetTable:Number(select.value),holds:window.RestoDraftHolds||[]});
+  if(!data){result.append(el('p','Moteur de simulation indisponible.'));return;}
+  if(!data.ok){result.append(el('p','Aucune solution garantie : '+data.reason));return;}
+  if(!data.changes.length){result.append(el('p','Aucun changement nécessaire.'));return;}
+  const ul=el('ul');
+  data.changes.forEach(change=>{const li=el('li',change.client+' : table '+change.from.join(' + ')+' → table '+change.to.join(' + '));ul.append(li)});
+  result.append(el('strong','Proposition théorique, non enregistrée :'),ul,el('p','Vérifiez la réalité du service avant toute installation. Les autres réservations ne seront pas déplacées automatiquement.'));
+ });
+ buttons.append(close,simulate);panel.append(heading,subtitle,hint,select,result,buttons);dialog.append(panel);document.body.append(dialog);
+ dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.remove()});
+ dialog.addEventListener('keydown',e=>{if(e.key==='Escape')dialog.remove()});select.focus();
+}
 function render(){
  const date=$('reservationDate').value,query=$('reservationQuery').value.trim().toLocaleLowerCase('fr-FR');
  let list;try{list=load()}catch(e){return notify('Lecture impossible : '+e.message)}
@@ -135,7 +169,7 @@ function render(){
  }
  const actions=el('div',undefined,'reservationActions');
  const opts=[['edit','Modifier'],['confirm','Confirmer'],['arrived','Arrivé'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler']];
- const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});actions.append(primary);if(more.children.length>1)actions.append(more);
+ const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){const simulate=el('button','Simuler autre table');simulate.type='button';simulate.className='smartPlacementLaunch';simulate.addEventListener('click',()=>showSmartPlacement(r.id));primary.append(simulate)}actions.append(primary);if(more.children.length>1)actions.append(more);
  card.append(actions);root.append(card);
  });
 }
