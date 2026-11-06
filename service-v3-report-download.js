@@ -18,8 +18,9 @@ if(period==='month'){start=new Date(d.getFullYear(),d.getMonth(),1,12);end=new D
 const from=fmt(start),to=fmt(end),records=ReservationEngine.normalizeReservations(window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]')).filter(r=>r.date>=from&&r.date<=to).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
 const served=records.filter(r=>['completed','released'].includes(r.status)),covers=served.reduce((n,r)=>n+r.guests,0),hotel=served.filter(r=>r.type==='hotel').reduce((n,r)=>n+r.guests,0),walkins=served.filter(r=>r.walkIn).reduce((n,r)=>n+r.guests,0),noShow=records.filter(r=>r.status==='no_show').length,cancelled=records.filter(r=>r.status==='cancelled').length,inRoom=records.filter(r=>r.status==='seated'),inRoomCovers=inRoom.reduce((n,r)=>n+r.guests,0),welcomedCovers=covers+inRoomCovers,walkinPassages=served.filter(r=>r.walkIn).length,pending=records.filter(r=>!['completed','released','no_show','cancelled'].includes(r.status)).length,days=new Set(served.map(r=>r.date)).size;
 const frenchDate=value=>new Date(value+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-const serviceOf=r=>r.time>='12:00'&&r.time<='14:30'?'midi':r.time>='19:00'&&r.time<='21:30'?'soir':'autre';
-const lunch=served.filter(r=>serviceOf(r)==='midi'),dinner=served.filter(r=>serviceOf(r)==='soir');
+const shifts=ReservationEngine.getShifts();
+const serviceOf=r=>{const t=r.time||'';return shifts.lunch.enabled&&t>=shifts.lunch.start&&t<=shifts.lunch.end?'midi':shifts.dinner.enabled&&t>=shifts.dinner.start&&t<=shifts.dinner.end?'soir':'autre'};
+const lunch=served.filter(r=>serviceOf(r)==='midi'),dinner=served.filter(r=>serviceOf(r)==='soir'),other=served.filter(r=>serviceOf(r)==='autre');
 const sum=arr=>arr.reduce((n,r)=>n+r.guests,0);
 const title=period==='month'?'Rapport mensuel':period==='week'?'Rapport hebdomadaire':'Rapport journalier';
 const pdf=new window.jspdf.jsPDF({unit:'mm',format:'a4'});let y=18;
