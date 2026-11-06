@@ -69,18 +69,24 @@ end $function$
 ;
 revoke all on function public.close_service_v3(date,text) from public,anon;
 grant execute on function public.close_service_v3(date,text) to authenticated;
-CREATE OR REPLACE FUNCTION private.guard_closed_service_reservations()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO ''
-AS $function$
-declare
- old_day date;new_day date;rid uuid; d date;
+create or replace function private.guard_closed_service_reservations()
+returns trigger language plpgsql security definer set search_path='' as $$
+declare old_day date;new_day date;rid uuid; d date;
 begin
- rid:=coalesce(new.restaurant_id,old.restaurant_id);
- if tg_op in ('UPDATE','DELETE') then old_day:=(old.starts_at at time zone 'Europe/Paris')::date;end if;
- if tg_op in ('INSERT','UPDATE') then new_day:=(new.starts_at at time zone 'Europe/Paris')::date;end if;
+ if tg_op='INSERT' then
+  rid:=new.restaurant_id;
+  new_day:=(new.starts_at at time zone 'Europe/Paris')::date;
+ elsif tg_op='DELETE' then
+  rid:=old.restaurant_id;
+  old_day:=(old.starts_at at time zone 'Europe/Paris')::date;
+ else
+  rid:=old.restaurant_id;
+  old_day:=(old.starts_at at time zone 'Europe/Paris')::date;
+  new_day:=(new.starts_at at time zone 'Europe/Paris')::date;
+  if new.restaurant_id is distinct from old.restaurant_id then
+   raise exception 'Changement d’établissement non autorisé.' using errcode='23514';
+  end if;
+ end if;
  for d in select distinct x from unnest(array[old_day,new_day]) x where x is not null order by x loop
   perform pg_advisory_xact_lock(hashtext(rid::text),hashtext(d::text));
   if exists(select 1 from public.service_closures c where c.restaurant_id=rid and c.service_date=d) then
@@ -89,8 +95,7 @@ begin
  end loop;
  if tg_op='DELETE' then return old; end if;
  return new;
-end $function$
-;
+end $$;
 revoke all on function private.guard_closed_service_reservations() from public,anon,authenticated;
 drop trigger if exists guard_closed_service_reservations on public.reservations;
 create trigger guard_closed_service_reservations before insert or update or delete on public.reservations
