@@ -1,7 +1,7 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
-const label=document.createElement('span');label.textContent='V3 · Connexion Supabase en cours';
+const label=document.createElement('span');label.textContent='Connexion en cours…';
 const logout=document.createElement('button');logout.type='button';logout.textContent='Déconnexion';
 logout.addEventListener('click',async()=>{await supabase.auth.signOut();location.replace('login.html')});
 banner.append(label,logout);
@@ -14,18 +14,18 @@ try{
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
  const summary=document.createElement('summary');summary.className='managementGroupHead';summary.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="wifi"></i></span><span class="managementGroupWords"><strong>Réseau et synchronisation</strong><small>Connexion, compte et données partagées</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
  const content=document.createElement('div');content.className='managementGroupBody';
- const description=document.createElement('p');description.textContent='État de Supabase et compte actuellement connecté.';
+ const description=document.createElement('p');description.textContent='État de la synchronisation et compte connecté.';
  const lastSync=document.createElement('p');lastSync.className='muted';lastSync.textContent='Dernière synchronisation : en attente';content.append(description,banner,lastSync);network.append(summary,content);management.append(network);
  if(window.lucide?.createIcons)window.lucide.createIcons();
  style.textContent=style.textContent.replace('body{visibility:hidden}','');
- label.textContent='Supabase · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
+ label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
  // legacy localStorage-backed UI until they are replaced by server-side RPC calls.
  const protectedForms=new Set(['bookingForm','editForm','walkinForm','tableAdminForm','fusionForm']);
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (!['bookingForm','editForm','tableAdminForm'].includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion Supabase en cours : attendez la synchronisation avant d’enregistrer.':'Cette fonction de Gestion n’est pas encore raccordée à Supabase.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
+  if(e.type==='submit' && form && (!['bookingForm','editForm','tableAdminForm'].includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
@@ -33,7 +33,7 @@ try{
    if(id==='tableAdminSubmit'&&window.RestoSupabaseReady)return;
    // Let view navigation, date selection, search and tabs work; block mutation buttons.
    if(/(?:save|submit|delete|remove|release|cancelReservation|confirmReservation|install|arrive|seated|noShow|complete|closure)/i.test(id)){
-    e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification bloquée · Supabase reste la source officielle';const feedback=document.getElementById('bookingFeedback');if(feedback)feedback.textContent='Cette action nécessite encore un raccordement à Supabase.';
+    e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification indisponible.';const feedback=document.getElementById('bookingFeedback');if(feedback)feedback.textContent='Cette action est temporairement indisponible.';
    }
   }
  };
@@ -44,7 +44,7 @@ try{
  bookingButton?.addEventListener('click',()=>{
   const feedback=document.getElementById('bookingFeedback');
   if(!feedback)return;
-  if(!window.RestoSupabaseReady){feedback.textContent='Synchronisation Supabase non terminée. Vérifiez Réseau et synchronisation dans Gestion.';return;}
+  if(!window.RestoSupabaseReady){feedback.textContent='Synchronisation en cours. Vérifiez Réseau et synchronisation dans Gestion.';return;}
   const invalid=[...bookingForm.elements].find(field=>field.willValidate&&!field.checkValidity());
   if(invalid){feedback.textContent=invalid.id==='bookingTable'?'Aucune table disponible sélectionnée : impossible de créer la réservation.':'Champ obligatoire ou invalide : '+(invalid.closest('label')?.textContent?.trim()||invalid.name||invalid.id);return;}
   feedback.textContent='Vérification et enregistrement de la réservation…';
@@ -91,10 +91,10 @@ try{
   window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
   window.dispatchEvent(new Event('restomanager:v3-change'));
   lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleTimeString('fr-FR');
-  label.textContent='Supabase · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · création de réservations active';
+  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · création de réservations active';
  };
  window.RestoRefreshSharedService=async()=>{const snapshot=await loadSharedService();applySharedSnapshot(snapshot);return snapshot;};
- await subscribeSharedService(applySharedSnapshot,err=>{window.RestoSupabaseReady=false;label.textContent='Supabase indisponible · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
+ await subscribeSharedService(applySharedSnapshot,err=>{window.RestoSupabaseReady=false;label.textContent='Connexion interrompue · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
 }catch(error){
  location.replace('login.html');
 }
