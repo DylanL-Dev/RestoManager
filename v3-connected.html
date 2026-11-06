@@ -43,6 +43,17 @@ html[data-theme="dark"] .receptionServiceOverview,html[data-theme="dark"] .recep
 html[data-theme="dark"] .receptionServiceMetric{background:#244435;border-color:#355347}
 html[data-theme="dark"] .receptionServiceIntro h2,html[data-theme="dark"] .receptionServiceMetric strong,html[data-theme="dark"] .receptionServicePressure h3,html[data-theme="dark"] .receptionServiceArrivals h3{color:#effaf2}
 html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .receptionServiceFoot,html[data-theme="dark"] .receptionServiceMetric span{color:#bad1c1}
+
+/* Placement intelligent: read-only trial, with explicit no-save message. */
+.smartPlacementOverlay{position:fixed;inset:0;z-index:1200;background:rgba(5,25,17,.68);display:flex;align-items:center;justify-content:center;padding:16px}
+.smartPlacementDialog{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#173e30;border-radius:18px;box-shadow:0 18px 70px #001a1370;padding:22px;display:flex;flex-direction:column;gap:14px}
+.smartPlacementDialog h2{margin:0;font-size:23px}
+.smartPlacementDialog select{width:100%;padding:13px;border:1px solid #a7b9af;border-radius:10px;background:#fff;color:#163b2e}
+.smartPlacementButtons{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px}
+.smartPlacementButtons button,.smartPlacementLaunch{padding:10px 14px;min-height:42px;border-radius:10px}
+.smartPlacementResult{padding:12px;background:#eff7f1;border-radius:10px;line-height:1.5}
+.smartPlacementResult:empty{display:none}
+.smartPlacementResult ul{margin:6px 0;padding-left:19px}
 </style></head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button></div></header>
 
@@ -55,7 +66,7 @@ html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .
 <a href="#passages" class="mobileNavItem" data-nav="passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Service</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3.js?v=20261106-release2"></script><script src="service-v3-reservations.js?v=20261106-annulation"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
+<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3.js?v=20261106-release2"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-smart-preview1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
   const target=document.querySelector(link.getAttribute('href'));
