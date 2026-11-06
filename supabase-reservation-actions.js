@@ -1,6 +1,6 @@
 // Reservation creation uses only secured PostgreSQL RPCs.
 // Never insert directly into reservations or reservation_tables.
-import {supabase,requireStaff} from './supabase-service-bridge.js?v=hours1';
+import {supabase,requireStaff} from './supabase-service-bridge.js?v=sync2';
 const ownerToken=crypto.randomUUID();
 export async function acquireHold({tableId,startsAt,endsAt}){
  await requireStaff();

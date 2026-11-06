@@ -34,7 +34,7 @@ export async function loadSharedService(){
 }
 // Postgres Changes events can arrive out of order. Reload the full authorized
 // snapshot after each event instead of applying unsafe partial state mutations.
-export async function subscribeSharedService(onSnapshot,onError=console.error){
+export async function subscribeSharedService(onSnapshot,onError=console.error,onConnection=()=>{}){
  await requireStaff();
  let stopped=false,busy=false,dirty=false;
  let connectionState='connecting';
@@ -46,7 +46,7 @@ export async function subscribeSharedService(onSnapshot,onError=console.error){
    do{
     dirty=false;
     const snapshot=await loadSharedService();
-    if(!stopped)onSnapshot(snapshot);
+    if(!stopped&&connectionState==='connected')onSnapshot(snapshot);
    }while(dirty&&!stopped);
   }catch(error){if(!stopped)onError(error);}
   finally{busy=false;}
@@ -57,15 +57,18 @@ export async function subscribeSharedService(onSnapshot,onError=console.error){
   if(stopped)return;
   if(status==='SUBSCRIBED'){
    connectionState='connected';
+   onConnection(true);
    void refresh();
   }
   if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
    connectionState='disconnected';
-   onError(new Error('Synchronisation temps réel interrompue ('+status+'). Actualisez après reconnexion.'));
+   onConnection(false);
+   onError(Object.assign(new Error('Connexion en direct interrompue'),{code:status}));
   }
  });
  // On browser resume, refresh even when the websocket silently missed changes.
  const resume=()=>{if(!stopped&&document.visibilityState==='visible')void refresh();};
  document.addEventListener('visibilitychange',resume);
- return ()=>{stopped=true;document.removeEventListener('visibilitychange',resume);void supabase.removeChannel(channel);};
+ window.addEventListener('online',resume);
+ return ()=>{stopped=true;window.removeEventListener('online',resume);document.removeEventListener('visibilitychange',resume);void supabase.removeChannel(channel);};
 }

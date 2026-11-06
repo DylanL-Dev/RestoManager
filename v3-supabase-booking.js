@@ -1,6 +1,6 @@
 // Native V3 -> Supabase reservation creation. No direct table inserts or local writes.
-import {loadSharedService} from './supabase-service-bridge.js?v=hours1';
-import {confirmReservation} from './supabase-reservation-actions.js?v=hours1';
+import {loadSharedService} from './supabase-service-bridge.js?v=sync2';
+import {confirmReservation} from './supabase-reservation-actions.js?v=sync2';
 function parisDateTime(date,time){
  const value=date+'T'+time+':00';
  const guess=Date.parse(value+'Z');
@@ -16,7 +16,7 @@ function parisDateTime(date,time){
  return utc.toISOString();
 }
 async function saveReceptionBooking(candidate,id){
- const {supabase}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase}=await import('./supabase-service-bridge.js?v=sync2');
  const start=parisDateTime(candidate.date,candidate.time);
  const name=candidate.client.trim();
  const notes=[candidate.notes,candidate.allergies?'ALLERGIES À VÉRIFIER : '+candidate.allergies:''].filter(Boolean).join('\n');
@@ -49,7 +49,7 @@ export async function createSharedBooking(candidate){
 window.RestoCreateSharedBooking=createSharedBooking;
 
 export async function cancelSharedBooking(id){
- const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=sync2');
  await requireStaff();
  const {data,error}=await supabase.rpc('cancel_reservation_v3',{p_reservation_id:id});
  if(error)throw error;
@@ -58,7 +58,7 @@ export async function cancelSharedBooking(id){
 window.RestoCancelSharedBooking=cancelSharedBooking;
 
 export async function deleteCancelledSharedBooking(id){
- const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=sync2');
  const {profile}=await requireStaff();
  if(profile.role!=='fb_admin')throw Error('Suppression réservée aux administrateurs');
  const {data,error}=await supabase.rpc('delete_cancelled_reservation_v3',{p_reservation_id:id});
@@ -69,7 +69,7 @@ window.RestoDeleteCancelledSharedBooking=deleteCancelledSharedBooking;
 
 export async function updateSharedBooking(candidate){
  if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id);
- const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js?v=sync2');
  await requireStaff();
  const snapshot=await loadSharedService();
  const byNumber=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t.id]));
@@ -83,7 +83,7 @@ export async function updateSharedBooking(candidate){
 window.RestoUpdateSharedBooking=updateSharedBooking;
 
 export async function updateRestaurantTableShared({id,label,seats,roomId}){
- const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=sync2');
  const {profile}=await requireStaff();
  if(profile.role!=='fb_admin')throw Error('Modification réservée aux administrateurs.');
  const {data,error}=await supabase.rpc('update_restaurant_table_v3',{
@@ -95,7 +95,7 @@ export async function updateRestaurantTableShared({id,label,seats,roomId}){
 window.RestoUpdateRestaurantTable=updateRestaurantTableShared;
 
 export async function createRestaurantTableShared({label,seats,roomId}){
- const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=sync2');
  const {profile}=await requireStaff();
  if(profile.role!=='fb_admin')throw Error('Action réservée aux administrateurs.');
  const {data,error}=await supabase.rpc('create_restaurant_table_v3',{p_label:label,p_seats:Number(seats),p_room_id:roomId});
@@ -103,7 +103,7 @@ export async function createRestaurantTableShared({label,seats,roomId}){
  return data;
 }
 export async function setRestaurantTableActiveShared(id,active){
- const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=sync2');
  const {profile}=await requireStaff();
  if(profile.role!=='fb_admin')throw Error('Action réservée aux administrateurs.');
  const {data,error}=await supabase.rpc('set_restaurant_table_active_v3',{p_table_id:id,p_active:active});
@@ -115,7 +115,7 @@ window.RestoSetRestaurantTableActive=setRestaurantTableActiveShared;
 
 window.RestoChangeSharedStatus=async function(reservation,status){
  if(!window.RestoSupabaseReady)throw Error('Connexion en cours. Réessayez dans un instant.');
- const {supabase}=await import('./supabase-service-bridge.js?v=hours1');
+ const {supabase}=await import('./supabase-service-bridge.js?v=sync2');
  const {error}=await supabase.rpc('change_reservation_status_v3',{
   p_reservation_id:reservation.id,p_expected:reservation.status,p_status:status
  });

@@ -1,4 +1,4 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=hours1';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=sync2';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
@@ -23,7 +23,7 @@ try{
  function greet(){
   const hour=Number(hourInParis.formatToParts(new Date()).find(part=>part.type==='hour').value);
   const greeting=hour>=18||hour<5?'Bonsoir':'Bonjour';
-  document.querySelector('.serviceIntro h1').textContent=greeting+' l’équipe '+(window.RestoReception?'de réception':'du restaurant')+' !';
+  document.getElementById('teamGreeting').textContent=greeting+' l’équipe '+(window.RestoReception?'de réception':'du restaurant')+' !';
  }
  greet();
  setInterval(greet,60000);
@@ -33,11 +33,7 @@ try{
   const text=document.createElement('p');
   text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
   document.querySelector('#bookingTable').closest('label').after(text);
-  for(const link of document.querySelectorAll('a[href="#administration"]')){
-   const caption=link.querySelector('span:last-child');
-   if(caption)caption.textContent='Compte';
-  }
-  document.querySelector('.managementIntro').textContent='Compte réception';
+  document.querySelector('.managementIntro').textContent='Gestion · Réception';
   if(location.hash==='#passages')window.RestoScreens.show('tables');
  }
  window.RestoSharedReservations=[];
@@ -47,9 +43,10 @@ try{
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
  const summary=document.createElement('summary');summary.className='managementGroupHead';summary.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="wifi"></i></span><span class="managementGroupWords"><strong>Réseau et synchronisation</strong><small>Connexion, compte et données partagées</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
  const content=document.createElement('div');content.className='managementGroupBody';
- const description=document.createElement('p');description.textContent='État de la synchronisation et compte connecté.';
+ const description=document.createElement('p');description.setAttribute('role','status');description.textContent='Connexion au service en cours…';
  const lastSync=document.createElement('p');lastSync.className='muted';lastSync.textContent='Dernière synchronisation : en attente';content.append(description,banner,lastSync);network.append(summary,content);management.append(network);
- document.getElementById('accountNetwork').addEventListener('click',()=>{
+ const badge=document.getElementById('syncBadge');
+ badge.addEventListener('click',()=>{
   window.RestoScreens.show('administration');
   network.open=true;
   summary.focus();
@@ -109,6 +106,28 @@ try{
   if(error)throw Error(error.message);
   await window.RestoRefreshSharedService();
  };
+ let channelReady=false;
+ function showState(state,title,detail){
+  badge.dataset.state=state;
+  badge.textContent=title;
+  description.textContent=detail;
+  window.RestoSupabaseReady=state==='ok';
+ }
+ function showError(error){
+  const code=navigator.onLine===false?'HORS_LIGNE':String(error?.code||'LECTURE_DONNEES');
+  const messages={
+   HORS_LIGNE:'Cet appareil a perdu sa connexion Internet.',
+   CHANNEL_ERROR:'La connexion en direct au service a échoué.',
+   TIMED_OUT:'Le service a mis trop de temps à répondre.',
+   CLOSED:'La connexion en direct a été fermée.',
+   '42501':'Le compte connecté ne dispose pas des droits nécessaires pour lire ces données.',
+   PGRST301:'La session a expiré ou a été refusée. Reconnectez-vous.',
+   PLAN_TABLES:'Le plan de salle reçu ne peut pas être affiché.'
+  };
+  const detail=messages[code]||'La lecture des données partagées a échoué.';
+  showState('error','Synchronisation interrompue',detail+' Code : '+code+'. Vérifiez la connexion puis actualisez si nécessaire.');
+ }
+ window.addEventListener('offline',()=>showError({code:'HORS_LIGNE'}));
  const applySharedSnapshot=snapshot=>{
   const hours=snapshot.hours, shifts={};
   for(const key of ['lunch','dinner'])shifts[key]={enabled:hours[key+'_enabled'],start:hours[key+'_start'].slice(0,5),end:hours[key+'_end'].slice(0,5)};
@@ -133,8 +152,8 @@ try{
    }));
    if(tables.every(t=>Number.isInteger(t.number)&&t.number>0)&&new Set(tables.map(t=>t.number)).size===tables.length){
     try{TableStore.setShared({version:1,rooms,tables});window.dispatchEvent(new Event('restomanager:v3-tables'));}
-    catch(err){console.error('Synchronisation des tables refusée',err);}
-   }else console.error('Numérotation des tables Supabase incompatible avec le plan V3.');
+    catch(err){throw Object.assign(new Error('Plan de salle invalide',{cause:err}),{code:'PLAN_TABLES'});}
+   }else throw Object.assign(new Error('Numérotation incompatible'),{code:'PLAN_TABLES'});
   }
   const assigned=new Map();
   for(const a of snapshot.assignments){
@@ -152,14 +171,24 @@ try{
     walkIn:!!r.walkin_type,type:r.walkin_type||undefined,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
     duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:r.notes||'',hotelRoom:r.hotel_room||''};
   });
-  window.RestoSupabaseReady=true;
+  if(navigator.onLine===false)showError({code:'HORS_LIGNE'});
+  else if(channelReady)showState('ok','Synchronisation active','Les données de cet appareil sont synchronisées en direct.');
   window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
   window.dispatchEvent(new Event('restomanager:v3-change'));
   lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
-  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · création de réservations active';
+  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables';
  };
- window.RestoRefreshSharedService=async()=>{const snapshot=await loadSharedService();applySharedSnapshot(snapshot);return snapshot;};
- await subscribeSharedService(applySharedSnapshot,err=>{window.RestoSupabaseReady=false;label.textContent='Connexion interrompue · Ne pas utiliser pour le service';console.error(err)});
+ window.RestoRefreshSharedService=async()=>{
+  try{const snapshot=await loadSharedService();applySharedSnapshot(snapshot);return snapshot;}
+  catch(error){showError(error);throw error;}
+ };
+ try{
+  await subscribeSharedService(applySharedSnapshot,showError,connected=>{
+   channelReady=connected;
+   if(connected)showState('pending','Synchronisation en cours','Connexion établie. Lecture des données en cours…');
+  });
+ }catch(error){showError(error);}
+
 }catch(error){
  location.replace('login.html');
 }
