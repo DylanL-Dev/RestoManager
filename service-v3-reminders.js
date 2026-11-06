@@ -1,8 +1,6 @@
 'use strict';
 (function(){
  const KEY='restomanager_reservations',SNOOZE='restomanager_v3_reminder_snoozes';
- // Demo lives only in this browser tab; it never touches Supabase or reservations.
- let demoPressure=false;
  const bell=document.createElement('button');bell.type='button';bell.className='serviceBell';bell.setAttribute('aria-label','Rappels de service');bell.innerHTML='<i data-lucide="bell"></i><span class="serviceBellCount" hidden>0</span>';
  const panel=document.createElement('section');panel.className='serviceReminderPanel';panel.hidden=true;panel.setAttribute('role','region');panel.setAttribute('aria-label','Notifications de service');
  (document.querySelector('.headerQuickActions')||document.querySelector('.top'))?.append(bell);document.body.append(panel);
@@ -59,7 +57,7 @@
   const activeRestaurant=window.RestoReception===false&&ready;
   const bookingAlerts=activeRestaurant?(window.RestoFbReservationAlerts||[]).filter(a=>!a.read_at):[];
   const alerts=ready&&!reception?collect():[];
-  const pressure=ready?(demoPressure?{time:'19:00',info:{valid:true,remaining:2,total:22,level:'critical'},demo:true}:capacityAlert()):null;
+  const pressure=ready?capacityAlert():null;
   const total=alerts.length+bookingAlerts.length+(pressure?1:0);
   bell.hidden=!ready;
   if(!ready){panel.hidden=true;return}
@@ -67,19 +65,13 @@
   bell.setAttribute('aria-label',total+' notification(s) '+(reception?'Réception':'Restaurant'));
   panel.replaceChildren();
   const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent=reception?'Notifications · Réception':'Notifications · Restaurant';head.append(h,button('Fermer',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
-  const demoToolbar=document.createElement('div');demoToolbar.className='serviceDemoToolbar';
-  const demoCaption=document.createElement('span');demoCaption.textContent='TEST LOCAL · aucune réservation modifiée';
-  const demoButton=button(demoPressure?'Terminer la démo':'Tester : 2 tables restantes',()=>{demoPressure=!demoPressure;update();panel.hidden=false;},'serviceDemoButton');
-  demoButton.setAttribute('aria-pressed',String(demoPressure));
-  demoToolbar.append(demoCaption,demoButton);panel.append(demoToolbar);
   if(!total){const p=document.createElement('p');p.textContent='Aucune nouvelle notification.';panel.append(p);return}
   if(pressure){
    const item=document.createElement('article');item.className='serviceReminderItem serviceCapacityWarning';
-   const title=document.createElement('strong');title.textContent=(pressure.demo?'DÉMONSTRATION · ':'')+(pressure.info.remaining===0?'Créneau complet · '+pressure.time:'Peu de tables disponibles · '+pressure.time);
-   const detail=document.createElement('p');detail.textContent=(pressure.demo?'Simulation uniquement. Aucune table réelle n’est bloquée. ':'')+(pressure.info.remaining===0?'Aucune table compatible libre pour 2 couverts à cet horaire.':'Seulement '+pressure.info.remaining+' table(s) encore compatible(s) pour 2 couverts à cet horaire. Vérifiez les disponibilités avant de proposer ce créneau.');
+   const title=document.createElement('strong');title.textContent=pressure.info.remaining===0?'Créneau complet · '+pressure.time:'Peu de tables disponibles · '+pressure.time;
+   const detail=document.createElement('p');detail.textContent=pressure.info.remaining===0?'Aucune table compatible libre pour 2 couverts à cet horaire.':'Seulement '+pressure.info.remaining+' table(s) encore compatible(s) pour 2 couverts à cet horaire. Vérifiez les disponibilités avant de proposer ce créneau.';
    const actions=document.createElement('div');actions.className='serviceReminderActions';
-   if(pressure.demo)actions.append(button('Terminer le test',()=>{demoPressure=false;update();panel.hidden=false},'serviceReminderPrimary'));
-   else actions.append(button('Voir les disponibilités',()=>{window.RestoScreens?.show('reservationForm');panel.hidden=true},'serviceReminderPrimary'));
+   actions.append(button('Voir les disponibilités',()=>{window.RestoScreens?.show('reservationForm');panel.hidden=true},'serviceReminderPrimary'));
    item.append(title,detail,actions);panel.append(item);
   }
   for(const a of bookingAlerts){
