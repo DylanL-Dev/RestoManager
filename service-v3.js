@@ -46,7 +46,15 @@ const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 // The service dashboard can show yesterday after midnight, but booking dates cannot.
 const bookingToday=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
-const date=today();$('serviceDate').textContent=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const date=today();
+function refreshHeaderDate(){
+ const paris=bookingToday();
+ const heading=$('serviceDate');
+ if(heading)heading.textContent=new Date(paris+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+refreshHeaderDate();
+setInterval(refreshHeaderDate,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshHeaderDate()});
 let plan,bookings;try{plan=TableStore.get();const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');bookings=ReservationEngine.normalizeReservations(raw).filter(r=>r.date===date)}catch(e){$('tableGrid').textContent='Données indisponibles : '+e.message;return}
 const rooms=plan.rooms||[];rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name==='Salle principale'?'Principale':r.name;o.title=r.name;$('roomFilter').append(o)});
 let filter='all',selected=null;
