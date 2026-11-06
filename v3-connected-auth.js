@@ -36,6 +36,11 @@ try{
   text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
   document.querySelector('#bookingTable').closest('label').after(text);
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
+  // "Disponibilités" did not describe the Reception's actual reservation workflow.
+  const reservationLink=document.querySelector('.sidebar a[href="#reservationForm"] span');
+  if(reservationLink)reservationLink.textContent='Ajouter une réservation';
+  const reservationHeading=document.querySelector('#reservationForm .actionPanelBody h2');
+  if(reservationHeading)reservationHeading.textContent='Ajouter une réservation';
   const serviceSidebar=document.querySelector('.sidebar a[href="#passages"] span');
   if(serviceSidebar)serviceSidebar.textContent='Service';
   const serviceShortcut=document.querySelector('.quickAction[href="#passages"] span');
