@@ -98,6 +98,10 @@ list.forEach(r=>{
  if(kind==='seated'&&window.RestoCheckOccupiedTables?.(all[index],all))return;
  if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(all[index])))return;
  const result=ReservationEngine.transition(all[index],kind,undefined,all);if(!result.valid)throw Error(result.error);
+ if(window.RestoSharedReservations){
+  await window.RestoChangeSharedStatus(all[index],kind);
+  return;
+ }
  all[index]=result.reservation;localStorage.setItem('restomanager_reservations',JSON.stringify(all));
  window.dispatchEvent(new Event('restomanager:v3-change'));
  const table=plan.tables.find(x=>x.number===t.number);if(table)detail(table,state(table));

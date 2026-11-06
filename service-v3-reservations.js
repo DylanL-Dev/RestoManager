@@ -89,7 +89,16 @@ async function action(id,kind){
    }catch(e){notify('Annulation impossible : '+e.message)}
    return;
   }
-  notify('Cette action est temporairement indisponible.');return;
+  const all=load(),current=all.find(r=>r.id===id);
+  if(!current)return notify('Réservation introuvable.');
+  if(kind==='seated'&&window.RestoCheckOccupiedTables?.(current,all))return;
+  if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(current)))return;
+  const status=kind==='confirm'?'confirmed':kind;
+  try{
+   await window.RestoChangeSharedStatus(current,status);
+   notify('Statut mis à jour : '+statuses[status]+'.');
+  }catch(error){notify(error.message)}
+  return;
  }
  try{
  const all=load(),i=all.findIndex(r=>r.id===id);if(i<0)return notify('Réservation introuvable.');

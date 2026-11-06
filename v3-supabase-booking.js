@@ -97,3 +97,13 @@ export async function setRestaurantTableActiveShared(id,active){
 }
 window.RestoCreateRestaurantTable=createRestaurantTableShared;
 window.RestoSetRestaurantTableActive=setRestaurantTableActiveShared;
+
+window.RestoChangeSharedStatus=async function(reservation,status){
+ if(!window.RestoSupabaseReady)throw Error('Connexion en cours. Réessayez dans un instant.');
+ const {supabase}=await import('./supabase-service-bridge.js');
+ const {error}=await supabase.rpc('change_reservation_status_v3',{
+  p_reservation_id:reservation.id,p_expected:reservation.status,p_status:status
+ });
+ if(error)throw error;
+ await window.RestoRefreshSharedService();
+};

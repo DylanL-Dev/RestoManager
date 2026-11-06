@@ -5,7 +5,7 @@ const section=document.createElement('section');section.className='quickReleaseP
 section.innerHTML='<div class="quickReleaseHeader"><div><h2><i data-lucide="utensils"></i> Tables occupées <span id="quickReleaseCount"></span></h2><p>Consultez les heures prévues et libérez la table après le départ des clients.</p></div></div><div class="quickReleaseTools"><label>Rechercher <input id="quickReleaseSearch" type="search" placeholder="Chambre, nom, table…" autocomplete="off"></label><label>Trier par <select id="quickReleaseSort"><option value="table">Table croissante</option><option value="room">Chambre croissante</option><option value="name">Nom A → Z</option><option value="time">Installation ancienne</option></select></label></div><div id="quickReleaseUndo" role="status" aria-live="polite"></div><div id="quickReleaseList" class="quickReleaseList"></div><p id="quickReleaseFeedback" role="status" aria-live="polite"></p>';
 host.parentNode.insertBefore(section,host);
 const $=id=>document.getElementById(id),collator=new Intl.Collator('fr',{numeric:true,sensitivity:'base'});
-function read(){try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}}
+function read(){if(window.RestoSharedReservations)return ReservationEngine.normalizeReservations(window.RestoSharedReservations);try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}}
 function serviceDay(){const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 let lastUndo=null;
 function room(r){return String(r.room||r.roomNumber||r.chambre||r.chambreNumber||'').trim()}
@@ -32,7 +32,7 @@ function render(){
   btn.addEventListener('click',()=>release(r.id));
   const edit=el('button','quickReleaseEdit','Modifier');edit.type='button';edit.setAttribute('aria-label','Modifier la table et la durée de '+r.client);
   edit.addEventListener('click',()=>openQuickEdit(r.id));
-  const actions=el('div','quickReleaseActions');actions.append(edit,btn);row.append(info,actions);container.append(row);
+  const actions=el('div','quickReleaseActions');if(!window.RestoSharedReservations)actions.append(edit);actions.append(btn);row.append(info,actions);container.append(row);
  }
 }
 
@@ -78,10 +78,17 @@ function openQuickEdit(id){
  });
  controls.append(cancel,save);panel.append(heading,subtitle,tableLabel,durationLabel,hint,error,controls);overlay.append(panel);document.body.append(overlay);tableSelect.focus();
 }
-function release(id){
+async function release(id){
  const all=read(),index=all.findIndex(r=>r.id===id&&r.status==='seated'&&r.date===serviceDay());if(index<0){render();return}
  const previous=all[index],transition=ReservationEngine.transition(previous,'released',new Date().toISOString(),all);
  if(!transition.valid){$('quickReleaseFeedback').textContent=transition.error;return}
+ if(window.RestoSharedReservations){
+  try{
+   await window.RestoChangeSharedStatus(previous,'released');
+   $('quickReleaseFeedback').textContent='Table '+previous.tables.join(' + ')+' libérée.';
+  }catch(error){$('quickReleaseFeedback').textContent=error.message}
+  return;
+ }
  all[index]=transition.reservation;
  try{localStorage.setItem(KEY,JSON.stringify(all))}catch(e){$('quickReleaseFeedback').textContent='Enregistrement impossible : '+e.message;return}
  lastUndo={id,previous,releasedAt:transition.reservation.updatedAt};
