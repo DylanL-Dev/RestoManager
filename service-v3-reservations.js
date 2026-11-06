@@ -148,7 +148,7 @@ $('editForm').addEventListener('submit',async e=>{
  if(window.RestoSharedReservations){
   try{
    const previous=load().find(r=>r.id===editing);if(!previous)throw Error('Réservation introuvable');
-   const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests:Number($('editGuests').value),tables:chosenTables.slice(),notes:$('editNotes').value.trim()};
+   const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests:Number($('editGuests').value),tables:chosenTables.slice(),notes:$('editNotes').value.trim().slice(0,1000),allergies:$('editAllergies').value.trim().slice(0,500)};
    if(!window.RestoReception&&!updated.tables.length)throw Error('Choisissez une table');
    if(!updated.client)throw Error('Le nom du client est obligatoire.');
    if(!Number.isInteger(updated.guests)||updated.guests<1||updated.guests>50)throw Error('Nombre de couverts invalide.');
