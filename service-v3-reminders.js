@@ -56,9 +56,10 @@
   const ready=window.RestoSupabaseReady&&typeof window.RestoReception==='boolean';
   const activeRestaurant=window.RestoReception===false&&ready;
   const bookingAlerts=activeRestaurant?(window.RestoFbReservationAlerts||[]).filter(a=>!a.read_at):[];
+  const changeAlerts=activeRestaurant?(window.RestoFbChangeAlerts||[]).filter(a=>!a.read_at):[];
   const alerts=ready&&!reception?collect():[];
   const pressure=ready?capacityAlert():null;
-  const total=alerts.length+bookingAlerts.length+(pressure?1:0);
+  const total=alerts.length+bookingAlerts.length+changeAlerts.length+(pressure?1:0);
   bell.hidden=!ready;
   if(!ready){panel.hidden=true;return}
   const count=bell.querySelector('span');count.textContent=String(total);count.hidden=!total;
@@ -73,6 +74,52 @@
    const actions=document.createElement('div');actions.className='serviceReminderActions';
    actions.append(button('Voir les disponibilités',()=>{window.RestoScreens?.show('reservationForm');panel.hidden=true},'serviceReminderPrimary'));
    item.append(title,detail,actions);panel.append(item);
+  }
+  for(const a of changeAlerts){
+   const item=document.createElement('article');item.className='serviceReminderItem serviceReceptionChangeAlert'+(a.event_type==='cancelled'?' isCancellation':'');
+   const title=document.createElement('strong');
+   title.textContent=a.event_type==='cancelled'?'Réservation annulée · Réception':'Réservation modifiée · Réception';
+   const who=a.hotel_room?'Chambre '+a.hotel_room:(a.guest_name||'Client');
+   const when=new Date(a.starts_at);
+   const displayDate=value=>Number.isFinite(new Date(value).getTime())?new Date(value).toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Horaire à vérifier';
+   const detail=document.createElement('p');
+   detail.textContent=who+' · '+a.party_size+' couvert(s) · '+displayDate(a.starts_at);
+   item.append(title,detail);
+   if(a.event_type==='modified'){
+    const changes=[];
+    const fields=Array.isArray(a.changed_fields)?a.changed_fields:[];
+    if(fields.includes('horaire'))changes.push('Horaire : '+displayDate(a.previous_starts_at)+' → '+displayDate(a.starts_at));
+    if(fields.includes('couverts'))changes.push('Couverts : '+a.previous_party_size+' → '+a.party_size);
+    if(fields.includes('chambre'))changes.push('Chambre modifiée');
+    if(fields.includes('client'))changes.push('Nom du client modifié');
+    if(fields.includes('consignes'))changes.push('Consignes ou allergies modifiées');
+    if(changes.length){
+     const summary=document.createElement('ul');summary.className='serviceChangeDetails';
+     for(const text of changes){const line=document.createElement('li');line.textContent=text;summary.append(line)}
+     item.append(summary);
+    }
+   }
+   const actions=document.createElement('div');actions.className='serviceReminderActions';
+   actions.append(button('Voir la réservation',async()=>{
+    try{
+     await window.RestoMarkFbChangeRead?.(a.id);
+     const date=document.getElementById('reservationDate');
+     if(date){
+      const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when);
+      const fields=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+      date.value=fields.year+'-'+fields.month+'-'+fields.day;
+      date.dispatchEvent(new Event('change',{bubbles:true}));
+     }
+     const search=document.getElementById('reservationQuery');
+     if(search){search.value=a.hotel_room||a.guest_name;search.dispatchEvent(new Event('input',{bubbles:true}))}
+     window.RestoScreens?.show('reservations');panel.hidden=true;
+    }catch(err){await window.RestoDialog?.alert(err.message||'Ouverture impossible',{title:'Notification'});}
+   },'serviceReminderPrimary'));
+   actions.append(button('Marquer comme lue',async()=>{
+    try{await window.RestoMarkFbChangeRead?.(a.id)}
+    catch(err){await window.RestoDialog?.alert(err.message||'Action impossible',{title:'Notification'})}
+   }));
+   item.append(actions);panel.append(item);
   }
   for(const a of bookingAlerts){
    const item=document.createElement('article');item.className='serviceReminderItem serviceReceptionBookingAlert';
