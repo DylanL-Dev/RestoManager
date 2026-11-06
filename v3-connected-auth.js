@@ -3,11 +3,30 @@ const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
 const logout=document.createElement('button');logout.type='button';logout.textContent='Déconnexion';
-logout.addEventListener('click',async()=>{await supabase.auth.signOut();location.replace('login.html')});
+logout.addEventListener('click',async()=>{
+ logout.disabled=true;
+ try{
+  const {error}=await supabase.auth.signOut({scope:'local'});
+  if(error)throw error;
+  location.replace('login.html');
+ }catch(error){
+  logout.disabled=false;
+  label.textContent='Déconnexion impossible. Vérifiez le réseau et réessayez.';
+ }
+});
 banner.append(label,logout);
 try{
  const {profile}=await requireStaff();
  window.RestoReception=profile.role==='reception';
+ document.getElementById('teamSpace').textContent=window.RestoReception?'Espace Réception':'Espace Restaurant';
+ const hourInParis=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',hourCycle:'h23'});
+ function greet(){
+  const hour=Number(hourInParis.formatToParts(new Date()).find(part=>part.type==='hour').value);
+  const greeting=hour>=18||hour<5?'Bonsoir':'Bonjour';
+  document.querySelector('.serviceIntro h1').textContent=greeting+' l’équipe '+(window.RestoReception?'de réception':'du restaurant')+' !';
+ }
+ greet();
+ setInterval(greet,60000);
  if(window.RestoReception){
   document.documentElement.classList.add('reception');
   document.querySelector('#editTable').required=false;
@@ -30,6 +49,12 @@ try{
  const content=document.createElement('div');content.className='managementGroupBody';
  const description=document.createElement('p');description.textContent='État de la synchronisation et compte connecté.';
  const lastSync=document.createElement('p');lastSync.className='muted';lastSync.textContent='Dernière synchronisation : en attente';content.append(description,banner,lastSync);network.append(summary,content);management.append(network);
+ document.getElementById('accountNetwork').addEventListener('click',()=>{
+  window.RestoScreens.show('administration');
+  network.open=true;
+  summary.focus();
+  network.scrollIntoView({block:'center'});
+ });
  if(window.lucide?.createIcons)window.lucide.createIcons();
  style.textContent=style.textContent.replace('body{visibility:hidden}','');
  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
@@ -130,11 +155,11 @@ try{
   window.RestoSupabaseReady=true;
   window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
   window.dispatchEvent(new Event('restomanager:v3-change'));
-  lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleTimeString('fr-FR');
+  lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
   label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables · création de réservations active';
  };
  window.RestoRefreshSharedService=async()=>{const snapshot=await loadSharedService();applySharedSnapshot(snapshot);return snapshot;};
- await subscribeSharedService(applySharedSnapshot,err=>{window.RestoSupabaseReady=false;label.textContent='Connexion interrompue · Ne pas utiliser pour le service';lastSync.textContent='Synchronisation interrompue · données potentiellement périmées';console.error(err)});
+ await subscribeSharedService(applySharedSnapshot,err=>{window.RestoSupabaseReady=false;label.textContent='Connexion interrompue · Ne pas utiliser pour le service';console.error(err)});
 }catch(error){
  location.replace('login.html');
 }
