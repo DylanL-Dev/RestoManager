@@ -44,6 +44,8 @@ window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count
 (function(){
 const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+// The service dashboard can show yesterday after midnight, but booking dates cannot.
+const bookingToday=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
 const date=today();$('serviceDate').textContent=new Date(date+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 let plan,bookings;try{plan=TableStore.get();const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');bookings=ReservationEngine.normalizeReservations(raw).filter(r=>r.date===date)}catch(e){$('tableGrid').textContent='Données indisponibles : '+e.message;return}
 const rooms=plan.rooms||[];rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name==='Salle principale'?'Principale':r.name;o.title=r.name;$('roomFilter').append(o)});
@@ -231,7 +233,10 @@ function showBookingSuccess(reservation){
  actions.append(view,again);dialog.append(mark,heading,summary,note,actions);overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',escape);view.focus();
 }
 function prepareNewReservation(){
- // Keep date/time and any table preselection from the user's shortcut.
+ // Roll an expired booking date forward, while preserving future dates chosen by staff.
+ const bookingDateField=$('bookingDate');
+ if(bookingDateField&&(!bookingDateField.value||bookingDateField.value<bookingToday()))bookingDateField.value=bookingToday();
+ // Keep time and any table preselection from the user's shortcut.
  // Only clear fields belonging to the previous guest.
  for(const id of ['bookingClient','bookingAllergies','bookingNotes']){
   const field=$(id);if(field)field.value='';
@@ -245,7 +250,7 @@ window.addEventListener('restomanager:screen',e=>{
  if(e.detail==='reservationForm')prepareNewReservation();
 });
 function readReservations(){const raw=window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
-$('bookingDate').value=date;
+$('bookingDate').value=bookingToday();
 $('bookingTime').value='19:00';
 ['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient'].forEach(id=>$(id).addEventListener('change',refreshAvailability));
 $('bookingForm').addEventListener('submit',async event=>{
@@ -253,7 +258,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  try{
  if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw Error('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
- if($('bookingDate').value<today())throw Error('Impossible de créer une réservation à une date passée.');
+ if($('bookingDate').value<bookingToday())throw Error('Impossible de créer une réservation à une date passée.');
  const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
