@@ -66,3 +66,15 @@ export async function updateSharedBooking(candidate){
  return data;
 }
 window.RestoUpdateSharedBooking=updateSharedBooking;
+
+export async function updateRestaurantTableShared({id,label,seats,roomId}){
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js');
+ const {profile}=await requireStaff();
+ if(profile.role!=='fb_admin')throw Error('Modification réservée aux administrateurs.');
+ const {data,error}=await supabase.rpc('update_restaurant_table_v3',{
+  p_table_id:id,p_label:label,p_seats:Number(seats),p_room_id:roomId
+ });
+ if(error)throw error;
+ return data;
+}
+window.RestoUpdateRestaurantTable=updateRestaurantTableShared;
