@@ -78,6 +78,18 @@
         return BLOCKING_STATUSES.includes(reservation.status);
     }
 
+    function rankedTableChoices(tables, groups, guests) {
+        const byNumber = new Map(tables.map(t => [t.number, t]));
+        const choices = tables.filter(t => guests >= (t.capacityMin || 1)).map(t => [t.number]).concat(groups);
+        return choices.filter(numbers => numbers.every(n => byNumber.has(n))).map(numbers => {
+            const capacity = numbers.reduce((sum,n) => sum + byNumber.get(n).capacity, 0);
+            const label = (numbers.length === 1 ? 'Table ' : 'Tables ') + numbers.join(' + ');
+            return {numbers, capacity, label, value: numbers.join(',')};
+        }).filter(c => c.capacity >= guests).sort((a,b) =>
+            a.capacity - b.capacity || a.numbers.length - b.numbers.length ||
+            a.value.localeCompare(b.value, 'fr', {numeric:true}));
+    }
+
     function tableCapacity(tables) {
         if(globalThis.RestoSharedReservations){
             const plan=TableStore.get().tables;
@@ -267,6 +279,7 @@
         CAPACITY: CAPACITY,
         STATUS: STATUS,
         DEFAULT_DURATION: DEFAULT_DURATION,
+        rankedTableChoices,
         getDefaultDuration: getDefaultDuration,
         CLOSING_MINUTES: CLOSING_MINUTES,
         TERMINAL_STATUSES: TERMINAL_STATUSES,

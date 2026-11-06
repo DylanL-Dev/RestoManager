@@ -21,7 +21,7 @@ configs.forEach(id=>{
  const options=Array.from(select.options).filter(o=>o.value);
  const chosen=options.find(o=>o.value===select.value);
  trigger.replaceChildren();
- const label=document.createElement('span');label.textContent=chosen?(id==='editTable'?chosen.textContent:'Table '+chosen.value+' · '+chosen.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim()):'Aucune table disponible';
+ const label=document.createElement('span');label.textContent=chosen?(chosen.textContent):'Aucune table disponible';
  const action=document.createElement('span');action.className='tableChoiceAction';action.textContent=chosen?'Changer':'Choisir';
  trigger.append(label,action);trigger.disabled=!options.length;
  if(active===id)render();
@@ -36,7 +36,7 @@ configs.forEach(id=>{
  options.forEach((o,i)=>{
  const card=document.createElement('button');card.type='button';card.className='tablePickerCard'+(o.value===select.value?' selected':'')+(o.disabled?' unavailable':'')+(o.dataset.availability==='caution'?' caution':'');card.disabled=Boolean(o.disabled);
  const top=document.createElement('div');top.className='tablePickerCardTop';
- const name=document.createElement('strong');name.textContent=id==='editTable'?o.textContent.split(' · ')[0]:'Table '+o.value;top.append(name);
+ const name=document.createElement('strong');name.textContent=o.textContent.split(' · ')[0];top.append(name);
  if(i===0&&id!=='editTable'){const tag=document.createElement('span');tag.className='tablePickerBest';tag.textContent='★ Recommandée';top.append(tag)}
  const desc=document.createElement('small');desc.textContent=o.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim();
  const indicator=document.createElement('span');indicator.className='tablePickerIndicator';indicator.textContent=id==='editTable'?(o.disabled?(o.dataset.reason||'Indisponible'):(o.dataset.availability==='caution'?(o.dataset.reason||'À confirmer'):(o.value===select.value?'✓ Sélectionnée':'✓ Disponible'))):(o.value===select.value?'✓ Sélectionnée':'Choisir cette table');

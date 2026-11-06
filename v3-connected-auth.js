@@ -57,7 +57,7 @@ try{
  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
  // legacy localStorage-backed UI until they are replaced by server-side RPC calls.
- const allowedForms=window.RestoReception?['bookingForm','editForm']:['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm'];
+ const allowedForms=window.RestoReception?['bookingForm','editForm']:['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm','fusionForm'];
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
@@ -66,7 +66,7 @@ try{
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
    const id=btn.id||'';
-   if(id==='tableAdminSubmit'&&window.RestoSupabaseReady)return;
+   if(['tableAdminSubmit','fusionSubmit'].includes(id)&&!window.RestoReception&&window.RestoSupabaseReady)return;
    // Let view navigation, date selection, search and tabs work; block mutation buttons.
    if(/(?:save|submit|delete|remove|release|cancelReservation|confirmReservation|install|arrive|seated|noShow|complete|closure)/i.test(id)){
     e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification indisponible.';const feedback=document.getElementById('bookingFeedback');if(feedback)feedback.textContent='Cette action est temporairement indisponible.';
@@ -99,10 +99,18 @@ try{
   if(error)throw Error('Impossible d’enregistrer les horaires. Vérifiez votre connexion et réessayez.');
   await window.RestoRefreshSharedService();
  };
+ const idsFor=numbers=>numbers.map(n=>{
+  const t=TableStore.get().tables.find(t=>t.number===n);
+  if(!t)throw Error('Table introuvable.');
+  return t.id;
+ });
+ window.RestoChangeFusion=async(oldPair,newPair)=>{
+  const {error}=await supabase.rpc('change_fusion_link_v3',{p_old:oldPair?idsFor(oldPair):null,p_new:newPair?idsFor(newPair):null});
+  if(error)throw Error(error.code==='23505'?'Cette association existe déjà.':error.message);
+  await window.RestoRefreshSharedService();
+ };
  window.RestoInstallWalkin=async r=>{
-  const table=TableStore.get().tables.find(t=>t.number===r.tables[0]);
-  if(!table)throw Error('Table introuvable.');
-  const {error}=await supabase.rpc('install_walkin_v3',{p_table:table.id,p_guests:r.guests,p_name:r.client,p_type:r.type});
+  const {error}=await supabase.rpc('install_walkin_group_v3',{p_tables:idsFor(r.tables),p_guests:r.guests,p_name:r.client,p_type:r.type});
   if(error)throw Error(error.message);
   await window.RestoRefreshSharedService();
  };
@@ -151,6 +159,8 @@ try{
     capacityMin:1,capacity:t.seats,roomId:roomIds.get(t.room_id)
    }));
    if(tables.every(t=>Number.isInteger(t.number)&&t.number>0)&&new Set(tables.map(t=>t.number)).size===tables.length){
+    const numbers=new Map(tables.map(t=>[t.id,t.number]));
+    window.RestoFusionLinks=snapshot.fusionLinks.map(l=>[numbers.get(l.table_a),numbers.get(l.table_b)]).filter(p=>p.every(Number.isInteger));
     try{TableStore.setShared({version:1,rooms,tables});window.dispatchEvent(new Event('restomanager:v3-tables'));}
     catch(err){throw Object.assign(new Error('Plan de salle invalide',{cause:err}),{code:'PLAN_TABLES'});}
    }else throw Object.assign(new Error('Numérotation incompatible'),{code:'PLAN_TABLES'});

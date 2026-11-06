@@ -134,6 +134,7 @@ function confirmTableDeparture(kind,r){
   document.addEventListener('keydown',onKey,true);cancel.focus();
  });
 }
+$('bookingTable').addEventListener('change',()=>{$('bookingTable').dataset.manual='true'});
 function refreshAvailability(){
  const dateValue=$('bookingDate').value,time=$('bookingTime').value,guests=Number($('bookingGuests').value),select=$('bookingTable'),previous=select.value;
  const insight=$('availabilityInsight'),fusionPanel=$('fusionSuggestions');
@@ -142,50 +143,30 @@ function refreshAvailability(){
  select.replaceChildren();window.RestoFusionSelected=null;select.required=!window.RestoReception;
  if(!dateValue||!time||!Number.isInteger(guests)||guests<1)return;
  const reservationsAll=readReservations(),duration=ReservationEngine.getDefaultDuration();
- const suitable=plan.tables.filter(t=>t.capacity>=guests&&(t.capacityMin||1)<=guests).sort((a,b)=>a.capacity-b.capacity||a.number-b.number);
- const pairs=window.RestoFusion?window.RestoFusion.pairs():[];
- const configured=pairs.map(pair=>{
-  const tables=pair.map(n=>plan.tables.find(t=>t.number===n));
-  if(tables.some(t=>!t))return null;
-  return {pair,capacity:tables.reduce((sum,t)=>sum+t.capacity,0)};
- }).filter(x=>x&&x.capacity>=guests);
+ const choices=ReservationEngine.rankedTableChoices(plan.tables,window.RestoFusion?.pairs()||[],guests);
  function candidate(at,tables){return {id:'availability-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time:at,guests,duration,tables,status:'reserved'};}
- function matches(at){
-  const singles=suitable.filter(t=>ReservationEngine.validate(candidate(at,[t.number]),reservationsAll).valid);
-  const fusions=configured.filter(x=>ReservationEngine.validate(candidate(at,x.pair),reservationsAll).valid);
-  return {singles,fusions};
+ function matches(at){return choices.filter(c=>ReservationEngine.validate(candidate(at,c.numbers),reservationsAll).valid);}
+ const available=matches(time),best=available[0];
+ const context=[dateValue,time,guests].join('/');
+ if(select.dataset.context!==context){delete select.dataset.manual;select.dataset.context=context}
+ for(const c of available){
+  const option=new Option(c.label+' · '+c.capacity+' places',c.value);
+  select.append(option);
  }
- const available=matches(time),options=available.singles,fusions=available.fusions;
- options.forEach((t,i)=>{const option=document.createElement('option');option.value=t.number;option.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places'+(i===0?' · Recommandée':'');select.append(option)});
- if(options.some(t=>String(t.number)===previous))select.value=previous;
- if(!options.length){const o=document.createElement('option');o.value='';o.textContent=fusions.length?'Choisir une fusion ci-dessous':'Aucune table disponible';select.append(o)}
- if(fusionPanel){
-  if(fusions.length){
-   fusionPanel.append(node('strong','','Fusions autorisées disponibles'));
-   // Smaller groups first: do not waste four tables on a party of two.
-   fusions.sort((a,b)=>a.capacity-b.capacity||a.pair.length-b.pair.length);
-   fusions.forEach(({pair,capacity})=>{
-    const button=node('button','fusionSuggestion','Tables '+pair.join(' + ')+' · '+capacity+' places'+(capacity>guests?' · Retirer '+(capacity-guests)+' couvert(s)':''));
-    button.type='button';
-    button.addEventListener('click',()=>{window.RestoFusionSelected=pair.slice();select.required=false;fusionPanel.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===button));$('bookingFeedback').textContent='Fusion sélectionnée : tables '+pair.join(' + ')+'. Confirmez avec Ajouter la réservation.'});
-    fusionPanel.append(button);
-   });
-  }else fusionPanel.append(node('p','muted','Aucune fusion configurée disponible pour ce créneau.'));
- }
+ if(select.dataset.manual&&available.some(c=>c.value===previous))select.value=previous;
+ else delete select.dataset.manual;
  window.RestoTableChoices?.refresh('bookingTable');
  if(!insight)return;
- const total=options.length+fusions.length;
- const previewTables=options.length?[options[0].number]:fusions.length?fusions[0].pair:[];
- if(window.RestoReception&&options.length)insight.append(node('p','availabilitySummary','Table proposée : '+options[0].number+' · Attribution confirmée à l’enregistrement.'));
+ const total=available.length,previewTables=best?.numbers||[];
+ if(best)insight.append(node('p','availabilitySummary',best.label+' recommandée'+(best.numbers.length>1?'s':'')+' · '+best.capacity+' places pour '+guests+' couvert(s).'));
  if(previewTables.length&&window.RestoRush){const preview=candidate(time,previewTables),rush=window.RestoRush.evaluate(preview,reservationsAll);insight.append(node('p','rushAvailabilityHint',rush.current+' couverts attendus entre '+rush.range+' · '+rush.limit+' conseillés au maximum.'));if(rush.blocked){insight.append(node('p','availabilityWarning','Forte affluence : confirmation manuelle nécessaire.'));const times=window.RestoRush.suggestions(preview,reservationsAll);const buttons=node('div','availabilityAlternatives');times.forEach(item=>{const button=node('button','availabilityTimeOption',item.at+' · '+item.covers+' couverts');button.type='button';button.addEventListener('click',()=>{$('bookingTime').value=item.at;refreshAvailability()});buttons.append(button)});if(times.length)insight.append(buttons)}}
- if(!window.RestoReception)insight.append(node('p','availabilitySummary',total?options.length+' table(s) individuelle(s) et '+fusions.length+' fusion(s) compatibles à '+time+'.':'Aucune configuration compatible à '+time+'.'));
  if(!total&&!window.RestoReception){
   insight.append(node('p','availabilityWarning','Aucune table ou fusion autorisée disponible pour '+guests+' couvert(s) à cet horaire.'));
   const current=Number(time.slice(0,2))*60+Number(time.slice(3,5)),alternatives=[];
   for(const delta of [-60,-30,30,60,90]){
    const mins=current+delta;if(mins<0||mins>=24*60)continue;
    const at=String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
-   const found=matches(at),count=found.singles.length+found.fusions.length;
+   const count=matches(at).length;
    if(count)alternatives.push({at,count});
   }
   if(alternatives.length){
@@ -220,9 +201,9 @@ $('bookingTime').value='19:00';
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
- const existing=readReservations(),table=Number($('bookingTable').value),guests=Number($('bookingGuests').value);
+ const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<today())throw Error('Impossible de créer une réservation à une date passée.');
- const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.getDefaultDuration(),tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
+ const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
  if(!window.RestoReception&&!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
