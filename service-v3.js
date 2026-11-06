@@ -166,7 +166,7 @@ function refreshAvailability(){
  const interval=window.RestoBookingInterval?.(dateValue,time,duration);
  if(interval){
   const held=window.RestoBookingDraft.occupied(plan.tables.map(t=>t.number),...interval);
-  if(held.length)insight.append(node('p','availabilityWarning','Saisie en cours : '+held.map(h=>'table '+h.number+' · '+h.team).join(', ')+'.'));
+  if(held.length)insight.append(node('p','availabilityWarning','Saisie sur un autre appareil : '+held.map(h=>'table '+h.number+' · '+h.team).join(', ')+'.'));
  }
  if(best)insight.append(node('p','availabilitySummary',best.label+' recommandée'+(best.numbers.length>1?'s':'')+' · '+best.capacity+' places pour '+guests+' couvert(s).'));
  if(previewTables.length&&window.RestoRush){const preview=candidate(time,previewTables),rush=window.RestoRush.evaluate(preview,reservationsAll);insight.append(node('p','rushAvailabilityHint',rush.current+' couverts attendus entre '+rush.range+' · '+rush.limit+' conseillés au maximum.'));if(rush.blocked){insight.append(node('p','availabilityWarning','Forte affluence : confirmation manuelle nécessaire.'));const times=window.RestoRush.suggestions(preview,reservationsAll);const buttons=node('div','availabilityAlternatives');times.forEach(item=>{const button=node('button','availabilityTimeOption',item.at+' · '+item.covers+' couverts');button.type='button';button.addEventListener('click',()=>{$('bookingTime').value=item.at;refreshAvailability()});buttons.append(button)});if(times.length)insight.append(buttons)}}

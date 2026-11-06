@@ -6,6 +6,7 @@ const logout=document.createElement('button');logout.type='button';logout.textCo
 logout.addEventListener('click',async()=>{
  logout.disabled=true;
  try{
+  await window.RestoBookingDraft?.close();
   const {error}=await supabase.auth.signOut({scope:'local'});
   if(error)throw error;
   location.replace('login.html');

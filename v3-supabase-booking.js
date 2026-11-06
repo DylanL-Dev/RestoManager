@@ -1,5 +1,5 @@
 // Native V3 -> Supabase reservation creation. No direct table inserts or local writes.
-import {setupBookingDraft} from './booking-draft.js?v=hold1';
+import {setupBookingDraft} from './booking-draft.js?v=release2';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=hold1';
 
 function parisDateTime(date,time){

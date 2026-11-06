@@ -15,7 +15,8 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
  }
  const date='2032-11-06',time='19:30',guests=3;
  Object.entries({bookingDate:date,bookingTime:time,bookingGuests:'3',bookingTable:'2,3'}).forEach(([id,value])=>element(id).value=value);
- const window={RestoReception:true,RestoSupabaseReady:true,RestoScreens:{current:()=>'reservationForm'},addEventListener(){},dispatchEvent(){}};
+ const events={};
+ const window={RestoReception:true,RestoSupabaseReady:true,RestoScreens:{current:()=>'reservationForm'},addEventListener:(name,fn)=>events[name]=fn,dispatchEvent(){}};
  let now=0,interval,debounced;
  class Clock extends Date{static now(){return now}}
  const api=vm.runInNewContext(fs.readFileSync(require.resolve('../booking-draft.js'),'utf8').replace('export function','(function')+')',{
@@ -25,8 +26,10 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
   setTimeout:f=>(debounced=f),clearTimeout:()=>{},setInterval:f=>(interval=f)
  });
  const calls=[];
+ let unblock;let delayRelease=false;
  const draft=api({rpc:async(_name,args)=>{
   calls.push(args.p_action);
+  if(delayRelease&&args.p_action==='release')await new Promise(resolve=>unblock=resolve);
   return {data:{tables:['a','b'],holds:['h1','h2'],seconds:180}};
  }},(d,t)=>d+'T'+t+':00.000Z');
  const type=async()=>{element('bookingForm').listeners.input();await debounced()};
@@ -37,5 +40,17 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
  await assert.rejects(draft.confirm(candidate),/expiré/);
  await element('draftExtend').listeners.click();assert.deepEqual(calls.slice(-2),['release','hold']);
  await draft.confirm(candidate);assert.equal(calls.at(-1),'confirm');
- await type();await element('draftAbandon').listeners.click();assert.equal(calls.at(-1),'release');assert.equal(element('bookingDraft').hidden,true);
+ await type();
+ window.RestoDraftHolds=[{id:'h1',number:2,expiry:now+180000,start:1,end:3},{id:'other',number:3,expiry:now+180000,start:1,end:3,team:'Réception'}];
+ delayRelease=true;
+ const pending=element('draftAbandon').listeners.click();
+ interval();assert.equal(element('bookingDraft').hidden,true);
+ await new Promise(resolve=>setImmediate(resolve));unblock();await pending;
+ assert.equal(calls.at(-1),'release');
+ assert.deepEqual(Array.from(draft.occupied([2,3],1,3),h=>h.id),['other']);
+ delayRelease=false;await type();
+ element('reservationForm').listeners.toggle({currentTarget:{open:false}});
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls.at(-1),'release');
+ await type();events['restomanager:screen']({detail:'tables'});
+ await new Promise(resolve=>setImmediate(resolve));assert.equal(calls.at(-1),'release');assert.equal(element('bookingDraft').hidden,true);
 });

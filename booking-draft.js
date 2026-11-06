@@ -9,6 +9,27 @@ export function setupBookingDraft(supabase, parisDateTime){
  const submit=form.querySelector('[type=submit]');
  let draft=null, active=false, debounce, queue=Promise.resolve(), submitting=false;
  let nextExpiry=Infinity;
+ // A late snapshot can still contain a hold that the server has just released.
+ const released=new Map();
+ let checking=false,lastCheck=0;
+ function retire(ids,until){
+  for(const id of ids||[])released.set(id,Math.max(until||0,Date.now()+180000));
+ }
+ async function reconcile(){
+  if(checking||!window.RestoSupabaseReady||Date.now()-lastCheck<5000||
+     window.RestoScreens?.current()!=='reservationForm')return;
+  const ids=(window.RestoDraftHolds||[]).filter(h=>h.expiry>Date.now()&&!released.has(h.id)&&!draft?.holdIds?.includes(h.id)).map(h=>h.id);
+  if(!ids.length)return;
+  checking=true;lastCheck=Date.now();
+  try{
+   const {data,error}=await supabase.from('table_holds').select('id').in('id',ids);
+   if(error)return;
+   const present=new Set(data.map(row=>row.id));
+   const gone=ids.filter(id=>!present.has(id));
+   if(gone.length){retire(gone);redraw()}
+  }catch{/* Realtime and the server expiry remain authoritative while offline. */}
+  finally{checking=false}
+ }
  function serial(task){
   const result=queue.then(task);
   queue=result.catch(()=>{});
@@ -21,7 +42,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  }
  function remaining(){return draft?Math.max(0,Math.ceil((draft.until-Date.now())/1000)):0}
  function tick(){
-  if(!draft?.numbers)return;
+  if(!active||!draft?.numbers)return;
   const seconds=remaining();
   extend.textContent=seconds?'Prolonger':'Revérifier';
   const tables=(draft.numbers.length===1?'Table ':'Tables ')+draft.numbers.join(' + ');
@@ -35,7 +56,10 @@ export function setupBookingDraft(supabase, parisDateTime){
    redraw();
   }
  }
- setInterval(()=>{tick();refreshExpiredHolds()},1000);
+ setInterval(()=>{
+  for(const [id,until] of released)if(until<=Date.now())released.delete(id);
+  tick();refreshExpiredHolds();void reconcile();
+ },1000);
  function idsToNumbers(ids){
   return ids.map(id=>TableStore.get().tables.find(t=>t.id===id)?.number).sort((a,b)=>a-b);
  }
@@ -58,6 +82,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  async function release(){
   if(!draft)return;
   await rpc(draft.key,'release');
+  retire(draft.holdIds,draft.until);
   draft=null;
  }
  async function ensure(force=false){
@@ -68,7 +93,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   await release();
   const key=crypto.randomUUID();
   draft={key,signature:f.signature,start:f.start,guests:f.guests,until:0};
-  show('Vérification de la disponibilité…');
+  if(active)show('Vérification de la disponibilité…');
   const sent=Date.now();
   const result=await rpc(key,'hold',{p_start:f.start,p_end:f.end,p_guests:f.guests,p_tables:f.ids});
   Object.assign(draft,{numbers:idsToNumbers(result.tables),holdIds:result.holds,until:sent+result.seconds*1000});
@@ -81,7 +106,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   clearTimeout(debounce);
   debounce=setTimeout(()=>serial(async()=>{
    if(!active||submitting)return;
-   try{await ensure()}catch(error){show(error.message,true)}
+   try{await ensure()}catch(error){if(active)show(error.message,true)}
   }),250);
  }
  form.addEventListener('input',inputChanged);
@@ -97,7 +122,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   }catch(error){show(error.message,true)}
  }));
  function leave(reset){
-  active=false;clearTimeout(debounce);
+  active=false;clearTimeout(debounce);panel.hidden=true;
   return serial(async()=>{
    try{
     await release();panel.hidden=true;
@@ -112,12 +137,16 @@ export function setupBookingDraft(supabase, parisDateTime){
   });
  }
  abandon.addEventListener('click',()=>leave(true));
+ const close=()=>(active||draft)?leave(false):Promise.resolve();
+ el('reservationForm').addEventListener('toggle',event=>{if(!event.currentTarget.open)void close()});
+ window.addEventListener('pagehide',()=>{void close()});
  window.addEventListener('restomanager:screen',e=>{if(e.detail!=='reservationForm'&&(active||draft))leave(false)});
  return {
+  close,
   occupied(numbers,start,end){
    const rows=window.RestoDraftHolds||[];
    return rows.filter(h=>{
-    if(h.expiry<=Date.now())return false;
+    if(h.expiry<=Date.now()||released.has(h.id))return false;
     nextExpiry=Math.min(nextExpiry,h.expiry);
     return !draft?.holdIds?.includes(h.id)&&numbers.includes(h.number)&&h.start<end&&start<h.end;
    });
@@ -137,6 +166,7 @@ export function setupBookingDraft(supabase, parisDateTime){
      const notes=[candidate.notes,candidate.allergies?'ALLERGIES À VÉRIFIER : '+candidate.allergies:''].filter(Boolean).join('\n');
      await rpc(current.key,'confirm',{p_name:name,p_room:room,p_notes:notes});
      candidate.tables=current.numbers;
+     retire(current.holdIds,current.until);
      draft=null;active=false;panel.hidden=true;
     });
    }finally{submitting=false;submit.disabled=false;extend.disabled=false;abandon.disabled=false}

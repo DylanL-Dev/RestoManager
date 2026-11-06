@@ -10,6 +10,7 @@
   button.classList.add('is-refreshing');
   button.setAttribute('aria-label','Actualisation en cours');
   try{
+   await window.RestoBookingDraft?.close();
    // Update the service worker and remove only application-shell caches.
    // Never touch localStorage: it contains reservations and configuration.
    if('serviceWorker' in navigator){
