@@ -1,5 +1,6 @@
 // Native V3 -> Supabase reservation creation. No direct table inserts or local writes.
 import {setupBookingDraft} from './booking-draft.js?v=release2';
+import {encodeBookingDetails} from './reservation-details.js';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=hold1';
 
 function parisDateTime(date,time){
@@ -20,7 +21,7 @@ async function saveReceptionBooking(candidate,id){
  const {supabase}=await import('./supabase-service-bridge.js?v=hold1');
  const start=parisDateTime(candidate.date,candidate.time);
  const name=candidate.client.trim();
- const notes=[candidate.notes,candidate.allergies?'ALLERGIES À VÉRIFIER : '+candidate.allergies:''].filter(Boolean).join('\n');
+ const notes=encodeBookingDetails(candidate);
  const {data,error}=await supabase.rpc('reception_booking_v3',{
   p_reservation:id,p_name:name,p_room:candidate.type==='hotel'&&/^\d{1,6}[A-Za-z]?$/.test(name)?name:null,
   p_guests:Number(candidate.guests),p_start:start,p_end:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),p_notes:notes
@@ -64,7 +65,7 @@ export async function updateSharedBooking(candidate){
  const ids=candidate.tables.map(n=>{const id=byNumber.get(Number(n));if(!id)throw Error('Table '+n+' introuvable. Vérifiez les tables disponibles.');return id;});
  const start=parisDateTime(candidate.date,candidate.time);
  const end=new Date(Date.parse(start)+(Number(candidate.duration)||90)*60000).toISOString();
- const {data,error}=await supabase.rpc('update_reservation_v3',{p_reservation_id:candidate.id,p_guest_name:candidate.client,p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:end,p_table_ids:ids,p_notes:candidate.notes||null});
+ const {data,error}=await supabase.rpc('update_reservation_v3',{p_reservation_id:candidate.id,p_guest_name:candidate.client,p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:end,p_table_ids:ids,p_notes:encodeBookingDetails(candidate)||null});
  if(error)throw error;
  return data;
 }
