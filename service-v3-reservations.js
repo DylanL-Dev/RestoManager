@@ -102,6 +102,53 @@ async function action(id,kind){
  all[i]=next.reservation;save(all);notify('Statut mis à jour : '+statuses[all[i].status]+'.');
  }catch(e){notify('Erreur : '+e.message)}
 }
+function showReservationActions(reservation,items,trigger){
+ document.querySelector('.reservationMenuOverlay')?.remove();
+ const previousFocus=trigger;
+ const overlay=el('div',undefined,'reservationMenuOverlay');
+ const dialog=el('section',undefined,'reservationMenuDialog');
+ dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-label','Actions de la réservation');
+ dialog.setAttribute('tabindex','-1');
+ const grabber=el('div',undefined,'reservationMenuGrabber');grabber.setAttribute('aria-hidden','true');
+ const head=el('div',undefined,'reservationMenuHead');
+ const text=el('div');text.append(el('span','OPTIONS DE RÉSERVATION','reservationMenuEyebrow'),el('h2',reservation.client+' · '+reservation.guests+' couvert(s)'));
+ const close=el('button',undefined,'reservationMenuClose');close.type='button';close.setAttribute('aria-label','Fermer les actions');
+ const closeIcon=document.createElement('i');closeIcon.dataset.lucide='x';closeIcon.setAttribute('aria-hidden','true');close.append(closeIcon);
+ head.append(text,close);
+ const choices=el('div',undefined,'reservationMenuChoices');
+ let closing=false;
+ const originalScroll=document.body.style.overflow;
+ function dismiss(callback){
+  if(closing)return;closing=true;
+  overlay.classList.add('isClosing');
+  document.body.style.overflow=originalScroll;
+  window.setTimeout(()=>{overlay.remove();if(typeof callback==='function')callback();else if(previousFocus.isConnected)previousFocus.focus()},180);
+ }
+ close.addEventListener('click',()=>dismiss());
+ for(const item of items){
+  const btn=el('button',undefined,'reservationMenuOption'+(item.danger?' reservationMenuDanger':''));
+  btn.type='button';
+  const ico=document.createElement('i');ico.dataset.lucide=item.danger?'trash-2':item.label==='Confirmer'?'check-circle-2':item.label==='Retard'?'clock-3':'user-x';ico.setAttribute('aria-hidden','true');
+  const words=el('span',item.label);
+  const arrow=document.createElement('i');arrow.dataset.lucide='chevron-right';arrow.setAttribute('aria-hidden','true');
+  btn.append(ico,words,arrow);btn.addEventListener('click',()=>dismiss(item.run));choices.append(btn);
+ }
+ dialog.append(grabber,head,choices);overlay.append(dialog);document.body.append(overlay);
+ document.body.style.overflow='hidden';
+ overlay.addEventListener('click',e=>{if(e.target===overlay)dismiss()});
+ overlay.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){e.preventDefault();dismiss();return}
+  if(e.key==='Tab'){
+   const focusable=[...dialog.querySelectorAll('button:not([disabled])')];
+   if(!focusable.length)return;
+   const first=focusable[0],last=focusable[focusable.length-1];
+   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  }
+ });
+ window.lucide?.createIcons?.();
+ close.focus();
+}
 function showSmartPlacement(id){
  if(window.RestoReception||!window.RestoSharedReservations||!window.RestoSupabaseReady){notify('Le placement intelligent nécessite le compte Restaurant connecté.');return;}
  const target=load().find(r=>r.id===id);
@@ -197,9 +244,35 @@ function render(){
  if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}
  card.append(details);
  }
- const actions=el('div',undefined,'reservationActions');
+ const actions=el('div',undefined,'reservationActions reservationActionsModern');
  const opts=[['edit','Modifier'],['confirm','Confirmer'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler']];
- const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){const simulate=el('button','Simuler autre table');simulate.type='button';simulate.className='smartPlacementLaunch';simulate.addEventListener('click',()=>showSmartPlacement(r.id));primary.append(simulate)}actions.append(primary);if(more.children.length>1)actions.append(more);
+ const available=opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status)));
+ const mainActions=el('div',undefined,'reservationPrimaryActions');
+ const secondary=el('div',undefined,'reservationSecondaryActions');
+ const extra=[];
+ const makeAction=(kind,label,cls)=>{const btn=el('button',label,cls);btn.type='button';btn.dataset.reservationAction=kind;btn.addEventListener('click',()=>action(r.id,kind));return btn};
+ for(const [kind,label] of available){
+  if(kind==='seated'||kind==='completed')mainActions.append(makeAction(kind,label,'reservationActionMain'));
+  else if(kind==='edit')secondary.append(makeAction(kind,label,'reservationActionSecondary'));
+  else extra.push({label,run:()=>action(r.id,kind),danger:kind==='cancel'});
+ }
+ if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){
+  const change=el('button','Changer la table du client','reservationActionSecondary reservationChangeTable');
+  change.type='button';change.addEventListener('click',()=>showSmartPlacement(r.id));
+  secondary.append(change);
+ }
+ actions.append(mainActions);
+ const tools=el('div',undefined,'reservationActionTools');
+ if(secondary.children.length)tools.append(secondary);
+ if(extra.length){
+  const btn=el('button',undefined,'reservationMoreTrigger');
+  btn.type='button';btn.setAttribute('aria-label','Plus d’actions pour '+r.client);
+  btn.setAttribute('title','Plus d’actions');
+  const icon=document.createElement('i');icon.dataset.lucide='ellipsis';icon.setAttribute('aria-hidden','true');btn.append(icon);
+  btn.addEventListener('click',()=>showReservationActions(r,extra,btn));
+  tools.append(btn);
+ }
+ if(tools.children.length)actions.append(tools);
  card.append(actions);root.append(card);
  });
 }
