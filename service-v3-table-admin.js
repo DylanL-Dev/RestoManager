@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id),E=ReservationEngine,KEY='restomanager_re
 const form=$('tableAdminForm'),list=$('tableAdminList'),feedback=$('tableAdminFeedback');if(!form)return;
 form.noValidate=true;
 let editId=null;
-function bookings(){return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
+function bookings(){return E.normalizeReservations(window.RestoSharedReservations||JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
  const plan=TableStore.get();list.replaceChildren();list.lastRoom=null;const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
  plan.tables.slice().sort((a,b)=>a.roomId.localeCompare(b.roomId)||a.number-b.number).forEach(t=>{
@@ -12,7 +12,7 @@ function refresh(){
  const row=document.createElement('div');row.className='tableAdminItem';
  const info=document.createElement('span');info.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places · '+(plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle');
  const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.onclick=()=>{editId=t.id;feedback.textContent='Modification de la table '+t.number+' : vérifiez les champs puis enregistrez.';$('tableAdminNumber').value=t.number;$('tableAdminMin').value=t.capacityMin||1;$('tableAdminMax').value=t.capacity;$('tableAdminRoom').value=t.roomId;$('tableAdminSubmit').textContent='Enregistrer les modifications';form.scrollIntoView({behavior:'smooth',block:'center'})};
- const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.onclick=async()=>{try{
+ const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';if(window.RestoSharedReservations)remove.disabled=true;remove.onclick=async()=>{try{
  const refs=bookings().filter(r=>r.tables.includes(t.number));
  if(refs.length)throw Error('Cette table figure dans '+refs.length+' réservation(s), y compris l’historique. Suppression bloquée pour préserver les données.');
  if(!await window.RestoDialog.confirm('Supprimer définitivement la table '+t.number+' ?',{title:'Supprimer la table',danger:true,acceptLabel:'Supprimer'}))return;
@@ -23,12 +23,30 @@ function refresh(){
 }
 $('tableAdminNew').textContent='Réinitialiser le formulaire';
 $('tableAdminNew').addEventListener('click',()=>{editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';$('tableAdminMin').value=1;$('tableAdminMax').value=2;feedback.textContent='Formulaire prêt pour une nouvelle table.';$('tableAdminNumber').focus()});
-form.addEventListener('submit',e=>{e.preventDefault();try{
+form.addEventListener('submit',async e=>{e.preventDefault();try{
  const next=TableStore.get(),number=Number($('tableAdminNumber').value),min=Number($('tableAdminMin').value),max=Number($('tableAdminMax').value),roomId=$('tableAdminRoom').value;
  if(!Number.isInteger(number)||number<1)throw Error('Indiquez un numéro de table entier supérieur à zéro.');
  if(!Number.isInteger(min)||min<1||!Number.isInteger(max)||max<min)throw Error('Vérifiez les capacités : le maximum doit être supérieur ou égal au minimum.');
  if(!next.rooms.some(r=>r.id===roomId))throw Error('Sélectionnez une salle valide.');
  if(next.tables.some(t=>t.number===number&&t.id!==editId))throw Error('Ce numéro de table existe déjà.');
+ if(window.RestoSharedReservations){
+  if(!window.RestoSupabaseReady)throw Error('Synchronisation Supabase en cours.');
+  if(!editId)throw Error('Ajout de table Supabase en préparation : aucune modification locale effectuée.');
+  const existing=next.tables.find(t=>t.id===editId);
+  if(!existing)throw Error('Table introuvable dans Supabase.');
+  if(min!==1)throw Error('La capacité minimale personnalisée n’est pas encore prise en charge par Supabase (minimum : 1).');
+  const sharedRooms=window.RestoSharedRoomIds;
+  const sharedRoomId=sharedRooms?.get(roomId);
+  if(!sharedRoomId)throw Error('Salle Supabase introuvable.');
+  if(typeof window.RestoUpdateRestaurantTable!=='function')throw Error('Module Supabase non disponible.');
+  feedback.textContent='Enregistrement de la table dans Supabase…';
+  await window.RestoUpdateRestaurantTable({id:editId,label:'Table '+number,seats:max,roomId:sharedRoomId});
+  await window.RestoRefreshSharedService();
+  editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';
+  feedback.textContent='Table modifiée et synchronisée dans Supabase.';
+  refresh();return;
+ }
+
  if(editId){const t=next.tables.find(x=>x.id===editId);if(!t)throw Error('Table introuvable');
  if(t.number!==number&&bookings().some(r=>r.tables.includes(t.number)))throw Error('Renumérotation impossible : des réservations référencent cette table.');
  if(bookings().some(r=>r.tables.includes(t.number)&&E.isBlocking(r)&&r.guests>r.tables.reduce((sum,n)=>sum+(n===t.number?max:(next.tables.find(x=>x.number===n)?.capacity||0)),0)))throw Error('La nouvelle capacité est inférieure aux couverts d’une réservation active, y compris fusionnée.');
