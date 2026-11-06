@@ -102,6 +102,27 @@ export async function setRestaurantTableActiveShared(id,active){
 window.RestoCreateRestaurantTable=createRestaurantTableShared;
 window.RestoSetRestaurantTableActive=setRestaurantTableActiveShared;
 
+window.RestoApplySmartPlacement=async function(reservationId,plan){
+ if(!window.RestoSupabaseReady||window.RestoReception)throw Error('Compte Restaurant connecté requis.');
+ if(!plan?.ok||!plan.changes?.length)throw Error('Aucune réorganisation à confirmer.');
+ const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=hold1');
+ const {profile}=await requireStaff();
+ if(profile.role!=='fb_admin')throw Error('Action réservée à l’équipe du restaurant.');
+ const tableIds=window.RestoSmartPlacementTableIds;
+ if(!(tableIds instanceof Map))throw Error('Plan de salle non synchronisé.');
+ const p_changes=plan.changes.map(item=>{
+  if(item.from.length!==1||item.to.length!==1)throw Error('Les fusions ne sont pas encore prises en charge.');
+  const from_table=tableIds.get(Number(item.from[0])),to_table=tableIds.get(Number(item.to[0]));
+  if(!from_table||!to_table)throw Error('Une table est introuvable. Actualisez le plan de salle.');
+  return {id:item.id,from_table,to_table,expected_status:item.status};
+ });
+ const {data,error}=await supabase.rpc('apply_smart_placement_v3',{
+  p_target_reservation_id:reservationId,p_changes
+ });
+ if(error)throw error;
+ await window.RestoRefreshSharedService?.();
+ return data;
+};
 window.RestoChangeSharedStatus=async function(reservation,status){
  if(!window.RestoSupabaseReady)throw Error('Connexion en cours. Réessayez dans un instant.');
  const {supabase}=await import('./supabase-service-bridge.js?v=hold1');
