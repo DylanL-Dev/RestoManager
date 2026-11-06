@@ -329,6 +329,16 @@ $('editForm').addEventListener('submit',async e=>{
  }catch(err){notify('Modification impossible : '+err.message)}
 });
 ['editGuests','editDate','editTime','editClient'].forEach(id=>$(id).addEventListener('input',updateEditChoiceAvailability));
+// Notifications navigate to the appropriate status tab and expand the exact booking.
+window.addEventListener('restomanager:open-reservation',event=>{
+ const data=event.detail||{};
+ if(!['active','departed','all'].includes(data.view))return;
+ reservationView=data.view;
+ expanded=typeof data.reservationId==='string'?data.reservationId:null;
+ render();
+ const card=$('reservationList')?.querySelector('.reservationExpanded');
+ if(card)card.scrollIntoView({block:'nearest',behavior:'smooth'});
+});
 window.addEventListener('restomanager:v3-change',()=>{render();updateEditChoiceAvailability()});
 window.addEventListener('storage',e=>{if(e.key===KEY)render()});
 render();
