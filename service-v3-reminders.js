@@ -36,19 +36,44 @@
   }
   return alerts.sort((a,b)=>Number(b.priority)-Number(a.priority)||(a.kind==='late'?-a.delay:a.remaining)-(b.kind==='late'?-b.delay:b.remaining));
  }
+ function capacityAlert(){
+  if(!window.RestoSupabaseReady||!window.RestoTablePressure?.availability||typeof TableStore==='undefined')return null;
+  const all=read(),now=new Date();
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  const today=parts.year+'-'+parts.month+'-'+parts.day;
+  const current=Number(parts.hour)*60+Number(parts.minute);
+  const future=all.filter(r=>r.date===today&&['reserved','confirmed','late','arrived'].includes(r.status)&&r.time&&Number(r.time.slice(0,2))*60+Number(r.time.slice(3,5))>=current-15);
+  if(!future.length)return null;
+  const slots=[...new Set(future.map(r=>r.time))].sort();
+  const tablePlan=TableStore.get().tables;
+  const results=slots.map(time=>({time,info:window.RestoTablePressure.availability({date:today,time,guests:2,tables:tablePlan,reservations:all,holds:window.RestoDraftHolds||[]})}))
+    .filter(x=>x.info.valid&&x.info.total>0&&x.info.remaining<=3)
+    .sort((a,b)=>a.info.remaining-b.info.remaining||a.time.localeCompare(b.time));
+  return results[0]||null;
+ }
  function update(){
   const reception=window.RestoReception===true;
-  const activeRestaurant=window.RestoReception===false&&window.RestoSupabaseReady;
+  const ready=window.RestoSupabaseReady&&typeof window.RestoReception==='boolean';
+  const activeRestaurant=window.RestoReception===false&&ready;
   const bookingAlerts=activeRestaurant?(window.RestoFbReservationAlerts||[]).filter(a=>!a.read_at):[];
-  const alerts=reception?[]:collect();
-  const total=alerts.length+bookingAlerts.length;
-  bell.hidden=reception;
-  if(reception){panel.hidden=true;return}
+  const alerts=ready&&!reception?collect():[];
+  const pressure=ready?capacityAlert():null;
+  const total=alerts.length+bookingAlerts.length+(pressure?1:0);
+  bell.hidden=!ready;
+  if(!ready){panel.hidden=true;return}
   const count=bell.querySelector('span');count.textContent=String(total);count.hidden=!total;
-  bell.setAttribute('aria-label',total+' notification(s) du restaurant');
+  bell.setAttribute('aria-label',total+' notification(s) '+(reception?'Réception':'Restaurant'));
   panel.replaceChildren();
-  const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent='Notifications · Restaurant';head.append(h,button('Fermer',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
+  const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent=reception?'Notifications · Réception':'Notifications · Restaurant';head.append(h,button('Fermer',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
   if(!total){const p=document.createElement('p');p.textContent='Aucune nouvelle notification.';panel.append(p);return}
+  if(pressure){
+   const item=document.createElement('article');item.className='serviceReminderItem serviceCapacityWarning';
+   const title=document.createElement('strong');title.textContent=pressure.info.remaining===0?'Créneau complet · '+pressure.time:'Peu de tables disponibles · '+pressure.time;
+   const detail=document.createElement('p');detail.textContent=pressure.info.remaining===0?'Aucune table compatible libre pour 2 couverts à cet horaire.': 'Seulement '+pressure.info.remaining+' table(s) encore compatible(s) pour 2 couverts à cet horaire. Vérifiez les disponibilités avant de proposer ce créneau.';
+   const actions=document.createElement('div');actions.className='serviceReminderActions';
+   actions.append(button('Voir les disponibilités',()=>{window.RestoScreens?.show('reservationForm');panel.hidden=true},'serviceReminderPrimary'));
+   item.append(title,detail,actions);panel.append(item);
+  }
   for(const a of bookingAlerts){
    const item=document.createElement('article');item.className='serviceReminderItem serviceReceptionBookingAlert';
    const title=document.createElement('strong');title.textContent='Nouvelle réservation · Réception';
