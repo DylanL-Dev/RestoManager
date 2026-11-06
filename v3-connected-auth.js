@@ -62,7 +62,7 @@ try{
    const rooms=activeRooms.map((r,i)=>({id:i===0?'main':r.id,name:r.name}));
    const roomIds=new Map(activeRooms.map((r,i)=>[r.id,i===0?'main':r.id]));
    const tables=snapshot.tables.filter(t=>t.active&&roomIds.has(t.room_id)).map(t=>({
-    id:t.id,number:Number(String(t.label).trim().replace(/^table\\s*/i,'')),
+    id:t.id,number:Number(String(t.label).trim().replace(/^table\s*/i,'')),
     capacityMin:1,capacity:t.seats,roomId:roomIds.get(t.room_id)
    }));
    if(tables.every(t=>Number.isInteger(t.number)&&t.number>0)&&new Set(tables.map(t=>t.number)).size===tables.length){
