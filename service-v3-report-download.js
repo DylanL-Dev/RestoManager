@@ -17,8 +17,8 @@ if(period==='week'){start.setDate(start.getDate()-(start.getDay()+6)%7);end=new 
 if(period==='month'){start=new Date(d.getFullYear(),d.getMonth(),1,12);end=new Date(d.getFullYear(),d.getMonth()+1,0,12)}
 const from=fmt(start),to=fmt(end),records=ReservationEngine.normalizeReservations(window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]')).filter(r=>r.date>=from&&r.date<=to).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
 const shifts=ReservationEngine.getShifts();
-const metrics=window.RestoReportMetrics.calculate(records,shifts);
-const {served,covers,inRoomCovers,welcomedCovers,walkinPassages,hotelCovers,walkinCovers,lunch,dinner,other,pendingCount,serviceDays,noShowCount,cancelledCount}=metrics;
+const stats=window.RestoReportMetrics.calculate(records,shifts);
+const {served,covers,inRoomCovers,welcomedCovers,walkinPassages,hotelCovers,walkinCovers,lunch,dinner,other,pendingCount,serviceDays,noShowCount,cancelledCount}=stats;
 const hotel=hotelCovers,walkins=walkinCovers,noShow=noShowCount,cancelled=cancelledCount,pending=pendingCount,days=serviceDays;
 const frenchDate=value=>new Date(value+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const sum=arr=>arr.reduce((n,r)=>n+r.guests,0);
