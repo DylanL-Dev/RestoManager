@@ -1,0 +1,16 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {availability}=require('../service-v3-table-pressure.js');
+const date='2026-11-06', time='19:00', tables=[1,2,3,4].map(number=>({number,capacity:2,capacityMin:1}));
+const booking=(id,n,status='reserved',time='19:00')=>({id,date,time,duration:90,guests:2,status,tables:[n]});
+const run=(extra={})=>availability({date,time,tables,reservations:[],...extra});
+assert.equal(run().remaining,4);
+assert.equal(run({reservations:[booking('a',1),booking('b',2)]}).remaining,2);
+assert.equal(run({reservations:[booking('a',1,'reserved','22:00')]}).remaining,4);
+assert.equal(run({reservations:[booking('a',1,'reserved','20:00')]}).remaining,3);
+assert.equal(run({reservations:[booking('a',1,'seated','12:00')]}).remaining,3);
+assert.equal(run({reservations:[booking('a',1,'released')]}).remaining,4);
+assert.equal(run({guests:3}).total,0);
+assert.equal(run({time:'invalid'}).valid,false);
+assert.equal(availability({date:'2026-07-06',time:'19:00',tables,holds:[{number:2,expiry:Date.now()+600000,start:Date.parse('2026-07-06T17:00:00Z'),end:Date.parse('2026-07-06T18:30:00Z')}]}).remaining,3);
+console.log('Table pressure: 9 assertions passed');
