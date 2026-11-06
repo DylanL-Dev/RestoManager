@@ -22,10 +22,11 @@
   }
   for(const h of holds){
    if(!h||Number(h.expiry)<=now)continue;
-   // Server holds are absolute UTC timestamps; compare using the time zone of the planned restaurant date.
-   const start=Date.parse(date+'T'+time+':00+01:00'); // fallback below uses Europe/Paris formatter
-   const endTimestamp=start+Number(duration)*60000;
-   if(Number(h.start)<endTimestamp&&Number(h.end)>start)busy.add(Number(h.number));
+   // Compare hold timestamps in the restaurant's local wall-clock calendar.
+   const paris=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+   const local=ms=>{const p=Object.fromEntries(paris.formatToParts(new Date(ms)).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),Number(p.hour),Number(p.minute))/60000};
+   const planned=Date.UTC(Number(date.slice(0,4)),Number(date.slice(5,7))-1,Number(date.slice(8,10)))/60000+begin;
+   if(local(h.start)<planned+Number(duration)&&local(h.end)>planned)busy.add(Number(h.number));
   }
   const remaining=potential.filter(t=>!busy.has(Number(t.number))).length;
   return {valid:true,total:potential.length,remaining,occupied:potential.length-remaining,level:remaining===0?'full':remaining<=3?'critical':remaining<=5?'busy':'normal'};
