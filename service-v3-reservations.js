@@ -158,15 +158,15 @@ function showSmartPlacement(id){
  const dialog=document.createElement('div');dialog.className='smartPlacementOverlay';
  dialog.setAttribute('role','presentation');
  const panel=document.createElement('section');panel.className='smartPlacementDialog';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');panel.setAttribute('aria-label','Placement intelligent');
- const heading=el('h2','Placement intelligent');
+ const heading=el('h2','Changer la table du client');
  const subtitle=el('p',target.client+' · '+target.guests+' couvert(s) · Table prévue '+target.tables.join(' + '),'muted');
- const hint=el('p','Choisissez la table où le client s’est réellement installé. Vérifiez d’abord la proposition avant de confirmer.','muted');
+ const hint=el('p','Choisissez sa table réelle. RestoManager vérifie les réservations à réorganiser avant la confirmation.','muted');
  const select=el('select');select.setAttribute('aria-label','Table réellement choisie');
  const option=el('option','Sélectionner une autre table');option.value='';select.append(option);
  plan.filter(t=>t.capacity>=target.guests&&(t.capacityMin||1)<=target.guests).forEach(t=>{const o=el('option','Table '+t.number+' · '+t.capacity+' places');o.value=String(t.number);select.append(o)});
  const result=el('div',undefined,'smartPlacementResult');result.setAttribute('aria-live','polite');
  const buttons=el('div',undefined,'smartPlacementButtons');const close=el('button','Fermer');close.type='button';
- const simulate=el('button','Simuler le replacement');simulate.type='button';
+ const simulate=el('button','Vérifier le placement');simulate.type='button';
  const apply=el('button','Confirmer et installer');apply.type='button';apply.className='smartPlacementApply';apply.hidden=true;
  let preview=null,busy=false;
  function clearPreview(){preview=null;apply.hidden=true;result.replaceChildren();result.classList.remove('smartPlacementError')}
@@ -275,6 +275,7 @@ function render(){
  if(tools.children.length)actions.append(tools);
  card.append(actions);root.append(card);
  });
+ window.lucide?.createIcons?.();
 }
 $('reservationDate').value=new Date().toLocaleDateString('en-CA');
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',()=>{if($('reservationQuery').value.trim())$('reservationDate').value='';render()});
