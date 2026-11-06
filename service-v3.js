@@ -86,7 +86,15 @@ function occupationProgress(r){
  if(r.status==='seated')card.append(node('small','tableTimeProgressHint',now<start?'Le créneau n’a pas encore commencé.':'Estimation : les clients restent installés jusqu’à validation de leur départ.'));
  return card;
 }
-function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('strong','',fusion?'Tables '+fusion.tables.join(' + ')+' · '+s.label:'Table '+t.number+' · '+s.label),node('p','muted',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s) réservé(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const list=bookings.filter(r=>r.tables.includes(t.number)).sort((a,b)=>a.time.localeCompare(b.time));if(!list.length){box.append(node('p','muted','Aucune réservation pour ce service.'))}
+function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('strong','',fusion?'Tables '+fusion.tables.join(' + ')+' · '+s.label:'Table '+t.number+' · '+s.label),node('p','muted',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s) réservé(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const isReception=window.RestoReception===true;
+const receptionActiveStatuses=new Set(['reserved','confirmed','late','arrived','seated']);
+const list=bookings.filter(r=>r.tables.includes(t.number)&&(!isReception||receptionActiveStatuses.has(r.status)))
+ .sort((a,b)=>(a.status==='seated'?0:1)-(b.status==='seated'?0:1)||a.time.localeCompare(b.time));
+if(isReception){
+ const note=node('p','muted',s.key==='present'?'Consultation uniquement · Client(s) installé(s)':'Consultation uniquement · Réservations à venir');
+ box.append(note);
+}
+if(!list.length){box.append(node('p','muted',isReception?'Aucun client attendu ou installé sur cette table pour ce service.':'Aucune réservation pour ce service.'))}
 const actions=node('div','tableDetailActions');
 function shortcut(label,id,tableId){
  const button=node('button','tableDetailAction',label);button.type='button';button.addEventListener('click',async()=>{
@@ -103,8 +111,9 @@ const choices={reserved:[['seated','Installer à table'],['late','Signaler un re
 list.forEach(r=>{
  const row=node('div','detailLine');
  row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+(labels[r.status]||r.status)));
- if(r.status==='seated')row.append(occupationProgress(r));
- if(r.tables.length>1){const total=r.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0);row.append(node('span','fusionDetailNote','Tables fusionnées : '+r.tables.join(' + ')));if(total>r.guests)row.append(node('span','fusionCoverHint','Préparation : retirer '+(total-r.guests)+' couvert(s)'))}const controls=node('div','tableStatusActions');
+ if(r.status==='seated'&&!isReception)row.append(occupationProgress(r));
+ if(r.tables.length>1){const total=r.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0);row.append(node('span','fusionDetailNote','Tables fusionnées : '+r.tables.join(' + ')));if(total>r.guests)row.append(node('span','fusionCoverHint','Préparation : retirer '+(total-r.guests)+' couvert(s)'))}if(isReception){box.append(row);return}
+ const controls=node('div','tableStatusActions');
  const secondary=node('details','tableSecondaryActions');const secondaryTitle=node('summary','','Autres actions');secondary.append(secondaryTitle);
  (choices[r.status]||[]).forEach(([kind,label])=>{
  const button=node('button','tableStatusAction',label);button.type='button';
