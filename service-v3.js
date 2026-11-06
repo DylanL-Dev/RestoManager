@@ -82,7 +82,7 @@ function shortcut(label,id,tableId){
 if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else if(!window.RestoReception){box.append(node('p','tableAlreadyReserved','Cette table est réservée. Retrouvez le client ci-dessous, puis choisissez « Installer à table ».'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
-const choices={reserved:[['seated','Installer à table'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['seated','Installer à table'],['arrived','Signaler l’arrivée'],['late','Signaler un retard'],['no_show','Absent']],late:[['seated','Installer à table'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['released','Libérer la table']]};
+const choices={reserved:[['seated','Installer à table'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['seated','Installer à table'],['late','Signaler un retard'],['no_show','Absent']],late:[['seated','Installer à table'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['released','Libérer la table']]};
 list.forEach(r=>{
  const row=node('div','detailLine');
  row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+(labels[r.status]||r.status)));
