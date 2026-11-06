@@ -1,4 +1,4 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=sync2';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=hold1';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
@@ -145,6 +145,8 @@ try{
    window.dispatchEvent(new Event('restomanager:hours'));
   }
   const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
+  window.RestoDraftHolds=snapshot.holds.map(h=>({id:h.id,number:Number(String(byTable.get(h.table_id)||'').replace(/^table\s*/i,'')),
+   start:Date.parse(h.starts_at),end:Date.parse(h.ends_at),expiry:Date.parse(h.expires_at),team:h.draft_role==='reception'?'Réception':'Restaurant'}));
   // Supabase is the authoritative table configuration on the connected preview.
   // Keep localStorage intact as a backup; do not persist this shared snapshot locally.
   window.RestoInactiveRestaurantTables=snapshot.tables.filter(t=>!t.active);

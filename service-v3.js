@@ -145,7 +145,10 @@ function refreshAvailability(){
  const reservationsAll=readReservations(),duration=ReservationEngine.getDefaultDuration();
  const choices=ReservationEngine.rankedTableChoices(plan.tables,window.RestoFusion?.pairs()||[],guests);
  function candidate(at,tables){return {id:'availability-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time:at,guests,duration,tables,status:'reserved'};}
- function matches(at){return choices.filter(c=>ReservationEngine.validate(candidate(at,c.numbers),reservationsAll).valid);}
+ function matches(at){
+  const interval=window.RestoBookingInterval?.(dateValue,at,duration);
+  return choices.filter(c=>!(interval&&window.RestoBookingDraft.occupied(c.numbers,...interval).length)&&ReservationEngine.validate(candidate(at,c.numbers),reservationsAll).valid);
+ }
  const available=matches(time),best=available[0];
  const context=[dateValue,time,guests].join('/');
  if(select.dataset.context!==context){delete select.dataset.manual;select.dataset.context=context}
@@ -153,11 +156,18 @@ function refreshAvailability(){
   const option=new Option(c.label+' · '+c.capacity+' places',c.value);
   select.append(option);
  }
+ const pinned=window.RestoBookingDraft?.pinned(dateValue,time,guests)?.join(',');
+ if(!select.dataset.manual&&available.some(c=>c.value===pinned))select.value=pinned;
  if(select.dataset.manual&&available.some(c=>c.value===previous))select.value=previous;
  else delete select.dataset.manual;
  window.RestoTableChoices?.refresh('bookingTable');
  if(!insight)return;
  const total=available.length,previewTables=best?.numbers||[];
+ const interval=window.RestoBookingInterval?.(dateValue,time,duration);
+ if(interval){
+  const held=window.RestoBookingDraft.occupied(plan.tables.map(t=>t.number),...interval);
+  if(held.length)insight.append(node('p','availabilityWarning','Saisie en cours : '+held.map(h=>'table '+h.number+' · '+h.team).join(', ')+'.'));
+ }
  if(best)insight.append(node('p','availabilitySummary',best.label+' recommandée'+(best.numbers.length>1?'s':'')+' · '+best.capacity+' places pour '+guests+' couvert(s).'));
  if(previewTables.length&&window.RestoRush){const preview=candidate(time,previewTables),rush=window.RestoRush.evaluate(preview,reservationsAll);insight.append(node('p','rushAvailabilityHint',rush.current+' couverts attendus entre '+rush.range+' · '+rush.limit+' conseillés au maximum.'));if(rush.blocked){insight.append(node('p','availabilityWarning','Forte affluence : confirmation manuelle nécessaire.'));const times=window.RestoRush.suggestions(preview,reservationsAll);const buttons=node('div','availabilityAlternatives');times.forEach(item=>{const button=node('button','availabilityTimeOption',item.at+' · '+item.covers+' couverts');button.type='button';button.addEventListener('click',()=>{$('bookingTime').value=item.at;refreshAvailability()});buttons.append(button)});if(times.length)insight.append(buttons)}}
  if(!total&&!window.RestoReception){
@@ -201,6 +211,7 @@ $('bookingTime').value='19:00';
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
+ if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw Error('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<today())throw Error('Impossible de créer une réservation à une date passée.');
  const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};

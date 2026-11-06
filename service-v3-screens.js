@@ -47,6 +47,7 @@ function show(id,options={}){
  screens.forEach((screen,key)=>{const active=key===id;screen.hidden=!active;screen.classList.toggle('appScreenActive',active)});
  links.forEach(a=>{const active=a.dataset.nav===id;a.classList.toggle('active',active);if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
  sidebar.forEach(a=>{const active=a.getAttribute('href')==='#'+id;a.classList.toggle('selected',active);if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+ window.dispatchEvent(new CustomEvent('restomanager:screen',{detail:id}));
  if(!options.keepScroll)window.scrollTo({top:0,behavior:'instant'});
 }
 function navigate(id){show(id);if(location.hash!=='#'+id)history.replaceState(null,'','#'+id)}

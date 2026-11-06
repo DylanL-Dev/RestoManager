@@ -24,7 +24,7 @@ export async function loadSharedService(){
   supabase.from('reservation_tables').select('*'),
   supabase.from('restaurant_rooms').select('*').order('sort_order'),
   supabase.from('restaurant_tables').select('*'),
-  supabase.from('table_holds').select('id,table_id,held_by,starts_at,ends_at,expires_at,created_at'),
+  supabase.from('table_holds').select('id,table_id,draft_role,held_by,starts_at,ends_at,expires_at,created_at'),
   supabase.from('table_fusion_links').select('table_a,table_b'),
   supabase.from('restaurant_hours').select('*').eq('id',1).single()
  ]);
