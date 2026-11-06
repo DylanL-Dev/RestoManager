@@ -25,5 +25,5 @@ const TableStore=(()=>{
  }catch(e){error=e.message;state=fallback();}
  const sync=()=>{ReservationEngine.TABLES.splice(0,ReservationEngine.TABLES.length,...state.tables.map(t=>t.number));for(const k of Object.keys(ReservationEngine.CAPACITY))delete ReservationEngine.CAPACITY[k];for(const t of state.tables)ReservationEngine.CAPACITY[t.number]=t.capacity;};
  if(!error)sync();
- return {get:()=>clone(state),getLoadError:()=>error,valid,setShared(next){if(!valid(next))throw Error('Configuration Supabase invalide : synchronisation des tables refusée.');state=clone(next);sync();},save(next){if(error)throw Error(error);if(!valid(next))throw Error('Tables ou salles invalides : enregistrement refusé.');const serialized=JSON.stringify(next);localStorage.setItem(KEY,serialized);state=clone(next);sync();}};
+ return {get:()=>clone(state),getLoadError:()=>error,valid,setShared(next){if(!valid(next))throw Error('Impossible de synchroniser les tables. Vérifiez la configuration du plan.');state=clone(next);sync();},save(next){if(error)throw Error(error);if(!valid(next))throw Error('Tables ou salles invalides : enregistrement refusé.');const serialized=JSON.stringify(next);localStorage.setItem(KEY,serialized);state=clone(next);sync();}};
 })();
