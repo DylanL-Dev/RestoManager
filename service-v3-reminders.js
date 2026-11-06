@@ -11,6 +11,8 @@
  const clock=d=>d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
  const button=(label,fn,kind)=>{const b=document.createElement('button');b.type='button';b.textContent=label;if(kind)b.className=kind;b.addEventListener('click',fn);return b};
  function collect(){
+  if(window.RestoReception===true)return [];
+  if(window.RestoSharedReservations && window.RestoReception!==false)return [];
   const now=new Date(),all=read(),sleep=snoozes(),alerts=[];
   for(const r of all){
    if(!sameDay(r.date,now)||!['reserved','confirmed','late'].includes(r.status))continue;
@@ -35,11 +37,36 @@
   return alerts.sort((a,b)=>Number(b.priority)-Number(a.priority)||(a.kind==='late'?-a.delay:a.remaining)-(b.kind==='late'?-b.delay:b.remaining));
  }
  function update(){
-  const alerts=collect();const count=bell.querySelector('span');count.textContent=String(alerts.length);count.hidden=!alerts.length;
-  bell.setAttribute('aria-label',alerts.length+' rappel(s) de service');
+  const reception=window.RestoReception===true;
+  const activeRestaurant=window.RestoReception===false&&window.RestoSupabaseReady;
+  const bookingAlerts=activeRestaurant?(window.RestoFbReservationAlerts||[]).filter(a=>!a.read_at):[];
+  const alerts=reception?[]:collect();
+  const total=alerts.length+bookingAlerts.length;
+  bell.hidden=reception;
+  if(reception){panel.hidden=true;return}
+  const count=bell.querySelector('span');count.textContent=String(total);count.hidden=!total;
+  bell.setAttribute('aria-label',total+' notification(s) du restaurant');
   panel.replaceChildren();
-  const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent='Rappels de service';head.append(h,button('Fermer',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
-  if(!alerts.length){const p=document.createElement('p');p.textContent='Aucun rappel pour le moment.';panel.append(p);return}
+  const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent='Notifications · Restaurant';head.append(h,button('Fermer',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
+  if(!total){const p=document.createElement('p');p.textContent='Aucune nouvelle notification.';panel.append(p);return}
+  for(const a of bookingAlerts){
+   const item=document.createElement('article');item.className='serviceReminderItem serviceReceptionBookingAlert';
+   const title=document.createElement('strong');title.textContent='Nouvelle réservation · Réception';
+   const when=new Date(a.starts_at);
+   const time=Number.isFinite(when.getTime())?when.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Horaire à vérifier';
+   const detail=document.createElement('p');detail.textContent=(a.hotel_room?'Chambre '+a.hotel_room:a.guest_name)+' · '+a.party_size+' couvert(s) · '+time;
+   const actions=document.createElement('div');actions.className='serviceReminderActions';
+   actions.append(button('Voir la réservation',async()=>{
+    try{
+     await window.RestoMarkFbAlertRead?.(a.id);
+     const date=document.getElementById('reservationDate');if(date){const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when);const v=Object.fromEntries(p.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));date.value=v.year+'-'+v.month+'-'+v.day;date.dispatchEvent(new Event('change',{bubbles:true}))}
+     const search=document.getElementById('reservationQuery');if(search){search.value=a.hotel_room||a.guest_name;search.dispatchEvent(new Event('input',{bubbles:true}))}
+     window.RestoScreens?.show('reservations');panel.hidden=true;
+    }catch(err){await window.RestoDialog?.alert(err.message||'Lecture impossible',{title:'Notification'});}
+   },'serviceReminderPrimary'));
+   actions.append(button('Marquer comme lue',async()=>{try{await window.RestoMarkFbAlertRead?.(a.id)}catch(err){await window.RestoDialog?.alert(err.message||'Action impossible',{title:'Notification'})}}));
+   item.append(title,detail,actions);panel.append(item);
+  }
   for(const a of alerts){
    const item=document.createElement('article');item.className='serviceReminderItem';
    if(a.kind==='late'){
@@ -69,6 +96,7 @@
  bell.addEventListener('click',()=>{panel.hidden=!panel.hidden;update()});
  window.addEventListener('restomanager:v3-change',update);
  window.addEventListener('restomanager:supabase-snapshot',update);
+ window.addEventListener('restomanager:fb-alerts',update);
  window.addEventListener('storage',update);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
  setInterval(update,60000);update();
