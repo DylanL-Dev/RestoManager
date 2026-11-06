@@ -5,7 +5,7 @@
  const dateFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
  const day=()=>{const p=Object.fromEntries(dateFormat.formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
  const clock=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
- const statusNames={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé'};
+ const statusNames={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé'};
  const node=(tag,cls,value)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el};
  function render(){
   if(!window.RestoReception)return;
@@ -24,7 +24,8 @@
   const seated=list.filter(r=>r.status==='seated');
   const expected=pending.reduce((n,r)=>n+Number(r.guests||0),0);
   const inRoom=seated.reduce((n,r)=>n+Number(r.guests||0),0);
-  const tables=(window.TableStore?.get?.().tables||[]).filter(t=>t.capacity>0);
+  // TableStore is a top-level lexical const, not a property of window.
+  const tables=(typeof TableStore!=='undefined'?TableStore.get().tables:[]).filter(t=>t.capacity>0);
   const occupied=new Set(seated.flatMap(r=>r.tables||[]).map(Number));
   const free=tables.filter(t=>!occupied.has(Number(t.number))).length;
   const cards=node('div','receptionServiceMetrics');
