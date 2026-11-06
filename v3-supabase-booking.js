@@ -20,7 +20,7 @@ export async function createSharedBooking(candidate){
  const byNumber=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t]));
  const tableIds=candidate.tables.map(n=>{
   const table=byNumber.get(Number(n));
-  if(!table)throw Error('Table '+n+' absente de Supabase : vérifier la configuration des salles');
+  if(!table)throw Error('Table '+n+' introuvable. Vérifiez la configuration des salles.');
   return table.id;
  });
  if(new Set(tableIds).size!==tableIds.length)throw Error('Sélection de tables invalide');
@@ -58,7 +58,7 @@ export async function updateSharedBooking(candidate){
  await requireStaff();
  const snapshot=await loadSharedService();
  const byNumber=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t.id]));
- const ids=candidate.tables.map(n=>{const id=byNumber.get(Number(n));if(!id)throw Error('Table '+n+' introuvable dans Supabase');return id;});
+ const ids=candidate.tables.map(n=>{const id=byNumber.get(Number(n));if(!id)throw Error('Table '+n+' introuvable. Vérifiez les tables disponibles.');return id;});
  const start=parisDateTime(candidate.date,candidate.time);
  const end=new Date(Date.parse(start)+(Number(candidate.duration)||90)*60000).toISOString();
  const {data,error}=await supabase.rpc('update_reservation_v3',{p_reservation_id:candidate.id,p_guest_name:candidate.client,p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:end,p_table_ids:ids,p_notes:candidate.notes||null});
