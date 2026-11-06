@@ -14,7 +14,13 @@ function refresh(){
  const row=document.createElement('div');row.className='tableAdminItem';
  const info=document.createElement('span');info.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places · '+(plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle');
  const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.onclick=()=>{editId=t.id;feedback.textContent='Modification de la table '+t.number+' : vérifiez les champs puis enregistrez.';$('tableAdminNumber').value=t.number;$('tableAdminMin').value=t.capacityMin||1;$('tableAdminMax').value=t.capacity;$('tableAdminRoom').value=t.roomId;$('tableAdminSubmit').textContent='Enregistrer les modifications';form.scrollIntoView({behavior:'smooth',block:'center'})};
- const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';if(window.RestoSharedReservations)remove.disabled=true;remove.onclick=async()=>{try{
+ const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';if(window.RestoSharedReservations)remove.textContent='Désactiver';remove.onclick=async()=>{try{
+ if(window.RestoSharedReservations){
+  if(!await window.RestoDialog.confirm('Désactiver la table '+t.number+' ? Elle ne sera plus proposée pour les nouvelles réservations. Son historique sera conservé.',{title:'Désactiver la table',danger:true,acceptLabel:'Désactiver'}))return;
+  if(typeof window.RestoSetRestaurantTableActive!=='function')throw Error('Service temporairement indisponible.');
+  await window.RestoSetRestaurantTableActive(t.id,false);await window.RestoRefreshSharedService();feedback.textContent='✓ Table '+t.number+' désactivée.';return;
+ }
+
  const refs=bookings().filter(r=>r.tables.includes(t.number));
  if(refs.length)throw Error('Cette table figure dans '+refs.length+' réservation(s), y compris l’historique. Suppression bloquée pour préserver les données.');
  if(!await window.RestoDialog.confirm('Supprimer définitivement la table '+t.number+' ?',{title:'Supprimer la table',danger:true,acceptLabel:'Supprimer'}))return;
@@ -33,21 +39,21 @@ form.addEventListener('submit',async e=>{e.preventDefault();try{
  if(next.tables.some(t=>t.number===number&&t.id!==editId))throw Error('Ce numéro de table existe déjà.');
  if(window.RestoSharedReservations){
   if(!window.RestoSupabaseReady)throw Error('Chargement des données en cours.');
-  if(!editId)throw Error('L’ajout de tables n’est pas encore disponible.');
-  const existing=next.tables.find(t=>t.id===editId);
-  if(!existing)throw Error('Table introuvable.');
+  
+  if(editId&&!next.tables.some(t=>t.id===editId))throw Error('Table introuvable.');
   if(min!==1)throw Error('La capacité minimale doit être de 1 place pour le moment.');
   const sharedRooms=window.RestoSharedRoomIds;
   const sharedRoomId=sharedRooms?.get(roomId);
   if(!sharedRoomId)throw Error('Salle introuvable.');
-  if(typeof window.RestoUpdateRestaurantTable!=='function')throw Error('Service temporairement indisponible.');
+  if(typeof window.RestoUpdateRestaurantTable!=='function'||typeof window.RestoCreateRestaurantTable!=='function')throw Error('Service temporairement indisponible.');
   feedback.textContent='Enregistrement des modifications…';
   submitButton.disabled=true;
-  try{await window.RestoUpdateRestaurantTable({id:editId,label:'Table '+number,seats:max,roomId:sharedRoomId});
+  try{if(editId)await window.RestoUpdateRestaurantTable({id:editId,label:'Table '+number,seats:max,roomId:sharedRoomId});
+  else await window.RestoCreateRestaurantTable({label:'Table '+number,seats:max,roomId:sharedRoomId});
   await window.RestoRefreshSharedService();}
   finally{submitButton.disabled=false;}
-  editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';
-  feedback.textContent='✓ Table '+number+' modifiée avec succès — '+max+' places.';
+  const wasEditing=Boolean(editId);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';
+  feedback.textContent='✓ Table '+number+(wasEditing?' modifiée':' ajoutée')+' avec succès — '+max+' places.';
   refresh();return;
  }
 
