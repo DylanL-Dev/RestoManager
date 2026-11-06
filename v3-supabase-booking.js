@@ -15,7 +15,21 @@ function parisDateTime(date,time){
  if(actual!==date+'T'+time)throw Error('Horaire inexistant lors du changement d’heure');
  return utc.toISOString();
 }
+async function saveReceptionBooking(candidate,id){
+ const {supabase}=await import('./supabase-service-bridge.js?v=hours1');
+ const start=parisDateTime(candidate.date,candidate.time);
+ const name=candidate.client.trim();
+ const notes=[candidate.notes,candidate.allergies?'ALLERGIES À VÉRIFIER : '+candidate.allergies:''].filter(Boolean).join('\n');
+ const {data,error}=await supabase.rpc('reception_booking_v3',{
+  p_reservation:id,p_name:name,p_room:candidate.type==='hotel'&&/^\d{1,6}[A-Za-z]?$/.test(name)?name:null,
+  p_guests:Number(candidate.guests),p_start:start,p_end:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),p_notes:notes
+ });
+ if(error)throw error;
+ const tables=TableStore.get().tables;
+ candidate.tables=data.map(id=>tables.find(t=>t.id===id)?.number).filter(n=>n!=null);
+}
 export async function createSharedBooking(candidate){
+ if(window.RestoReception)return saveReceptionBooking(candidate,null);
  const snapshot=await loadSharedService();
  const byNumber=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t]));
  const tableIds=candidate.tables.map(n=>{
@@ -54,6 +68,7 @@ export async function deleteCancelledSharedBooking(id){
 window.RestoDeleteCancelledSharedBooking=deleteCancelledSharedBooking;
 
 export async function updateSharedBooking(candidate){
+ if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id);
  const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js?v=hours1');
  await requireStaff();
  const snapshot=await loadSharedService();

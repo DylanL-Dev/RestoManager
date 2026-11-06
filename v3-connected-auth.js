@@ -7,6 +7,20 @@ logout.addEventListener('click',async()=>{await supabase.auth.signOut();location
 banner.append(label,logout);
 try{
  const {profile}=await requireStaff();
+ window.RestoReception=profile.role==='reception';
+ if(window.RestoReception){
+  document.documentElement.classList.add('reception');
+  document.querySelector('#editTable').required=false;
+  const text=document.createElement('p');
+  text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
+  document.querySelector('#bookingTable').closest('label').after(text);
+  for(const link of document.querySelectorAll('a[href="#administration"]')){
+   const caption=link.querySelector('span:last-child');
+   if(caption)caption.textContent='Compte';
+  }
+  document.querySelector('.managementIntro').textContent='Compte réception';
+  if(location.hash==='#passages')window.RestoScreens.show('tables');
+ }
  window.RestoSharedReservations=[];
  window.RestoSupabaseReady=false;
  const management=document.querySelector('[data-screen="administration"]')||document.getElementById('administration');
@@ -21,11 +35,11 @@ try{
  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
  // legacy localStorage-backed UI until they are replaced by server-side RPC calls.
- const protectedForms=new Set(['bookingForm','editForm','walkinForm','tableAdminForm','fusionForm']);
+ const allowedForms=window.RestoReception?['bookingForm','editForm']:['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm'];
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (!['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm'].includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
+  if(e.type==='submit' && form && (!allowedForms.includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;

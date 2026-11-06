@@ -79,7 +79,7 @@ function shortcut(label,id,tableId){
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
  });actions.append(button);
 }
-if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else{box.append(node('p','tableAlreadyReserved','Cette table est réservée. Retrouvez le client ci-dessous, puis choisissez « Installer à table ».'))}
+if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else if(!window.RestoReception){box.append(node('p','tableAlreadyReserved','Cette table est réservée. Retrouvez le client ci-dessous, puis choisissez « Installer à table ».'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 const choices={reserved:[['seated','Installer à table'],['arrived','Signaler l’arrivée'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['seated','Installer à table'],['arrived','Signaler l’arrivée'],['late','Signaler un retard'],['no_show','Absent']],late:[['seated','Installer à table'],['arrived','Signaler l’arrivée'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['released','Libérer la table']]};
@@ -139,7 +139,7 @@ function refreshAvailability(){
  const insight=$('availabilityInsight'),fusionPanel=$('fusionSuggestions');
  if(insight)insight.replaceChildren();
  if(fusionPanel)fusionPanel.replaceChildren();
- select.replaceChildren();window.RestoFusionSelected=null;select.required=true;
+ select.replaceChildren();window.RestoFusionSelected=null;select.required=!window.RestoReception;
  if(!dateValue||!time||!Number.isInteger(guests)||guests<1)return;
  const reservationsAll=readReservations(),duration=ReservationEngine.getDefaultDuration();
  const suitable=plan.tables.filter(t=>t.capacity>=guests&&(t.capacityMin||1)<=guests).sort((a,b)=>a.capacity-b.capacity||a.number-b.number);
@@ -176,9 +176,10 @@ function refreshAvailability(){
  if(!insight)return;
  const total=options.length+fusions.length;
  const previewTables=options.length?[options[0].number]:fusions.length?fusions[0].pair:[];
+ if(window.RestoReception&&options.length)insight.append(node('p','availabilitySummary','Table proposée : '+options[0].number+' · Attribution confirmée à l’enregistrement.'));
  if(previewTables.length&&window.RestoRush){const preview=candidate(time,previewTables),rush=window.RestoRush.evaluate(preview,reservationsAll);insight.append(node('p','rushAvailabilityHint',rush.current+' couverts attendus entre '+rush.range+' · '+rush.limit+' conseillés au maximum.'));if(rush.blocked){insight.append(node('p','availabilityWarning','Forte affluence : confirmation manuelle nécessaire.'));const times=window.RestoRush.suggestions(preview,reservationsAll);const buttons=node('div','availabilityAlternatives');times.forEach(item=>{const button=node('button','availabilityTimeOption',item.at+' · '+item.covers+' couverts');button.type='button';button.addEventListener('click',()=>{$('bookingTime').value=item.at;refreshAvailability()});buttons.append(button)});if(times.length)insight.append(buttons)}}
- insight.append(node('p','availabilitySummary',total?options.length+' table(s) individuelle(s) et '+fusions.length+' fusion(s) compatibles à '+time+'.':'Aucune configuration compatible à '+time+'.'));
- if(!total){
+ if(!window.RestoReception)insight.append(node('p','availabilitySummary',total?options.length+' table(s) individuelle(s) et '+fusions.length+' fusion(s) compatibles à '+time+'.':'Aucune configuration compatible à '+time+'.'));
+ if(!total&&!window.RestoReception){
   insight.append(node('p','availabilityWarning','Aucune table ou fusion autorisée disponible pour '+guests+' couvert(s) à cet horaire.'));
   const current=Number(time.slice(0,2))*60+Number(time.slice(3,5)),alternatives=[];
   for(const delta of [-60,-30,30,60,90]){
@@ -224,11 +225,11 @@ $('bookingForm').addEventListener('submit',async event=>{
  const fusion=window.RestoFusionSelected;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.getDefaultDuration(),tables:Array.isArray(fusion)&&fusion.length>=2?fusion:[table],status:'reserved'};
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
- if(!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
+ if(!window.RestoReception&&!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
  const latest=readReservations(),again=ReservationEngine.validate(candidate,latest);
- if(!again.valid){feedback.textContent=again.errors.join(' ');refreshAvailability();return}
+ if(!window.RestoReception&&!again.valid){feedback.textContent=again.errors.join(' ');refreshAvailability();return}
  const loadState=window.RestoRush.evaluate(candidate,latest);
- if(loadState.blocked){const ok=await window.RestoRush.confirm(candidate,latest);if(!ok){feedback.textContent='Créneau refusé.';return}const fresh=readReservations();if(!ReservationEngine.validate(candidate,fresh).valid||window.RestoRush.evaluate(candidate,fresh).current!==loadState.current){feedback.textContent='Situation modifiée : réessayez.';return}candidate.rushOverride={confirmedAt:new Date().toISOString(),range:loadState.range}}
+ if(loadState.blocked){const ok=await window.RestoRush.confirm(candidate,latest);if(!ok){feedback.textContent='Créneau refusé.';return}const fresh=readReservations();if((!window.RestoReception&&!ReservationEngine.validate(candidate,fresh).valid)||window.RestoRush.evaluate(candidate,fresh).current!==loadState.current){feedback.textContent='Situation modifiée : réessayez.';return}candidate.rushOverride={confirmedAt:new Date().toISOString(),range:loadState.range}}
  if(window.RestoSharedReservations){
   if(typeof window.RestoCreateSharedBooking!=='function')throw Error('Connexion en cours. Réessayez dans un instant.');
   feedback.textContent='Enregistrement en cours…';

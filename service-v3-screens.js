@@ -40,6 +40,7 @@ if(management){
 const links=[...document.querySelectorAll('.mobileNavItem')],sidebar=[...document.querySelectorAll('.sidebar a[href^="#"]')];
 let current=null;
 function show(id,options={}){
+ if(window.RestoReception&&id==='passages')id='tables';
  if(!screens.has(id))return;
  if(current===id&&!options.force)return;
  current=id;

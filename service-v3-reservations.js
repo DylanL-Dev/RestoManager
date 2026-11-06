@@ -151,7 +151,7 @@ function render(){
  }
  const actions=el('div',undefined,'reservationActions');
  const opts=[['edit','Modifier'],['confirm','Confirmer'],['arrived','Arrivé'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler'],['delete','Supprimer']];
- const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||k==='delete'||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});actions.append(primary);if(more.children.length>1)actions.append(more);
+ const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||k==='delete'||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});actions.append(primary);if(more.children.length>1)actions.append(more);
  card.append(actions);root.append(card);
  });
 }
@@ -165,10 +165,10 @@ $('editForm').addEventListener('submit',async e=>{
   try{
    const previous=load().find(r=>r.id===editing);if(!previous)throw Error('Réservation introuvable');
    const updated={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests:Number($('editGuests').value),tables:chosenTables.slice(),notes:$('editNotes').value.trim()};
-   if(!updated.tables.length)throw Error('Choisissez une table');
+   if(!window.RestoReception&&!updated.tables.length)throw Error('Choisissez une table');
    if(!updated.client)throw Error('Le nom du client est obligatoire.');
    if(!Number.isInteger(updated.guests)||updated.guests<1||updated.guests>50)throw Error('Nombre de couverts invalide.');
-   const availability=editAvailability(updated.tables);
+   const availability=window.RestoReception?{available:true}:editAvailability(updated.tables);
    if(!availability.available)throw Error(availability.reason||'Table indisponible');
    if(availability.caution&&!await window.RestoDialog.confirm('Attention : '+availability.reason+'. Confirmer la modification ?', {title:'Disponibilité à confirmer',acceptLabel:'Confirmer'}))return;
    notify('Enregistrement en cours…');

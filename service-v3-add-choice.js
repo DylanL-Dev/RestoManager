@@ -10,7 +10,7 @@
  document.addEventListener('click',event=>{
   const anchor=event.target.closest('a[href="#reservationForm"]');
   if(anchor&&(anchor.classList.contains('mobileNavAdd')||anchor.closest('.sidebar'))){
-   event.preventDefault();event.stopImmediatePropagation();open();
+   event.preventDefault();event.stopImmediatePropagation();if(window.RestoReception)window.RestoScreens.show('reservationForm');else open();
   }
  },true);
  overlay.querySelector('.restoAddChoiceClose').addEventListener('click',close);
