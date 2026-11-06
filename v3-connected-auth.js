@@ -150,6 +150,7 @@ try{
    window.dispatchEvent(new Event('restomanager:hours'));
   }
   const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
+  window.RestoSmartPlacementTableIds=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t.id]).filter(([number])=>Number.isInteger(number)&&number>0));
   window.RestoDraftHolds=snapshot.holds.map(h=>({id:h.id,number:Number(String(byTable.get(h.table_id)||'').replace(/^table\s*/i,'')),
    start:Date.parse(h.starts_at),end:Date.parse(h.ends_at),expiry:Date.parse(h.expires_at),team:h.draft_role==='reception'?'Réception':'Restaurant'}));
   // Supabase is the authoritative table configuration on the connected preview.
