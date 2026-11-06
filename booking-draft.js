@@ -1,3 +1,4 @@
+import {encodeBookingDetails} from './reservation-details.js';
 // A key belongs to this form instance. Tabs sharing a login still have separate holds.
 export function setupBookingDraft(supabase, parisDateTime){
  const el=id=>document.getElementById(id);
@@ -163,7 +164,7 @@ export function setupBookingDraft(supabase, parisDateTime){
      if(candidate.guests!==Number(el('bookingGuests').value)||candidate.date!==el('bookingDate').value||candidate.time!==el('bookingTime').value)throw Error('Le créneau a changé. Vérifiez la réservation.');
      const name=candidate.client.trim();
      const room=candidate.type==='hotel'&&/^\d{1,6}[A-Za-z]?$/.test(name)?name:null;
-     const notes=[candidate.notes,candidate.allergies?'ALLERGIES À VÉRIFIER : '+candidate.allergies:''].filter(Boolean).join('\n');
+     const notes=encodeBookingDetails(candidate);
      await rpc(current.key,'confirm',{p_name:name,p_room:room,p_notes:notes});
      candidate.tables=current.numbers;
      retire(current.holdIds,current.until);
