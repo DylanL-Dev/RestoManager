@@ -4,7 +4,8 @@
  const bell=document.createElement('button');bell.type='button';bell.className='serviceBell';bell.setAttribute('aria-label','Rappels de service');bell.innerHTML='<i data-lucide="bell"></i><span class="serviceBellCount" hidden>0</span>';
  const panel=document.createElement('section');panel.className='serviceReminderPanel';panel.hidden=true;panel.setAttribute('role','region');panel.setAttribute('aria-label','Notifications de service');
  (document.querySelector('.headerQuickActions')||document.querySelector('.top'))?.append(bell);document.body.append(panel);
- const read=()=>{try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}};
+ const connected=()=>Boolean(window.RestoSharedReservations);
+ const read=()=>{if(connected())return ReservationEngine.normalizeReservations(window.RestoSharedReservations);try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}};
  const snoozes=()=>{try{return JSON.parse(localStorage.getItem(SNOOZE)||'{}')}catch{return {}}};
  const sameDay=(d,now)=>d===now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
  const clock=d=>d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
@@ -45,7 +46,7 @@
     const title=document.createElement('strong');title.textContent='Client en retard · '+a.r.client+' · Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ');
     const desc=document.createElement('p');desc.textContent='Attendu à '+a.r.time+' · '+a.delay+' min de retard. Vérifiez si le client est arrivé avant de modifier son statut.';
     const actions=document.createElement('div');actions.className='serviceReminderActions';
-    const changeStatus=(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){window.RestoDialog.alert(result.error||'Action impossible.',{title:'Action impossible'});return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
+    const changeStatus=async(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}if(connected()){try{await window.RestoChangeSharedStatus(all[idx],status)}catch(error){await window.RestoDialog.alert(error.message||'Action impossible.',{title:'Action impossible'})}update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){window.RestoDialog.alert(result.error||'Action impossible.',{title:'Action impossible'});return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
     actions.append(button('✓ Client arrivé',()=>changeStatus('arrived'),'serviceReminderPrimary'));
     if(a.r.status!=='late')actions.append(button('Signaler le retard',()=>changeStatus('late')));
     actions.append(button('Rappeler dans 10 min',()=>{const data=snoozes();data['late:'+a.r.id]=Date.now()+600000;localStorage.setItem(SNOOZE,JSON.stringify(data));update()}));
@@ -57,6 +58,7 @@
    actions.append(button('Libérer la table',async()=>{
     if(!await window.RestoConfirmRelease(a.r))return;
     const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||all[idx].status!=='seated'){update();return}
+    if(connected()){try{await window.RestoChangeSharedStatus(all[idx],'released')}catch(error){await window.RestoDialog.alert(error.message||'Impossible de libérer cette table.',{title:'Libération impossible'})}update();return}
     const result=ReservationEngine.transition(all[idx],'released',undefined,all);
     if(!result.valid){window.RestoDialog.alert(result.error||'Impossible de libérer cette table.',{title:'Libération impossible'});return}
     all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update();
@@ -67,6 +69,7 @@
  }
  bell.addEventListener('click',()=>{panel.hidden=!panel.hidden;update()});
  window.addEventListener('restomanager:v3-change',update);
+ window.addEventListener('restomanager:supabase-snapshot',update);
  window.addEventListener('storage',update);
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
  setInterval(update,60000);update();
