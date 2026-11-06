@@ -54,7 +54,7 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
     if(!stopped&&navigator.onLine&&connectionState==='connected'&&requestGeneration===generation)onSnapshot(snapshot);
    }while(dirty&&!stopped&&requestGeneration===generation);
   }catch(error){if(!stopped&&requestGeneration===generation)onError(error)}
-  finally{busy=false}
+  finally{busy=false;if(dirty&&!stopped&&navigator.onLine&&connectionState==='connected')void refresh()}
  }
  function startChannel(){
   if(stopped||!navigator.onLine)return;
@@ -86,9 +86,8 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
   connectionState='disconnected';generation++;onConnection(false);
   if(channel){const old=channel;channel=null;void supabase.removeChannel(old)}
  }
- document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible')resume();
- });
+ const visible=()=>{if(document.visibilityState==='visible')resume()};
+ document.addEventListener('visibilitychange',visible);
  window.addEventListener('online',resume);
  window.addEventListener('offline',offline);
  const timer=setInterval(()=>{
@@ -98,6 +97,7 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
  return ()=>{
   stopped=true;generation++;clearInterval(timer);
   window.removeEventListener('online',resume);window.removeEventListener('offline',offline);
+  document.removeEventListener('visibilitychange',visible);
   if(channel)void supabase.removeChannel(channel);
  };
 }
