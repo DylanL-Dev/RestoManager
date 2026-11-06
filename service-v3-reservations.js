@@ -60,21 +60,6 @@ async function action(id,kind){
    $('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
    editChoices();$('editForm').hidden=false;$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return;
   }
-  if(kind==='delete'){
-   const current=load().find(r=>r.id===id);
-   if(!current)return notify('Réservation introuvable.');
-   if(current.status!=='cancelled')return notify('Annulez la réservation avant de la supprimer.');
-   const accepted=await window.RestoDialog.confirm('Supprimer définitivement la réservation de '+current.client+' ? Les données liées seront également supprimées.',{title:'Suppression définitive',danger:true,acceptLabel:'Supprimer définitivement'});
-   if(!accepted)return;
-   try{
-    if(typeof window.RestoDeleteCancelledSharedBooking!=='function')throw Error('Service indisponible. Réessayez dans un instant.');
-    notify('Suppression en cours…');
-    await window.RestoDeleteCancelledSharedBooking(id);
-    await window.RestoRefreshSharedService?.();
-    notify('Réservation supprimée définitivement.');
-   }catch(e){notify('Suppression impossible : '+e.message)}
-   return;
-  }
   if(kind==='cancel'){
    const current=load().find(r=>r.id===id);
    if(!current)return notify('Réservation introuvable.');
@@ -109,7 +94,6 @@ async function action(id,kind){
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
  editChoices();$('editForm').hidden=false;$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
  }
- if(kind==='delete'){if(!await window.RestoDialog.confirm('Supprimer définitivement la réservation de '+r.client+' ? Cette opération est irréversible.',{title:'Supprimer la réservation',danger:true,acceptLabel:'Supprimer'}))return;all.splice(i,1);save(all);notify('Réservation supprimée.');return}
  if(kind==='cancel'&&!await window.RestoDialog.confirm('Annuler la réservation de '+r.client+' ?',{title:'Annuler la réservation',danger:true,acceptLabel:'Annuler la réservation'}))return;
  if(kind==='seated'&&window.RestoCheckOccupiedTables?.(r,all))return;
  if(kind==='seated'&&!(await window.RestoConfirmEarlySeating(r)))return;
@@ -150,8 +134,8 @@ function render(){
  card.append(details);
  }
  const actions=el('div',undefined,'reservationActions');
- const opts=[['edit','Modifier'],['confirm','Confirmer'],['arrived','Arrivé'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler'],['delete','Supprimer']];
- const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||k==='delete'||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});actions.append(primary);if(more.children.length>1)actions.append(more);
+ const opts=[['edit','Modifier'],['confirm','Confirmer'],['arrived','Arrivé'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler']];
+ const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});actions.append(primary);if(more.children.length>1)actions.append(more);
  card.append(actions);root.append(card);
  });
 }
