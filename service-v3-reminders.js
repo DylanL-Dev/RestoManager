@@ -51,6 +51,23 @@
     .sort((a,b)=>a.info.remaining-b.info.remaining||a.time.localeCompare(b.time));
   return results[0]||null;
  }
+ function openReservationFromAlert(a,view){
+  const when=new Date(a.starts_at);
+  const search=document.getElementById('reservationQuery');
+  if(search){search.value=a.hotel_room||a.guest_name||'';search.dispatchEvent(new Event('input',{bubbles:true}))}
+  const date=document.getElementById('reservationDate');
+  if(date&&Number.isFinite(when.getTime())){
+   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when);
+   const d=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+   date.value=d.year+'-'+d.month+'-'+d.day;
+   date.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+  window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{
+   detail:{view,reservationId:a.reservation_id}
+  }));
+  window.RestoScreens?.show('reservations');
+  panel.hidden=true;
+ }
  function update(){
   const reception=window.RestoReception===true;
   const ready=window.RestoSupabaseReady&&typeof window.RestoReception==='boolean';
@@ -103,16 +120,7 @@
    actions.append(button('Voir la réservation',async()=>{
     try{
      await window.RestoMarkFbChangeRead?.(a.id);
-     const date=document.getElementById('reservationDate');
-     if(date){
-      const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when);
-      const fields=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
-      date.value=fields.year+'-'+fields.month+'-'+fields.day;
-      date.dispatchEvent(new Event('change',{bubbles:true}));
-     }
-     const search=document.getElementById('reservationQuery');
-     if(search){search.value=a.hotel_room||a.guest_name;search.dispatchEvent(new Event('input',{bubbles:true}))}
-     window.RestoScreens?.show('reservations');panel.hidden=true;
+     openReservationFromAlert(a,a.event_type==='cancelled'?'departed':'active');
     }catch(err){await window.RestoDialog?.alert(err.message||'Ouverture impossible',{title:'Notification'});}
    },'serviceReminderPrimary'));
    actions.append(button('Marquer comme lue',async()=>{
@@ -131,9 +139,7 @@
    actions.append(button('Voir la réservation',async()=>{
     try{
      await window.RestoMarkFbAlertRead?.(a.id);
-     const date=document.getElementById('reservationDate');if(date){const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when);const v=Object.fromEntries(p.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));date.value=v.year+'-'+v.month+'-'+v.day;date.dispatchEvent(new Event('change',{bubbles:true}))}
-     const search=document.getElementById('reservationQuery');if(search){search.value=a.hotel_room||a.guest_name;search.dispatchEvent(new Event('input',{bubbles:true}))}
-     window.RestoScreens?.show('reservations');panel.hidden=true;
+     openReservationFromAlert(a,'active');
     }catch(err){await window.RestoDialog?.alert(err.message||'Lecture impossible',{title:'Notification'});}
    },'serviceReminderPrimary'));
    actions.append(button('Marquer comme lue',async()=>{try{await window.RestoMarkFbAlertRead?.(a.id)}catch(err){await window.RestoDialog?.alert(err.message||'Action impossible',{title:'Notification'})}}));
