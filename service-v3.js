@@ -226,10 +226,10 @@ $('bookingForm').addEventListener('submit',async event=>{
  const loadState=window.RestoRush.evaluate(candidate,latest);
  if(loadState.blocked){const ok=await window.RestoRush.confirm(candidate,latest);if(!ok){feedback.textContent='Créneau refusé.';return}const fresh=readReservations();if(!ReservationEngine.validate(candidate,fresh).valid||window.RestoRush.evaluate(candidate,fresh).current!==loadState.current){feedback.textContent='Situation modifiée : réessayez.';return}candidate.rushOverride={confirmedAt:new Date().toISOString(),range:loadState.range}}
  if(window.RestoSharedReservations){
-  if(typeof window.RestoCreateSharedBooking!=='function')throw Error('Connexion Supabase non prête. Réessayez après synchronisation.');
-  feedback.textContent='Enregistrement sécurisé dans Supabase…';
+  if(typeof window.RestoCreateSharedBooking!=='function')throw Error('Connexion en cours. Réessayez dans un instant.');
+  feedback.textContent='Enregistrement en cours…';
   await window.RestoCreateSharedBooking(candidate);
-  feedback.textContent='✓ Réservation enregistrée dans Supabase : '+candidate.client+' · '+candidate.time+'.';
+  feedback.textContent='✓ Réservation enregistrée · '+candidate.client+' · '+candidate.time+'.';
   try{if(typeof window.RestoRefreshSharedService==='function')await window.RestoRefreshSharedService();}
   catch(syncError){feedback.textContent+=' Actualisation en attente : '+syncError.message;}
   window.RestoFusionSelected=null;
