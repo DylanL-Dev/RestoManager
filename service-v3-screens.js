@@ -10,6 +10,8 @@ const groups=[
 ];
 const screens=new Map();
 groups.forEach(group=>{const screen=document.createElement('section');screen.className='appScreen';screen.dataset.screen=group.id;screen.setAttribute('aria-label',({tables:'Service et tables',reservations:'Réservations',reservationForm:'Nouvelle réservation',passages:'Service en cours',administration:'Gestion des tables',history:'Historique et statistiques'})[group.id]);group.nodes.forEach(selector=>{const el=main.querySelector(selector);if(el){if(el.tagName==='DETAILS')el.open=true;screen.append(el)}});main.append(screen);screens.set(group.id,screen)});
+// The Reception service tab is a safe, read-only screen, not the restaurant's passage actions.
+const receptionService=document.createElement('section');receptionService.id='receptionServiceOverview';receptionService.className='receptionServiceOverview';screens.get('passages').append(receptionService);
 // Gestion : navigation compacte, sections indépendantes et accessibles.
 const management=screens.get('administration');
 if(management){
@@ -40,7 +42,6 @@ if(management){
 const links=[...document.querySelectorAll('.mobileNavItem')],sidebar=[...document.querySelectorAll('.sidebar a[href^="#"]')];
 let current=null;
 function show(id,options={}){
- if(window.RestoReception&&id==='passages')id='tables';
  if(!screens.has(id))return;
  if(current===id&&!options.force)return;
  current=id;
