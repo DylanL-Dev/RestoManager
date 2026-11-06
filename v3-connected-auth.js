@@ -1,4 +1,5 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=hold1';
+import {decodeBookingDetails} from './reservation-details.js';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
@@ -180,9 +181,10 @@ try{
    const dateParts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(dt).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
    const parts=dateParts.year+'-'+dateParts.month+'-'+dateParts.day;
    const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hour12:false}).format(dt);
+   const details=decodeBookingDetails(r.notes,r.hotel_room);
    return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status==='departed'?'released':r.status,
-    walkIn:!!r.walkin_type,type:r.walkin_type||undefined,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
-    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:r.notes||'',hotelRoom:r.hotel_room||''};
+    walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
+    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||''};
   });
   if(navigator.onLine===false)showError({code:'HORS_LIGNE'});
   else if(channelReady)showState('ok','Synchronisation active','Les données de cet appareil sont synchronisées en direct.');
