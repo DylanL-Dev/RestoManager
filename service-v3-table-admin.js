@@ -3,6 +3,8 @@
 const $=id=>document.getElementById(id),E=ReservationEngine,KEY='restomanager_reservations';
 const form=$('tableAdminForm'),list=$('tableAdminList'),feedback=$('tableAdminFeedback');if(!form)return;
 form.noValidate=true;
+const submitButton=$('tableAdminSubmit');
+submitButton.addEventListener('click',()=>{if(editId&&window.RestoSharedReservations)feedback.textContent='Vérification et enregistrement dans Supabase…';});
 let editId=null;
 function bookings(){return E.normalizeReservations(window.RestoSharedReservations||JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
@@ -40,10 +42,12 @@ form.addEventListener('submit',async e=>{e.preventDefault();try{
   if(!sharedRoomId)throw Error('Salle Supabase introuvable.');
   if(typeof window.RestoUpdateRestaurantTable!=='function')throw Error('Module Supabase non disponible.');
   feedback.textContent='Enregistrement de la table dans Supabase…';
-  await window.RestoUpdateRestaurantTable({id:editId,label:'Table '+number,seats:max,roomId:sharedRoomId});
-  await window.RestoRefreshSharedService();
+  submitButton.disabled=true;
+  try{await window.RestoUpdateRestaurantTable({id:editId,label:'Table '+number,seats:max,roomId:sharedRoomId});
+  await window.RestoRefreshSharedService();}
+  finally{submitButton.disabled=false;}
   editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';
-  feedback.textContent='Table modifiée et synchronisée dans Supabase.';
+  feedback.textContent='✓ Table '+number+' mise à jour dans Supabase : '+max+' places.';
   refresh();return;
  }
 
