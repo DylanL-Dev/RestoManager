@@ -49,7 +49,7 @@ function editChoices(){
 function load(){if(window.RestoSharedReservations)return E.normalizeReservations(window.RestoSharedReservations);return E.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=String(text);if(cls)n.className=cls;return n}
 function notify(msg){$('reservationMessage').textContent=msg}
-function save(all){if(window.RestoSharedReservations)throw Error('Mode Supabase : modifications locales désactivées.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
+function save(all){if(window.RestoSharedReservations)throw Error('La modification sur cet appareil est désactivée.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
 async function action(id,kind){
  if(window.RestoSharedReservations){
   if(kind==='edit'){
@@ -67,11 +67,11 @@ async function action(id,kind){
    const accepted=await window.RestoDialog.confirm('Supprimer définitivement la réservation de '+current.client+' ? Les données liées seront également supprimées.',{title:'Suppression définitive',danger:true,acceptLabel:'Supprimer définitivement'});
    if(!accepted)return;
    try{
-    if(typeof window.RestoDeleteCancelledSharedBooking!=='function')throw Error('Module Supabase indisponible');
+    if(typeof window.RestoDeleteCancelledSharedBooking!=='function')throw Error('Service indisponible. Réessayez dans un instant.');
     notify('Suppression en cours…');
     await window.RestoDeleteCancelledSharedBooking(id);
     await window.RestoRefreshSharedService?.();
-    notify('Réservation supprimée définitivement de Supabase.');
+    notify('Réservation supprimée définitivement.');
    }catch(e){notify('Suppression impossible : '+e.message)}
    return;
   }
@@ -83,13 +83,13 @@ async function action(id,kind){
    catch(dialogError){notify('Confirmation impossible : '+dialogError.message);return;}
    if(!accepted){notify('Annulation abandonnée.');return;}
    try{
-    if(typeof window.RestoCancelSharedBooking!=='function')throw Error('Module Supabase indisponible');
+    if(typeof window.RestoCancelSharedBooking!=='function')throw Error('Service indisponible. Réessayez dans un instant.');
     notify('Annulation en cours…');await window.RestoCancelSharedBooking(id);
-    await window.RestoRefreshSharedService?.();notify('Réservation annulée dans Supabase.');
+    await window.RestoRefreshSharedService?.();notify('Réservation annulée.');
    }catch(e){notify('Annulation impossible : '+e.message)}
    return;
   }
-  notify('Action '+kind+' indisponible : raccordement Supabase en cours.');return;
+  notify('Cette action est temporairement indisponible.');return;
  }
  try{
  const all=load(),i=all.findIndex(r=>r.id===id);if(i<0)return notify('Réservation introuvable.');
@@ -162,10 +162,10 @@ $('editForm').addEventListener('submit',async e=>{
    const availability=editAvailability(updated.tables);
    if(!availability.available)throw Error(availability.reason||'Table indisponible');
    if(availability.caution&&!await window.RestoDialog.confirm('Attention : '+availability.reason+'. Confirmer la modification ?', {title:'Disponibilité à confirmer',acceptLabel:'Confirmer'}))return;
-   notify('Enregistrement dans Supabase…');
+   notify('Enregistrement en cours…');
    await window.RestoUpdateSharedBooking(updated);
    await window.RestoRefreshSharedService?.();
-   editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée dans Supabase.');
+   editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée.');
   }catch(err){notify('Modification impossible : '+err.message)}
   return;
  }
