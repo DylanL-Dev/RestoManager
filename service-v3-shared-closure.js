@@ -23,7 +23,7 @@
  date.max=now.date;label.append(date);root.insertBefore(container,status);
  container.append(label);
  button.disabled=false;
- let loading=false,history=[],lastAuto='',closedDates=new Set();
+ let loading=false,history=[],lastAuto='',closedDates=new Set(),lastError='';
  function pendingCount(value){
   return (window.RestoSharedReservations||[]).filter(r=>r.date===value&&!['completed','released','cancelled','no_show'].includes(r.status)).length;
  }
@@ -38,6 +38,8 @@
   const pending=pendingCount(selected);
   if(!window.RestoSupabaseReady){
    status.textContent='Connexion indisponible : aucune clôture ne peut être enregistrée.';
+  }else if(lastError){
+   status.textContent=lastError;
   }else if(prior){
    status.textContent='Service du '+selected+' clôturé et archivé dans Supabase ('+(prior.close_mode==='automatic'?'automatiquement':'manuellement')+').';
   }else if(!eligible(selected)){
@@ -68,8 +70,8 @@
    const db=await getDb();
    const {data,error}=await db.from('service_closures').select('service_date,close_mode,closed_at,served_covers,served_groups,walkin_covers,hotel_covers,no_show_groups,cancelled_groups').order('service_date',{ascending:false}).limit(60);
    if(error)throw error;
-   history=data||[];closedDates=new Set(history.map(x=>x.service_date));
-  }catch(error){status.textContent='Archive partagée non accessible : '+error.message;return}
+   history=data||[];closedDates=new Set(history.map(x=>x.service_date));lastError='';
+  }catch(error){lastError='Archive partagée non accessible : '+error.message;display();return}
   display();
  }
  async function close(day,mode){
@@ -80,7 +82,7 @@
    const {error}=await db.rpc('close_service_v3',{p_date:day,p_mode:mode});
    if(error)throw error;
    await refresh();
-  }catch(error){status.textContent='Clôture refusée par Supabase : '+error.message}
+  }catch(error){lastError='Clôture refusée par Supabase : '+error.message}
   finally{loading=false;display()}
  }
  button.addEventListener('click',async()=>{
