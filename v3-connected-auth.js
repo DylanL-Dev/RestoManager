@@ -124,7 +124,7 @@ try{
   if(error)throw Error(error.message);
   await window.RestoRefreshSharedService();
  };
- let channelReady=false;
+ let channelReady=false,lastAppliedSequence=0,everConnected=false;
  function showState(state,title,detail){
   badge.dataset.state=state;
   badge.textContent=title;
@@ -146,7 +146,12 @@ try{
   showState('error','Synchronisation interrompue',detail+' Code : '+code+'. Vérifiez la connexion puis actualisez si nécessaire.');
  }
  window.addEventListener('offline',()=>showError({code:'HORS_LIGNE'}));
+ window.addEventListener('online',()=>showState('pending','Reconnexion en cours','Mise à jour des réservations depuis Supabase…'));
  const applySharedSnapshot=snapshot=>{
+  // Ignore responses started before a newer service snapshot request.
+  if(Number(snapshot.syncSequence||0)<lastAppliedSequence)return;
+  if(!navigator.onLine){showError({code:'HORS_LIGNE'});return}
+  lastAppliedSequence=Number(snapshot.syncSequence||0);
   const hours=snapshot.hours, shifts={};
   for(const key of ['lunch','dinner'])shifts[key]={enabled:hours[key+'_enabled'],start:hours[key+'_start'].slice(0,5),end:hours[key+'_end'].slice(0,5)};
   const settings={shifts,duration:hours.duration};
@@ -200,6 +205,7 @@ try{
   window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
   window.dispatchEvent(new Event('restomanager:v3-change'));
   lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
+  window.RestoLastSyncAt=Date.now();
   label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables';
  };
  window.RestoRefreshSharedService=async()=>{
@@ -209,7 +215,14 @@ try{
  try{
   await subscribeSharedService(applySharedSnapshot,showError,connected=>{
    channelReady=connected;
-   if(connected)showState('pending','Synchronisation en cours','Connexion établie. Lecture des données en cours…');
+   if(connected){
+    everConnected=true;
+    showState('pending','Synchronisation en cours','Connexion établie. Lecture des données en cours…');
+   }else if(everConnected){
+    showState('error','Synchronisation interrompue','Les réservations affichées peuvent être anciennes. Les modifications sont bloquées jusqu’à reconnexion.');
+   }else{
+    showState('pending','Connexion en cours','Connexion au service en cours…');
+   }
   });
  }catch(error){showError(error);}
 
