@@ -30,6 +30,7 @@ try{
    const btn=target.closest?.('button');
    if(!btn||btn===logout)return;
    const id=btn.id||'';
+   if(id==='tableAdminSubmit'&&window.RestoSupabaseReady)return;
    // Let view navigation, date selection, search and tabs work; block mutation buttons.
    if(/(?:save|submit|delete|remove|release|cancelReservation|confirmReservation|install|arrive|seated|noShow|complete|closure)/i.test(id)){
     e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification bloquée · Supabase reste la source officielle';const feedback=document.getElementById('bookingFeedback');if(feedback)feedback.textContent='Cette action nécessite encore un raccordement à Supabase.';
