@@ -233,6 +233,8 @@ $('bookingForm').addEventListener('submit',async event=>{
   try{if(typeof window.RestoRefreshSharedService==='function')await window.RestoRefreshSharedService();}
   catch(syncError){feedback.textContent+=' Actualisation en attente : '+syncError.message;}
   window.RestoFusionSelected=null;
+  refreshAvailability();
+  showBookingSuccess(candidate);
   return;
  }
  const warnings=ReservationEngine.seatingWarnings(candidate,latest);
