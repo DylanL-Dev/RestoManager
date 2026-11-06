@@ -54,6 +54,22 @@ try{
  // No duplicate prototype panel or independent local reservation list.
  const applySharedSnapshot=snapshot=>{
   const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
+  // Supabase is the authoritative table configuration on the connected preview.
+  // Keep localStorage intact as a backup; do not persist this shared snapshot locally.
+  const activeRooms=snapshot.rooms.filter(r=>r.active);
+  const primary=activeRooms[0];
+  if(primary){
+   const rooms=activeRooms.map((r,i)=>({id:i===0?'main':r.id,name:r.name}));
+   const roomIds=new Map(activeRooms.map((r,i)=>[r.id,i===0?'main':r.id]));
+   const tables=snapshot.tables.filter(t=>t.active&&roomIds.has(t.room_id)).map(t=>({
+    id:t.id,number:Number(String(t.label).trim().replace(/^table\\s*/i,'')),
+    capacityMin:1,capacity:t.seats,roomId:roomIds.get(t.room_id)
+   }));
+   if(tables.every(t=>Number.isInteger(t.number)&&t.number>0)&&new Set(tables.map(t=>t.number)).size===tables.length){
+    try{TableStore.setShared({version:1,rooms,tables});window.dispatchEvent(new Event('restomanager:v3-tables'));}
+    catch(err){console.error('Synchronisation des tables refusée',err);}
+   }else console.error('Numérotation des tables Supabase incompatible avec le plan V3.');
+  }
   const assigned=new Map();
   for(const a of snapshot.assignments){
    if(!assigned.has(a.reservation_id))assigned.set(a.reservation_id,[]);
