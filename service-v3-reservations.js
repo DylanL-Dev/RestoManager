@@ -1,7 +1,7 @@
 'use strict';
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
-const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Arrivé',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
+const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,chosenTables=[],expanded=null,reservationView='active';
 const departedStatuses=new Set(['completed','released','cancelled','no_show']);
 function sameTables(a,b){return a.length===b.length&&a.every(n=>b.includes(n))}
@@ -198,8 +198,8 @@ function render(){
  card.append(details);
  }
  const actions=el('div',undefined,'reservationActions');
- const opts=[['edit','Modifier'],['confirm','Confirmer'],['arrived','Arrivé'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler']];
- const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='arrived'&&['reserved','confirmed','late'].includes(r.status))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){const simulate=el('button','Simuler autre table');simulate.type='button';simulate.className='smartPlacementLaunch';simulate.addEventListener('click',()=>showSmartPlacement(r.id));primary.append(simulate)}actions.append(primary);if(more.children.length>1)actions.append(more);
+ const opts=[['edit','Modifier'],['confirm','Confirmer'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler']];
+ const primary=el('div',undefined,'reservationPrimaryActions'),more=el('details',undefined,'reservationMoreActions'),summary=el('summary','Plus d’actions');more.append(summary);opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status))).forEach(([k,label])=>{const b=el('button',label);b.type='button';b.dataset.reservationAction=k;b.addEventListener('click',()=>action(r.id,k));(k==='edit'||k==='seated'||k==='completed'?primary:more).append(b)});if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){const simulate=el('button','Simuler autre table');simulate.type='button';simulate.className='smartPlacementLaunch';simulate.addEventListener('click',()=>showSmartPlacement(r.id));primary.append(simulate)}actions.append(primary);if(more.children.length>1)actions.append(more);
  card.append(actions);root.append(card);
  });
 }
