@@ -1,6 +1,16 @@
 'use strict';
 (function(){
 const root=document.getElementById('serviceClosure');if(!root)return;
+// Connected mode: browser-local closure is not a Supabase-wide archive.
+if(location.pathname.endsWith('/v3-connected.html')){
+ const status=document.getElementById('closureStatus');
+ if(status)status.textContent='Clôture partagée en préparation : aucune clôture locale ne sera enregistrée dans cette version connectée.';
+ const action=document.getElementById('closureManual');
+ if(action){action.disabled=true;action.title='Clôture Supabase indisponible pour le moment';}
+ const archive=document.getElementById('closureArchive');
+ if(archive)archive.textContent='Les anciennes archives du navigateur ne constituent pas des clôtures Supabase.';
+ return;
+}
 const KEY='restomanager_reservations',CLOSE='restomanager_closures_v1',pad=n=>String(n).padStart(2,'0');
 const dateOf=d=>[d.getFullYear(),pad(d.getMonth()+1),pad(d.getDate())].join('-');
 const read=()=>ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'));
