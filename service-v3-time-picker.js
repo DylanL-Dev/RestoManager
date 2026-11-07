@@ -20,9 +20,9 @@
  const close=()=>{root.hidden=true;document.body.classList.remove('rmTimeOpen');active=null;previousFocus?.focus?.({preventScroll:true})};
  const open=input=>{
   previousFocus=input;active=input;const value=/^([01]\d|2[0-3]):[0-5]\d$/.test(input.value)?input.value:'12:00';
-  [h,m]=value.split(':').map(Number);exact.checked=m%5!==0;tab='hour';
+  [h,m]=value.split(':').map(Number);exact.checked=m%5!==0;tab=input.id==='bookingTime'?'minute':'hour';
   root.querySelector('#rmTimeTitle').textContent=input.closest('label')?.textContent?.trim().slice(0,45)||'Choisir une heure';
-  root.hidden=false;document.body.classList.add('rmTimeOpen');render();root.querySelector('.rmTimeTabHour').focus({preventScroll:true});
+  root.hidden=false;document.body.classList.add('rmTimeOpen');render();root.querySelector(tab==='minute'?'.rmTimeTabMinute':'.rmTimeTabHour').focus({preventScroll:true});
  };
  for(const input of inputs){
   input.type='text';input.inputMode='none';input.autocomplete='off';input.readOnly=true;
