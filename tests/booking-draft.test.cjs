@@ -20,7 +20,8 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
  let now=0,interval,debounced;
  class Clock extends Date{static now(){return now}}
  const api=vm.runInNewContext(fs.readFileSync(require.resolve('../booking-draft.js'),'utf8').replace(/^import[^\n]+\n/m,'').replace('export function','(function')+')',{
-  window,document:{getElementById:element},Date:Clock,Event,crypto:require('node:crypto').webcrypto,
+  window,document:{getElementById:element,addEventListener(){},visibilityState:'visible'},navigator:{onLine:true},Date:Clock,Event,crypto:require('node:crypto').webcrypto,
+  encodeBookingDetails:()=>'',
   TableStore:{get:()=>({tables:[{id:'a',number:2},{id:'b',number:3}]})},
   ReservationEngine:{getDefaultDuration:()=>45},
   setTimeout:f=>(debounced=f),clearTimeout:()=>{},setInterval:f=>(interval=f)
