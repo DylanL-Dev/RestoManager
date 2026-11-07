@@ -97,14 +97,16 @@ function occupationProgress(r){
  return card;
 }
 function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('strong','',fusion?'Tables '+fusion.tables.join(' + ')+' · '+s.label:'Table '+t.number+' · '+s.label),node('p','muted',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s) réservé(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const isReception=window.RestoReception===true;
-const receptionActiveStatuses=new Set(['reserved','confirmed','late','arrived','seated']);
-const list=bookings.filter(r=>r.tables.includes(t.number)&&(!isReception||receptionActiveStatuses.has(r.status)))
+// The table popup is for live service actions only; archived or cancelled
+// bookings belong to the reservation history, not the table's quick view.
+const activeTableStatuses=new Set(['reserved','confirmed','late','arrived','seated']);
+const list=bookings.filter(r=>r.tables.includes(t.number)&&activeTableStatuses.has(r.status))
  .sort((a,b)=>(a.status==='seated'?0:1)-(b.status==='seated'?0:1)||a.time.localeCompare(b.time));
 if(isReception){
  const note=node('p','muted',s.key==='present'?'Consultation uniquement · Client(s) installé(s)':'Consultation uniquement · Réservations à venir');
  box.append(note);
 }
-if(!list.length){box.append(node('p','muted',isReception?'Aucun client attendu ou installé sur cette table pour ce service.':'Aucune réservation pour ce service.'))}
+if(!list.length){box.append(node('p','muted','Aucun client attendu ou installé sur cette table pour ce service.'))}
 const actions=node('div','tableDetailActions');
 function shortcut(label,id,tableId){
  const button=node('button','tableDetailAction',label);button.type='button';button.addEventListener('click',async()=>{
@@ -114,7 +116,7 @@ function shortcut(label,id,tableId){
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
  });actions.append(button);
 }
-if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else if(!window.RestoReception){box.append(node('p','tableAlreadyReserved','Cette table est réservée. Retrouvez le client ci-dessous, puis choisissez « Installer à table ».'))}
+if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else if(!window.RestoReception&&list.some(r=>r.status!=='seated')){box.append(node('p','tableAlreadyReserved','Cette table est réservée. Retrouvez le client ci-dessous, puis choisissez « Installer à table ».'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 const choices={reserved:[['seated','Installer à table'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['seated','Installer à table'],['late','Signaler un retard'],['no_show','Absent']],late:[['seated','Installer à table'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['released','Libérer la table']]};
