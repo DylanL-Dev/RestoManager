@@ -7,12 +7,15 @@
   document.body.appendChild(dialog);
   const items=dialog.querySelector('.v3-picker-items');
   let source=null,choice=null,focusBefore=null;
-  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
+  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker','v3-percent-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
   function render(){items.querySelectorAll('button').forEach(b=>{const yes=b.dataset.value===choice;b.classList.toggle('selected',yes);b.setAttribute('aria-checked',String(yes));});}
   function open(select){
     source=select;focusBefore=document.activeElement;choice=select.value;
     const rushMode=select.getAttribute('aria-label')==='Choisir une plage horaire';
+    const percentMode=select.closest('.rushSettings')!==null;
+    const instantMode=rushMode||percentMode;
     dialog.classList.toggle('v3-rush-period-picker',rushMode);
+    dialog.classList.toggle('v3-percent-picker',percentMode);
     const associated=select.labels?.[0];
     const explicit=select.getAttribute('aria-label')?.trim();
     const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\s+/g,' ').trim() : '';
@@ -34,10 +37,10 @@
       const button=document.createElement('button');
       button.type='button';button.dataset.value=o.value;button.disabled=o.disabled;
       button.setAttribute('role','radio');
-      button.textContent=rushMode?o.textContent.replace(/^(Midi|Soir) · /,''):o.textContent;
+      button.textContent=rushMode?o.textContent.replace(/^(Midi|Soir) · /,''):percentMode?o.textContent.replace(/ de la capacité$/,''):o.textContent;
       button.addEventListener('click',()=>{
         choice=o.value;
-        if(rushMode){
+        if(instantMode){
           const current=source;
           if(!current)return;
           const changed=current.value!==choice;
@@ -53,7 +56,7 @@
     });
     items.setAttribute('role','radiogroup');render();dialog.hidden=false;
     document.body.classList.add('v3-picker-open');
-    if(rushMode)items.querySelector('button.selected')?.focus({preventScroll:true});
+    if(instantMode)items.querySelector('button.selected')?.focus({preventScroll:true});
     else dialog.querySelector('[data-confirm]').focus();
   }
   function eligible(s){return s instanceof HTMLSelectElement&&!s.multiple&&!s.disabled&&!s.hidden&&s.options.length>0&&s.getClientRects().length>0&&!s.classList.contains('visuallyHiddenSelect')&&!['bookingType','walkinTable'].includes(s.id);}
