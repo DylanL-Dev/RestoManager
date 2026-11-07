@@ -70,6 +70,7 @@
     if(instantMode)items.querySelector('button.selected')?.focus({preventScroll:true});
     else dialog.querySelector('[data-confirm]').focus();
   }
+  window.RestoOpenSelectPicker=open;
   function eligible(s){return s instanceof HTMLSelectElement&&!s.multiple&&!s.disabled&&!s.hidden&&s.options.length>0&&s.getClientRects().length>0&&!s.classList.contains('visuallyHiddenSelect')&&!['bookingType','walkinTable'].includes(s.id);}
   document.addEventListener('pointerdown',e=>{
     const s=e.target.closest?.('select');
