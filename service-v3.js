@@ -4,14 +4,24 @@ const KEY='restomanager_rush_v1',RES='restomanager_reservations',DEFAULT={percen
 const $=id=>document.getElementById(id);
 const rushNode=(tag,className,content)=>{const element=document.createElement(tag);if(className)element.className=className;if(content!==undefined)element.textContent=String(content);return element};
 const rushStatuses={waiting:new Set(['reserved','confirmed','late']),arrived:new Set(['arrived','seated'])};
-function rushArrivalBreakdown(date,start,end,all){
- const tally={planned:0,waiting:0,arrived:0};
+function rushLocalDate(){
+ const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const values=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+ return values.year+'-'+values.month+'-'+values.day;
+}
+function rushArrivalBreakdown(date,start,end,all,nowMinutes=currentMinutes(),today=rushLocalDate()){
+ const tally={planned:0,upcoming:0,late:0,arrived:0};
  for(const r of all){
-  if(!relevant(r,date)||!Number.isFinite(mins(r.time))||mins(r.time)<start||mins(r.time)>=end)continue;
+  const scheduled=mins(r.time);
+  if(!relevant(r,date)||!Number.isFinite(scheduled)||scheduled<start||scheduled>=end)continue;
   const guests=Math.max(0,Number(r.guests)||0);
-  if(rushStatuses.waiting.has(r.status))tally.waiting+=guests;
-  else if(rushStatuses.arrived.has(r.status))tally.arrived+=guests;
+  if(rushStatuses.arrived.has(r.status))tally.arrived+=guests;
+  else if(rushStatuses.waiting.has(r.status)){
+   if(r.status==='late'||date<today||(date===today&&scheduled<nowMinutes))tally.late+=guests;
+   else tally.upcoming+=guests;
+  }
  }
+ tally.waiting=tally.upcoming+tally.late;
  tally.planned=tally.waiting+tally.arrived;
  return tally;
 }
@@ -73,7 +83,7 @@ function dashboard(date,all){
  target.replaceChildren();
  const shifts=Object.entries(ReservationEngine.getShifts()).filter(([,s])=>s.enabled);
  const heading=document.createElement('div');heading.className='rushDashHead';
- heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2>Charge des arrivées</h2><p>Flux prévu sur le créneau : clients encore attendus et déjà arrivés, sans le confondre avec l’occupation actuelle.</p></div>';
+ heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2>Charge des arrivées</h2><p>Suivi du créneau : clients encore à venir, arrivées en retard et clients déjà installés.</p></div>';
  target.append(heading);
  const windows=[];
  for(const [name,s] of shifts){
@@ -103,18 +113,25 @@ function dashboard(date,all){
  const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
  const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown';
- const expected=rushNode('div','rushArrivalBreakdownItem');
- expected.append(rushNode('strong','',breakdown.waiting),rushNode('span','','Encore attendus'));
+ const upcoming=rushNode('div','rushArrivalBreakdownItem');
+ upcoming.append(rushNode('strong','',breakdown.upcoming),rushNode('span','','Encore à venir'));
+ const late=rushNode('div','rushArrivalBreakdownItem rushArrivalLate'+(breakdown.late?' isLate':''));
+ late.append(rushNode('strong','',breakdown.late),rushNode('span','','Heure prévue dépassée'));
  const welcomed=rushNode('div','rushArrivalBreakdownItem');
  welcomed.append(rushNode('strong','',breakdown.arrived),rushNode('span','','Déjà arrivés / installés'));
- arrivalDetails.append(expected,welcomed);
+ arrivalDetails.append(upcoming,late,welcomed);
  result.append(summary,arrivalDetails,progress(data));
- const hint=rushNode('p','rushHint rushArrivalsHint',covers>=limit
-  ?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
+ const hint=rushNode('p','rushHint rushArrivalsHint',breakdown.late
+  ?breakdown.late+' couvert(s) dont l’heure prévue est passée restent à accueillir. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
+  :covers>=limit?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
   :'Arrivées réparties : ce créneau reste sous la limite conseillée.');
  result.append(hint);
- const tableState=window.RestoTablePressure?.availability({date,time:clock(w.start),guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]});
+ const isCurrentDay=date===rushLocalDate(),nowClock=currentMinutes();
+ const queryMinutes=isCurrentDay?Math.max(w.start,nowClock+1):w.start;
+ const canQuoteAvailability=!isCurrentDay||queryMinutes<w.end;
+ const queryTime=clock(queryMinutes);
+ const tableState=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
  if(tableState?.valid){
   const critical=tableState.remaining<=3;
   const note=document.createElement('div');note.className='rushTablePressure'+(critical?' rushTablePressureCritical':'')+(covers>=limit?' rushLimitReached':'');
@@ -127,7 +144,7 @@ function dashboard(date,all){
    head.append(symbol,heading);note.append(head);
   }
   const message=document.createElement('p');
-  message.textContent=tableState.remaining===0?'Aucune table compatible encore disponible pour 2 couverts à '+clock(w.start)+'. Proposez un autre horaire.':critical?'Seulement '+tableState.remaining+' table'+(tableState.remaining>1?'s':'')+' compatible'+(tableState.remaining>1?'s':'')+' encore réservable'+(tableState.remaining>1?'s':'')+' pour 2 couverts à '+clock(w.start)+'. Vérifiez les disponibilités avant de confirmer.':tableState.remaining+' tables compatibles encore réservables pour 2 couverts à '+clock(w.start)+'.';
+  message.textContent=tableState.remaining===0?'Aucune table compatible encore disponible pour 2 couverts à '+queryTime+'. Proposez un autre horaire.':critical?'Seulement '+tableState.remaining+' table'+(tableState.remaining>1?'s':'')+' compatible'+(tableState.remaining>1?'s':'')+' encore réservable'+(tableState.remaining>1?'s':'')+' pour 2 couverts à '+queryTime+'. Vérifiez les disponibilités avant de confirmer.':tableState.remaining+' tables compatibles encore réservables pour 2 couverts à '+queryTime+'.';
   if(covers>=limit)message.textContent+=' Attention : le seuil conseillé d’arrivées est déjà atteint pour cette heure.';
   note.append(message);result.append(note);
  }
