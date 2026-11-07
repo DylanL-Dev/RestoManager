@@ -371,6 +371,28 @@ html[data-theme="dark"] .managementSelectTrigger{background:#244a38!important;co
 html[data-theme="dark"] .rushAutomaticSlot{background:#213c30;border-color:#41684e;color:#edf7ee}
 html[data-theme="dark"] .rushAutomaticTag{background:#18553d;color:#dcf4e4}
 @media(max-width:380px){.rushAutomaticSlot{font-size:13px;padding:10px 12px}.rushAutomaticTag{font-size:10px;padding:4px 7px}}
+
+/* Distinct service operations (now) vs reservation arrivals (future). */
+.occupancyHeadingBlock{display:grid;gap:5px}
+.occupancySectionEyebrow,.rushSectionEyebrow{display:block;font-size:10px;line-height:1.3;font-weight:850;letter-spacing:.105em;text-transform:uppercase;color:#348164}
+.rushSectionEyebrow{margin-bottom:7px;color:#536d91}
+.rushDashboard{border-top:3px solid #d7e2f1!important}
+.rushLoadSummary{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:4px 0 12px}
+.rushLoadNumbers{display:grid;gap:4px;min-width:0}
+.rushLoadNumbers strong{font-size:clamp(26px,5vw,36px);line-height:1.2;color:#193d35;font-variant-numeric:tabular-nums}
+.rushLoadNumbers span{font-size:12px;line-height:1.4;color:#647a6d}
+.rushLoadStatus{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;line-height:1.2;background:#e8f4eb;color:#187b53}
+.rushLoadStatus.busy{background:#fff0d7;color:#905810}
+.rushLoadStatus.full{background:#fce3dd;color:#a8362a}
+.rushDashboard .rushProgress{margin:0;height:12px}
+.rushArrivalsHint{margin-top:13px!important;font-size:13px!important;line-height:1.5!important}
+.rushTablePressure{margin-top:14px}
+.rushTablePressure.rushLimitReached:not(.rushTablePressureCritical){background:#fff9ec!important;border-color:#ead4a7!important;color:#87591e!important}
+.rushTablePressure.rushLimitReached:not(.rushTablePressureCritical) p{color:#80551a!important}
+html[data-theme="dark"] .rushLoadNumbers strong{color:#eaf8ed}
+html[data-theme="dark"] .rushLoadNumbers span{color:#b2d0be}
+html[data-theme="dark"] .rushDashboard{border-top-color:#426e86!important}
+@media(max-width:410px){.rushLoadSummary{gap:7px}.rushLoadNumbers strong{font-size:27px}.rushLoadStatus{font-size:11px;padding:6px 8px}}
 </style></head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button></div></header>
 
@@ -383,7 +405,7 @@ html[data-theme="dark"] .rushAutomaticTag{background:#18553d;color:#dcf4e4}
 <a href="#passages" class="mobileNavItem" data-nav="passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Service</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-booking-current-time1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
+<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-rush-clarity1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
   const target=document.querySelector(link.getAttribute('href'));
