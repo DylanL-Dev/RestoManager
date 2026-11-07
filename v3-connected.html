@@ -363,6 +363,14 @@ html[data-theme="dark"] .occupancyProgressLine,html[data-theme="dark"] .occupanc
 html[data-theme="dark"] .occupancyProgressRail{background:#355447}
 html[data-theme="dark"] .managementSelectTrigger{background:#244a38!important;color:#e8f9ee!important;border-color:#557865!important}
 @media(max-width:390px){.currentOccupancy{padding:14px}.occupancyHead h2{font-size:18px!important}.occupancyProgressLine{font-size:12px}.occupancyProgressLine strong{font-size:12px}}
+
+/* Automatic rush-hour window — informational, not a dropdown. */
+.rushAutomaticSlot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;padding:12px 14px;margin:12px 0 15px;border:1px solid #d9e9df;border-radius:13px;background:#f5faf7;color:#21563f;font-size:15px;font-weight:750;line-height:1.35;font-variant-numeric:tabular-nums;cursor:default}
+.rushAutomaticTag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;padding:5px 9px;border-radius:999px;background:#e3f3e8;color:#18704d;font-size:11px;font-weight:750;letter-spacing:.01em}
+.rushAutomaticTag::before{content:"";width:6px;height:6px;border-radius:50%;background:#24986b}
+html[data-theme="dark"] .rushAutomaticSlot{background:#213c30;border-color:#41684e;color:#edf7ee}
+html[data-theme="dark"] .rushAutomaticTag{background:#18553d;color:#dcf4e4}
+@media(max-width:380px){.rushAutomaticSlot{font-size:13px;padding:10px 12px}.rushAutomaticTag{font-size:10px;padding:4px 7px}}
 </style></head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button></div></header>
 
@@ -375,7 +383,7 @@ html[data-theme="dark"] .managementSelectTrigger{background:#244a38!important;co
 <a href="#passages" class="mobileNavItem" data-nav="passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Service</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-occupancy1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
+<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-auto-affluence1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
   const target=document.querySelector(link.getAttribute('href'));
