@@ -168,19 +168,32 @@ window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count
 'use strict';
 (function(){
 const $=id=>document.getElementById(id);
-const today=()=>{const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
-// The service dashboard can show yesterday after midnight, but booking dates cannot.
+// Restaurant-local service date. Until 01:00 the previous service day remains
+// active; new bookings always use the current Paris calendar date.
 const bookingToday=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
+const today=()=>{
+ const paris=bookingToday(),parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+ const hour=Number(parts.find(p=>p.type==='hour')?.value||0);
+ if(hour>=1)return paris;
+ const d=new Date(paris+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10);
+};
 const bookingNowTime=()=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(/\s/g,'');
-const date=today();
+let date=today();
 function refreshHeaderDate(){
- const paris=bookingToday();
  const heading=$('serviceDate');
- if(heading)heading.textContent=new Date(paris+'T12:00:00').toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ if(heading)heading.textContent=new Date(date+'T12:00:00Z').toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+// Re-evaluate after midnight, focus return, and snapshots. Never leave the
+// header on one day while the tables and counters remain on the previous day.
+function syncServiceDay(){
+ const next=today(),changed=next!==date;
+ if(changed){date=next;bookings=readReservations().filter(r=>r.date===date);}
+ refreshHeaderDate();
+ if(changed)render();
 }
 refreshHeaderDate();
-setInterval(refreshHeaderDate,60000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshHeaderDate()});
+setInterval(syncServiceDay,60000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)syncServiceDay()});
 let plan,bookings;try{plan=TableStore.get();const raw=JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');bookings=ReservationEngine.normalizeReservations(raw).filter(r=>r.date===date)}catch(e){$('tableGrid').textContent='Données indisponibles : '+e.message;return}
 const rooms=plan.rooms||[];rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.id==='main'&&['Salle à configurer','Salle principale'].includes(r.name)?'Salle principale':r.name;o.title=r.name;$('roomFilter').append(o)});
 let filter='all',selected=null;
@@ -607,7 +620,7 @@ $('bookingForm').addEventListener('submit',async event=>{
 });
 refreshAvailability();
 window.addEventListener('restomanager:v3-tables',()=>{plan=TableStore.get();const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;refreshAvailability();render()});
-window.addEventListener('restomanager:v3-change',()=>{try{bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()}catch(e){$('bookingFeedback').textContent=e.message}});
+window.addEventListener('restomanager:v3-change',()=>{try{syncServiceDay();bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});
 setInterval(()=>{if(!modal.hidden&&selected){const t=plan.tables.find(x=>x.number===selected);if(t)detail(t,state(t))}},60000);
 render();
