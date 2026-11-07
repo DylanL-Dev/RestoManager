@@ -175,6 +175,21 @@ list.forEach(r=>{
  }catch(error){const warning=node('p','tableActionError',error.message);row.append(warning)}
  });if(kind==='seated'||kind==='released'){button.classList.add('tableCompactPrimary');controls.append(button)}else{button.classList.add('tableCompactSecondary');button.addEventListener('click',()=>{secondary.open=false});sheet.append(button)}
  });
+ // Detailed editing and smart table changes already live in the reservation card.
+ // Link there rather than duplicating business logic in this quick-service sheet.
+ if(r.status!=='seated'){
+  const manage=node('button','tableStatusAction tableCompactSecondary','Modifier / changer de table');
+  manage.type='button';
+  manage.addEventListener('click',()=>{
+   secondary.open=false;
+   closeTable();
+   const dateField=$('reservationDate');if(dateField){dateField.value=r.date;dateField.dispatchEvent(new Event('change',{bubbles:true}))}
+   const query=$('reservationQuery');if(query){query.value='';query.dispatchEvent(new Event('input',{bubbles:true}))}
+   window.RestoScreens?.show('reservations');
+   window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{detail:{view:'active',reservationId:r.id}}));
+  });
+  sheet.append(manage);
+ }
  if(sheet.querySelector('.tableCompactSecondary'))controls.append(secondary);
  row.append(controls);box.append(row);
  });
