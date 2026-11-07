@@ -9,7 +9,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  const abandon=el('draftAbandon');
  const submit=form.querySelector('[type=submit]');
  let draft=null, active=false, debounce, queue=Promise.resolve(), submitting=false;
- let nextExpiry=Infinity;
+ let nextExpiry=Infinity,holdGeneration=0;
  // A late snapshot can still contain a hold that the server has just released.
  const released=new Map();
  let checking=false,lastCheck=0;
@@ -93,6 +93,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  }
  async function ensure(force=false){
   if(!onlineReady())throw Error(offlineMessage);
+  const generation=holdGeneration;
   let f;
   try{f=fields()}catch(error){await release();throw error}
   if(draft?.signature===f.signature&&remaining()>0)return draft;
@@ -103,6 +104,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   if(active)show('Vérification de la disponibilité…');
   const sent=Date.now();
   const result=await rpc(key,'hold',{p_start:f.start,p_end:f.end,p_guests:f.guests,p_tables:f.ids});
+  if(generation!==holdGeneration||!onlineReady()||draft?.key!==key)throw Error('Connexion interrompue pendant le maintien. Revérifiez la disponibilité.');
   Object.assign(draft,{numbers:idsToNumbers(result.tables),holdIds:result.holds,until:sent+result.seconds*1000});
   redraw();tick();
   return draft;
@@ -134,6 +136,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   // A disconnected browser cannot release a server hold. Forget it locally;
   // the server-side expiry remains authoritative and blocks unsafe re-use.
   if(!onlineReady()){
+   holdGeneration++;
    if(draft)retire(draft.holdIds,draft.until);
    draft=null;panel.hidden=true;
    if(reset){
@@ -163,6 +166,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  // Discard the previous hold after a network interruption: it may have expired
  // or been released by Supabase while this device was disconnected.
  window.addEventListener('offline',()=>{
+  holdGeneration++;
   clearTimeout(debounce);
   if(draft)retire(draft.holdIds,draft.until);
   draft=null;
