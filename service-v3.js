@@ -59,7 +59,53 @@ let plan,bookings;try{plan=TableStore.get();const raw=JSON.parse(localStorage.ge
 const rooms=plan.rooms||[];rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.name==='Salle principale'?'Principale':r.name;o.title=r.name;$('roomFilter').append(o)});
 let filter='all',selected=null;
 const tableSort=document.createElement('select');tableSort.id='tableSort';tableSort.setAttribute('aria-label','Trier les tables');for(const [value,label] of [['number-asc','N° croissant'],['number-desc','N° décroissant'],['capacity-asc','Places croissantes'],['capacity-desc','Places décroissantes'],['status','Statut']]){const option=document.createElement('option');option.value=value;option.textContent=label;tableSort.append(option)}
-const sortLabel=document.createElement('label');sortLabel.className='tableSortLabel';const sortText=document.createElement('span');sortText.textContent='Trier';sortLabel.append(sortText,tableSort);$('filters').classList.add('tableFiltersToolbar');const toolsRow=document.createElement('div');toolsRow.className='tableToolbar';const roomControl=document.querySelector('#tables .roomFilterLabel');if(roomControl)toolsRow.append(roomControl);toolsRow.append(sortLabel);$('filters').parentNode.insertBefore(toolsRow,$('filters'));tableSort.addEventListener('change',render);
+// Keep the native selection as source of truth; use a compact, accessible sort menu.
+tableSort.hidden=true;
+const sortMenu=document.createElement('details');sortMenu.className='tableSortMenu';
+const sortTrigger=document.createElement('summary');sortTrigger.className='tableSortTrigger';
+sortTrigger.setAttribute('aria-label','Trier les tables');
+const sortIcon=document.createElement('i');sortIcon.setAttribute('data-lucide','arrow-up-down');
+const sortText=document.createElement('span');sortText.textContent='Trier';
+sortTrigger.append(sortIcon,sortText);
+const sortPopover=document.createElement('div');sortPopover.className='tableSortPopover';
+const sortBackdrop=document.createElement('button');sortBackdrop.type='button';sortBackdrop.className='tableSortBackdrop';
+sortBackdrop.setAttribute('aria-label','Fermer les options de tri');
+sortBackdrop.addEventListener('click',()=>{sortMenu.open=false;sortTrigger.focus()});
+const sortOptions=document.createElement('div');sortOptions.className='tableSortOptions';
+sortOptions.setAttribute('role','group');sortOptions.setAttribute('aria-label','Options de tri');
+const sortTitle=document.createElement('div');sortTitle.className='tableSortOptionsHeader';
+sortTitle.append(node('strong','','Trier les tables'));
+const sortClose=document.createElement('button');sortClose.type='button';sortClose.className='tableSortClose';
+sortClose.textContent='✕';sortClose.setAttribute('aria-label','Fermer les options de tri');
+sortClose.addEventListener('click',()=>{sortMenu.open=false;sortTrigger.focus()});
+sortTitle.append(sortClose);sortOptions.append(sortTitle);
+const sortButtons=[];
+for(const option of Array.from(tableSort.options)){
+ const choice=document.createElement('button');choice.type='button';choice.className='tableSortOption';
+ choice.textContent=option.textContent;choice.dataset.value=option.value;
+ choice.addEventListener('click',()=>{
+  tableSort.value=option.value;
+  tableSort.dispatchEvent(new Event('change',{bubbles:true}));
+  sortMenu.open=false;
+  sortTrigger.focus();
+ });
+ sortButtons.push(choice);sortOptions.append(choice);
+}
+function syncSortButtons(){
+ for(const button of sortButtons){const selected=button.dataset.value===tableSort.value;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected))}
+ sortTrigger.title='Tri actuel : '+tableSort.options[tableSort.selectedIndex]?.textContent;
+}
+sortPopover.append(sortBackdrop,sortOptions);sortMenu.append(sortTrigger,sortPopover);
+const toolsRow=document.createElement('div');toolsRow.className='tableToolbar';
+const roomControl=document.querySelector('#tables .roomFilterLabel');
+if(roomControl)toolsRow.append(roomControl);
+toolsRow.append(sortMenu);$('filters').classList.add('tableFiltersToolbar');
+$('filters').parentNode.insertBefore(toolsRow,$('filters'));
+tableSort.addEventListener('change',()=>{syncSortButtons();render()});
+sortMenu.addEventListener('toggle',()=>{sortPopover.hidden=!sortMenu.open});
+document.addEventListener('click',event=>{if(sortMenu.open&&!sortMenu.contains(event.target))sortMenu.open=false});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&sortMenu.open){event.preventDefault();sortMenu.open=false;sortTrigger.focus()}});
+syncSortButtons();
 
 const detailNode=$('detail');
 const modal=document.createElement('div');modal.className='tableDetailModal';modal.hidden=true;
@@ -134,7 +180,8 @@ list.forEach(r=>{
  if(r.tables.length>1){const total=r.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0);row.append(node('span','fusionDetailNote','Tables fusionnées : '+r.tables.join(' + ')));if(total>r.guests)row.append(node('span','fusionCoverHint','Préparation : retirer '+(total-r.guests)+' couvert(s)'))}if(isReception){box.append(row);return}
  const controls=node('div','tableStatusActions tableCompactActions');
  const secondary=node('details','tableSecondaryActions tableCompactMore');
- const secondaryTitle=node('summary','tableCompactMoreTrigger','⋯');
+ const secondaryTitle=node('summary','tableCompactMoreTrigger');
+ const moreIcon=document.createElement('i');moreIcon.setAttribute('data-lucide','ellipsis');secondaryTitle.append(moreIcon);
  secondaryTitle.setAttribute('aria-label','Autres actions pour '+r.client);
  secondaryTitle.setAttribute('title','Autres actions');
  const secondaryOverlay=node('div','tableCompactMoreOverlay');
