@@ -1,5 +1,5 @@
 // Native V3 -> Supabase reservation creation. No direct table inserts or local writes.
-import {setupBookingDraft} from './booking-draft.js?v=release2';
+import {setupBookingDraft} from './booking-draft.js?v=20261107-offline-guard1';
 import {encodeBookingDetails} from './reservation-details.js';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261106-reconnect2';
 
