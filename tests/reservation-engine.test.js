@@ -74,7 +74,8 @@ assert.equal(engine.validate(reservation({tables:[1,1],guests:3}),[]).valid,fals
 assert.equal(engine.validate(reservation({time:'19:0'}),[]).valid,false,'Format horaire');
 const formatMinutes = m => String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
 for(let i=0;i<1000;i++){
-    const start=16*60+(i%9)*15;
+    // Exercise overlapping and adjacent bookings within the configured dinner window.
+    const start=19*60+(i%5)*15;
     const existing=reservation({id:'stress-'+i,time:formatMinutes(start)});
     const overlapping=reservation({id:'overlap-'+i,time:formatMinutes(start+15)});
     const adjacent=reservation({id:'adjacent-'+i,time:formatMinutes(start+90)});
