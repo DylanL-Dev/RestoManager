@@ -123,10 +123,11 @@ export function setupBookingDraft(supabase, parisDateTime){
   if(active)show('Vérification de la disponibilité…');
   const sent=Date.now();
   const result=await rpc(key,'hold',{p_start:f.start,p_end:f.end,p_guests:f.guests,p_tables:f.ids});
-  if(generation!==holdGeneration||!onlineReady()||draft?.key!==key){
+  if(generation!==holdGeneration||!active||window.RestoScreens?.current()!=='reservationForm'||!onlineReady()||draft?.key!==key){
    deferRelease(key);
+   if(draft?.key===key)draft=null;
    if(onlineReady())void flushPendingReleases();
-   throw Error('Connexion interrompue pendant le maintien. Revérifiez la disponibilité.');
+   throw Error('Saisie quittée ou connexion interrompue. Table libérée dès que possible.');
   }
   Object.assign(draft,{numbers:idsToNumbers(result.tables),holdIds:result.holds,until:sent+result.seconds*1000});
   redraw();tick();
@@ -155,6 +156,9 @@ export function setupBookingDraft(supabase, parisDateTime){
   }catch(error){show(error.message,true)}
  }));
  function leave(reset){
+  // Stop considering the old hold available immediately, even if a hold RPC
+  // is still in flight. Its server-side cleanup is queued after that RPC.
+  holdGeneration++;
   active=false;clearTimeout(debounce);panel.hidden=true;
   // A disconnected browser cannot release a server hold. Forget it locally;
   // the server-side expiry remains authoritative and blocks unsafe re-use.
@@ -172,7 +176,9 @@ export function setupBookingDraft(supabase, parisDateTime){
   }
   return serial(async()=>{
    try{
-    await release();panel.hidden=true;
+    await release();
+    if(onlineReady())await flushPendingReleases();
+    panel.hidden=true;
     if(reset){
      const date=el('bookingDate').value,time=el('bookingTime').value;
      form.reset();el('bookingDate').value=date;el('bookingTime').value=time;
@@ -209,8 +215,15 @@ export function setupBookingDraft(supabase, parisDateTime){
    if(active&&!draft){show('Connexion rétablie · Réservations synchronisées. Revérifiez la disponibilité avant de confirmer.',true)}
   }
  });
- window.addEventListener('pagehide',()=>{void close()});
- window.addEventListener('restomanager:screen',e=>{if(e.detail!=='reservationForm'&&(active||draft))leave(false)});
+ // Leaving the in-app reservation screen or putting the browser in the
+ // background releases the hold rather than occupying a table for 3 minutes.
+ // pagehide is best-effort; a killed browser can only rely on server expiry.
+ const closeOnBackground=()=>{if(document.visibilityState==='hidden'&&(active||draft))void leave(false)};
+ document.addEventListener('visibilitychange',closeOnBackground);
+ window.addEventListener('pagehide',()=>{if(active||draft)void leave(false)});
+ window.addEventListener('restomanager:screen',e=>{
+  if(e.detail!=='reservationForm'&&(active||draft))void leave(false);
+ });
  return {
   close,
   occupied(numbers,start,end){
