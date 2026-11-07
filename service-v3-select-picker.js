@@ -7,15 +7,19 @@
   document.body.appendChild(dialog);
   const items=dialog.querySelector('.v3-picker-items');
   let source=null,choice=null,focusBefore=null;
-  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker','v3-percent-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
+  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker','v3-percent-picker','v3-theme-picker','v3-duration-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
   function render(){items.querySelectorAll('button').forEach(b=>{const yes=b.dataset.value===choice;b.classList.toggle('selected',yes);b.setAttribute('aria-checked',String(yes));});}
   function open(select){
     source=select;focusBefore=document.activeElement;choice=select.value;
     const rushMode=select.getAttribute('aria-label')==='Choisir une plage horaire';
     const percentMode=select.closest('.rushSettings')!==null;
-    const instantMode=rushMode||percentMode;
+    const themeMode=select.id==='themeMode';
+    const durationMode=select.id==='restaurantDefaultDuration';
+    const instantMode=rushMode||percentMode||themeMode||durationMode;
     dialog.classList.toggle('v3-rush-period-picker',rushMode);
     dialog.classList.toggle('v3-percent-picker',percentMode);
+    dialog.classList.toggle('v3-theme-picker',themeMode);
+    dialog.classList.toggle('v3-duration-picker',durationMode);
     const associated=select.labels?.[0];
     const explicit=select.getAttribute('aria-label')?.trim();
     const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\s+/g,' ').trim() : '';
