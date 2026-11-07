@@ -1,5 +1,5 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261106-reconnect2';
-import {decodeBookingDetails} from './reservation-details.js';
+import {decodeBookingDetails} from './reservation-details.js?v=20261107-exterior-type1';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
