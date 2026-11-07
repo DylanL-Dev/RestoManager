@@ -127,6 +127,17 @@ function dashboard(date,all){
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
   :'Arrivées réparties : ce créneau reste sous la limite conseillée.');
  result.append(hint);
+ // An hour change must not hide guests who are still awaiting arrival.
+ // Keep this operational warning separate from the current hour's forecast.
+ if(date===rushLocalDate()){
+  const overdue=all.filter(r=>relevant(r,date)&&rushStatuses.waiting.has(r.status)&&mins(r.time)<currentMinutes()&&mins(r.time)<w.start);
+  const overdueCovers=overdue.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  if(overdueCovers){
+   const carried=rushNode('p','rushHint rushArrivalsHint','⚠ '+overdueCovers+' couvert(s) attendus sur les créneaux précédents restent à accueillir. Le créneau actuel ne les inclut pas : vérifiez les réservations en retard avant d’accepter de nouvelles arrivées.');
+   carried.setAttribute('role','status');
+   result.append(carried);
+  }
+ }
  const isCurrentDay=date===rushLocalDate(),nowClock=currentMinutes();
  const queryMinutes=isCurrentDay?Math.max(w.start,nowClock+1):w.start;
  const canQuoteAvailability=!isCurrentDay||queryMinutes<w.end;
@@ -477,6 +488,14 @@ function refreshAvailability(){
  if(fusionPanel)fusionPanel.replaceChildren();
  select.replaceChildren();window.RestoFusionSelected=null;select.required=!window.RestoReception;
  if(!dateValue||!time||!Number.isInteger(guests)||guests<1)return;
+ // Explain a closed booking slot instead of pretending that every table is occupied.
+ const allowedShifts=Object.values(ReservationEngine.getShifts()).filter(shift=>shift.enabled);
+ const inBookingHours=allowedShifts.some(shift=>mins(time)>=mins(shift.start)&&mins(time)<=mins(shift.end));
+ if(!inBookingHours){
+  if(insight)insight.append(node('p','availabilityWarning','Horaire hors service : aucune réservation ne peut être prise à '+time+'. Horaires autorisés : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
+  window.RestoTableChoices?.refresh('bookingTable');
+  return;
+ }
  const reservationsAll=readReservations(),duration=ReservationEngine.getDefaultDuration();
  const choices=ReservationEngine.rankedTableChoices(plan.tables,window.RestoFusion?.pairs()||[],guests);
  function candidate(at,tables){return {id:'availability-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time:at,guests,duration,tables,status:'reserved'};}
