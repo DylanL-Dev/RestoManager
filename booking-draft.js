@@ -13,6 +13,8 @@ export function setupBookingDraft(supabase, parisDateTime){
  // A late snapshot can still contain a hold that the server has just released.
  const released=new Map();
  let checking=false,lastCheck=0;
+ const onlineReady=()=>navigator.onLine!==false&&window.RestoSupabaseReady===true;
+ const offlineMessage='Connexion interrompue : aucune réservation ne peut être confirmée. Le maintien devra être revérifié après reconnexion.';
  function retire(ids,until){
   for(const id of ids||[])released.set(id,Math.max(until||0,Date.now()+180000));
  }
@@ -43,7 +45,9 @@ export function setupBookingDraft(supabase, parisDateTime){
  }
  function remaining(){return draft?Math.max(0,Math.ceil((draft.until-Date.now())/1000)):0}
  function tick(){
-  if(!active||!draft?.numbers)return;
+  if(!active)return;
+  if(!onlineReady()){show(offlineMessage,false);return}
+  if(!draft?.numbers)return;
   const seconds=remaining();
   extend.textContent=seconds?'Prolonger':'Revérifier';
   const tables=(draft.numbers.length===1?'Table ':'Tables ')+draft.numbers.join(' + ');
@@ -65,6 +69,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   return ids.map(id=>TableStore.get().tables.find(t=>t.id===id)?.number).sort((a,b)=>a-b);
  }
  async function rpc(key,action,args={}){
+  if(!onlineReady())throw Error(offlineMessage);
   const {data,error}=await supabase.rpc('booking_draft_v3',{p_key:key,p_action:action,...args});
   if(error)throw Error(error.message);
   return data;
@@ -87,6 +92,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   draft=null;
  }
  async function ensure(force=false){
+  if(!onlineReady())throw Error(offlineMessage);
   let f;
   try{f=fields()}catch(error){await release();throw error}
   if(draft?.signature===f.signature&&remaining()>0)return draft;
@@ -114,6 +120,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  form.addEventListener('change',inputChanged);
  extend.addEventListener('click',()=>serial(async()=>{
   clearTimeout(debounce);
+  if(!onlineReady()){show(offlineMessage,false);return}
   if(!active||submitting)return;
   try{
    if(!remaining()||draft.signature!==fields().signature){await ensure(true);return}
@@ -124,6 +131,19 @@ export function setupBookingDraft(supabase, parisDateTime){
  }));
  function leave(reset){
   active=false;clearTimeout(debounce);panel.hidden=true;
+  // A disconnected browser cannot release a server hold. Forget it locally;
+  // the server-side expiry remains authoritative and blocks unsafe re-use.
+  if(!onlineReady()){
+   if(draft)retire(draft.holdIds,draft.until);
+   draft=null;panel.hidden=true;
+   if(reset){
+    const date=el('bookingDate').value,time=el('bookingTime').value;
+    form.reset();el('bookingDate').value=date;el('bookingTime').value=time;
+    delete el('bookingTable').dataset.manual;
+    el('bookingFeedback').textContent='Saisie abandonnée hors ligne. Le maintien expire automatiquement côté serveur.';
+   }
+   redraw();return Promise.resolve();
+  }
   return serial(async()=>{
    try{
     await release();panel.hidden=true;
@@ -140,6 +160,19 @@ export function setupBookingDraft(supabase, parisDateTime){
  abandon.addEventListener('click',()=>leave(true));
  const close=()=>(active||draft)?leave(false):Promise.resolve();
  el('reservationForm').addEventListener('toggle',event=>{if(!event.currentTarget.open)void close()});
+ // Discard the previous hold after a network interruption: it may have expired
+ // or been released by Supabase while this device was disconnected.
+ window.addEventListener('offline',()=>{
+  clearTimeout(debounce);
+  if(draft)retire(draft.holdIds,draft.until);
+  draft=null;
+  if(active){show(offlineMessage,false);submit.disabled=true}
+  redraw();
+ });
+ window.addEventListener('online',()=>{
+  submit.disabled=false;
+  if(active)show('Connexion rétablie. Vérifiez à nouveau la disponibilité avant de réserver.',true);
+ });
  window.addEventListener('pagehide',()=>{void close()});
  window.addEventListener('restomanager:screen',e=>{if(e.detail!=='reservationForm'&&(active||draft))leave(false)});
  return {
@@ -155,6 +188,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   pinned(date,time,guests){return remaining()>0&&draft.guests===guests&&draft.start===parisDateTime(date,time)?draft.numbers:null},
   async confirm(candidate){
    if(submitting)throw Error('Enregistrement déjà en cours.');
+   if(!onlineReady())throw Error(offlineMessage);
    submitting=true;submit.disabled=true;extend.disabled=true;abandon.disabled=true;
    active=true;clearTimeout(debounce);
    try{
