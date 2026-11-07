@@ -95,16 +95,44 @@ function syncSortButtons(){
  for(const button of sortButtons){const selected=button.dataset.value===tableSort.value;button.classList.toggle('selected',selected);button.setAttribute('aria-pressed',String(selected))}
  sortTrigger.title='Tri actuel : '+tableSort.options[tableSort.selectedIndex]?.textContent;
 }
-sortPopover.append(sortBackdrop,sortOptions);sortMenu.append(sortTrigger,sortPopover);
+sortPopover.append(sortBackdrop,sortOptions);
+sortPopover.hidden=true;
+sortPopover.setAttribute('role','dialog');
+sortPopover.setAttribute('aria-label','Trier les tables');
+sortMenu.append(sortTrigger);
+// This layer must live under <body>, not inside the transformed tables screen.
+// Otherwise mobile fixed positioning is clipped and moves when the page scrolls.
+document.body.append(sortPopover);
 const toolsRow=document.createElement('div');toolsRow.className='tableToolbar';
 const roomControl=document.querySelector('#tables .roomFilterLabel');
 if(roomControl)toolsRow.append(roomControl);
 toolsRow.append(sortMenu);$('filters').classList.add('tableFiltersToolbar');
 $('filters').parentNode.insertBefore(toolsRow,$('filters'));
 tableSort.addEventListener('change',()=>{syncSortButtons();render()});
-sortMenu.addEventListener('toggle',()=>{sortPopover.hidden=!sortMenu.open});
-document.addEventListener('click',event=>{if(sortMenu.open&&!sortMenu.contains(event.target))sortMenu.open=false});
-document.addEventListener('keydown',event=>{if(event.key==='Escape'&&sortMenu.open){event.preventDefault();sortMenu.open=false;sortTrigger.focus()}});
+function closeSortMenu(){
+ sortMenu.open=false;
+ sortPopover.hidden=true;
+ document.body.classList.remove('restoSortOpen');
+}
+function positionSortPopover(){
+ const rect=sortTrigger.getBoundingClientRect();
+ sortPopover.style.setProperty('--sort-anchor-top',Math.round(rect.bottom+8)+'px');
+ sortPopover.style.setProperty('--sort-anchor-right',Math.max(12,Math.round(innerWidth-rect.right))+'px');
+}
+sortMenu.addEventListener('toggle',()=>{
+ const isOpen=sortMenu.open;
+ sortPopover.hidden=!isOpen;
+ document.body.classList.toggle('restoSortOpen',isOpen);
+ if(isOpen){positionSortPopover();sortOptions.querySelector('.tableSortOption.selected')?.focus({preventScroll:true})}
+});
+window.addEventListener('resize',()=>{if(sortMenu.open)positionSortPopover()});
+window.addEventListener('restomanager:screen',event=>{if(event.detail!=='tables')closeSortMenu()});
+document.addEventListener('click',event=>{
+ if(sortMenu.open&&!sortMenu.contains(event.target)&&!sortPopover.contains(event.target))closeSortMenu();
+});
+document.addEventListener('keydown',event=>{
+ if(event.key==='Escape'&&sortMenu.open){event.preventDefault();closeSortMenu();sortTrigger.focus()}
+});
 syncSortButtons();
 
 const detailNode=$('detail');
