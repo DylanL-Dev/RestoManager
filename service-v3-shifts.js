@@ -9,7 +9,17 @@ const durationSelect=document.createElement('select');durationSelect.id='restaur
 for(const [mins,label] of [[30,'30 min'],[45,'45 min'],[60,'1 h'],[75,'1 h 15'],[90,'1 h 30'],[105,'1 h 45'],[120,'2 h'],[150,'2 h 30'],[180,'3 h']]){const option=document.createElement('option');option.value=String(mins);option.textContent=label;durationSelect.append(option)}
 durationSelect.value=String(ReservationEngine.getDefaultDuration());
 const help=document.createElement('p');help.className='muted';help.textContent='Utilisée pour les nouvelles réservations et installations. Les clients déjà enregistrés ne changent pas.';
-durationLabel.append(durationSelect);durationBox.append(durationLabel,help);form.prepend(durationBox);
+// Keep the select as data model; show a button to avoid a second Android-native menu.
+const durationTrigger=document.createElement('button');durationTrigger.type='button';
+durationTrigger.className='managementSelectTrigger durationSelectTrigger';
+durationTrigger.setAttribute('aria-label','Choisir la durée par défaut d’une table');
+const refreshDurationTrigger=()=>{durationTrigger.textContent=durationSelect.selectedOptions[0]?.textContent||'Choisir';durationTrigger.setAttribute('aria-haspopup','dialog')};
+durationSelect.style.display='none';durationSelect.tabIndex=-1;durationSelect.setAttribute('aria-hidden','true');
+durationTrigger.addEventListener('click',()=>{window.RestoOpenSelectPicker?.(durationSelect)});
+durationSelect.addEventListener('change',refreshDurationTrigger);
+durationLabel.append(durationSelect,durationTrigger);
+durationBox.append(durationLabel,help);form.prepend(durationBox);
+refreshDurationTrigger();
 const durationFeedback=document.createElement('p');
 durationFeedback.className='durationSettingFeedback';
 durationFeedback.setAttribute('role','status');
@@ -33,7 +43,7 @@ durationSelect.addEventListener('change',async()=>{
    savedDuration=chosen;
    durationFeedback.textContent='Durée enregistrée pour toute l’équipe.';
   }catch(error){
-   durationSelect.value=String(savedDuration);
+   durationSelect.value=String(savedDuration);refreshDurationTrigger();
    durationFeedback.textContent=error.message||'Impossible de modifier la durée.';
   }finally{durationSaving=false;durationSelect.disabled=false}
  }else{
@@ -43,7 +53,7 @@ durationSelect.addEventListener('change',async()=>{
    durationFeedback.textContent='Durée enregistrée sur cet appareil.';
    window.dispatchEvent(new Event('restomanager:v3-change'));
   }catch(error){
-   durationSelect.value=String(savedDuration);
+   durationSelect.value=String(savedDuration);refreshDurationTrigger();
    durationFeedback.textContent='Impossible d’enregistrer la durée.';
   }
  }
@@ -55,7 +65,7 @@ window.addEventListener('restomanager:hours',()=>{
   for(const field of ['start','end'])document.getElementById('shift-'+key+'-'+field).value=shifts[key][field];
  }
  durationSelect.value=String(duration);
- savedDuration=Number(duration);
+ savedDuration=Number(duration);refreshDurationTrigger();
 });
 form.addEventListener('submit',async event=>{event.preventDefault();const next={};for(const key of names){const enabled=document.getElementById('shift-'+key+'-enabled').checked,start=document.getElementById('shift-'+key+'-start').value,end=document.getElementById('shift-'+key+'-end').value;if(!start||!end||start>=end){document.getElementById('shiftFeedback').textContent='Horaires invalides : vérifiez les heures de début et de dernière commande.';return}next[key]={enabled,start,end}}
 if(next.lunch.enabled&&next.dinner.enabled&&next.lunch.end>=next.dinner.start){document.getElementById('shiftFeedback').textContent='Les deux services ne doivent pas se chevaucher.';return}
