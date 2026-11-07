@@ -16,8 +16,11 @@ jobs:
       - run: npm ci
       - name: JavaScript syntax validation
         run: |
-          for file in reservation-engine.js service-v3*.js smart-placement-engine.js v3-connected-auth.js v3-supabase-booking.js; do
+          for file in reservation-engine.js service-v3*.js smart-placement-engine.js; do
             node --check "$file"
+          done
+          for file in v3-connected-auth.js v3-supabase-booking.js; do
+            node --input-type=module --check < "$file"
           done
       - name: All Node regressions
         run: npm test
