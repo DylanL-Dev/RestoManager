@@ -66,7 +66,7 @@ const modal=document.createElement('div');modal.className='tableDetailModal';mod
 modal.innerHTML='<div class="tableDetailBackdrop"></div><section class="tableDetailSheet" role="dialog" aria-modal="true" aria-labelledby="tableDetailHeading" tabindex="-1"><div class="tableDetailSheetHeader"><div><small>GESTION DU SERVICE</small><h2 id="tableDetailHeading">Détails de la table</h2></div><button class="tableDetailClose" type="button" aria-label="Fermer les détails">✕</button></div><div class="tableDetailSheetBody"></div></section>';
 document.body.append(modal);modal.querySelector('.tableDetailSheetBody').append(detailNode);
 let returnFocus=null;
-function closeTable(){if(modal.hidden)return;modal.hidden=true;document.body.classList.remove('tableDetailOpen');returnFocus?.focus();returnFocus=null}
+function closeTable(){if(modal.hidden)return;modal.querySelectorAll('.tableCompactMoreOverlay').forEach(overlay=>{overlay.hidden=true});modal.querySelectorAll('.tableCompactMore[open]').forEach(menu=>{menu.open=false});modal.hidden=true;document.body.classList.remove('tableDetailOpen');returnFocus?.focus();returnFocus=null}
 function openTable(t,s,trigger){selected=t.number;detail(t,s);returnFocus=trigger;modal.querySelector('#tableDetailHeading').textContent=s.booking&&s.booking.tables.length>1?'Tables '+s.booking.tables.join(' + '):'Table '+t.number;modal.hidden=false;document.body.classList.add('tableDetailOpen');modal.querySelector('.tableDetailClose').focus()}
 modal.querySelector('.tableDetailClose').addEventListener('click',closeTable);
 modal.querySelector('.tableDetailBackdrop').addEventListener('click',closeTable);
@@ -96,7 +96,7 @@ function occupationProgress(r){
  if(r.status==='seated')card.append(node('small','tableTimeProgressHint',now<start?'Le créneau n’a pas encore commencé.':'Estimation : les clients restent installés jusqu’à validation de leur départ.'));
  return card;
 }
-function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('p','tableCompactMeta',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const isReception=window.RestoReception===true;
+function detail(t,s){modal.querySelectorAll('.tableCompactMoreOverlay').forEach(overlay=>overlay.remove());const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('p','tableCompactMeta',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const isReception=window.RestoReception===true;
 // The table popup is for live service actions only; archived or cancelled
 // bookings belong to the reservation history, not the table's quick view.
 const activeTableStatuses=new Set(['reserved','confirmed','late','arrived','seated']);
@@ -152,8 +152,10 @@ list.forEach(r=>{
  closeMore.addEventListener('click',()=>{secondary.open=false;secondaryTitle.focus()});
  sheetHeader.append(closeMore);sheet.append(sheetHeader);
  secondaryOverlay.append(secondaryBackdrop,sheet);
- secondary.append(secondaryTitle,secondaryOverlay);
- secondary.addEventListener('toggle',()=>{if(secondary.open)closeMore.focus()});
+ secondaryOverlay.hidden=true;
+ secondary.append(secondaryTitle);
+ modal.append(secondaryOverlay);
+ secondary.addEventListener('toggle',()=>{secondaryOverlay.hidden=!secondary.open;if(secondary.open)closeMore.focus()});
  (choices[r.status]||[]).forEach(([kind,label])=>{
  const button=node('button','tableStatusAction',label);button.type='button';
  button.addEventListener('click',async()=>{
