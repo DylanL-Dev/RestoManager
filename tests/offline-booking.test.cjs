@@ -19,6 +19,7 @@ function setup(){
  for(const id of ['bookingForm','bookingDraft','draftMessage','draftExtend','draftAbandon','bookingDate',
   'bookingTime','bookingGuests','bookingTable','bookingFeedback','reservationForm'])elements.set(id,mk(id));
  elements.get('bookingForm').querySelector=()=>submit;
+ elements.get('bookingForm').reset=()=>{};
  const app={RestoSupabaseReady:true,RestoReception:false,RestoScreens:{current:()=>'reservationForm'},
   RestoDraftHolds:[],listeners:{},addEventListener(type,cb){this.listeners[type]=cb},dispatchEvent(){}};
  const navigator={onLine:true};
