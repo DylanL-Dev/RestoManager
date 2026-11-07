@@ -5,9 +5,18 @@
  const options=['auto','light','dark'];
  const system=window.matchMedia('(prefers-color-scheme: dark)');
  function saved(){try{const value=localStorage.getItem(KEY);return options.includes(value)?value:'auto'}catch{return 'auto'}}
- function apply(mode){const effective=mode==='auto'?(system.matches?'dark':'light'):mode;root.dataset.theme=effective;root.style.colorScheme=effective;const picker=document.getElementById('themeMode');if(picker)picker.value=mode;const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=effective==='dark'?'#102821':'#103f35'}
+ function apply(mode){const effective=mode==='auto'?(system.matches?'dark':'light'):mode;root.dataset.theme=effective;root.style.colorScheme=effective;const picker=document.getElementById('themeMode');if(picker){picker.value=mode;picker.dispatchEvent(new Event('restomanager:picker-label'));}const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.content=effective==='dark'?'#102821':'#103f35'}
  const picker=document.createElement('select');picker.id='themeMode';picker.setAttribute('aria-label','Thème de RestoManager');for(const [value,label] of [['auto','Automatique'],['light','Clair'],['dark','Sombre']]){const o=document.createElement('option');o.value=value;o.textContent=label;picker.append(o)}
- const label=document.createElement('label');label.className='themeModeControl';const icon=document.createElement('span');icon.textContent='Thème';label.append(icon,picker);const management=document.querySelector('[data-screen="administration"]');if(management){const section=document.createElement('section');section.className='managementGroup themeSettingsGroup';const head=document.createElement('div');head.className='themeSettingsHead';const heading=document.createElement('strong');heading.textContent='Apparence';const description=document.createElement('p');description.textContent='Choisissez l’apparence de RestoManager sur cet appareil.';head.append(heading,description);section.append(head,label);management.append(section)}else{document.querySelector('header.top')?.append(label)}
+ const label=document.createElement('div');label.className='themeModeControl';
+const icon=document.createElement('span');icon.textContent='Thème';
+const trigger=document.createElement('button');trigger.type='button';trigger.className='managementSelectTrigger';
+trigger.setAttribute('aria-label','Choisir le thème de RestoManager');
+const refreshTrigger=()=>{trigger.textContent=picker.selectedOptions[0]?.textContent||'Choisir';trigger.setAttribute('aria-haspopup','dialog')};
+picker.style.display='none';picker.tabIndex=-1;picker.setAttribute('aria-hidden','true');
+trigger.addEventListener('click',()=>{window.RestoOpenSelectPicker?.(picker)});
+picker.addEventListener('change',refreshTrigger);
+ picker.addEventListener('restomanager:picker-label',refreshTrigger);
+label.append(icon,picker,trigger);refreshTrigger();const management=document.querySelector('[data-screen="administration"]');if(management){const section=document.createElement('section');section.className='managementGroup themeSettingsGroup';const head=document.createElement('div');head.className='themeSettingsHead';const heading=document.createElement('strong');heading.textContent='Apparence';const description=document.createElement('p');description.textContent='Choisissez l’apparence de RestoManager sur cet appareil.';head.append(heading,description);section.append(head,label);management.append(section)}else{document.querySelector('header.top')?.append(label)}
  picker.addEventListener('change',()=>{try{localStorage.setItem(KEY,picker.value)}catch{}apply(picker.value)});
  if(system.addEventListener)system.addEventListener('change',()=>{if(saved()==='auto')apply('auto')});else if(system.addListener)system.addListener(()=>{if(saved()==='auto')apply('auto')});
  apply(saved());
