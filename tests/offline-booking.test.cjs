@@ -23,7 +23,7 @@ function setup(){
  const app={RestoSupabaseReady:true,RestoReception:false,RestoScreens:{current:()=>'reservationForm'},
   RestoDraftHolds:[],listeners:{},addEventListener(type,cb){this.listeners[type]=cb},dispatchEvent(){}};
  const navigator={onLine:true};
- const document={getElementById:id=>elements.get(id)};
+ const document={getElementById:id=>elements.get(id),addEventListener(){},visibilityState:'visible'};
  const supabase={async rpc(...args){calls.push(args);return {data:{},error:null}}};
  const create=factory(document,app,navigator,()=>0,()=>1,()=>{}, {randomUUID:()=>'test-key'},Date,
   {get:()=>({tables:[]})},{getDefaultDuration:()=>90},class Event{},()=>'',supabase,
