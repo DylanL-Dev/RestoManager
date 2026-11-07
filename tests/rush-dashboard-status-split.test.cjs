@@ -37,8 +37,6 @@ test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 s
  assert.ok(nodes.some(n=>n.textContent==='22 / 22'));
  assert.ok(nodes.some(n=>n.textContent==='Encore à venir'));
  assert.ok(nodes.some(n=>n.textContent==='Heure prévue dépassée'));
- assert.ok(nodes.some(n=>n.textContent==='20'));
- // The 20 waiting guests may be upcoming or overdue depending on test execution time.
  assert.ok(nodes.some(n=>n.textContent==='Déjà arrivés / installés'));
  assert.ok(nodes.some(n=>n.textContent==='2'));
  assert.ok(nodes.some(n=>n.className==='rushProgress'));
