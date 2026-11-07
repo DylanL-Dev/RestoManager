@@ -152,6 +152,45 @@ function state(table){const related=bookings.filter(r=>r.tables.includes(table.n
 function node(tag,className,content){const e=document.createElement(tag);if(className)e.className=className;if(content!==undefined)e.textContent=String(content);return e}
 function render(){const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted','Aucune table pour ce filtre.'));
 const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0)],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0)],['Tables occupées',occupiedNumbers.size],['Capacité non occupée',free]];$('kpis').replaceChildren(...kpis.map(([label,value])=>{const c=node('div','kpi');c.append(node('span','',label),node('strong','',value));return c}));
+const totalTables=plan.tables.length;
+const totalSeats=plan.tables.reduce((n,t)=>n+Math.max(0,Number(t.capacity)||0),0);
+const guestsPresent=seated.reduce((n,r)=>n+(Number(r.guests)||0),0);
+const occupiedTables=occupiedNumbers.size;
+const tablesPercent=totalTables?Math.round(100*occupiedTables/totalTables):0;
+const seatsPercent=totalSeats?Math.round(100*guestsPresent/totalSeats):0;
+const noFreeTables=totalTables>0&&occupiedTables>=totalTables;
+let occupancy=$('currentOccupancy');
+if(!occupancy){
+ occupancy=node('section','currentOccupancy');
+ occupancy.id='currentOccupancy';
+ occupancy.setAttribute('aria-label','Occupation actuelle du restaurant');
+ $('kpis').insertAdjacentElement('afterend',occupancy);
+}
+function progressRow(label,count,total,percent){
+ const group=node('div','occupancyProgressGroup');
+ const head=node('div','occupancyProgressLine');
+ head.append(node('span','',label),node('strong','',count+' / '+total+' · '+percent+' %'));
+ const rail=node('div','occupancyProgressRail');
+ rail.setAttribute('role','progressbar');rail.setAttribute('aria-label',label);
+ rail.setAttribute('aria-valuemin','0');rail.setAttribute('aria-valuemax','100');rail.setAttribute('aria-valuenow',String(Math.max(0,Math.min(100,percent))));
+ const bar=node('div','occupancyProgressBar');
+ bar.style.width=Math.max(0,Math.min(100,percent))+'%';
+ rail.append(bar);group.append(head,rail);return group;
+}
+const occupancyTitle=node('div','occupancyHead');
+occupancyTitle.append(node('h2','','Occupation actuelle'));
+const occupancyState=noFreeTables?'Complet':tablesPercent>=85?'Presque complet':tablesPercent>=60?'Service chargé':'Places disponibles';
+occupancyTitle.append(node('span','occupancyState'+(noFreeTables?' isFull':tablesPercent>=85?' isBusy':''),occupancyState));
+const occupancyNote=node('p','occupancyHelp',noFreeTables
+ ?'Toutes les tables sont occupées. Des places peuvent rester libres sur des tables déjà installées.'
+ :totalTables-occupiedTables+' table(s) actuellement non occupée(s).');
+occupancy.replaceChildren(
+ occupancyTitle,
+ progressRow('Tables occupées',occupiedTables,totalTables,tablesPercent),
+ progressRow('Clients présents / capacité totale',guestsPresent,totalSeats,seatsPercent),
+ occupancyNote
+);
+
 $('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{const c=node('div','arrival');c.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));return c}));if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
 function occupationProgress(r){
  const scheduled=new Date(r.date+'T'+r.time+':00').getTime();
@@ -425,7 +464,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  }catch(error){feedback.textContent='Enregistrement impossible : '+error.message}
 });
 refreshAvailability();
-window.addEventListener('restomanager:v3-tables',()=>{plan=TableStore.get();const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.name==='Salle principale'?'Principale':room.name;option.title=room.name;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;refreshAvailability();render()});
+window.addEventListener('restomanager:v3-tables',()=>{plan=TableStore.get();const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;refreshAvailability();render()});
 window.addEventListener('restomanager:v3-change',()=>{try{bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});
 setInterval(()=>{if(!modal.hidden&&selected){const t=plan.tables.find(x=>x.number===selected);if(t)detail(t,state(t))}},60000);
