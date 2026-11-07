@@ -40,7 +40,7 @@ function progress(data){
  bar.setAttribute('aria-valuenow',String(Math.min(covers,limit)));
  bar.setAttribute('aria-valuetext',covers+' arrivées prévues pour une limite conseillée de '+limit);
  bar.setAttribute('aria-label','Charge des arrivées par rapport à la limite conseillée');
- const fill=document.createElement('div');fill.className='rushProgressFill'+(ratio>=1?' full':ratio>=.8?' busy':'');
+ const fill=document.createElement('div');fill.className='rushProgressFill'+(ratio>1?' full':ratio>=.8?' busy':'');
  fill.style.width=Math.min(100,ratio*100)+'%';
  bar.append(fill);return bar;
 }
@@ -92,7 +92,7 @@ function dashboard(date,all){
  const tableState=window.RestoTablePressure?.availability({date,time:clock(w.start),guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]});
  if(tableState?.valid){
   const critical=tableState.remaining<=3;
-  const note=document.createElement('div');note.className='rushTablePressure'+(critical?' rushTablePressureCritical':'');
+  const note=document.createElement('div');note.className='rushTablePressure'+(critical?' rushTablePressureCritical':'')+(covers>=limit?' rushLimitReached':'');
   if(critical){
    note.setAttribute('role','status');
    const head=document.createElement('div');head.className='rushTablePressureHead';
@@ -253,7 +253,7 @@ function progressRow(label,count,total,percent){
  rail.append(bar);group.append(head,rail);return group;
 }
 const occupancyTitle=node('div','occupancyHead');
-occupancyTitle.append(node('h2','','Occupation actuelle'));
+const occupancyHeading=node('div','occupancyHeadingBlock');occupancyHeading.append(node('span','occupancySectionEyebrow','EN DIRECT · CLIENTS INSTALLÉS'),node('h2','','Occupation actuelle'));occupancyTitle.append(occupancyHeading);
 const occupancyState=noFreeTables?'Complet':tablesPercent>=85?'Presque complet':tablesPercent>=60?'Service chargé':'Places disponibles';
 occupancyTitle.append(node('span','occupancyState'+(noFreeTables?' isFull':tablesPercent>=85?' isBusy':''),occupancyState));
 const occupancyNote=node('p','occupancyHelp',noFreeTables
