@@ -70,7 +70,7 @@ function closeTable(){if(modal.hidden)return;modal.hidden=true;document.body.cla
 function openTable(t,s,trigger){selected=t.number;detail(t,s);returnFocus=trigger;modal.querySelector('#tableDetailHeading').textContent=s.booking&&s.booking.tables.length>1?'Tables '+s.booking.tables.join(' + '):'Table '+t.number;modal.hidden=false;document.body.classList.add('tableDetailOpen');modal.querySelector('.tableDetailClose').focus()}
 modal.querySelector('.tableDetailClose').addEventListener('click',closeTable);
 modal.querySelector('.tableDetailBackdrop').addEventListener('click',closeTable);
-document.addEventListener('keydown',e=>{if(modal.hidden)return;if(e.key==='Escape'){e.preventDefault();closeTable()}if(e.key==='Tab'){const controls=[...modal.querySelectorAll('button:not([disabled])')];if(!controls.length)return;const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
+document.addEventListener('keydown',e=>{if(modal.hidden)return;if(e.key==='Escape'){const menu=modal.querySelector('.tableCompactMore[open]');if(menu){e.preventDefault();menu.open=false;menu.querySelector('summary')?.focus();return}e.preventDefault();closeTable()}if(e.key==='Tab'){const controls=[...modal.querySelectorAll('button:not([disabled])')];if(!controls.length)return;const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
 
 const active=r=>ReservationEngine.isBlocking(r);
 const priority={seated:4,arrived:2,late:2,confirmed:2,reserved:2};
@@ -96,7 +96,7 @@ function occupationProgress(r){
  if(r.status==='seated')card.append(node('small','tableTimeProgressHint',now<start?'Le créneau n’a pas encore commencé.':'Estimation : les clients restent installés jusqu’à validation de leur départ.'));
  return card;
 }
-function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('strong','',fusion?'Tables '+fusion.tables.join(' + ')+' · '+s.label:'Table '+t.number+' · '+s.label),node('p','muted',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s) réservé(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const isReception=window.RestoReception===true;
+function detail(t,s){const box=$('detail');const fusion=s.booking&&s.booking.tables.length>1?s.booking:null;const capacity=fusion?fusion.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;box.replaceChildren(node('p','tableCompactMeta',fusion?'Capacité totale : '+capacity+' places · '+fusion.guests+' couvert(s)':'Capacité : '+(t.capacityMin||1)+' à '+t.capacity+' places'));const isReception=window.RestoReception===true;
 // The table popup is for live service actions only; archived or cancelled
 // bookings belong to the reservation history, not the table's quick view.
 const activeTableStatuses=new Set(['reserved','confirmed','late','arrived','seated']);
@@ -116,17 +116,44 @@ function shortcut(label,id,tableId){
  const chosen=$(tableId);if(chosen&&!Array.from(chosen.options).some(o=>o.value===String(t.number))){$('bookingFeedback').textContent='Cette table n’est pas disponible pour le créneau sélectionné.'}
  });actions.append(button);
 }
-if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else if(!window.RestoReception&&list.some(r=>r.status!=='seated')){box.append(node('p','tableAlreadyReserved','Cette table est réservée. Retrouvez le client ci-dessous, puis choisissez « Installer à table ».'))}
+if(s.key==='free'){shortcut('Réserver cette table','reservationForm','bookingTable');shortcut('Installer un passage','passages','walkinTable');box.append(actions)}else if(!window.RestoReception&&list.some(r=>r.status!=='seated')){box.append(node('p','tableCompactHint','Client attendu · choisissez une action ci-dessous.'))}
 if(!list.length)return;
 const labels={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 const choices={reserved:[['seated','Installer à table'],['late','Signaler un retard'],['no_show','Absent']],confirmed:[['seated','Installer à table'],['late','Signaler un retard'],['no_show','Absent']],late:[['seated','Installer à table'],['no_show','Absent']],arrived:[['seated','Installer à table']],seated:[['released','Libérer la table']]};
 list.forEach(r=>{
  const row=node('div','detailLine');
- row.append(node('strong','',r.time+' · '+r.guests+' personne(s)'),node('span','',r.client+' · '+(labels[r.status]||r.status)));
+ const info=node('div','tableCompactGuest');
+ const details=node('div','tableCompactIdentity');
+ const time=node('strong','',r.time+' · '+r.guests+' personne'+(r.guests>1?'s':''));
+ const client=node('span','',r.client);
+ details.append(time,client);
+ const statusBadge=node('span','tableCompactBadge',labels[r.status]||r.status);
+ info.append(details,statusBadge);
+ row.append(info);
  if(r.status==='seated'&&!isReception)row.append(occupationProgress(r));
  if(r.tables.length>1){const total=r.tables.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0);row.append(node('span','fusionDetailNote','Tables fusionnées : '+r.tables.join(' + ')));if(total>r.guests)row.append(node('span','fusionCoverHint','Préparation : retirer '+(total-r.guests)+' couvert(s)'))}if(isReception){box.append(row);return}
- const controls=node('div','tableStatusActions');
- const secondary=node('details','tableSecondaryActions');const secondaryTitle=node('summary','','Autres actions');secondary.append(secondaryTitle);
+ const controls=node('div','tableStatusActions tableCompactActions');
+ const secondary=node('details','tableSecondaryActions tableCompactMore');
+ const secondaryTitle=node('summary','tableCompactMoreTrigger','⋯');
+ secondaryTitle.setAttribute('aria-label','Autres actions pour '+r.client);
+ secondaryTitle.setAttribute('title','Autres actions');
+ const secondaryOverlay=node('div','tableCompactMoreOverlay');
+ const secondaryBackdrop=node('button','tableCompactMoreBackdrop');
+ secondaryBackdrop.type='button';
+ secondaryBackdrop.setAttribute('aria-label','Fermer les actions');
+ secondaryBackdrop.addEventListener('click',()=>{secondary.open=false});
+ const sheet=node('div','tableCompactMoreSheet');
+ sheet.setAttribute('role','group');
+ sheet.setAttribute('aria-label','Actions pour '+r.client);
+ const sheetHeader=node('div','tableCompactMoreHeader');
+ sheetHeader.append(node('strong','','Actions · '+r.client));
+ const closeMore=node('button','tableCompactMoreClose','✕');
+ closeMore.type='button';closeMore.setAttribute('aria-label','Fermer les actions');
+ closeMore.addEventListener('click',()=>{secondary.open=false;secondaryTitle.focus()});
+ sheetHeader.append(closeMore);sheet.append(sheetHeader);
+ secondaryOverlay.append(secondaryBackdrop,sheet);
+ secondary.append(secondaryTitle,secondaryOverlay);
+ secondary.addEventListener('toggle',()=>{if(secondary.open)closeMore.focus()});
  (choices[r.status]||[]).forEach(([kind,label])=>{
  const button=node('button','tableStatusAction',label);button.type='button';
  button.addEventListener('click',async()=>{
@@ -144,9 +171,9 @@ list.forEach(r=>{
  window.dispatchEvent(new Event('restomanager:v3-change'));
  const table=plan.tables.find(x=>x.number===t.number);if(table)detail(table,state(table));
  }catch(error){const warning=node('p','tableActionError',error.message);row.append(warning)}
- });if(kind==='seated'||kind==='released')controls.append(button);else secondary.append(button);
+ });if(kind==='seated'||kind==='released'){button.classList.add('tableCompactPrimary');controls.append(button)}else{button.classList.add('tableCompactSecondary');button.addEventListener('click',()=>{secondary.open=false});sheet.append(button)}
  });
- if(secondary.children.length>1)controls.append(secondary);
+ if(sheet.querySelector('.tableCompactSecondary'))controls.append(secondary);
  row.append(controls);box.append(row);
  });
 }
