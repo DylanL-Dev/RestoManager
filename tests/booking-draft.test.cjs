@@ -19,7 +19,7 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
  const window={RestoReception:true,RestoSupabaseReady:true,RestoScreens:{current:()=>'reservationForm'},addEventListener:(name,fn)=>events[name]=fn,dispatchEvent(){}};
  let now=0,interval,debounced;
  class Clock extends Date{static now(){return now}}
- const api=vm.runInNewContext(fs.readFileSync(require.resolve('../booking-draft.js'),'utf8').replace('export function','(function')+')',{
+ const api=vm.runInNewContext(fs.readFileSync(require.resolve('../booking-draft.js'),'utf8').replace(/^import[^\n]+\n/m,'').replace('export function','(function')+')',{
   window,document:{getElementById:element},Date:Clock,Event,crypto:require('node:crypto').webcrypto,
   TableStore:{get:()=>({tables:[{id:'a',number:2},{id:'b',number:3}]})},
   ReservationEngine:{getDefaultDuration:()=>45},
