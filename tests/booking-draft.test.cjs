@@ -7,7 +7,7 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
  const fields=new Map();
  function element(id){
   if(!fields.has(id))fields.set(id,{
-   dataset:{},listeners:{},
+   dataset:{},listeners:{},textContent:'',hidden:false,
    addEventListener(name,fn){this.listeners[name]=fn},
    querySelector(){return element('submit')},reset(){}
   });
