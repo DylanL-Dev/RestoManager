@@ -2,6 +2,19 @@
 (function(){
 const KEY='restomanager_rush_v1',RES='restomanager_reservations',DEFAULT={percent:60,window:60,step:15};
 const $=id=>document.getElementById(id);
+const rushNode=(tag,className,content)=>{const element=document.createElement(tag);if(className)element.className=className;if(content!==undefined)element.textContent=String(content);return element};
+const rushStatuses={waiting:new Set(['reserved','confirmed','late']),arrived:new Set(['arrived','seated'])};
+function rushArrivalBreakdown(date,start,end,all){
+ const tally={planned:0,waiting:0,arrived:0};
+ for(const r of all){
+  if(!relevant(r,date)||!Number.isFinite(mins(r.time))||mins(r.time)<start||mins(r.time)>=end)continue;
+  const guests=Math.max(0,Number(r.guests)||0);
+  if(rushStatuses.waiting.has(r.status))tally.waiting+=guests;
+  else if(rushStatuses.arrived.has(r.status))tally.arrived+=guests;
+ }
+ tally.planned=tally.waiting+tally.arrived;
+ return tally;
+}
 const mins=s=>Number(String(s).slice(0,2))*60+Number(String(s).slice(3,5));
 const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
 function settings(){try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return {percent:[40,50,55,60,65,70,75,80,85,90].includes(Number(v.percent))?Number(v.percent):60,window:60,step:15}}catch(_){return {...DEFAULT}}}
@@ -54,7 +67,7 @@ function dashboard(date,all){
  target.replaceChildren();
  const shifts=Object.entries(ReservationEngine.getShifts()).filter(([,s])=>s.enabled);
  const heading=document.createElement('div');heading.className='rushDashHead';
- heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2>Charge des arrivées</h2><p>Nombre de clients attendus par heure, indépendamment des clients déjà à table.</p></div>';
+ heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2>Charge des arrivées</h2><p>Flux prévu sur le créneau : clients encore attendus et déjà arrivés, sans le confondre avec l’occupation actuelle.</p></div>';
  target.append(heading);
  const windows=[];
  for(const [name,s] of shifts){
@@ -77,14 +90,20 @@ function dashboard(date,all){
  const automatic=document.createElement('span');automatic.className='rushAutomaticTag';automatic.textContent='Automatique';
  label.append(automatic);target.append(label);
  const result=document.createElement('div');result.className='rushDashContent';target.append(result);
- function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),covers=count(date,w.start,w.end,all),data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
+ function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
  const numbers=document.createElement('div');numbers.className='rushLoadNumbers';
- numbers.append(node('strong','',covers+' / '+limit),node('span','','Arrivées prévues / limite conseillée'));
+ numbers.append(rushNode('strong','',covers+' / '+limit),rushNode('span','','Arrivées prévues / limite conseillée'));
  const level=covers>limit?'Limite dépassée':covers===limit?'Seuil atteint':covers>=limit*.8?'Presque au seuil':'Flux maîtrisé';
- const status=node('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
+ const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
- result.append(summary,progress(data));
- const hint=node('p','rushHint rushArrivalsHint',covers>=limit
+ const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown';
+ const expected=rushNode('div','rushArrivalBreakdownItem');
+ expected.append(rushNode('strong','',breakdown.waiting),rushNode('span','','Encore attendus'));
+ const welcomed=rushNode('div','rushArrivalBreakdownItem');
+ welcomed.append(rushNode('strong','',breakdown.arrived),rushNode('span','','Déjà arrivés / installés'));
+ arrivalDetails.append(expected,welcomed);
+ result.append(summary,arrivalDetails,progress(data));
+ const hint=rushNode('p','rushHint rushArrivalsHint',covers>=limit
   ?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
   :'Arrivées réparties : ce créneau reste sous la limite conseillée.');
