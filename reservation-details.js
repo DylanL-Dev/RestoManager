@@ -9,12 +9,12 @@ export function encodeBookingDetails({notes='',allergies='',type}={}){
 }
 export function decodeBookingDetails(raw='',hotelRoom=''){
  const lines=String(raw||'').split(/\r?\n/),notes=[];
- let allergies='',isHotel=Boolean(String(hotelRoom||'').trim()),isExterior=false;
+ let allergies='',isHotel=Boolean(String(hotelRoom||'').trim());
  for(const line of lines){
   if(line.trim()===hotelTag){isHotel=true;continue;}
-  if(line.trim()===exteriorTag){isExterior=true;continue;}
+  if(line.trim()===exteriorTag){continue;}
   if(line.startsWith(allergyLabel)){allergies=line.slice(allergyLabel.length).trim();continue;}
   notes.push(line);
  }
- return {notes:notes.join('\n').trim(),allergies,type:isHotel?'hotel':isExterior?'exterieur':'exterieur'};
+ return {notes:notes.join('\n').trim(),allergies,type:isHotel?'hotel':'exterieur'};
 }
