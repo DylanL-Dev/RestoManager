@@ -416,6 +416,18 @@ html[data-theme="dark"] .rushArrivalBreakdownItem span{color:#b4cfc1}
 @media(hover:hover){.rushAlternativeChoice:hover{background:#e5f6ed!important;border-color:#87c9a6!important}}
 html[data-theme="dark"] .rushAlternatives .rushAlternativeChoice{background:#233e30!important;border-color:#547760!important;color:#e2f7e9!important}
 html[data-theme="dark"] .rushAlternativeChoice strong,html[data-theme="dark"] .rushAlternativeChoice .rushAlternativeArrow{color:#a8f0c9!important}
+
+/* Service rush: distinguish upcoming, overdue and already-arrived guests. */
+.rushArrivalBreakdown{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.rushArrivalBreakdownItem{padding:11px 9px!important;min-width:0}
+.rushArrivalBreakdownItem strong{font-size:23px!important}
+.rushArrivalBreakdownItem span{font-size:11px!important;line-height:1.35!important}
+.rushArrivalBreakdownItem.rushArrivalLate{background:#f8f9f7;border-color:#e3e9e2}
+.rushArrivalBreakdownItem.rushArrivalLate.isLate{background:#fff2e3!important;border-color:#ebc89f!important}
+.rushArrivalBreakdownItem.rushArrivalLate.isLate strong{color:#a35b1d!important}
+html[data-theme="dark"] .rushArrivalBreakdownItem.rushArrivalLate.isLate{background:#513823!important;border-color:#94643a!important}
+html[data-theme="dark"] .rushArrivalBreakdownItem.rushArrivalLate.isLate strong{color:#ffd6a3!important}
+@media(max-width:400px){.rushArrivalBreakdownItem{padding:10px 7px!important}.rushArrivalBreakdownItem strong{font-size:20px!important}.rushArrivalBreakdownItem span{font-size:10px!important}}
 </style></head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button></div></header>
 
@@ -428,7 +440,7 @@ html[data-theme="dark"] .rushAlternativeChoice strong,html[data-theme="dark"] .r
 <a href="#passages" class="mobileNavItem" data-nav="passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Service</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-one-rush-choice1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
+<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-overdue-rush1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
   const target=document.querySelector(link.getAttribute('href'));
