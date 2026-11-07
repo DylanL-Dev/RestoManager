@@ -1,11 +1,28 @@
 # RestoManager
 
-Application statique de réservation et de gestion des salles, avec éditeur de plan
-2D/3D. Le stockage local existant est conservé ; aucun service Supabase n'est intégré.
+Application web de réservation et de suivi du service en restaurant. La V3 d'intégration utilise **Supabase** pour partager les réservations, les salles, les tables et les états entre les postes Restaurant et Réception.
 
-## Démarrage et tests
+## Application actuelle
 
-Node.js 22 ou supérieur et Python 3 sont nécessaires pour les commandes de développement.
+- **Intégration V3 Supabase** : [ouvrir l'application](https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html) — `v3-connected.html`.
+- **Version officielle au restaurant** : branche `feature/refonte-service-responsive-v3` ; ne pas modifier dans les travaux d'intégration.
+- **Branche de développement de référence** : `feature/v3-supabase-full-clone`.
+- Les pages `index.html` et `service-v3.html` redirigent vers `v3-connected.html` sur cette branche.
+
+## Fonctionnalités conservées
+
+- Réservations (clients hôtel et extérieurs), recherche et notes/allergies.
+- Suivi des tables : libres, réservées, attendues, installées et libérées.
+- Gestion des salles et des tables (numéro, capacité, disponibilité), **sans ancien éditeur graphique 2D/3D ni catalogue de mobilier**.
+- Fusions de tables, choix intelligents, passages, indicateurs d'affluence.
+- Rôles Réception et Restaurant, synchronisation Supabase, contrôle de disponibilité avant validation.
+- Historique, rapports et clôture de service.
+
+La gestion opérationnelle des tables dépend de `service-v3-table-store.js`, `service-v3-table-admin.js` et `reservation-engine.js`. Le fichier `service-v3-table-store.js` conserve une **lecture de migration** des anciennes données stockées localement : ce mécanisme de compatibilité ne doit pas être supprimé, même si l'ancien éditeur graphique n'existe plus.
+
+## Développement et tests
+
+Prérequis : Node.js 22 ou plus et Python 3 pour un serveur HTTP local.
 
 ```sh
 npm ci
@@ -13,62 +30,19 @@ npm test
 npm run serve
 ```
 
-Ouvrir http://localhost:8000. Dans un second terminal, lancer les scénarios navigateur :
+Ouvrir `http://localhost:8000/v3-connected.html`. La connexion et les fonctionnalités partagées nécessitent un compte autorisé et la disponibilité du projet Supabase.
 
-```sh
-npm run test:browser:install
-npm run test:browser
-```
+Les tests Node ciblent les règles métier, les réservations, les suggestions de tables et la synchronisation. La suppression des anciens tests du mobilier, de Three.js et de l'éditeur graphique ne remplace pas les tests navigateur des parcours V3 : ceux-ci restent à compléter.
 
-Chromium système est utilisé s'il existe dans `/usr/bin/chromium`, sinon celui installé
-par Playwright. `CHROMIUM_PATH`, `BROWSER_BASE_URL`, `BROWSER_ARTIFACTS` et
-`PLAYWRIGHT_MODULE` permettent d'adapter l'exécution. Les résultats JSON et captures
-sont placés par défaut dans `/tmp/restomanager-artifacts`. Les tests utilisent des
-contextes de navigateur isolés et des données de démonstration.
+## Protection des données et mises en production
 
-`npm run screenshots` reproduit les [captures PC et mobile](docs/screenshots) avec un
-plan de démonstration indépendant. Le workflow GitHub valide les tests Node et les
-scénarios Chromium à chaque PR vers `main` et sur la branche de mission.
+- Ne jamais modifier la base Supabase partagée dans une simple opération de nettoyage frontend.
+- Contrôler les migrations, les politiques RLS et les autorisations des fonctions RPC avant toute nouvelle fonctionnalité SQL.
+- Ne pas fusionner la branche d'intégration vers la version officielle sans validation terrain.
+- L'intégration de nouvelles fonctionnalités multirestaurants doit prévoir des réglages propres à chaque établissement et des tests avec données isolées.
 
-## Éditeur
+## Retrait de l'ancien éditeur de salle
 
-Gestion du restaurant → Modifier le plan. Un toucher sélectionne, glisser déplace.
-Les poignées dimensionnent et tournent ; les boutons permettent aussi des rotations
-45°/90°. Sur PC, tracer un rectangle sur le fond sélectionne plusieurs objets ;
-Maj/Ctrl-clic ou « Sélection multiple » au doigt complètent la sélection.
+Le nettoyage 2D/3D supprime les scripts et dépendances historiques (Three.js, éditeur graphique et mobilier), leurs captures et leurs tests obsolètes. Il **ne supprime ni les salles et tables V3, ni les associations aux réservations, ni la compatibilité de migration des données**.
 
-Deux doigts zooment et déplacent le plan. Le bouton central souris déplace la vue.
-« Vue complète » recadre le plan. Les propriétés rapides sont à droite sur PC,
-les détails dans un panneau inférieur sur smartphone. Le magnétisme est désactivable.
-
-Raccourcis : flèches 10 cm, Maj/flèches 1 cm, Ctrl/Cmd A/D/Z/Maj Z/Y/S,
-Suppr et Échap. L'historique conserve 60 opérations du brouillon, y compris les
-formulaires et changements de dimensions des salles. Enregistrer valide le brouillon ;
-Annuler l'abandonne après confirmation. Les tables liées aux réservations ou à
-l'historique restent protégées.
-
-## Données et 3D
-
-Le format v4 utilise les mètres et le centre des objets. Les versions v1–v3 sont
-migrées en mémoire sans modifier le JSON enregistré ; avant la première sauvegarde
-v4, le contenu historique est copié dans
-`restomanager_floor_plan_v1_backup_before_v4`. La clé principale reste
-`restomanager_floor_plan_v1`. Réservations et historique conservent leurs clés.
-Un contenu illisible n'est pas écrasé ; une erreur de sauvegarde conserve le brouillon
-et les données en mémoire. Fermer un brouillon non enregistré déclenche un avertissement.
-
-La 3D utilise [Three.js r180 local](vendor/three/README.md), chargé à la demande,
-avec maillages instanciés, matériaux simples et petites étiquettes de numéros.
-Elle représente l'emprise du mobilier et de ses assises, comme le dessin 2D.
-En cas d'indisponibilité ou perte de WebGL, la 2D reste utilisable.
-
-## Validation et hébergement
-
-[L'audit et les résultats par lot](docs/mission-3.md) détaillent les corrections.
-La [matrice de validation](docs/manual-validation.md) distingue les scénarios
-automatisés des vérifications sur appareils physiques encore nécessaires : les
-objectifs 60 FPS PC et 30 FPS smartphone ne sont pas certifiés par une émulation.
-
-GitHub Pages existant utilise une autre branche (`codex/mission-3-service-tables`).
-Sa configuration reste intacte : cette mission fournit une prévisualisation locale
-et des captures, sans déployer automatiquement les changements ni fusionner `main`.
+Les anciennes implémentations restent consultables dans l'historique Git et les branches historiques ; elles ne sont pas chargées par la V3 Supabase.
