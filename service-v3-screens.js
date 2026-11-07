@@ -52,7 +52,13 @@ function show(id,options={}){
  if(!options.keepScroll)window.scrollTo({top:0,behavior:'instant'});
 }
 function navigate(id){show(id);if(location.hash!=='#'+id)history.replaceState(null,'','#'+id)}
-document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const id=a.getAttribute('href').slice(1);if(!screens.has(id))return;e.preventDefault();navigate(id)});
+document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]');if(!a)return;const id=a.getAttribute('href').slice(1);if(!screens.has(id))return;e.preventDefault();navigate(id);
+ // The quick action promises to jump to the tables themselves, even when
+ // the Service screen is already active. Navigation alone only switches screens.
+ if(id==='tables'&&a.matches('.quickAction[href="#tables"]')){
+  document.getElementById('tables')?.scrollIntoView({behavior:'smooth',block:'start'});
+ }
+});
 window.addEventListener('hashchange',()=>{const id=location.hash.slice(1);if(screens.has(id))show(id)});
 window.RestoScreens={show:navigate,current:()=>current};
 show(screens.has(location.hash.slice(1))?location.hash.slice(1):'tables',{keepScroll:true,force:true});
