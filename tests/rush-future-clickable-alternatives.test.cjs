@@ -14,7 +14,7 @@ const engine={rankedTableChoices:()=>[{numbers:[1],capacity:2}],validate:()=>({v
 const app={RestoFusion:{pairs:()=>[]},RestoBookingInterval:()=>null};
 const suggestions=new Function('service','mins','clock','evaluate','ReservationEngine','TableStore','window',body+'\nreturn suggestions;')(
  ()=>({start:'02:00',end:'06:00'}),mins,clock,()=>({current:0,limit:22,blocked:false}),engine,{get:()=>({tables:[{number:1,capacity:2}]})},app);
-test('no past alternative for today's 03:41 local time',()=>{
+test("no past alternative for today's 03:41 local time",()=>{
  const items=suggestions({date:'2026-11-07',time:'03:45',guests:2},[]);
  assert.ok(items.length);
  assert.ok(items.every(i=>mins(i.at)>3*60+41));
