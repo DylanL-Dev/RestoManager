@@ -77,6 +77,7 @@ const $=id=>document.getElementById(id);
 const today=()=>{const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
 // The service dashboard can show yesterday after midnight, but booking dates cannot.
 const bookingToday=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
+const bookingNowTime=()=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(/\s/g,'');
 const date=today();
 function refreshHeaderDate(){
  const paris=bookingToday();
@@ -435,7 +436,8 @@ function prepareNewReservation(){
  // Roll an expired booking date forward, while preserving future dates chosen by staff.
  const bookingDateField=$('bookingDate');
  if(bookingDateField&&(!bookingDateField.value||bookingDateField.value<bookingToday()))bookingDateField.value=bookingToday();
- // Keep time and any table preselection from the user's shortcut.
+ // Start each new booking at the current restaurant-local clock time, keeping table shortcuts.
+ const bookingTimeField=$('bookingTime');if(bookingTimeField)bookingTimeField.value=bookingNowTime();
  // Only clear fields belonging to the previous guest.
  for(const id of ['bookingClient','bookingAllergies','bookingNotes']){
   const field=$(id);if(field)field.value='';
@@ -450,7 +452,7 @@ window.addEventListener('restomanager:screen',e=>{
 });
 function readReservations(){const raw=window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
 $('bookingDate').value=bookingToday();
-$('bookingTime').value='19:00';
+$('bookingTime').value=bookingNowTime();
 ['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient'].forEach(id=>$(id).addEventListener('change',refreshAvailability));
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
