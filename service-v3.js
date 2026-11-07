@@ -513,6 +513,10 @@ function showBookingSuccess(reservation){
  const old=document.getElementById('bookingSuccessDialog');if(old)old.remove();
  const overlay=document.createElement('div');overlay.id='bookingSuccessDialog';overlay.className='bookingSuccessOverlay';
  const dialog=document.createElement('section');dialog.className='bookingSuccessCard';dialog.setAttribute('role','dialog');dialog.setAttribute('aria-modal','true');dialog.setAttribute('aria-labelledby','bookingSuccessTitle');
+ const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='bookingSuccessDismiss';
+ dismiss.setAttribute('aria-label','Fermer la confirmation de réservation');dismiss.title='Fermer';
+ dismiss.textContent='×';
+ dismiss.addEventListener('click',()=>close());
  const mark=document.createElement('div');mark.className='bookingSuccessIcon';mark.innerHTML='<i data-lucide="check"></i>';
  const heading=document.createElement('h2');heading.id='bookingSuccessTitle';heading.textContent='Réservation enregistrée !';
  const summary=document.createElement('p');summary.textContent=reservation.client+' · '+reservation.guests+' couvert(s) · '+reservation.time+' · '+(reservation.tables.length>1?'Tables ':'Table ')+reservation.tables.join(' + ');
@@ -524,7 +528,7 @@ function showBookingSuccess(reservation){
  function escape(e){if(e.key==='Escape')close()}
  view.addEventListener('click',()=>{close();window.RestoScreens?.show('reservations');const dateField=$('reservationDate'),query=$('reservationQuery');if(dateField)dateField.value=reservation.date;if(query){query.value=reservation.client;query.dispatchEvent(new Event('input',{bubbles:true}))}document.getElementById('reservations')?.scrollIntoView({block:'start'})});
  again.addEventListener('click',()=>{close();prepareNewReservation();$('bookingClient').focus()});
- actions.append(view,again);dialog.append(mark,heading,summary,note,actions);overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',escape);view.focus();
+ actions.append(view,again);dialog.append(dismiss,mark,heading,summary,note,actions);overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',escape);dismiss.focus();
 }
 function prepareNewReservation(){
  // Roll an expired booking date forward, while preserving future dates chosen by staff.
