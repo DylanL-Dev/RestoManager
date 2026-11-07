@@ -1277,3 +1277,8 @@ html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns
 .tablePickerSheet .tablePickerCard.unavailable{background:#e8eeea!important;color:#43594d!important;border-color:#c0cec5!important;opacity:1!important}
 .tablePickerSheet .tablePickerCard.unavailable :is(strong,small){color:#43594d!important;opacity:1!important}
 .tablePickerSheet .tablePickerCard.unavailable .tablePickerIndicator{color:#8b3d26!important;opacity:1!important}
+
+/* Mission 2: preserve the editor while the current shared version is reviewed. */
+#editForm .editConflict{grid-column:1/-1;padding:16px;border:1px solid #b87922;border-radius:12px;background:#fff9ed;color:#51370d}
+#editForm .editConflict[hidden],#editHotelRoomField[hidden]{display:none}
+#editCurrentValues{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px}

@@ -489,8 +489,9 @@ function refreshAvailability(){
  select.replaceChildren();window.RestoFusionSelected=null;select.required=!window.RestoReception;
  if(!dateValue||!time||!Number.isInteger(guests)||guests<1)return;
  // Explain a closed booking slot instead of pretending that every table is occupied.
+ const bookingMinutes=value=>Number(String(value).slice(0,2))*60+Number(String(value).slice(3,5));
  const allowedShifts=Object.values(ReservationEngine.getShifts()).filter(shift=>shift.enabled);
- const inBookingHours=allowedShifts.some(shift=>mins(time)>=mins(shift.start)&&mins(time)<=mins(shift.end));
+ const inBookingHours=allowedShifts.some(shift=>bookingMinutes(time)>=bookingMinutes(shift.start)&&bookingMinutes(time)<=bookingMinutes(shift.end));
  if(!inBookingHours){
   if(insight)insight.append(node('p','availabilityWarning','Horaire hors service : aucune réservation ne peut être prise à '+time+'. Horaires autorisés : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
   window.RestoTableChoices?.refresh('bookingTable');

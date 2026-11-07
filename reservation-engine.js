@@ -115,12 +115,19 @@
         return String(value || '').trim().toLocaleUpperCase('fr-FR');
     }
 
+    function roomIdentity(reservation) {
+        // Connected records carry an explicit room. Only historical local
+        // records without this property use the old client-as-room convention.
+        return normalizeRoom(Object.prototype.hasOwnProperty.call(reservation, 'hotelRoom')
+            ? reservation.hotelRoom : reservation.client);
+    }
+
     function findRoomConflict(candidate, reservations, ignoredId) {
-        if (candidate.type !== 'hotel' || !normalizeRoom(candidate.client) || (candidate.walkIn && normalizeRoom(candidate.client) === 'CLIENT DE PASSAGE')) return null;
+        if (candidate.type !== 'hotel' || !roomIdentity(candidate) || (candidate.walkIn && roomIdentity(candidate) === 'CLIENT DE PASSAGE')) return null;
         return normalizeReservations(reservations).find(function (other) {
             return other.id !== ignoredId && other.type === 'hotel' &&
                 other.date === candidate.date && isBlocking(other) &&
-                normalizeRoom(other.client) === normalizeRoom(candidate.client) &&
+                roomIdentity(other) === roomIdentity(candidate) &&
                 overlaps(candidate, other);
         }) || null;
     }
@@ -215,7 +222,7 @@
         });
         if (conflict) errors.push('Conflit avec la réservation de ' + conflict.client + ' à ' + conflict.time + '.');
         const roomConflict = findRoomConflict(candidate, reservations, ignoredId);
-        if (roomConflict) errors.push('La chambre ' + normalizeRoom(candidate.client) + ' possède déjà une réservation qui chevauche ce créneau.');
+        if (roomConflict) errors.push('La chambre ' + roomIdentity(candidate) + ' possède déjà une réservation qui chevauche ce créneau.');
         return { valid: errors.length === 0, errors: errors, conflict: conflict || null, roomConflict: roomConflict };
     }
 

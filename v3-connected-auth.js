@@ -210,7 +210,7 @@ try{
    const details=decodeBookingDetails(r.notes,r.hotel_room);
    return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status==='departed'?'released':r.status,
     walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
-    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||''};
+    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||'',editVersion:r.edit_version||null};
   });
   if(navigator.onLine===false)showError({code:'HORS_LIGNE'});
   else if(channelReady)showState('ok','Synchronisation active','Les données de cet appareil sont synchronisées en direct.');

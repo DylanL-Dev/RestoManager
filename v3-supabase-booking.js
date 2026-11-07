@@ -22,13 +22,19 @@ async function saveReceptionBooking(candidate,id){
  const start=parisDateTime(candidate.date,candidate.time);
  const name=candidate.client.trim();
  const notes=encodeBookingDetails(candidate);
- const {data,error}=await supabase.rpc('reception_booking_v3',{
-  p_reservation:id,p_name:name,p_room:candidate.type==='hotel'&&/^\d{1,6}[A-Za-z]?$/.test(name)?name:null,
-  p_guests:Number(candidate.guests),p_start:start,p_end:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),p_notes:notes
+ const {data,error}=await supabase.rpc('reception_update_reservation_v4',{
+  p_reservation_id:id,p_expected_version:window.ReservationEdit.requireVersion(candidate.editVersion),
+  p_guest_name:name,p_hotel_room:candidate.type==='hotel'?(candidate.hotelRoom?.trim()||null):null,
+  p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),p_notes:notes
  });
- if(error)throw error;
+ if(error)throw editError(error);
  const tables=TableStore.get().tables;
- candidate.tables=data.map(id=>tables.find(t=>t.id===id)?.number).filter(n=>n!=null);
+ candidate.tables=data.tables.map(id=>tables.find(t=>t.id===id)?.number).filter(n=>n!=null);
+ return data;
+}
+function editError(error){
+ if(error.code==='PGRST202')return Object.assign(Error('Le service de modification n’est pas encore disponible. Contactez le responsable.'),{code:error.code});
+ return error;
 }
 window.RestoBookingDraft=setupBookingDraft(supabase,parisDateTime);
 window.RestoBookingInterval=(date,time,duration)=>{
@@ -57,6 +63,8 @@ export async function deleteCancelledSharedBooking(id){
 window.RestoDeleteCancelledSharedBooking=deleteCancelledSharedBooking;
 
 export async function updateSharedBooking(candidate){
+ if(navigator.onLine===false||!window.RestoSupabaseReady)throw Error('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.');
+ window.ReservationEdit.requireVersion(candidate.editVersion);
  if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id);
  const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js?v=20261106-reconnect2');
  await requireStaff();
@@ -65,8 +73,11 @@ export async function updateSharedBooking(candidate){
  const ids=candidate.tables.map(n=>{const id=byNumber.get(Number(n));if(!id)throw Error('Table '+n+' introuvable. Vérifiez les tables disponibles.');return id;});
  const start=parisDateTime(candidate.date,candidate.time);
  const end=new Date(Date.parse(start)+(Number(candidate.duration)||90)*60000).toISOString();
- const {data,error}=await supabase.rpc('update_reservation_v3',{p_reservation_id:candidate.id,p_guest_name:candidate.client,p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:end,p_table_ids:ids,p_notes:encodeBookingDetails(candidate)||null});
- if(error)throw error;
+ const {data,error}=await supabase.rpc('update_reservation_v4',{p_reservation_id:candidate.id,
+  p_expected_version:candidate.editVersion,p_guest_name:candidate.client,
+  p_hotel_room:candidate.type==='hotel'?(candidate.hotelRoom?.trim()||null):null,
+  p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:end,p_table_ids:ids,p_notes:encodeBookingDetails(candidate)||null});
+ if(error)throw editError(error);
  return data;
 }
 window.RestoUpdateSharedBooking=updateSharedBooking;

@@ -52,18 +52,21 @@
   return results[0]||null;
  }
  function openReservationFromAlert(a,view){
+  const current=read().find(r=>r.id===a.reservation_id);
   const when=new Date(a.starts_at);
   const search=document.getElementById('reservationQuery');
-  if(search){search.value=a.hotel_room||a.guest_name||'';search.dispatchEvent(new Event('input',{bubbles:true}))}
+  if(search){search.value=current?(current.hotelRoom||current.client):(a.hotel_room||a.guest_name||'');search.dispatchEvent(new Event('input',{bubbles:true}))}
   const date=document.getElementById('reservationDate');
-  if(date&&Number.isFinite(when.getTime())){
+  if(date&&current){
+   date.value=current.date;date.dispatchEvent(new Event('change',{bubbles:true}));
+  }else if(date&&Number.isFinite(when.getTime())){
    const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when);
    const d=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
    date.value=d.year+'-'+d.month+'-'+d.day;
    date.dispatchEvent(new Event('change',{bubbles:true}));
   }
   window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{
-   detail:{view,reservationId:a.reservation_id}
+   detail:{view:current&&['completed','released','cancelled','no_show'].includes(current.status)?'departed':view,reservationId:a.reservation_id}
   }));
   window.RestoScreens?.show('reservations');
   panel.hidden=true;
@@ -74,6 +77,7 @@
   const activeRestaurant=window.RestoReception===false&&ready;
   const bookingAlerts=activeRestaurant?(window.RestoFbReservationAlerts||[]).filter(a=>!a.read_at):[];
   const changeAlerts=activeRestaurant?(window.RestoFbChangeAlerts||[]).filter(a=>!a.read_at):[];
+  const currentReservations=new Map(read().map(r=>[r.id,r]));
   const alerts=ready&&!reception?collect():[];
   const pressure=ready?capacityAlert():null;
   const total=alerts.length+bookingAlerts.length+changeAlerts.length+(pressure?1:0);
@@ -107,7 +111,7 @@
     const fields=Array.isArray(a.changed_fields)?a.changed_fields:[];
     if(fields.includes('horaire'))changes.push('Horaire : '+displayDate(a.previous_starts_at)+' → '+displayDate(a.starts_at));
     if(fields.includes('couverts'))changes.push('Couverts : '+a.previous_party_size+' → '+a.party_size);
-    if(fields.includes('chambre'))changes.push('Chambre modifiée');
+    if(fields.includes('chambre'))changes.push('Chambre : '+(a.previous_hotel_room||'—')+' → '+(a.hotel_room||'—'));
     if(fields.includes('client'))changes.push('Nom du client modifié');
     if(fields.includes('consignes'))changes.push('Consignes ou allergies modifiées');
     if(changes.length){
@@ -130,11 +134,13 @@
    item.append(actions);panel.append(item);
   }
   for(const a of bookingAlerts){
+   const current=currentReservations.get(a.reservation_id);
    const item=document.createElement('article');item.className='serviceReminderItem serviceReceptionBookingAlert';
    const title=document.createElement('strong');title.textContent='Nouvelle réservation · Réception';
    const when=new Date(a.starts_at);
-   const time=Number.isFinite(when.getTime())?when.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Horaire à vérifier';
-   const detail=document.createElement('p');detail.textContent=(a.hotel_room?'Chambre '+a.hotel_room:a.guest_name)+' · '+a.party_size+' couvert(s) · '+time;
+   const time=current?current.date.split('-').reverse().join('/')+' '+current.time:Number.isFinite(when.getTime())?when.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Horaire à vérifier';
+   const room=current?current.hotelRoom:a.hotel_room,guest=current?current.client:a.guest_name;
+   const detail=document.createElement('p');detail.textContent=(room?'Chambre '+room:guest)+' · '+(current?current.guests:a.party_size)+' couvert(s) · '+time;
    const actions=document.createElement('div');actions.className='serviceReminderActions';
    actions.append(button('Voir la réservation',async()=>{
     try{
