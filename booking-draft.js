@@ -130,11 +130,19 @@ export function setupBookingDraft(supabase, parisDateTime){
    throw Error('Saisie quittée ou connexion interrompue. Table libérée dès que possible.');
   }
   Object.assign(draft,{numbers:idsToNumbers(result.tables),holdIds:result.holds,until:sent+result.seconds*1000});
+  clearPreviousAbandonMessage();
   redraw();tick();
   return draft;
  }
+ function clearPreviousAbandonMessage(){
+  const feedback=el('bookingFeedback');
+  // A prior abandonment is informational, not an error for the next booking.
+  // Keep actual validation/connection errors visible until they are resolved.
+  if(feedback&&/^Saisie abandonnée(?:\.| hors ligne\.)/.test(feedback.textContent.trim()))feedback.textContent='';
+ }
  function inputChanged(event){
   if(submitting||!window.RestoSupabaseReady||window.RestoScreens?.current()!=='reservationForm')return;
+  clearPreviousAbandonMessage();
   active=true;
   clearTimeout(debounce);
   debounce=setTimeout(()=>serial(async()=>{
