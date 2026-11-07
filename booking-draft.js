@@ -10,6 +10,8 @@ export function setupBookingDraft(supabase, parisDateTime){
  const submit=form.querySelector('[type=submit]');
  let draft=null, active=false, debounce, queue=Promise.resolve(), submitting=false;
  let nextExpiry=Infinity,holdGeneration=0;
+ const pendingReleases=new Set();
+ let releasingPending=false;
  // A late snapshot can still contain a hold that the server has just released.
  const released=new Map();
  let checking=false,lastCheck=0;
@@ -32,6 +34,21 @@ export function setupBookingDraft(supabase, parisDateTime){
    if(gone.length){retire(gone);redraw()}
   }catch{/* Realtime and the server expiry remain authoritative while offline. */}
   finally{checking=false}
+ }
+ function deferRelease(key){if(key)pendingReleases.add(key)}
+ async function flushPendingReleases(){
+  if(releasingPending||!onlineReady()||!pendingReleases.size)return;
+  releasingPending=true;
+  try{
+   for(const key of [...pendingReleases]){
+    if(!onlineReady())break;
+    try{
+     const {error}=await supabase.rpc('booking_draft_v3',{p_key:key,p_action:'release'});
+     if(!error)pendingReleases.delete(key);
+    }catch{/* Retry after the next confirmed synchronization. */}
+   }
+   if(!pendingReleases.size)window.RestoRefreshSharedService?.().catch(()=>{});
+  }finally{releasingPending=false}
  }
  function serial(task){
   const result=queue.then(task);
@@ -87,9 +104,11 @@ export function setupBookingDraft(supabase, parisDateTime){
  }
  async function release(){
   if(!draft)return;
-  await rpc(draft.key,'release');
-  retire(draft.holdIds,draft.until);
-  draft=null;
+  const current=draft;
+  try{await rpc(current.key,'release')}
+  catch(error){deferRelease(current.key);throw error}
+  retire(current.holdIds,current.until);
+  if(draft?.key===current.key)draft=null;
  }
  async function ensure(force=false){
   if(!onlineReady())throw Error(offlineMessage);
@@ -104,7 +123,11 @@ export function setupBookingDraft(supabase, parisDateTime){
   if(active)show('Vérification de la disponibilité…');
   const sent=Date.now();
   const result=await rpc(key,'hold',{p_start:f.start,p_end:f.end,p_guests:f.guests,p_tables:f.ids});
-  if(generation!==holdGeneration||!onlineReady()||draft?.key!==key)throw Error('Connexion interrompue pendant le maintien. Revérifiez la disponibilité.');
+  if(generation!==holdGeneration||!onlineReady()||draft?.key!==key){
+   deferRelease(key);
+   if(onlineReady())void flushPendingReleases();
+   throw Error('Connexion interrompue pendant le maintien. Revérifiez la disponibilité.');
+  }
   Object.assign(draft,{numbers:idsToNumbers(result.tables),holdIds:result.holds,until:sent+result.seconds*1000});
   redraw();tick();
   return draft;
@@ -137,7 +160,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   // the server-side expiry remains authoritative and blocks unsafe re-use.
   if(!onlineReady()){
    holdGeneration++;
-   if(draft)retire(draft.holdIds,draft.until);
+   if(draft){deferRelease(draft.key);retire(draft.holdIds,draft.until);}
    draft=null;panel.hidden=true;
    if(reset){
     const date=el('bookingDate').value,time=el('bookingTime').value;
@@ -157,7 +180,10 @@ export function setupBookingDraft(supabase, parisDateTime){
      el('bookingFeedback').textContent='Saisie abandonnée.';
     }
     redraw();
-   }catch(error){show('Libération non confirmée. Le maintien expirera automatiquement.',false)}
+   }catch(error){
+    if(!active){panel.hidden=true;return}
+    show('Libération non confirmée. Le maintien expirera automatiquement.',false);
+   }
   });
  }
  abandon.addEventListener('click',()=>leave(true));
@@ -168,14 +194,20 @@ export function setupBookingDraft(supabase, parisDateTime){
  window.addEventListener('offline',()=>{
   holdGeneration++;
   clearTimeout(debounce);
-  if(draft)retire(draft.holdIds,draft.until);
+  if(draft){deferRelease(draft.key);retire(draft.holdIds,draft.until);}
   draft=null;
   if(active){show(offlineMessage,false);submit.disabled=true}
   redraw();
  });
  window.addEventListener('online',()=>{
   submit.disabled=false;
-  if(active)show('Connexion rétablie. Vérifiez à nouveau la disponibilité avant de réserver.',true);
+  if(active)show('Reconnexion en cours. Les maintiens seront revérifiés dès la synchronisation.',false);
+ });
+ window.addEventListener('restomanager:supabase-snapshot',()=>{
+  if(onlineReady()){
+   void flushPendingReleases();
+   if(active&&!draft){show('Connexion rétablie · Réservations synchronisées. Revérifiez la disponibilité avant de confirmer.',true)}
+  }
  });
  window.addEventListener('pagehide',()=>{void close()});
  window.addEventListener('restomanager:screen',e=>{if(e.detail!=='reservationForm'&&(active||draft))leave(false)});
