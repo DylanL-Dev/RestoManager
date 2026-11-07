@@ -4,12 +4,50 @@ const form=document.getElementById('restaurantShiftForm');if(!form)return;
 const KEY='restomanager_shifts_v1',names=['lunch','dinner'],defaults=ReservationEngine.getShifts();
 for(const key of names){const shift=defaults[key];for(const [field,value] of Object.entries(shift)){const input=document.getElementById('shift-'+key+'-'+field);if(!input)continue;if(field==='enabled')input.checked=value;else input.value=value}}
 const durationBox=document.createElement('div');durationBox.className='restaurantDurationSetting';
-const durationLabel=document.createElement('label');durationLabel.textContent='Durée standard d’occupation des tables';
+const durationLabel=document.createElement('label');durationLabel.textContent='Durée par défaut d’une table';
 const durationSelect=document.createElement('select');durationSelect.id='restaurantDefaultDuration';
 for(const [mins,label] of [[30,'30 min'],[45,'45 min'],[60,'1 h'],[75,'1 h 15'],[90,'1 h 30'],[105,'1 h 45'],[120,'2 h'],[150,'2 h 30'],[180,'3 h']]){const option=document.createElement('option');option.value=String(mins);option.textContent=label;durationSelect.append(option)}
 durationSelect.value=String(ReservationEngine.getDefaultDuration());
-const help=document.createElement('p');help.className='muted';help.textContent='Appliquée à toutes les nouvelles réservations et installations, sans modifier celles déjà enregistrées.';
+const help=document.createElement('p');help.className='muted';help.textContent='Utilisée pour les nouvelles réservations et installations. Les clients déjà enregistrés ne changent pas.';
 durationLabel.append(durationSelect);durationBox.append(durationLabel,help);form.prepend(durationBox);
+const durationFeedback=document.createElement('p');
+durationFeedback.className='durationSettingFeedback';
+durationFeedback.setAttribute('role','status');
+durationFeedback.setAttribute('aria-live','polite');
+durationBox.append(durationFeedback);
+let savedDuration=Number(durationSelect.value);
+let durationSaving=false;
+durationSelect.addEventListener('change',async()=>{
+ if(durationSaving)return;
+ const chosen=Number(durationSelect.value);
+ if(!Number.isInteger(chosen))return;
+ if(chosen===savedDuration)return;
+ if(window.RestoSharedReservations){
+  durationSaving=true;durationSelect.disabled=true;
+  durationFeedback.textContent='Enregistrement de la durée…';
+  try{
+   if(!window.RestoSupabaseReady||!window.RestoSharedHours||typeof window.RestoSaveSharedHours!=='function')
+    throw Error('Synchronisation indisponible : durée non enregistrée.');
+   // Save the currently persisted shift times, not unsaved changes in the form.
+   await window.RestoSaveSharedHours(window.RestoSharedHours.shifts,chosen);
+   savedDuration=chosen;
+   durationFeedback.textContent='Durée enregistrée pour toute l’équipe.';
+  }catch(error){
+   durationSelect.value=String(savedDuration);
+   durationFeedback.textContent=error.message||'Impossible de modifier la durée.';
+  }finally{durationSaving=false;durationSelect.disabled=false}
+ }else{
+  try{
+   localStorage.setItem('restomanager_default_duration_v1',String(chosen));
+   savedDuration=chosen;
+   durationFeedback.textContent='Durée enregistrée sur cet appareil.';
+   window.dispatchEvent(new Event('restomanager:v3-change'));
+  }catch(error){
+   durationSelect.value=String(savedDuration);
+   durationFeedback.textContent='Impossible d’enregistrer la durée.';
+  }
+ }
+});
 window.addEventListener('restomanager:hours',()=>{
  const {shifts,duration}=window.RestoSharedHours;
  for(const key of names){
@@ -17,6 +55,7 @@ window.addEventListener('restomanager:hours',()=>{
   for(const field of ['start','end'])document.getElementById('shift-'+key+'-'+field).value=shifts[key][field];
  }
  durationSelect.value=String(duration);
+ savedDuration=Number(duration);
 });
 form.addEventListener('submit',async event=>{event.preventDefault();const next={};for(const key of names){const enabled=document.getElementById('shift-'+key+'-enabled').checked,start=document.getElementById('shift-'+key+'-start').value,end=document.getElementById('shift-'+key+'-end').value;if(!start||!end||start>=end){document.getElementById('shiftFeedback').textContent='Horaires invalides : vérifiez les heures de début et de dernière commande.';return}next[key]={enabled,start,end}}
 if(next.lunch.enabled&&next.dinner.enabled&&next.lunch.end>=next.dinner.start){document.getElementById('shiftFeedback').textContent='Les deux services ne doivent pas se chevaucher.';return}
