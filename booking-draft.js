@@ -47,7 +47,7 @@ export function setupBookingDraft(supabase, parisDateTime){
      if(!error)pendingReleases.delete(key);
     }catch{/* Retry after the next confirmed synchronization. */}
    }
-   if(!pendingReleases.size)window.RestoRefreshSharedService?.().catch(()=>{});
+   if(!pendingReleases.size&&typeof window.RestoRefreshSharedService==='function')void window.RestoRefreshSharedService().catch(()=>{});
   }finally{releasingPending=false}
  }
  function serial(task){
