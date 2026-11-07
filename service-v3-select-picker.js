@@ -7,25 +7,54 @@
   document.body.appendChild(dialog);
   const items=dialog.querySelector('.v3-picker-items');
   let source=null,choice=null,focusBefore=null;
-  function close(){dialog.hidden=true;source=null;focusBefore?.focus?.();}
+  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
   function render(){items.querySelectorAll('button').forEach(b=>{const yes=b.dataset.value===choice;b.classList.toggle('selected',yes);b.setAttribute('aria-checked',String(yes));});}
   function open(select){
     source=select;focusBefore=document.activeElement;choice=select.value;
+    const rushMode=select.getAttribute('aria-label')==='Choisir une plage horaire';
+    dialog.classList.toggle('v3-rush-period-picker',rushMode);
     const associated=select.labels?.[0];
     const explicit=select.getAttribute('aria-label')?.trim();
     const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\s+/g,' ').trim() : '';
     const label=explicit||labelText||'Choisir une option';
     dialog.querySelector('header strong').textContent=label;
     items.replaceChildren();
+    let lastGroup='';
     Array.from(select.options).filter(o=>!o.hidden).forEach(o=>{
+      if(rushMode){
+        const group=o.textContent.split(' · ')[0];
+        if(group!==lastGroup){
+          const heading=document.createElement('div');
+          heading.className='v3-rush-period-group';
+          heading.textContent=group==='Midi'?'Service du midi':group==='Soir'?'Service du soir':group;
+          items.append(heading);
+          lastGroup=group;
+        }
+      }
       const button=document.createElement('button');
       button.type='button';button.dataset.value=o.value;button.disabled=o.disabled;
-      button.setAttribute('role','radio');button.textContent=o.textContent;
-      button.addEventListener('click',()=>{choice=o.value;render();});
+      button.setAttribute('role','radio');
+      button.textContent=rushMode?o.textContent.replace(/^(Midi|Soir) · /,''):o.textContent;
+      button.addEventListener('click',()=>{
+        choice=o.value;
+        if(rushMode){
+          const current=source;
+          if(!current)return;
+          const changed=current.value!==choice;
+          current.value=choice;
+          if(changed){
+            current.dispatchEvent(new Event('input',{bubbles:true}));
+            current.dispatchEvent(new Event('change',{bubbles:true}));
+          }
+          close();
+        }else render();
+      });
       items.append(button);
     });
     items.setAttribute('role','radiogroup');render();dialog.hidden=false;
-    dialog.querySelector('[data-confirm]').focus();
+    document.body.classList.add('v3-picker-open');
+    if(rushMode)items.querySelector('button.selected')?.focus({preventScroll:true});
+    else dialog.querySelector('[data-confirm]').focus();
   }
   function eligible(s){return s instanceof HTMLSelectElement&&!s.multiple&&!s.disabled&&!s.hidden&&s.options.length>0&&s.getClientRects().length>0&&!s.classList.contains('visuallyHiddenSelect')&&!['bookingType','walkinTable'].includes(s.id);}
   document.addEventListener('pointerdown',e=>{
