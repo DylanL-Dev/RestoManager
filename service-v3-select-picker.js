@@ -42,6 +42,13 @@
       button.type='button';button.dataset.value=o.value;button.disabled=o.disabled;
       button.setAttribute('role','radio');
       button.textContent=rushMode?o.textContent.replace(/^(Midi|Soir) · /,''):percentMode?o.textContent.replace(/ de la capacité$/,''):o.textContent;
+      if(themeMode){
+        const icon=document.createElement('i');
+        icon.setAttribute('data-lucide',o.value==='auto'?'monitor':o.value==='light'?'sun':'moon');
+        icon.setAttribute('aria-hidden','true');
+        const label=document.createElement('span');label.textContent=o.textContent;
+        button.replaceChildren(icon,label);
+      }
       button.addEventListener('click',()=>{
         choice=o.value;
         if(instantMode){
