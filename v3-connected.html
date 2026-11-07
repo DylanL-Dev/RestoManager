@@ -154,6 +154,38 @@ html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .
 #bookingForm #draftAbandon{background:transparent!important;color:#746456!important;border:1px solid #d5cfc6!important}
 #bookingForm .bookingSubmitPrimary{grid-column:1/-1;width:100%;margin-top:14px!important;min-height:49px!important;font-weight:750!important}
 @media(max-width:390px){#bookingForm .bookingDraftActions{grid-template-columns:1fr}#bookingForm .bookingDraftActions button{min-height:40px!important}}
+
+/* Compact 2027-style service table sheet (integration only). */
+.tableDetailModal .tableDetailSheet{padding:16px 16px calc(18px + env(safe-area-inset-bottom));max-height:min(87dvh,760px);border-radius:22px 22px 0 0}
+.tableDetailModal .tableDetailSheetHeader{align-items:center;padding-bottom:10px}
+.tableDetailModal .tableDetailSheetHeader h2{font-size:23px;line-height:1.1;margin:3px 0}
+.tableDetailModal .tableDetailSheetBody{padding-top:7px}
+.tableDetailModal .tableDetailSheetBody #detail{display:grid;gap:6px}
+.tableDetailModal .tableCompactMeta{margin:0 0 5px!important;font-size:13px!important;color:#65796f}
+.tableDetailModal .tableCompactHint{margin:0 0 5px!important;font-size:12px!important;color:#537466;line-height:1.35}
+.tableDetailModal .detailLine{margin:0!important;padding:10px 0!important;border-top:1px solid #e8efea;min-width:0}
+.tableDetailModal .tableCompactGuest{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;min-width:0}
+.tableDetailModal .tableCompactIdentity{display:grid;gap:3px;min-width:0;flex:1}
+.tableDetailModal .tableCompactIdentity strong{font-size:15px;line-height:1.35;color:#183f32;margin:0}
+.tableDetailModal .tableCompactIdentity span{font-size:14px;color:#52685d;overflow-wrap:anywhere}
+.tableDetailModal .tableCompactBadge{flex:none;max-width:42%;border-radius:999px;padding:5px 9px;background:#e8f2ed;color:#22694c;font-size:11px;font-weight:750;text-align:center}
+.tableDetailModal .tableCompactActions{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;gap:9px!important;margin-top:12px!important;min-height:46px;width:100%}
+.tableDetailModal .tableCompactActions>.tableCompactPrimary{flex:1 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important;height:46px!important;min-height:46px!important;max-height:46px!important;align-self:stretch!important;padding:0 14px!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;border-radius:12px!important;background:#087f5b!important;border:1px solid #087f5b!important;color:#fff!important;font-size:14px!important;font-weight:750!important;line-height:1.1!important}
+.tableDetailModal .tableCompactActions>.tableCompactMore{flex:none;width:48px;min-width:48px;margin:0;padding:0;border:0;background:transparent}
+.tableDetailModal .tableCompactMoreTrigger{display:flex!important;align-items:center;justify-content:center;width:48px;height:46px;min-height:46px;max-height:46px;box-sizing:border-box;border-radius:12px;border:1px solid #ccdcd2;background:#f5f8f6;color:#265843;font-size:27px;line-height:1;letter-spacing:1px;cursor:pointer;padding:0 0 10px!important;list-style:none}
+.tableDetailModal .tableCompactMoreTrigger::after{display:none!important}
+.tableDetailModal .tableCompactMoreTrigger::-webkit-details-marker{display:none}
+.tableDetailModal .tableCompactMoreOverlay[hidden]{display:none!important}
+.tableDetailModal .tableCompactMoreOverlay{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.tableDetailModal .tableCompactMoreBackdrop{position:absolute;inset:0;border:0;border-radius:0;background:rgba(8,28,22,.58);width:100%;height:100%;padding:0;cursor:default}
+.tableDetailModal .tableCompactMoreSheet{position:relative;z-index:1;width:min(100%,540px);max-height:min(75dvh,580px);overflow:auto;display:grid;gap:8px;background:#fff;border-radius:22px 22px 0 0;padding:16px 17px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -16px 45px #071d1740;animation:restoSheetIn .2s ease both}
+.tableDetailModal .tableCompactMoreHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:9px;margin-bottom:4px;border-bottom:1px solid #e5eee8}
+.tableDetailModal .tableCompactMoreHeader strong{font-size:15px;color:#214c3a}
+.tableDetailModal .tableCompactMoreClose{border:0;background:#edf5ef;color:#255840;border-radius:11px;width:40px;height:40px;min-height:40px;padding:0;font-size:18px}
+.tableDetailModal .tableCompactMoreSheet>.tableCompactSecondary{display:flex;align-items:center;justify-content:flex-start;text-align:left;width:100%;min-height:46px!important;max-height:initial!important;border:1px solid #e0ebe4;border-radius:12px;background:#f7faf8;color:#295d45;padding:11px 14px!important;margin:0!important;font-size:14px!important;font-weight:650!important}
+.tableDetailModal :is(.tableCompactPrimary,.tableCompactMoreTrigger,.tableCompactSecondary,.tableCompactMoreClose):focus-visible{outline:3px solid #37a984;outline-offset:2px}
+@media(min-width:901px){.tableDetailModal .tableDetailSheet{border-radius:22px;padding:20px}.tableDetailModal .tableCompactMoreSheet{border-radius:20px;margin-bottom:16px}}
+@media(prefers-reduced-motion:reduce){.tableDetailModal .tableCompactMoreSheet{animation:none}}
 </style></head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button></div></header>
 
@@ -166,7 +198,7 @@ html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .
 <a href="#passages" class="mobileNavItem" data-nav="passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Service</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-active-table-only1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
+<script src="reservation-engine.js?v=20261106-fusion1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261104-dialog1"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="service-v3.js?v=20261107-compact-table-sheet1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="service-v3-reservations.js?v=20261106-notification-navigation1"></script><script src="service-v3-walkin-fast.js?v=20261106-hold1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261106-fusion1"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
   const target=document.querySelector(link.getAttribute('href'));
