@@ -31,9 +31,14 @@ test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 s
  const booking=(status,guests,id)=>({status,guests,id,date,time,tables:[id],walkIn:false});
  assert.doesNotThrow(()=>app.dashboard(date,[booking('reserved',20,1),booking('seated',2,2),booking('cancelled',5,3)]));
  const nodes=flatten(target);
+ const expectedCards=nodes.filter(n=>n.className.startsWith('rushArrivalBreakdownItem'));
+ assert.equal(expectedCards.length,3);
+ assert.equal(Number(expectedCards[0].children[0].textContent)+Number(expectedCards[1].children[0].textContent),20);
  assert.ok(nodes.some(n=>n.textContent==='22 / 22'));
- assert.ok(nodes.some(n=>n.textContent==='Encore attendus'));
+ assert.ok(nodes.some(n=>n.textContent==='Encore à venir'));
+ assert.ok(nodes.some(n=>n.textContent==='Heure prévue dépassée'));
  assert.ok(nodes.some(n=>n.textContent==='20'));
+ // The 20 waiting guests may be upcoming or overdue depending on test execution time.
  assert.ok(nodes.some(n=>n.textContent==='Déjà arrivés / installés'));
  assert.ok(nodes.some(n=>n.textContent==='2'));
  assert.ok(nodes.some(n=>n.className==='rushProgress'));
