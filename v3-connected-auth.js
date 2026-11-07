@@ -90,7 +90,7 @@ try{
  bookingButton?.addEventListener('click',()=>{
   const feedback=document.getElementById('bookingFeedback');
   if(!feedback)return;
-  if(!window.RestoSupabaseReady){feedback.textContent='Synchronisation en cours. Vérifiez Réseau et synchronisation dans Gestion.';return;}
+  if(!window.RestoSupabaseReady){feedback.textContent=navigator.onLine===false?'Connexion interrompue · Réservation impossible hors ligne.':'Reconnexion en cours · Patientez jusqu’à la synchronisation des réservations.';return;}
   const invalid=[...bookingForm.elements].find(field=>field.willValidate&&!field.checkValidity());
   if(invalid){feedback.textContent=invalid.id==='bookingTable'?'Aucune table disponible sélectionnée : impossible de créer la réservation.':'Champ obligatoire ou invalide : '+(invalid.closest('label')?.textContent?.trim()||invalid.name||invalid.id);return;}
   feedback.textContent='Vérification et enregistrement de la réservation…';
@@ -126,10 +126,22 @@ try{
  };
  let channelReady=false,lastAppliedSequence=0,everConnected=false;
  function showState(state,title,detail){
+  const previous=badge.dataset.state;
   badge.dataset.state=state;
   badge.textContent=title;
   description.textContent=detail;
   window.RestoSupabaseReady=state==='ok';
+  const feedback=document.getElementById('bookingFeedback');
+  if(!feedback)return;
+  const text=feedback.textContent.trim();
+  const stale=/^(Connexion en cours|Synchronisation en cours|Connexion interrompue|Reconnexion en cours|Connexion rétablie|Synchronisation interrompue)/i.test(text);
+  if(state==='ok'&&previous!=='ok'){
+   if(stale||!text)feedback.textContent='Connexion rétablie · Réservations synchronisées. Vous pouvez poursuivre votre saisie.';
+  }else if(state==='error'&&stale){
+   feedback.textContent='Connexion interrompue · Réservation impossible. Les données affichées peuvent être anciennes.';
+  }else if(state==='pending'&&stale){
+   feedback.textContent='Reconnexion en cours · Synchronisation des réservations…';
+  }
  }
  function showError(error){
   const code=navigator.onLine===false?'HORS_LIGNE':String(error?.code||'LECTURE_DONNEES');
