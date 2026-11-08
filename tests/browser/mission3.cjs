@@ -104,6 +104,30 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   assert.equal(await management.page.locator('#shift-lunch-start').inputValue(),'11:45');pass('atomic snapshot refreshes hours, tables and fusions without resetting an unrelated unsaved hours draft');await clean(management);
   for(const role of ['fb_admin','reception'])for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
    reset();const view=await open(browser,origin,role,viewport);
+   // Navigation is identical in order and destination on both profiles;
+   // role-specific wording and icons must communicate distinct permissions.
+   const expectedIds=['tables','reservations','reservationForm','passages','administration'];
+   const expectedLabels=['Tables','Réservations','Ajouter un client',
+    role==='reception'?'Suivi du service':'Passages','Gestion'];
+   const sideNav=await view.page.locator('.sidebar a[href^="#"]').evaluateAll(items=>items.map(a=>({
+    id:a.getAttribute('href').slice(1),label:a.textContent.trim(),
+    svg:a.querySelector('svg')!==null
+   })));
+   assert.deepEqual(sideNav.map(item=>item.id),expectedIds);
+   assert.deepEqual(sideNav.map(item=>item.label),expectedLabels);
+   assert.ok(sideNav.every(item=>item.svg),'All navigation icons must render offline using Lucide');
+   const mobileNav=await view.page.locator('.mobileNavItem').evaluateAll(items=>items.map(a=>({
+    id:a.dataset.nav,label:a.textContent.trim(),aria:a.getAttribute('aria-label'),
+    svg:a.querySelector('svg')!==null
+   })));
+   assert.deepEqual(mobileNav.map(item=>item.id),expectedIds);
+   assert.equal(mobileNav[2].label,'Ajouter');
+   assert.equal(mobileNav[2].aria,'Ajouter un client');
+   assert.equal(mobileNav[3].label,role==='reception'?'Suivi':'Passage');
+   assert.equal(mobileNav[3].aria,role==='reception'?'Suivi du service':'Passages');
+   assert.ok(mobileNav.every(item=>item.svg),'Mobile navigation icons must render offline');
+   assert.equal(await view.page.locator('.quickAction[href="#reservationForm"] span').innerText(),'Ajouter un client');
+   pass(role+' '+viewport.width+'px coherent five-tab hierarchy and accessible Lucide icons');
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
     await view.page.evaluate(screen=>window.RestoScreens.show(screen),screen);await view.page.clock.runFor(32);
     const layout=await view.page.evaluate(()=>({viewport:innerWidth,body:document.body.scrollWidth,document:document.documentElement.scrollWidth,visible:[...document.querySelectorAll('.appScreen')].filter(screen=>!screen.hidden).length}));
