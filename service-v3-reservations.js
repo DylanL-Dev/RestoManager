@@ -325,11 +325,11 @@ function render(){
   else extra.push({label,run:()=>action(r.id,kind),danger:kind==='cancel'});
  }
  if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){
-  const change=el('button','Changer la table du client','reservationActionSecondary reservationChangeTable');
+  const change=el('button','Changer la table','reservationActionSecondary reservationChangeTable');
   change.type='button';change.addEventListener('click',()=>showSmartPlacement(r.id));
   secondary.append(change);
  }
- actions.append(mainActions);
+ if(mainActions.children.length)actions.append(mainActions);
  const tools=el('div',undefined,'reservationActionTools');
  if(secondary.children.length)tools.append(secondary);
  if(extra.length){
