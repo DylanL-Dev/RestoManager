@@ -18,6 +18,49 @@ module.exports=async({sql,ok,record,edit,ctx,fails,test,concurrent,lit,user,res,
  async function hold(who,k,n=5){const r=await record(1);return json(who,draft(k,'hold',{
   p_start:r.starts_at,p_end:r.ends_at,p_guests:2,...(who===3?{}:{p_tables:[table(n)]})}));}
 
+ await test('RCP-01: Reception keeps assigned table for unchanged covers, then right-sizes 2 to 10 to 2',async()=>{
+  await ok('update public.restaurant_tables set seats=10 where id='+lit(table(1)));
+  await ok('update public.restaurant_tables set seats=2 where id in ('+[table(5),table(6)].map(lit).join(',')+')');
+  const initial=await record(1);
+  assert.equal(initial.party_size,2);
+  const unchanged=await json(3,edit(initial,{p_guest_name:'Client fictif corrigé'},true));
+  assert.deepEqual(unchanged.tables,[table(1)],'Unrelated edits must retain the original table');
+  const renamed=await record(1);
+  const up=await json(3,edit(renamed,{p_party_size:10},true));
+  assert.deepEqual(up.tables,[table(1)],'Ten guests use the existing ten-seat table');
+  const large=await record(1);
+  const down=await json(3,edit(large,{p_party_size:2},true));
+  assert.deepEqual(down.tables,[table(5)],'Two guests should move to a free two-seat table');
+  const shrunk=await record(1);
+  assert.equal(shrunk.party_size,2);assert.equal(shrunk.hotel_room,initial.hotel_room);
+  assert.equal(shrunk.notes,initial.notes);
+  assert.equal(await ok('select table_id from public.reservation_tables where reservation_id='+lit(initial.id)),table(5));
+  const noteOnly=await json(3,edit(shrunk,{p_notes:'Note fictive conservée après réattribution'},true));
+  assert.deepEqual(noteOnly.tables,[table(5)],'A notes-only edit must not move a table');
+ });
+
+ await test('RCP-01: Reception keeps a large table if no smaller compatible table is free',async()=>{
+  await ok('update public.restaurant_tables set seats=10 where id='+lit(table(1)));
+  await ok('update public.restaurant_tables set seats=12 where id in ('+[5,6,7,8].map(n=>lit(table(n))).join(',')+')');
+  const first=await record(1);
+  const up=await json(3,edit(first,{p_party_size:10},true));
+  assert.deepEqual(up.tables,[table(1)]);
+  const second=await record(1);
+  const down=await json(3,edit(second,{p_party_size:2},true));
+  assert.deepEqual(down.tables,[table(1)],'Do not reject a valid booking when there is no better choice');
+ });
+
+ await test('RCP-01: an active hold removes the best small table from Reception recommendations',async()=>{
+  await ok('update public.restaurant_tables set seats=10 where id='+lit(table(1)));
+  await ok('update public.restaurant_tables set seats=2 where id in ('+[table(5),table(6)].map(lit).join(',')+')');
+  await hold(1,key(98),5);
+  const first=await record(1);
+  await json(3,edit(first,{p_party_size:10},true));
+  const second=await record(1);
+  const down=await json(3,edit(second,{p_party_size:2},true));
+  assert.deepEqual(down.tables,[table(6)],'Do not steal a held two-seat table');
+ });
+
  await test('Mission3: capabilities and revision fence are tenant scoped, include server time',async()=>{
   const a=await json(1,'select public.service_sync_state_v1()'),b=await json(4,'select public.service_sync_state_v1()');
   assert.deepEqual(a.capabilities,{reservation_edits:4,booking_recovery:1,snapshot:1});
