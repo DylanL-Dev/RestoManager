@@ -124,12 +124,12 @@ try{
    window.RestoEstablishment={id:profile.restaurant_id,name};
    const venue=document.getElementById('teamVenue');
    if(venue){
-    venue.textContent=name.split(/\s+[—–]\s+/)[0].trim()||name;
+    venue.textContent=name;
     venue.title=name;
     venue.setAttribute('aria-label',name);
    }
    const sidebarVenue=document.getElementById('sidebarVenue');
-   if(sidebarVenue){sidebarVenue.textContent=name.split(/\s+[—–]\s+/)[0].trim()||name;sidebarVenue.title=name;}
+   if(sidebarVenue){sidebarVenue.textContent=name;sidebarVenue.title=name;}
   }catch(_error){
    establishmentName.textContent='Nom de l’établissement indisponible';
    const venue=document.getElementById('teamVenue');
