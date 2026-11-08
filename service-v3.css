@@ -1695,3 +1695,31 @@ html[data-theme="dark"] .walkinPanel #walkinForm .walkinGuestCount #walkinGuestU
 html[data-theme="dark"] .walkinPanel #walkinForm .walkinGuestStepper > button{
  background:#294d3c;color:#e4f8ec;border-color:#517763
 }
+
+
+/* NAV-01: contextual Back at the top of the active content, not in the app chrome. */
+.navBackToolbar{
+ display:flex;align-items:center;gap:12px;
+ width:100%;min-height:42px;margin:0 0 14px;
+}
+.navBackToolbar[hidden]{display:none!important}
+.navBackButton{
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ min-width:92px;min-height:43px;padding:8px 13px;
+ border:1px solid #c7dfd2;background:#eef8f2;color:#146147;
+ border-radius:11px;font:700 13px inherit;cursor:pointer;
+}
+.navBackButton:hover{background:#d9f3e5;border-color:#92c7a9}
+.navBackButton:focus-visible{outline:3px solid #087f5b;outline-offset:2px}
+.navBackButton svg{width:19px;height:19px;flex:0 0 19px}
+.navBackContext{font-size:13px;font-weight:650;color:#547265;min-width:0}
+@media(max-width:700px){
+ .navBackToolbar{margin:0 0 10px;gap:9px}
+ .navBackButton{min-width:43px;min-height:44px;padding:8px 10px}
+ .navBackButton span{display:none}
+ .navBackContext{font-size:12px}
+}
+html[data-theme="dark"] .navBackButton{
+ background:#204f3c;color:#e3f8eb;border-color:#537b63
+}
+html[data-theme="dark"] .navBackContext{color:#b5d6c3}
