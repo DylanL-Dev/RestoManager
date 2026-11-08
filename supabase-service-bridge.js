@@ -1,6 +1,7 @@
 // RestoManager V3 — read-only Supabase bridge, staged for integration.
 // Import only on the authenticated development preview; never on published V3.
 // No localStorage fallback and no direct reservation writes.
+import {readRevisionSnapshot} from './service-sync.js?v=20261107-mission3';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 export const supabase=createClient(
  'https://tnsrkargogckgtsxipwd.supabase.co',
@@ -21,18 +22,8 @@ let snapshotSequence=0;
 export async function loadSharedService(){
  const sequence=++snapshotSequence;
  await requireStaff();
- const [reservations,assignments,rooms,restaurantTables,holds,fusionLinks,hours]=await Promise.all([
-  supabase.from('reservations').select('*').order('starts_at'),
-  supabase.from('reservation_tables').select('*'),
-  supabase.from('restaurant_rooms').select('*').order('sort_order'),
-  supabase.from('restaurant_tables').select('*'),
-  supabase.from('table_holds').select('id,table_id,draft_role,held_by,starts_at,ends_at,expires_at,created_at'),
-  supabase.from('table_fusion_links').select('table_a,table_b'),
-  supabase.from('restaurant_hours').select('*').eq('id',1).single()
- ]);
- const results=[reservations,assignments,rooms,restaurantTables,holds,fusionLinks,hours];
- for(const result of results)if(result.error)throw result.error;
- return {syncSequence:sequence,hours:hours.data,reservations:reservations.data,assignments:assignments.data,rooms:rooms.data,tables:restaurantTables.data,holds:holds.data,fusionLinks:fusionLinks.data};
+ const snapshot=await readRevisionSnapshot(supabase);
+ return {...snapshot,syncSequence:sequence};
 }
 // Postgres Changes events can arrive out of order. Reload the full authorized
 // snapshot after each event instead of applying unsafe partial state mutations.
@@ -41,24 +32,43 @@ export async function loadSharedService(){
 export async function subscribeSharedService(onSnapshot,onError=console.error,onConnection=()=>{}){
  await requireStaff();
  let stopped=false,busy=false,dirty=false,generation=0,connectionState='connecting';
- let channel=null;
+ let channel=null,retryTimer=null,retryAttempt=0,snapshotFailed=false;
+ const retryDelays=[1000,2000,4000];
+ function clearRetry(){if(retryTimer!==null){clearTimeout(retryTimer);retryTimer=null}}
+ function queueRetry(requestGeneration){
+  if(retryTimer!==null||retryAttempt>=retryDelays.length)return;
+  const delay=retryDelays[retryAttempt++];
+  retryTimer=setTimeout(()=>{
+   retryTimer=null;
+   if(!stopped&&navigator.onLine&&connectionState==='connected'&&requestGeneration===generation)void refresh();
+  },delay);
+ }
  async function refresh(){
   if(stopped||!navigator.onLine||connectionState!=='connected')return;
-  if(busy){dirty=true;return}
+  if(busy||retryTimer!==null){dirty=true;return}
   busy=true;
   const requestGeneration=generation;
   try{
    do{
     dirty=false;
     const snapshot=await loadSharedService();
-    if(!stopped&&navigator.onLine&&connectionState==='connected'&&requestGeneration===generation)onSnapshot(snapshot);
+    if(!stopped&&navigator.onLine&&connectionState==='connected'&&requestGeneration===generation){
+     onSnapshot(snapshot);snapshotFailed=false;retryAttempt=0;clearRetry();
+    }
    }while(dirty&&!stopped&&requestGeneration===generation);
-  }catch(error){if(!stopped&&requestGeneration===generation)onError(error)}
-  finally{busy=false;if(dirty&&!stopped&&navigator.onLine&&connectionState==='connected')void refresh()}
+  }catch(error){
+   if(!stopped&&requestGeneration===generation){
+    onError(error);dirty=false;
+    snapshotFailed=!['42501','PGRST301','SYNC_CONTRACT'].includes(String(error?.code||''));
+    if(snapshotFailed)queueRetry(requestGeneration);
+   }
+  }
+  finally{busy=false;if(dirty&&!snapshotFailed&&!stopped&&navigator.onLine&&connectionState==='connected')void refresh()}
  }
  function startChannel(){
   if(stopped||!navigator.onLine)return;
   const old=channel;
+  clearRetry();retryAttempt=0;snapshotFailed=false;
   generation++;
   connectionState='connecting';
   onConnection(false);
@@ -71,7 +81,7 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
    if(status==='SUBSCRIBED'){
     connectionState='connected';onConnection(true);void refresh();
    }else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status)){
-    connectionState='disconnected';onConnection(false);
+    connectionState='disconnected';clearRetry();onConnection(false);
     onError(Object.assign(new Error('Connexion en direct interrompue'),{code:status}));
    }
   });
@@ -83,7 +93,7 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
  }
  function offline(){
   if(stopped)return;
-  connectionState='disconnected';generation++;onConnection(false);
+  connectionState='disconnected';generation++;clearRetry();snapshotFailed=false;onConnection(false);
   if(channel){const old=channel;channel=null;void supabase.removeChannel(old)}
  }
  const visible=()=>{if(document.visibilityState==='visible')resume()};
@@ -91,11 +101,13 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
  window.addEventListener('online',resume);
  window.addEventListener('offline',offline);
  const timer=setInterval(()=>{
-  if(!stopped&&navigator.onLine&&connectionState!=='connected')startChannel();
+  if(stopped||!navigator.onLine)return;
+  if(connectionState!=='connected')startChannel();
+  else if(snapshotFailed&&!busy&&retryTimer===null){retryAttempt=0;void refresh()}
  },15000);
  startChannel();
  return ()=>{
-  stopped=true;generation++;clearInterval(timer);
+  stopped=true;generation++;clearRetry();clearInterval(timer);
   window.removeEventListener('online',resume);window.removeEventListener('offline',offline);
   document.removeEventListener('visibilitychange',visible);
   if(channel)void supabase.removeChannel(channel);

@@ -16,7 +16,8 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
  const date='2032-11-06',time='19:30',guests=3;
  Object.entries({bookingDate:date,bookingTime:time,bookingGuests:'3',bookingTable:'2,3'}).forEach(([id,value])=>element(id).value=value);
  const events={};
- const window={RestoReception:true,RestoSupabaseReady:true,RestoScreens:{current:()=>'reservationForm'},addEventListener:(name,fn)=>events[name]=fn,dispatchEvent(){}};
+ const storage=new Map();
+ const window={sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},RestoReception:true,RestoSupabaseReady:true,RestoScreens:{current:()=>'reservationForm'},addEventListener:(name,fn)=>events[name]=fn,dispatchEvent(){}};
  let now=0,interval,debounced;
  class Clock extends Date{static now(){return now}}
  const api=vm.runInNewContext(fs.readFileSync(require.resolve('../booking-draft.js'),'utf8').replace(/^import[^\n]+\n/m,'').replace('export function','(function')+')',{
@@ -31,7 +32,7 @@ test('maintenir, prolonger, expirer, revérifier, valider et abandonner une fusi
  const draft=api({rpc:async(_name,args)=>{
   calls.push(args.p_action);
   if(delayRelease&&args.p_action==='release')await new Promise(resolve=>unblock=resolve);
-  return {data:{tables:['a','b'],holds:['h1','h2'],seconds:180}};
+  return {data:{state:args.p_action==='release'?'released':undefined,tables:['a','b'],holds:['h1','h2'],seconds:180}};
  }},(d,t)=>d+'T'+t+':00.000Z');
  const type=async()=>{element('bookingForm').listeners.input();await debounced()};
  await type();assert.deepEqual(calls,['hold']);assert.match(element('draftMessage').textContent,/2 \+ 3.*3 min 00/);

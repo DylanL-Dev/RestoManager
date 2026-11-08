@@ -4,11 +4,16 @@
  const bell=document.createElement('button');bell.type='button';bell.className='serviceBell';bell.setAttribute('aria-label','Rappels de service');bell.innerHTML='<i data-lucide="bell"></i><span class="serviceBellCount" hidden>0</span>';
  const panel=document.createElement('section');panel.className='serviceReminderPanel';panel.hidden=true;panel.setAttribute('role','region');panel.setAttribute('aria-label','Notifications de service');
  (document.querySelector('.headerQuickActions')||document.querySelector('.top'))?.append(bell);document.body.append(panel);
+ const errorMessage=(error,fallback)=>{window.RestoErrors?.diagnostic('notification-action',error);return window.RestoErrors?.message(error,fallback)||fallback};
  const connected=()=>Boolean(window.RestoSharedReservations);
  const read=()=>{if(connected())return ReservationEngine.normalizeReservations(window.RestoSharedReservations);try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}};
  const snoozes=()=>{try{return JSON.parse(localStorage.getItem(SNOOZE)||'{}')}catch{return {}}};
- const sameDay=(d,now)=>d===now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
- const clock=d=>d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+ const sameDay=(d,now)=>{
+  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+  return d===parts.year+'-'+parts.month+'-'+parts.day;
+ };
+ const expectedAt=r=>{try{return new Date(window.RestoBookingInterval?window.RestoBookingInterval(r.date,r.time,r.duration||90)[0]:r.date+'T'+r.time+':00')}catch{return new Date(NaN)}};
+ const clock=d=>d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
  const button=(label,fn,kind)=>{const b=document.createElement('button');b.type='button';b.textContent=label;if(kind)b.className=kind;b.addEventListener('click',fn);return b};
  function collect(){
   if(window.RestoReception===true)return [];
@@ -16,7 +21,7 @@
   const now=new Date(),all=read(),sleep=snoozes(),alerts=[];
   for(const r of all){
    if(!sameDay(r.date,now)||!['reserved','confirmed','late'].includes(r.status))continue;
-   const expected=new Date(r.date+'T'+r.time+':00');
+   const expected=expectedAt(r);
    if(!Number.isFinite(expected.getTime()))continue;
    const delay=Math.floor((now.getTime()-expected.getTime())/60000);
    if(delay<10||Number(sleep['late:'+r.id])>now.getTime())continue;
@@ -24,7 +29,7 @@
   }
   for(const r of all){
    if(r.status!=='seated'||!sameDay(r.date,now))continue;
-   const start=r.seatedAt?new Date(r.seatedAt):new Date(r.date+'T'+r.time+':00');
+   const start=r.seatedAt?new Date(r.seatedAt):expectedAt(r);
    if(!Number.isFinite(start.getTime()))continue;
    const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);
    const remaining=Math.ceil((end.getTime()-now.getTime())/60000);
@@ -125,11 +130,11 @@
     try{
      await window.RestoMarkFbChangeRead?.(a.id);
      openReservationFromAlert(a,a.event_type==='cancelled'?'departed':'active');
-    }catch(err){await window.RestoDialog?.alert(err.message||'Ouverture impossible',{title:'Notification'});}
+    }catch(err){await window.RestoDialog?.alert(errorMessage(err,'Impossible d’ouvrir cette réservation. Réessayez après synchronisation.'),{title:'Notification'});}
    },'serviceReminderPrimary'));
    actions.append(button('Marquer comme lue',async()=>{
     try{await window.RestoMarkFbChangeRead?.(a.id)}
-    catch(err){await window.RestoDialog?.alert(err.message||'Action impossible',{title:'Notification'})}
+    catch(err){await window.RestoDialog?.alert(errorMessage(err,'Cette action ne peut pas être confirmée. Réessayez après synchronisation.'),{title:'Notification'})}
    }));
    item.append(actions);panel.append(item);
   }
@@ -146,9 +151,9 @@
     try{
      await window.RestoMarkFbAlertRead?.(a.id);
      openReservationFromAlert(a,'active');
-    }catch(err){await window.RestoDialog?.alert(err.message||'Lecture impossible',{title:'Notification'});}
+    }catch(err){await window.RestoDialog?.alert(errorMessage(err,'Impossible de lire cette réservation. Réessayez après synchronisation.'),{title:'Notification'});}
    },'serviceReminderPrimary'));
-   actions.append(button('Marquer comme lue',async()=>{try{await window.RestoMarkFbAlertRead?.(a.id)}catch(err){await window.RestoDialog?.alert(err.message||'Action impossible',{title:'Notification'})}}));
+   actions.append(button('Marquer comme lue',async()=>{try{await window.RestoMarkFbAlertRead?.(a.id)}catch(err){await window.RestoDialog?.alert(errorMessage(err,'Cette action ne peut pas être confirmée. Réessayez après synchronisation.'),{title:'Notification'})}}));
    item.append(title,detail,actions);panel.append(item);
   }
   for(const a of alerts){
@@ -157,7 +162,7 @@
     const title=document.createElement('strong');title.textContent='Client en retard · '+a.r.client+' · Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ');
     const desc=document.createElement('p');desc.textContent='Attendu à '+a.r.time+' · '+a.delay+' min de retard. Vérifiez si le client est installé avant de modifier son statut.';
     const actions=document.createElement('div');actions.className='serviceReminderActions';
-    const changeStatus=async(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}if(connected()){try{await window.RestoChangeSharedStatus(all[idx],status)}catch(error){await window.RestoDialog.alert(error.message||'Action impossible.',{title:'Action impossible'})}update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){window.RestoDialog.alert(result.error||'Action impossible.',{title:'Action impossible'});return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
+    const changeStatus=async(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}if(connected()){try{await window.RestoChangeSharedStatus(all[idx],status)}catch(error){await window.RestoDialog.alert(errorMessage(error,'Cette action ne peut pas être confirmée. Réessayez après synchronisation.'),{title:'Action impossible'})}update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){window.RestoDialog.alert(result.error||'Action impossible.',{title:'Action impossible'});return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
     if(a.r.status!=='late')actions.append(button('Signaler le retard',()=>changeStatus('late')));
     actions.append(button('Rappeler dans 10 min',()=>{const data=snoozes();data['late:'+a.r.id]=Date.now()+600000;localStorage.setItem(SNOOZE,JSON.stringify(data));update()}));
     item.append(title,desc,actions);panel.append(item);continue;
@@ -168,7 +173,7 @@
    actions.append(button('Libérer la table',async()=>{
     if(!await window.RestoConfirmRelease(a.r))return;
     const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||all[idx].status!=='seated'){update();return}
-    if(connected()){try{await window.RestoChangeSharedStatus(all[idx],'released')}catch(error){await window.RestoDialog.alert(error.message||'Impossible de libérer cette table.',{title:'Libération impossible'})}update();return}
+    if(connected()){try{await window.RestoChangeSharedStatus(all[idx],'released')}catch(error){await window.RestoDialog.alert(errorMessage(error,'Libération non confirmée. Vérifiez la table après synchronisation.'),{title:'Libération impossible'})}update();return}
     const result=ReservationEngine.transition(all[idx],'released',undefined,all);
     if(!result.valid){window.RestoDialog.alert(result.error||'Impossible de libérer cette table.',{title:'Libération impossible'});return}
     all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update();

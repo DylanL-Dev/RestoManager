@@ -46,7 +46,8 @@ test('network loss disables booking and requires fresh confirmation',async()=>{
  assert.match(t.elements.get('draftMessage').textContent,/revérifié après reconnexion/);
  assert.equal(t.calls.length,0);
  t.navigator.onLine=true;t.app.listeners.online();
- assert.equal(t.submit.disabled,false);
+ // A network event alone is not an authoritative synchronized snapshot.
+ assert.equal(t.submit.disabled,true);
  await assert.rejects(t.api.confirm({}),/Connexion interrompue/);
  assert.equal(t.calls.length,0);
 });

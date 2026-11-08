@@ -13,7 +13,7 @@ function setup(deferHold=false){
  items.get('bookingDate').value='2027-02-10';items.get('bookingTime').value='19:00';items.get('bookingGuests').value='1';items.get('bookingTable').value='2';
  const doc={visibilityState:'visible',getElementById:id=>items.get(id),addEventListener(t,f){docEvents[t]=f}};
  const win={RestoSupabaseReady:true,RestoReception:false,RestoScreens:{current:()=>screen},RestoDraftHolds:[],addEventListener(t,f){winEvents[t]=f},dispatchEvent(){},RestoRefreshSharedService:async()=>{}};
- const supabase={rpc:async(_,a)=>{calls.push(a.p_action);if(a.p_action==='hold')return deferHold?new Promise(ok=>{resolveHold=ok}):{data:{holds:['hold1'],tables:['table2'],seconds:180},error:null};return {data:{},error:null}}};
+ const supabase={rpc:async(_,a)=>{calls.push(a.p_action);if(a.p_action==='hold')return deferHold?new Promise(ok=>{resolveHold=ok}):{data:{holds:['hold1'],tables:['table2'],seconds:180},error:null};return {data:{state:'released'},error:null}}};
  const api=factory(doc,win,{onLine:true},()=>0,fn=>timers.push(fn),()=>{}, {randomUUID:()=> 'test-key'},Date,{get:()=>({tables:[{id:'table2',number:2}]})},{getDefaultDuration:()=>90},class Event{},()=>'',supabase,()=>new Date('2027-02-10T18:00:00Z').toISOString())(supabase,()=>new Date('2027-02-10T18:00:00Z').toISOString());
  return {api,items,calls,timers,doc,docEvents,winEvents,depart(){screen='tables';winEvents['restomanager:screen']({detail:'tables'})},finishHold(){resolveHold({data:{holds:['hold1'],tables:['table2'],seconds:180},error:null})}};
 }
