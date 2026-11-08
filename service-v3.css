@@ -1755,7 +1755,7 @@ html[data-theme="dark"] .reportIssueForm textarea{background:#1a3a2a;color:#ebff
 /* Arrival load settings — compact access and accessible touch slider. */
 .rushDashHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .rushDashHead>div{min-width:0;flex:1}
-.rushSettingsShortcut{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;min-height:44px;border:1px solid #cde3d7;border-radius:12px;background:#f4faf6;color:#136447;font-size:12px;font-weight:750;padding:9px 12px;cursor:pointer}
+.rushSettingsShortcut{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:44px;min-width:44px;height:44px;min-height:44px;border:1px solid #cde3d7;border-radius:12px;background:#f4faf6;color:#136447;padding:0;cursor:pointer}
 .rushSettingsShortcut svg{width:18px;height:18px}
 .rushSettingsShortcut:hover{background:#e6f4eb;border-color:#92cdb1}
 .rushSettingsShortcut:focus-visible,.rushPercentSlider:focus-visible{outline:3px solid #2eb287;outline-offset:3px}
@@ -1774,4 +1774,4 @@ html[data-theme="dark"] .reportIssueForm textarea{background:#1a3a2a;color:#ebff
 html[data-theme="dark"] .rushSettingsShortcut{background:#244a38;color:#def9e9;border-color:#54745f}
 html[data-theme="dark"] .rushSettingsValue{background:#1c5139;color:#b6f4d0}
 html[data-theme="dark"] .rushSettingsHint{background:#203d30;border-color:#446953;color:#e1f3e7}
-@media(max-width:520px){.rushSettingsShortcut{min-width:44px;padding:10px}.rushSettingsShortcut span{display:none}.rushSettingsValue{font-size:22px}.rushSettingsHeader{gap:8px}}
+@media(max-width:520px){.rushSettingsShortcut{width:44px;min-width:44px;height:44px;padding:0}.rushSettingsValue{font-size:22px}.rushSettingsHeader{gap:8px}}
