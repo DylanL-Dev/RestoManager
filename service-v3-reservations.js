@@ -3,6 +3,25 @@
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
 const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='active';
+let navEditBaseline=null;
+function navigationEditSnapshot(){
+ const form=$('editForm');
+ return JSON.stringify([...form.querySelectorAll('input,select,textarea')]
+  .filter(el=>!el.disabled&&el.type!=='button'&&el.type!=='submit'&&el.type!=='hidden')
+  .map(el=>[el.id||el.name,el.type==='radio'||el.type==='checkbox'?el.checked:el.value]).concat([['tables',chosenTables.join(',')]]));
+}
+function notifyNavigationEditorOpen(){navEditBaseline=navigationEditSnapshot();window.dispatchEvent(new Event('restomanager:editor-open'));}
+function closeNavigationEditor(){
+ if(savingEdit)return;
+ editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];navEditBaseline=null;
+ $('editForm').hidden=true;
+ window.dispatchEvent(new Event('restomanager:editor-close'));
+}
+window.RestoEditNavigation={
+ isOpen:()=>!$('editForm').hidden,
+ isDirty:()=>!$('editForm').hidden&&(savingEdit||navEditBaseline!==null&&navigationEditSnapshot()!==navEditBaseline),
+ close:closeNavigationEditor
+};
 const departedStatuses=new Set(['completed','released','cancelled','no_show']);
 function sameTables(a,b){return a.length===b.length&&a.every(n=>b.includes(n))}
 function editAvailability(tables){
@@ -74,7 +93,7 @@ function openSharedEditor(r){
  $('editConflict').hidden=true;$('editCurrentValues').textContent='';$('editReloadCurrent').hidden=true;
  editChoices();
  ['editDate','editTime'].forEach(id=>$(id).dispatchEvent(new Event('change',{bubbles:true})));
- $('editForm').hidden=false;updateEditDetailLimits();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+ $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
  $('editClient').focus({preventScroll:true});
 }
 function showEditConflict(uncertain=false){
@@ -150,7 +169,7 @@ async function action(id,kind){
  if(kind==='edit'){
  editing=id;editingBase=window.ReservationEdit.capture(r);chosenTables=r.tables.slice();
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
- editChoices();$('editForm').hidden=false;updateEditDetailLimits();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
+ editChoices();$('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
  }
  if(kind==='cancel'&&!await window.RestoDialog.confirm('Annuler la réservation de '+r.client+' ?',{title:'Annuler la réservation',danger:true,acceptLabel:'Annuler la réservation'}))return;
  if(kind==='seated'&&window.RestoCheckOccupiedTables?.(r,all))return;
@@ -348,7 +367,7 @@ function render(){
 $('reservationDate').value=new Date().toLocaleDateString('en-CA');
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',()=>{if($('reservationQuery').value.trim()){$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))}else render()});
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))});
-$('editCancel').addEventListener('click',()=>{if(savingEdit)return;editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true});
+$('editCancel').addEventListener('click',async()=>{if(savingEdit)return;if(window.RestoEditNavigation.isDirty()&&!(await window.RestoDialog.confirm('Vous avez des modifications non enregistrées. Voulez-vous fermer la modification ?',{title:'Modifications non enregistrées',acceptLabel:'Quitter sans enregistrer',danger:true})))return;closeNavigationEditor()});
 $('editReviewCurrent')?.addEventListener('click',async()=>{try{await reviewCurrentEdit()}catch(error){notify(errorMessage(error))}});
 $('editReloadCurrent')?.addEventListener('click',async()=>{
  if(!editing||savingEdit||!reviewedVersion)return;
@@ -387,7 +406,7 @@ $('editForm').addEventListener('submit',async e=>{
    // oversized former assignment after a guest-count decrease.
    const automaticallyReassigned=Boolean(window.RestoReception&&!sameTables(previousTables,updated.tables));
    const assignedLabel=updated.tables.length===1?'table '+updated.tables[0]:'tables '+updated.tables.join(' + ');
-   editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;
+   editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;navEditBaseline=null;window.dispatchEvent(new Event('restomanager:editor-close'));
    notify(automaticallyReassigned?'Réservation modifiée. Attribution réajustée automatiquement : '+assignedLabel+'.':'Réservation modifiée.');
    try{await window.RestoRefreshSharedService?.()}
    catch(_error){notify('Réservation modifiée. La mise à jour de l’affichage attend le retour de la connexion.');}
@@ -423,9 +442,9 @@ $('editForm').addEventListener('submit',async e=>{
   const currentWarnings=E.seatingWarnings(updated,latest,editing);
   if(JSON.stringify(currentWarnings)!==JSON.stringify(warnings))throw business('La situation des tables a changé. Vérifiez et confirmez à nouveau.');
   updated.seatingOverride={confirmedAt:new Date().toISOString(),warnings:warnings.map(w=>({id:w.id,client:w.client,plannedEnd:w.plannedEnd,gapMinutes:w.gapMinutes}))};
-  latest[latestIndex]=updated;save(latest);editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée avec confirmation.');return;
+  latest[latestIndex]=updated;save(latest);editing=null;chosenTables=[];$('editForm').hidden=true;navEditBaseline=null;window.dispatchEvent(new Event('restomanager:editor-close'));notify('Réservation modifiée avec confirmation.');return;
  }else delete updated.seatingOverride;
- all[i]=updated;save(all);editing=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée.');
+ all[i]=updated;save(all);editing=null;chosenTables=[];$('editForm').hidden=true;navEditBaseline=null;window.dispatchEvent(new Event('restomanager:editor-close'));notify('Réservation modifiée.');
  }catch(err){notify(errorMessage(err))}
 });
 ['editNotes','editAllergies'].forEach(id=>$(id).addEventListener('input',updateEditDetailLimits));
