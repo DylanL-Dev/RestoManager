@@ -159,6 +159,9 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await appLink('reservations');
    await view.page.goBack({waitUntil:'domcontentloaded'});
    await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
+   await appLink('reservations');
+   await appLink('tables');
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false,'Back must be hidden on home even after navigation history');
    await appLink('reservationForm');
    if(role==='fb_admin'){
     await view.page.locator('.restoAddChoiceOverlay').waitFor({state:'visible'});
