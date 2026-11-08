@@ -55,8 +55,8 @@ for (const page of found.filter(f => f.endsWith('.html'))) {
   for (const tag of html.match(/<(?:script|link|img)\b[^>]*>/gi) || []) {
     if (/^<link\b/i.test(tag) && !/\brel\s*=\s*["'](?:stylesheet|icon|manifest|apple-touch-icon|preload|modulepreload)["']/i.test(tag)) continue;
     const attr = /^<link\b/i.test(tag) ? 'href' : 'src';
-    const match = tag.match(new RegExp('\\b' + attr + '\\s*=\\s*(["\\'])(.*?)\\1', 'i'));
-    if (match) localResource(page, match[2]);
+    const match = tag.match(/\b(?:src|href)\s*=\s*["']([^"']+)["']/i);
+    if (match) localResource(page, match[1]);
   }
 }
 
