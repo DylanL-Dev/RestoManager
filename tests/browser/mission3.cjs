@@ -160,6 +160,11 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await view.page.goBack({waitUntil:'domcontentloaded'});
    await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
    await appLink('reservationForm');
+   if(role==='fb_admin'){
+    await view.page.locator('.restoAddChoiceOverlay').waitFor({state:'visible'});
+    await view.page.locator('.restoAddChoiceOption[data-choice="reservation"]').click();
+   }
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservationForm');
    await view.page.locator('#bookingClient').fill('Brouillon non enregistré');
    await appLink('reservations');
    const leaveWarning=view.page.locator('.rmNoticeOverlay');
