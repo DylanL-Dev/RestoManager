@@ -1298,3 +1298,66 @@ html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns
 .serviceDataStatus button{margin-top:10px;min-height:44px;padding:8px 16px}
 .serviceDataStatus[data-state="error"]{background:#fff5e8;border-color:#ebcd9e;color:#68421a}
 .serviceDataStatus[hidden]{display:none}
+
+
+/* RestoManager 2026: compact, accessible service identity on phone/PWA. */
+.serviceIntroContent{min-width:0;flex:1 1 auto}
+.serviceContext{display:flex;align-items:center;flex-wrap:wrap;column-gap:12px;row-gap:4px}
+.serviceIntro .serviceRole,.serviceIntro .serviceVenue{
+ display:inline-flex;align-items:center;gap:7px;margin:0;
+ font-size:12px;font-weight:700;line-height:1.45;letter-spacing:0;color:#176c51;
+}
+.serviceIntro .serviceRole svg,.serviceIntro .serviceVenue svg,
+.serviceIntro .serviceIntroDate svg{width:17px;height:17px;flex:0 0 17px}
+.serviceIntro .serviceRole span,.serviceIntro .serviceVenue span{min-width:0}
+.serviceIntro .serviceVenue{min-width:0}
+.serviceIntro .serviceVenue span{overflow-wrap:anywhere}
+.serviceIntro .serviceIntroDate{display:none}
+.serviceIntro h1 span{display:inline}
+@media(max-width:700px){
+ .serviceIntro{
+  display:flex;flex-direction:column;align-items:stretch;gap:11px;
+  margin:5px 2px 15px;
+ }
+ .serviceIntroContent{width:100%}
+ .serviceContext{
+  display:flex;align-items:flex-start;flex-direction:column;gap:6px;
+  margin:0 0 12px;
+ }
+ .serviceIntro .serviceRole{
+  display:inline-flex;align-self:flex-start;background:#def4e7;
+  color:#175c45;border-radius:999px;padding:6px 11px;
+  font-size:12px;font-weight:800;letter-spacing:0;line-height:1.35;
+ }
+ .serviceIntro .serviceVenue{
+  display:flex;max-width:100%;font-size:13px;font-weight:750;
+  line-height:1.4;color:#14715d;letter-spacing:0;
+ }
+ .serviceIntro .serviceVenue span{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ }
+ .serviceIntro h1{
+  font-size:clamp(23px,6vw,28px);font-weight:800;
+  line-height:1.12;letter-spacing:-.7px;margin:2px 0 9px;
+ }
+ .serviceIntro h1 span{display:block}
+ .serviceIntro .serviceIntroDate{
+  display:flex;align-items:center;gap:8px;font-size:12px;
+  font-weight:650;line-height:1.4;color:#50695d;margin:0;
+ }
+ .serviceIntro #teamGreeting{display:none}
+ .serviceIntro #syncBadge{align-self:flex-start;min-height:34px;padding:7px 12px;font-size:12px}
+}
+@media(max-width:350px){
+ .serviceIntro h1{font-size:22px}
+ .serviceIntro .serviceVenue{font-size:12px}
+}
+html[data-theme="dark"] .serviceIntro .serviceRole{
+ background:#244f3e;color:#d8f3e2;
+}
+html[data-theme="dark"] .serviceIntro .serviceVenue{
+ color:#a5e9cd;
+}
+html[data-theme="dark"] .serviceIntro .serviceIntroDate{
+ color:#c6d8cb;
+}
