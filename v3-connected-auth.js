@@ -38,13 +38,26 @@ try{
   text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
   document.querySelector('#bookingTable').closest('label').after(text);
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
-  // "Disponibilités" did not describe the Reception's actual reservation workflow.
-  const reservationLink=document.querySelector('.sidebar a[href="#reservationForm"] span');
-  if(reservationLink)reservationLink.textContent='Ajouter une réservation';
+  // The five menu destinations keep the same hierarchy on both staff roles.
+  // Reception sees the read-only service overview, never restaurant passage actions.
   const reservationHeading=document.querySelector('#reservationForm .actionPanelBody h2');
-  if(reservationHeading)reservationHeading.textContent='Ajouter une réservation';
-  const serviceSidebar=document.querySelector('.sidebar a[href="#passages"] span');
-  if(serviceSidebar)serviceSidebar.textContent='Service';
+  if(reservationHeading)reservationHeading.textContent='Nouvelle réservation';
+  const serviceLink=document.querySelector('.sidebar a[href="#passages"]');
+  const serviceSidebar=serviceLink?.querySelector('span');
+  if(serviceSidebar)serviceSidebar.textContent='Suivi du service';
+  const serviceMobile=document.querySelector('.mobileNavItem[data-nav="passages"]');
+  const serviceMobileLabel=serviceMobile?.querySelector('span:last-child');
+  if(serviceMobileLabel)serviceMobileLabel.textContent='Suivi';
+  if(serviceMobile)serviceMobile.setAttribute('aria-label','Suivi du service');
+  for(const link of [serviceLink,serviceMobile]){
+   const existingIcon=link?.querySelector('svg, i[data-lucide]');
+   if(!existingIcon)continue;
+   const icon=document.createElement('i');
+   icon.dataset.lucide='clock-3';
+   icon.className='navSvgIcon';
+   icon.setAttribute('aria-hidden','true');
+   existingIcon.replaceWith(icon);
+  }
   const serviceShortcut=document.querySelector('.quickAction[href="#passages"] span');
   if(serviceShortcut)serviceShortcut.textContent='Suivi du service';
  }
