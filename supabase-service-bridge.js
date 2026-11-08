@@ -13,7 +13,7 @@ export async function requireStaff(){
  const {data:{user},error}=await supabase.auth.getUser();
  if(error||!user)throw new Error('Connexion requise');
  const {data:profile,error:profileError}=await supabase.from('staff_profiles')
-  .select('role,active,display_name').eq('user_id',user.id).single();
+  .select('role,active,display_name,restaurant_id').eq('user_id',user.id).single();
  if(profileError||!profile?.active||!['reception','fb_admin'].includes(profile.role))
   throw new Error('Compte non autorisé');
  return {user,profile};

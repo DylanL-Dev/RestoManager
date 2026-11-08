@@ -143,6 +143,21 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.ok(mobileNav.every(item=>item.svg),'Mobile navigation icons must render offline');
    assert.equal(await view.page.locator('.quickAction[href="#reservationForm"] span').innerText(),'Ajouter un client');
    pass(role+' '+viewport.width+'px coherent five-tab hierarchy and accessible Lucide icons');
+   const establishmentFull='À l’Épicerie — Mercure Rouen Centre Champ-de-Mars';
+   const tenantHeader=view.page.locator('#headerEstablishment');
+   await tenantHeader.waitFor({state:'visible'});
+   assert.equal(await tenantHeader.innerText(),establishmentFull);
+   assert.equal(await tenantHeader.getAttribute('title'),establishmentFull);
+   assert.equal(await view.page.locator('#currentEstablishmentName').innerText(),establishmentFull);
+   const headerLayout=await view.page.evaluate(()=>{
+    const name=document.getElementById('headerEstablishment').getBoundingClientRect();
+    const refresh=document.getElementById('refreshAppBtn').getBoundingClientRect();
+    return {nameRight:name.right,refreshLeft:refresh.left,viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth};
+   });
+   assert.ok(headerLayout.nameRight<=headerLayout.refreshLeft+1,'Establishment must precede Refresh without overlap');
+   assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Establishment header must not overflow viewport');
+   pass(role+' '+viewport.width+'px establishment name in header and Gestion without overflow');
+
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
     await view.page.evaluate(screen=>window.RestoScreens.show(screen),screen);await view.page.clock.runFor(32);
     const layout=await view.page.evaluate(()=>({viewport:innerWidth,body:document.body.scrollWidth,document:document.documentElement.scrollWidth,visible:[...document.querySelectorAll('.appScreen')].filter(screen=>!screen.hidden).length}));
