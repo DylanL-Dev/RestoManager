@@ -5,7 +5,7 @@ const fs=require('node:fs');
 const vm=require('node:vm');
 const source=fs.readFileSync(require('node:path').join(__dirname,'../service-v3-screens.js'),'utf8');
 const start=source.indexOf("document.addEventListener('click',e=>{");
-const end=source.indexOf("\nwindow.addEventListener('hashchange'",start);
+const end=source.indexOf("\nwindow.addEventListener('popstate'",start);
 assert.ok(start>=0&&end>start,'Service link interception must be present');
 function setup(){
  let click,scrolled=0,screen=null;
@@ -15,8 +15,8 @@ function setup(){
   getElementById(id){return id==='tables'?grid:null}
  };
  const screens=new Map([['tables',{}],['reservations',{}]]);
- const navigate=id=>{screen=id};
- vm.runInNewContext(source.slice(start,end),{document,screens,navigate});
+ const request=(id,options={})=>{screen=id;if(options.scrollTables)grid.scrollIntoView({block:'start'})};
+ vm.runInNewContext(source.slice(start,end),{document,screens,request});
  assert.equal(typeof click,'function');
  function run(href,quick){
   let prevented=false;
