@@ -5,30 +5,30 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#103e33">
 <meta name="robots" content="noindex,nofollow">
-<title>Console Root · RestoManager</title>
+<title>Assistance & administration · RestoManager</title>
 <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
 <link rel="stylesheet" href="creator-console.css?v=20261108-rootconsole1">
 </head>
 <body>
 <section id="loginPanel" class="loginSurface">
  <main class="loginCard">
-  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Console d'administration</small></div></div>
-  <span class="ownerBadge">ACCÈS CRÉATEUR</span>
-  <h1>Bienvenue sur votre console</h1>
-  <p class="ownerIntro">Connexion privée à l'administration RestoManager. Identifiant temporaire <strong>root</strong>, protégé par votre mot de passe Supabase.</p>
+  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div>
+  <span class="ownerBadge">ESPACE ADMINISTRATION</span>
+  <h1>Espace Assistance & administration</h1>
+  <p class="ownerIntro">Accédez à votre espace de pilotage pour superviser les établissements, traiter les demandes d’assistance et suivre la plateforme. Connexion sécurisée réservée aux administrateurs autorisés.</p>
   <form id="creatorLogin">
-   <label for="ownerUsername">Identifiant Root</label>
+   <label for="ownerUsername">Identifiant administrateur</label>
    <input id="ownerUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="root" required>
    <label for="ownerPassword">Mot de passe</label>
    <input id="ownerPassword" type="password" autocomplete="current-password" required>
-   <button id="ownerSubmit" type="submit">Accéder à la console</button>
+   <button id="ownerSubmit" type="submit">Se connecter à l’administration</button>
   </form>
   <a class="loginBack" href="login.html">Retour à la connexion des équipes</a>
  </main>
 </section>
 <div id="ownerPanel" class="ownerShell" hidden>
  <aside class="ownerSidebar" id="ownerSidebar">
-  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Control Center</small></div></div>
+  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div>
   <span class="ownerSidebarCaption">PLATEFORME</span>
   <nav class="ownerNavigation" aria-label="Navigation Root">
    <button type="button" data-owner-nav="dashboard" class="active">▦ <span>Vue générale</span></button>
@@ -42,11 +42,11 @@
  <div class="ownerWorkspace">
   <header class="ownerTopbar">
    <div class="ownerTopbarLeft"><button id="ownerNavToggle" class="ownerNavToggle" type="button" aria-label="Ouvrir la navigation" aria-expanded="false">☰</button><div><small>RestoManager / Administration</small><strong id="ownerPageTitle">Vue générale</strong></div></div>
-   <span class="ownerAccount">● Administrateur Root</span>
+   <span class="ownerAccount">● Administration</span>
   </header>
   <main class="ownerContent">
    <section data-owner-section="dashboard">
-    <div class="ownerHeadline"><div><span class="ownerEyebrow">CONSOLE DE CONTRÔLE</span><h1>Vue générale</h1><p>Une vue claire sur ta plateforme, sans accès direct aux réservations des restaurants.</p></div><button id="ownerRefreshOverview" class="secondary" type="button">↻ Actualiser</button></div>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">CONSOLE DE CONTRÔLE</span><h1>Vue générale</h1><p>Suivez l’activité de la plateforme et les demandes d’assistance, sans intervenir dans les réservations.</p></div><button id="ownerRefreshOverview" class="secondary" type="button">↻ Actualiser</button></div>
     <div class="ownerMetrics">
      <article class="ownerMetric"><small>Établissements</small><strong id="ownerTotalRestaurants">—</strong><span>Enregistrés sur la plateforme</span></article>
      <article class="ownerMetric"><small>Signalements reçus</small><strong id="ownerTotalReports">—</strong><span>1000 derniers au maximum</span></article>
