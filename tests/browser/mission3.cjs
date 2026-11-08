@@ -143,6 +143,77 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.ok(mobileNav.every(item=>item.svg),'Mobile navigation icons must render offline');
    assert.equal(await view.page.locator('.quickAction[href="#reservationForm"] span').innerText(),'Ajouter un client');
    pass(role+' '+viewport.width+'px coherent five-tab hierarchy and accessible Lucide icons');
+   // NAV-01: functional Back on the actual browser history (and Android PWA).
+   const appLink=async id=>{
+    const selector=viewport.width<=900?'.mobileNavItem[data-nav="'+id+'"]':'.sidebar a[href="#'+id+'"]';
+    await view.page.locator(selector).click();
+   };
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false,'No back control on the initial screen');
+   await appLink('reservations');
+   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservations');
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),true);
+   assert.ok(await view.page.locator('#navBackBtn svg').count(),'Back control must render offline Lucide arrow-left');
+   await view.page.locator('#navBackBtn').click();
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false);
+   await appLink('reservations');
+   await view.page.goBack({waitUntil:'domcontentloaded'});
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
+   await appLink('reservationForm');
+   if(role==='fb_admin'){
+    await view.page.locator('.restoAddChoiceOverlay').waitFor({state:'visible'});
+    await view.page.locator('.restoAddChoiceOption[data-choice="reservation"]').click();
+   }
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservationForm');
+   await view.page.locator('#bookingClient').fill('Brouillon non enregistré');
+   await appLink('reservations');
+   const leaveWarning=view.page.locator('.rmNoticeOverlay');
+   await leaveWarning.waitFor({state:'visible'});
+   assert.match(await leaveWarning.innerText(),/modifications non enregistrées/i);
+   await leaveWarning.getByRole('button',{name:'Annuler'}).click();
+   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservationForm');
+   assert.equal(await view.page.locator('#bookingClient').inputValue(),'Brouillon non enregistré');
+   await appLink('reservations');
+   await leaveWarning.waitFor({state:'visible'});
+   await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
+   pass(role+' '+viewport.width+'px navigation browser/toolbar Back and protected booking draft');
+   // Returning from an unsaved reservation editor must protect the local draft.
+   await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
+   await view.page.locator('#reservationShowAll').click();
+   await view.page.locator('[data-reservation-action="edit"]').first().click();
+   await view.page.locator('#editForm').waitFor({state:'visible'});
+   await view.page.locator('#editClient').fill('Nom provisoire non enregistré');
+   await view.page.locator('#navBackBtn').click();
+   await leaveWarning.waitFor({state:'visible'});
+   await leaveWarning.getByRole('button',{name:'Annuler'}).click();
+   assert.equal(await view.page.locator('#editForm').isVisible(),true,'Cancel must preserve editor');
+   assert.equal(await view.page.locator('#editClient').inputValue(),'Nom provisoire non enregistré');
+   await view.page.locator('#navBackBtn').click();
+   await leaveWarning.waitFor({state:'visible'});
+   await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
+   await view.page.waitForFunction(()=>document.getElementById('editForm').hidden);
+   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservations');
+   pass(role+' '+viewport.width+'px protected edit form Back and cancellation');
+   if(role==='fb_admin'&&viewport.width===390){
+    // Simulate Android/system Back while an unsaved reservation is open.
+    await view.page.evaluate(()=>window.RestoScreens.show('reservationForm'));
+    await view.page.locator('#bookingClient').fill('Brouillon du bouton Retour Android');
+    await view.page.goBack({waitUntil:'domcontentloaded'});
+    await leaveWarning.waitFor({state:'visible'});
+    await leaveWarning.getByRole('button',{name:'Annuler'}).click();
+    assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservationForm');
+    assert.equal(await view.page.locator('#bookingClient').inputValue(),'Brouillon du bouton Retour Android');
+    await view.page.goBack({waitUntil:'domcontentloaded'});
+    await leaveWarning.waitFor({state:'visible'});
+    await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
+    await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
+    pass('Android/browser Back native navigation protects dirty draft');
+   }
+   // The existing sidebar regression needs a long service screen to scroll.
+   await view.page.evaluate(()=>window.RestoScreens.show('tables'));
+
+
    const sidebarInfo=await view.page.evaluate(()=>{
     const sidebar=document.querySelector('.shell > .sidebar');
     const footer=sidebar.querySelector('.sidebarFooter');

@@ -10,7 +10,7 @@
  document.addEventListener('click',event=>{
   const anchor=event.target.closest('a[href="#reservationForm"]');
   if(anchor&&(anchor.classList.contains('mobileNavAdd')||anchor.closest('.sidebar'))){
-   event.preventDefault();event.stopImmediatePropagation();if(window.RestoReception)window.RestoScreens.show('reservationForm');else open();
+   event.preventDefault();event.stopImmediatePropagation();if(window.RestoReception)window.RestoScreens.request('reservationForm');else open();
   }
  },true);
  overlay.querySelector('.restoAddChoiceClose').addEventListener('click',close);
@@ -21,9 +21,11 @@
  });
  overlay.querySelectorAll('[data-choice]').forEach(button=>button.addEventListener('click',()=>{
   const choice=button.dataset.choice;close();
-  if(choice==='reservation'){window.RestoScreens?.show('reservationForm');document.getElementById('reservationForm')?.scrollIntoView({block:'start'});return}
+  if(choice==='reservation'){void window.RestoScreens?.request('reservationForm');return}
   const panel=document.getElementById('passages');if(panel)panel.open=true;
-  window.RestoScreens?.show('passages');
-  requestAnimationFrame(()=>{panel?.scrollIntoView({block:'start',behavior:'instant'});document.getElementById('walkinGuests')?.focus({preventScroll:true})});
+  void window.RestoScreens?.request('passages').then(()=>{
+   if(window.RestoScreens.current()!=='passages')return;
+   requestAnimationFrame(()=>{panel?.scrollIntoView({block:'start',behavior:'instant'});document.getElementById('walkinGuests')?.focus({preventScroll:true})});
+  });
  }));
 })();
