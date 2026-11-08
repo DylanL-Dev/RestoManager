@@ -137,6 +137,9 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // placing install/edit/change-table/options together on wide viewports.
    await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
    await view.page.locator('#reservationShowAll').click();
+   // Wait for the 230ms appScreenActive translateY entrance animation to finish.
+   // Otherwise sequential boundingBox() calls capture different animation frames.
+   await view.page.clock.runFor(330);
    const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
    const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
    const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
