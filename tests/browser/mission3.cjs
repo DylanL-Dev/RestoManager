@@ -154,7 +154,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(installBox&&changeBox);
     if(viewport.width>=750){
      for(const rect of [editBox,changeBox,moreBox])
-      assert.ok(Math.abs(rect.y-installBox.y)<=2,'Tablet/desktop actions must align on one horizontal row');
+      assert.ok(Math.abs(rect.y-installBox.y)<=2,JSON.stringify({message:'Tablet/desktop action misalignment',role,viewport,installBox,editBox,changeBox,moreBox}));
      assert.ok(installBox.x<editBox.x&&editBox.x<changeBox.x&&changeBox.x<moreBox.x,
       'Actions must follow install, edit, change table, extra order');
     }else{
