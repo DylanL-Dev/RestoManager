@@ -1313,7 +1313,7 @@ html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns
 .serviceIntro .serviceVenue{min-width:0}
 .serviceIntro .serviceVenue span{overflow-wrap:anywhere}
 .serviceIntro .serviceIntroDate{display:none}
-.serviceIntro h1 span{display:inline}
+.serviceIntro h1{max-width:100%}
 @media(max-width:700px){
  .serviceIntro{
   display:flex;flex-direction:column;align-items:stretch;gap:11px;
@@ -1340,7 +1340,7 @@ html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns
   font-size:clamp(23px,6vw,28px);font-weight:800;
   line-height:1.12;letter-spacing:-.7px;margin:2px 0 9px;
  }
- .serviceIntro h1 span{display:block}
+ .serviceIntro h1{max-width:100%}
  .serviceIntro .serviceIntroDate{
   display:flex;align-items:center;gap:8px;font-size:12px;
   font-weight:650;line-height:1.4;color:#50695d;margin:0;
@@ -1360,4 +1360,66 @@ html[data-theme="dark"] .serviceIntro .serviceVenue{
 }
 html[data-theme="dark"] .serviceIntro .serviceIntroDate{
  color:#c6d8cb;
+}
+
+
+/* Service overview polish: natural headline wrapping and readable Lucide KPIs. */
+.serviceIntro h1{
+ overflow-wrap:normal;
+ word-break:normal;
+ text-wrap:pretty;
+}
+.kpi .kpiHead{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ min-width:0;
+}
+.kpi .kpiHead .kpiLabel{
+ display:block;
+ min-width:0;
+ font-size:13px;
+ line-height:1.35;
+ color:#526176;
+}
+.kpi .kpiHead .kpiIcon{
+ display:block;
+ width:19px;
+ height:19px;
+ flex:0 0 19px;
+ color:#177354;
+ stroke-width:1.8;
+}
+.kpi strong{font-variant-numeric:tabular-nums}
+.occupancyHead .occupancyTitleText{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ min-width:0;
+}
+.occupancyHead .occupancyTitleIcon{
+ width:20px;
+ height:20px;
+ flex:0 0 20px;
+ color:#177354;
+ stroke-width:1.8;
+}
+@media(max-width:700px){
+ .serviceIntro h1{
+  font-size:clamp(22px,5.5vw,27px);
+  line-height:1.15;
+  letter-spacing:-.7px;
+  max-width:100%;
+ }
+ .kpi .kpiHead{gap:7px;align-items:flex-start}
+ .kpi .kpiHead .kpiIcon{width:18px;height:18px;flex-basis:18px}
+ .kpi .kpiHead .kpiLabel{font-size:12px}
+ .occupancyHead .occupancyTitleIcon{width:19px;height:19px;flex-basis:19px}
+}
+html[data-theme="dark"] .kpi .kpiHead .kpiLabel{
+ color:var(--dark-muted);
+}
+html[data-theme="dark"] .kpi .kpiHead .kpiIcon,
+html[data-theme="dark"] .occupancyHead .occupancyTitleIcon{
+ color:#80d8af;
 }
