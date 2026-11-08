@@ -146,6 +146,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await more.click();
    await view.page.getByRole('dialog',{name:'Actions de la réservation'}).waitFor();
    await view.page.getByRole('button',{name:'Fermer les actions'}).click();
+   await view.page.clock.runFor(240);
    await view.page.waitForFunction(()=>!document.querySelector('.reservationMenuOverlay'));
    pass(role+' '+viewport.width+'px reservation actions aligned without overflow and menu accessible');
    await edit(view.page);await view.page.locator('#editClient').fill('Fictif accessible');await view.page.locator('#editNotes').fill('Note fictive '.repeat(60));
