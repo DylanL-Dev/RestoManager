@@ -514,6 +514,7 @@ function refreshAvailability(){
  select.required=!window.RestoReception;
  const connected=Array.isArray(window.RestoSharedReservations);
  if(connected&&(!window.RestoSupabaseReady||navigator.onLine===false)){
+  if(window.RestoSyncState==='readonly'&&navigator.onLine!==false){select.replaceChildren();applyState('readonly','Les réservations sont suspendues jusqu’à la mise à jour du service. Les données restent consultables.');return;}
   select.replaceChildren();applyState(navigator.onLine===false?'offline':window.RestoSyncState==='error'?'error':'syncing',navigator.onLine===false?'Connexion interrompue. Disponibilités à revérifier.':window.RestoSyncState==='error'?'Les disponibilités ne sont pas actualisées. Vérifiez la connexion ou contactez le responsable.':'Synchronisation des disponibilités en cours…');return;
  }
  // An own hold can arrive in realtime before its RPC response supplies its IDs.

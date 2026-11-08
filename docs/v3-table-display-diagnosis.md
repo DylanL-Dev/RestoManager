@@ -51,7 +51,7 @@ La pile réelle est testée d’abord sur le schéma d’origine sans les migrat
 
 Résultats locaux : syntaxe 88 fichiers, suite complète 25 fichiers sans échec, audit du moteur 2 800 assertions, SQL isolé 48 scénarios, HTTP/Auth/RLS 29 scénarios, navigateur réel avant migration 2 groupes puis Realtime après migration 6 groupes, interfaces simulées Mission 2/3 31 groupes, affichage 17 groupes dont les 3 reproductions du code publié.
 
-Les tests de navigateur ne remplacent pas une validation sur smartphone/tablette physiques ni une validation du compte personnel de l’utilisateur. La CI GitHub dépend du résultat des runs de la PR, à consulter séparément des preuves locales.
+Les tests de navigateur ne remplacent pas une validation sur smartphone/tablette physiques ni une validation du compte personnel de l’utilisateur. La CI utilise Ubuntu 24.04 pour la version verrouillée de Playwright et les images officielles Docker Hub épinglées par digest, afin de ne pas dépendre du quota ECR. Son résultat est à consulter sur les runs de la PR, séparément des preuves locales.
 
 ## Conditions de publication
 

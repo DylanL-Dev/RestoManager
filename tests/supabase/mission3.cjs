@@ -7,7 +7,7 @@ const assert=require('node:assert/strict');const {createClient}=require('@supaba
 const root=path.resolve(__dirname,'../..');
 const work=fs.mkdtempSync(path.join(os.tmpdir(),'restomanager-mission3-local-'));
 const name='restomanager-mission3-'+process.pid;const network=name+'-net';
-const images={db:process.env.MISSION3_POSTGRES_IMAGE||'postgres:17-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994',auth:'public.ecr.aws/supabase/gotrue:v2.197.0',rest:'public.ecr.aws/supabase/postgrest:v16.5',realtime:process.env.MISSION3_REALTIME_IMAGE||'public.ecr.aws/supabase/realtime:v2.151.3'};
+const images={db:process.env.MISSION3_POSTGRES_IMAGE||'postgres:17-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994',auth:'docker.io/supabase/gotrue:v2.197.0@sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b',rest:'docker.io/postgrest/postgrest:v16.5@sha256:1347d7552b88f17832912c06afbf7c43209af6eeeb60834b04aae12c9bd9d5cc',realtime:process.env.MISSION3_REALTIME_IMAGE||'docker.io/supabase/realtime:v2.151.3@sha256:dac44c958d0776144f0046ff0c0f8d51e0ff4f8a86c4a5e25287dd2f79fffa1e'};
 const env={...process.env};for(const key of ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH'])delete env[key];
 const secret=crypto.randomBytes(40).toString('hex'),password=crypto.randomBytes(24).toString('hex');
 function jwt(role){const b=x=>Buffer.from(JSON.stringify(x)).toString('base64url');const value=b({alg:'HS256',typ:'JWT'})+'.'+b({role,iss:'supabase-demo',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+86400});return value+'.'+crypto.createHmac('sha256',secret).update(value).digest('base64url');}
