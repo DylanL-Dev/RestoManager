@@ -15,6 +15,10 @@ Le créateur se connectera à **`creator.html` avec l'identifiant temporaire `ro
 - Pas de `service_role` côté navigateur, pas d'endpoint permettant de devenir administrateur.
 - Les utilisateurs employés restent liés à leurs données de service ; le compte Créateur ne reçoit aucun rôle `fb_admin` ou `reception`.
 
+## État d'activation Supabase — 8 novembre 2026
+
+Les deux scripts additifs `platform_owner_foundation.sql` et `bug01_private_reports.sql` ont été appliqués au projet d'intégration Supabase après succès des tests PostgreSQL isolés. Le rôle est **inactif tant qu'aucun compte propriétaire n'est provisionné ni activé**. L'application et la boîte de réception ne doivent pas être déclarées opérationnelles sans déploiement Render et connexion `root` vérifiée.
+
 ## Installation à effectuer
 1. Réviser, fusionner et tester la fondation de la [PR n°20](https://github.com/DylanL-Dev/RestoManager/pull/20) **avant** BUG-01.
 2. Exécuter les scripts dans cet ordre avec une connexion administrative **uniquement après validation isolée** :
