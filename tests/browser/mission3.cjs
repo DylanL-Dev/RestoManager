@@ -178,7 +178,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     });
     assert.ok(after.pageScrolled>100,'Long service page should scroll independently of the sidebar');
     assert.ok(Math.abs(after.top-after.headerBottom)<=3,
-     'Sidebar must remain under the fixed header while the page scrolls');
+     JSON.stringify({message:'Sidebar must remain under the fixed header while the page scrolls',role,viewport,after,sidebarInfo}));
     assert.ok(after.footerBottom<=viewport.height+2,
      'Sidebar footer remains accessible at the viewport bottom');
     await view.page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
