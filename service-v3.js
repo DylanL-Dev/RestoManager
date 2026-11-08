@@ -112,7 +112,8 @@ function dashboard(date,all){
  const level=covers>limit?'Limite dépassée':covers===limit?'Seuil atteint':covers>=limit*.8?'Presque au seuil':'Flux maîtrisé';
  const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
- function rushBreakdownLabel(iconName,label){const line=rushNode('span','rushBreakdownLabel');const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');line.append(icon,rushNode('span','',label));return line;}\n const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown';
+ function rushBreakdownLabel(iconName,label){const line=rushNode('span','rushBreakdownLabel');const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');line.append(icon,rushNode('span','',label));return line;}
+ const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown';
  const upcoming=rushNode('div','rushArrivalBreakdownItem');
  upcoming.append(rushNode('strong','',breakdown.upcoming),rushBreakdownLabel('calendar-clock','Encore à venir'));
  const late=rushNode('div','rushArrivalBreakdownItem rushArrivalLate'+(breakdown.late?' isLate':''));
