@@ -203,6 +203,46 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.equal(current.icon,true,'Occupation actuelle must use an offline Lucide icon');
    assert.equal(current.count,2,'Occupation chart must retain its existing two progress indicators');
    pass(role+' '+viewport.width+'px four KPI and occupancy icons displayed with unchanged values');
+   // All service subsections use local Lucide without changing business metrics.
+   if(role==='reception'){
+    await view.page.evaluate(()=>window.RestoScreens.show('passages'));
+    await view.page.waitForFunction(()=>document.querySelectorAll('.receptionServiceMetric').length===4);
+    await view.page.waitForFunction(()=>document.querySelectorAll('.receptionServiceMetric svg').length===4);
+    const overview=await view.page.locator('#receptionServiceOverview').evaluate(root=>({
+     metrics:[...root.querySelectorAll('.receptionServiceMetric')].map(c=>({
+      label:c.querySelector('.receptionMetricLabel')?.textContent,
+      hasIcon:!!c.querySelector('.receptionMetricLabel svg'),
+      value:c.querySelector('strong')?.textContent
+     })),
+     pressure:!!root.querySelector('.receptionServicePressure h3 svg'),
+     arrivals:!!root.querySelector('.receptionServiceArrivals h3 svg'),
+     progress:root.querySelectorAll('progress').length,
+     width:document.documentElement.scrollWidth,viewport:innerWidth
+    }));
+    assert.deepEqual(overview.metrics.map(m=>m.label),[
+     'Couverts encore attendus','Couverts installés','Réservations à venir','Tables non occupées']);
+    assert.ok(overview.metrics.every(m=>m.hasIcon&&/^[0-9]+$/.test(m.value)));
+    assert.ok(overview.pressure&&overview.arrivals,'Reception service headings must have Lucide icons');
+    assert.equal(overview.progress,1,'Reception service pressure meter must remain intact');
+    assert.ok(overview.width<=overview.viewport+1,'Reception overview must not overflow horizontally');
+   }else{
+    await view.page.waitForFunction(()=>document.querySelectorAll('.rushArrivalBreakdownItem').length===3);
+    await view.page.waitForFunction(()=>document.querySelectorAll('.rushBreakdownLabel svg').length===3);
+    const section=await view.page.locator('#rushDashboard').evaluate(root=>({
+     heading:!!root.querySelector('.rushDashHead .serviceIconHeading svg'),
+     limit:!!root.querySelector('.rushLoadLabel svg'),
+     statusIcons:[...root.querySelectorAll('.rushBreakdownLabel')].map(x=>!!x.querySelector('svg')),
+     statusLabels:[...root.querySelectorAll('.rushBreakdownLabel')].map(x=>x.textContent),
+     progress:root.querySelectorAll('[role="progressbar"]').length
+    }));
+    assert.ok(section.heading&&section.limit&&section.statusIcons.every(Boolean));
+    assert.deepEqual(section.statusLabels,['Encore à venir','Heure prévue dépassée','Déjà arrivés / installés']);
+    assert.ok(section.progress>=1,'Arrival load progressbar must remain present');
+    assert.ok(await view.page.locator('#tables .panelHead h1 svg').count());
+    assert.ok(await view.page.locator('#upcoming').locator('xpath=..').locator('h2 svg').count());
+   }
+   pass(role+' '+viewport.width+'px service dashboard headings and status cards preserve metrics with Lucide');
+
 
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
     await view.page.evaluate(screen=>window.RestoScreens.show(screen),screen);await view.page.clock.runFor(32);

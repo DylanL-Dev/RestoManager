@@ -83,7 +83,7 @@ function dashboard(date,all){
  target.replaceChildren();
  const shifts=Object.entries(ReservationEngine.getShifts()).filter(([,s])=>s.enabled);
  const heading=document.createElement('div');heading.className='rushDashHead';
- heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2>Charge des arrivées</h2><p>Suivi du créneau : clients encore à venir, arrivées en retard et clients déjà installés.</p></div>';
+ heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2 class="serviceIconHeading"><i data-lucide="activity" aria-hidden="true"></i><span>Charge des arrivées</span></h2><p>Suivi du créneau : clients encore à venir, arrivées en retard et clients déjà installés.</p></div>';
  target.append(heading);
  const windows=[];
  for(const [name,s] of shifts){
@@ -108,17 +108,18 @@ function dashboard(date,all){
  const result=document.createElement('div');result.className='rushDashContent';target.append(result);
  function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
  const numbers=document.createElement('div');numbers.className='rushLoadNumbers';
- numbers.append(rushNode('strong','',covers+' / '+limit),rushNode('span','','Arrivées prévues / limite conseillée'));
+ const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Arrivées prévues / limite conseillée'));numbers.append(rushNode('strong','',covers+' / '+limit),loadLabel);
  const level=covers>limit?'Limite dépassée':covers===limit?'Seuil atteint':covers>=limit*.8?'Presque au seuil':'Flux maîtrisé';
  const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
+ function rushBreakdownLabel(iconName,label){const line=rushNode('span','rushBreakdownLabel');const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');line.append(icon,rushNode('span','',label));return line;}
  const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown';
  const upcoming=rushNode('div','rushArrivalBreakdownItem');
- upcoming.append(rushNode('strong','',breakdown.upcoming),rushNode('span','','Encore à venir'));
+ upcoming.append(rushNode('strong','',breakdown.upcoming),rushBreakdownLabel('calendar-clock','Encore à venir'));
  const late=rushNode('div','rushArrivalBreakdownItem rushArrivalLate'+(breakdown.late?' isLate':''));
- late.append(rushNode('strong','',breakdown.late),rushNode('span','','Heure prévue dépassée'));
+ late.append(rushNode('strong','',breakdown.late),rushBreakdownLabel('alert-triangle','Heure prévue dépassée'));
  const welcomed=rushNode('div','rushArrivalBreakdownItem');
- welcomed.append(rushNode('strong','',breakdown.arrived),rushNode('span','','Déjà arrivés / installés'));
+ welcomed.append(rushNode('strong','',breakdown.arrived),rushBreakdownLabel('users','Déjà arrivés / installés'));
  arrivalDetails.append(upcoming,late,welcomed);
  result.append(summary,arrivalDetails,progress(data));
  const hint=rushNode('p','rushHint rushArrivalsHint',breakdown.late

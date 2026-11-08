@@ -1423,3 +1423,74 @@ html[data-theme="dark"] .kpi .kpiHead .kpiIcon,
 html[data-theme="dark"] .occupancyHead .occupancyTitleIcon{
  color:#80d8af;
 }
+
+
+/* Shared Lucide language for Restaurant and Reception service monitoring. */
+.serviceIconHeading{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ min-width:0;
+}
+.serviceIconHeading > svg,
+.serviceIconHeading > i[data-lucide]{
+ flex:0 0 20px;
+ width:20px;
+ height:20px;
+ color:#167459;
+ stroke-width:1.8;
+}
+.serviceIconHeading > span{min-width:0}
+.rushLoadLabel,.rushBreakdownLabel{
+ display:flex!important;
+ flex-direction:row!important;
+ align-items:center;
+ gap:7px!important;
+ min-width:0;
+}
+.rushLoadLabel > span,.rushBreakdownLabel > span{
+ min-width:0;
+ overflow-wrap:break-word;
+}
+.rushLoadLabel > svg,.rushBreakdownLabel > svg,
+.rushLoadLabel > i[data-lucide],.rushBreakdownLabel > i[data-lucide]{
+ flex:0 0 16px;
+ width:16px;
+ height:16px;
+ color:#167459;
+ stroke-width:1.8;
+}
+.rushArrivalLate .rushBreakdownLabel > svg{color:#98661d}
+.receptionMetricLabel{
+ display:flex!important;
+ align-items:center;
+ gap:8px;
+ min-width:0;
+ font-size:13px;
+ line-height:1.4;
+ color:#547265;
+}
+.receptionMetricLabel > svg,
+.receptionMetricLabel > i[data-lucide]{
+ flex:0 0 17px;
+ width:17px;
+ height:17px;
+ color:#167459;
+ stroke-width:1.8;
+}
+.receptionMetricLabel > span{min-width:0}
+.receptionServiceMetric{gap:9px}
+.receptionServiceMetric > strong{font-variant-numeric:tabular-nums}
+.receptionServicePressure .serviceIconHeading,
+.receptionServiceArrivals .serviceIconHeading{margin:0}
+@media(max-width:700px){
+ .serviceIconHeading{gap:8px}
+ .serviceIconHeading > svg{flex-basis:19px;width:19px;height:19px}
+ .receptionMetricLabel{align-items:flex-start;font-size:12px}
+ .receptionMetricLabel > svg{flex-basis:16px;width:16px;height:16px}
+ .rushBreakdownLabel{align-items:flex-start}
+}
+html[data-theme="dark"] .serviceIconHeading > svg,
+html[data-theme="dark"] .rushLoadLabel > svg,
+html[data-theme="dark"] .rushBreakdownLabel > svg,
+html[data-theme="dark"] .receptionMetricLabel > svg{color:#80d8af}

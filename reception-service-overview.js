@@ -7,6 +7,7 @@
  const clock=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
  const statusNames={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé'};
  const node=(tag,cls,value)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el};
+ const iconLabel=(tag,label,iconName,className)=>{const row=node(tag,className||'serviceIconHeading');const icon=node('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');row.append(icon,node('span',null,label));return row;};
  function render(){
   if(!window.RestoReception)return;
   const info=window.RestoSharedReservations;
@@ -29,14 +30,14 @@
   const occupied=new Set(seated.flatMap(r=>r.tables||[]).map(Number));
   const free=tables.filter(t=>!occupied.has(Number(t.number))).length;
   const cards=node('div','receptionServiceMetrics');
-  for(const [value,label] of [[expected,'Couverts encore attendus'],[inRoom,'Couverts installés'],[pending.length,'Réservations à venir'],[free,'Tables non occupées']]){
-   const c=node('div','receptionServiceMetric');c.append(node('strong',null,value),node('span',null,label));cards.append(c);
+  for(const [value,label,iconName] of [[expected,'Couverts encore attendus','calendar-clock'],[inRoom,'Couverts installés','users'],[pending.length,'Réservations à venir','calendar-days'],[free,'Tables non occupées','armchair']]){
+   const c=node('div','receptionServiceMetric');c.append(iconLabel('span',label,iconName,'receptionMetricLabel'),node('strong',null,value));cards.append(c);
   }
   root.append(cards);
   const totalSeats=tables.reduce((n,t)=>n+Number(t.capacity||0),0);
   const demand=expected+inRoom;
   const pressure=node('section','receptionServicePressure');
-  pressure.append(node('h3',null,'Affluence du service'));
+  pressure.append(iconLabel('h3','Affluence du service','activity'));
   const desc=node('p',null,totalSeats?demand+' couverts installés ou encore attendus pour '+totalSeats+' places configurées.':'Capacité du restaurant non disponible.');
   pressure.append(desc);
   if(totalSeats){
@@ -44,7 +45,7 @@
    if(demand/totalSeats>=.8)pressure.append(node('p','receptionServiceWarning','Forte affluence prévue. Vérifiez les créneaux disponibles avant de proposer une réservation.'));
   }
   root.append(pressure);
-  const section=node('section','receptionServiceArrivals');section.append(node('h3',null,'Prochaines arrivées'));
+  const section=node('section','receptionServiceArrivals');section.append(iconLabel('h3','Prochaines arrivées','calendar-days'));
   const ordered=pending.slice().sort((a,b)=>String(a.time).localeCompare(String(b.time))).slice(0,12);
   if(!ordered.length)section.append(node('p','muted','Aucune arrivée en attente pour aujourd’hui.'));
   for(const r of ordered){
