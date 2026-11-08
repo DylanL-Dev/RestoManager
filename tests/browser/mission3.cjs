@@ -159,6 +159,11 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await appLink('reservations');
    await view.page.goBack({waitUntil:'domcontentloaded'});
    await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
+   // Regression: returning home through navigation must hide Back even if depth > 0.
+   await appLink('reservations');
+   await appLink('tables');
+   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'tables');
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false,'Back must not appear on home after multiple navigations');
    await appLink('reservationForm');
    if(role==='fb_admin'){
     await view.page.locator('.restoAddChoiceOverlay').waitFor({state:'visible'});
