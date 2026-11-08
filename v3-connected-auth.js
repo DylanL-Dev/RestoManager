@@ -1,7 +1,7 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261107-mission3';
-import {prepareServiceSnapshot} from './service-snapshot.js?v=20261107-mission3';
-import {canWrite} from './service-sync.js?v=20261107-mission3';
-import {decodeBookingDetails} from './reservation-details.js?v=20261107-mission3';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261108-tables-display';
+import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
+import {canWrite} from './service-sync.js?v=20261108-tables-display';
+import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
@@ -50,6 +50,7 @@ try{
  }
  window.RestoSharedReservations=[];
  window.RestoSupabaseReady=false;
+ window.RestoSharedDataLoaded=false;
  const management=document.querySelector('[data-screen="administration"]')||document.getElementById('administration');
  if(!management)throw new Error('Espace Gestion introuvable');
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
@@ -176,10 +177,11 @@ try{
   // All decoding and validation precede publication. No listener sees a half snapshot.
   TableStore.setShared(prepared.plan);
   Object.assign(window,prepared.values);
+  window.RestoSharedDataLoaded=true;
   lastAppliedSequence=Number(snapshot.syncSequence||0);
   if(navigator.onLine===false)showError({code:'HORS_LIGNE'});
   else if(channelReady&&canWrite(snapshot.capabilities))showState('ok','Synchronisation active','Les données de cet appareil sont synchronisées en direct.');
-  else if(channelReady)showState('error','Mise à jour requise','Les données sont consultables. Le responsable doit finaliser la mise à jour du service avant de permettre les modifications.');
+  else if(channelReady)showState('readonly','Consultation seule','Les données sont consultables. Le responsable doit finaliser la mise à jour du service avant de permettre les modifications.');
   lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
   window.RestoLastSyncAt=Date.now();
   label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables';

@@ -1,4 +1,4 @@
-import {encodeBookingDetails} from './reservation-details.js?v=20261107-mission3';
+import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 // A key belongs to this form instance. Tabs sharing a login still have separate holds.
 export function setupBookingDraft(supabase, parisDateTime){
  const el=id=>document.getElementById(id);

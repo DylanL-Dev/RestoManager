@@ -1,7 +1,7 @@
 name: Mission 3 integration validation
 on:
   push:
-    branches: [fix/mission3-validation-integration]
+    branches: [fix/mission3-validation-integration, fix/v3-tables-display-mission3]
   pull_request:
     branches: [feature/v3-supabase-full-clone]
   workflow_dispatch:
@@ -71,6 +71,8 @@ jobs:
         run: npm run test:mission2:browser
       - name: Mission 3 responsive, conflict and controlled-clock UI regressions
         run: npm run test:mission3:browser
+      - name: Tables rendering, loading and pre-migration consultation
+        run: npm run test:display
       - uses: actions/upload-artifact@v4
         if: always()
         with:

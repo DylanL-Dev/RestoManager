@@ -1,6 +1,6 @@
 # Mission 3 — Validation de l’intégration
 
-Référence : `fec9cbe5b89c5323d126284def664d2a6c113fcd`, branche locale `fix/mission3-validation-integration`. Aucune publication ni migration partagée n’est comprise dans cette livraison. Le rapport et les résultats d’exécution sont livrés séparément, hors dépôt.
+Référence : `fec9cbe5b89c5323d126284def664d2a6c113fcd`, Mission 3 reprise dans `fix/v3-tables-display-mission3`, après sa validation initiale sur `fix/mission3-validation-integration`. Aucune publication ni migration partagée n’est comprise dans cette livraison. Le rapport et les résultats d’exécution sont livrés séparément, hors dépôt.
 
 ## Contrat frontend / SQL
 
@@ -11,7 +11,7 @@ Appliquer dans l’environnement de validation isolé, dans cet ordre :
 3. `supabase/scripts/mission3_validation_integration.sql` : prérequis, protections et contrats ci-dessous.
 4. Le frontend de cette branche avec tous ses assets versionnés ensemble.
 
-Les scripts sont transactionnels. Leur présence dans Git ne les exécute pas. Le frontend refuse les écritures si le contrat complet n’est pas disponible ; aucun repli automatique sur les éditions V3 n’est prévu.
+Les scripts sont transactionnels. Leur présence dans Git ne les exécute pas. Le frontend refuse les écritures si le contrat complet n’est pas disponible ; aucun repli automatique sur les éditions V3 n’est prévu. La correction d’affichage ajoute une consultation seule sur le schéma d’origine, avec sa table de révision RLS et la même pagination. Aucune heure serveur n’est inventée lorsque cette RPC manque. Les capacités vides maintiennent toutes les écritures bloquées ; une erreur de permission ou de réseau ne provoque pas ce mode de compatibilité.
 
 `service_sync_state_v1()` retourne la révision de l’établissement sous forme de texte, l’heure serveur et les capacités `reservation_edits:4`, `booking_recovery:1`, `snapshot:1`. Les sept collections autorisées sont paginées dans un ordre stable, sans filtre supprimant les historiques ou les réservations futures. Les offsets suivent le nombre réellement reçu, y compris lorsque le plafond REST est inférieur à la page demandée. Une modification de révision invalide la lecture entière ; trois essais immédiats précèdent une reprise différée. Aucune collection partielle n’est publiée.
 

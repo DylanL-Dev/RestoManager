@@ -47,3 +47,34 @@ test('one failed collection rejects the snapshot, never substituting empty avail
  const {readRevisionSnapshot}=await modulePromise;
  await assert.rejects(readRevisionSnapshot(client({failAt:'reservations'})),{code:'42501'});
 });
+test('missing Mission 3 RPC uses the existing RLS revision for complete read-only snapshots',async()=>{
+ const {readRevisionSnapshot,canWrite}=await modulePromise,c=client({count:7,serverLimit:2});
+ const from=c.from;let revisionReads=0;
+ c.rpc=async()=>({error:{code:'PGRST202'}});
+ c.from=name=>name==='restaurant_service_changes'?{select(columns){assert.equal(columns,'revision');return this},async maybeSingle(){revisionReads++;return {data:{revision:21}}}}:from(name);
+ const snapshot=await readRevisionSnapshot(c,{pageSize:500});
+ assert.equal(snapshot.tables.length,7);assert.equal(snapshot.reservations.length,7);assert.equal(snapshot.revision,'21');
+ assert.equal(snapshot.serverTime,null,'legacy reads do not invent a server clock');
+ assert.equal(revisionReads,2);assert.equal(canWrite(snapshot.capabilities),false);
+});
+test('permission or network failures cannot silently downgrade to legacy consultation',async()=>{
+ const {readServiceState}=await modulePromise;
+ for(const code of ['42501','PGRST301']){
+  let fallback=false;
+  await assert.rejects(readServiceState({rpc:async()=>({error:{code}}),from(){fallback=true}}),{code});assert.equal(fallback,false);
+ }
+ await assert.rejects(readServiceState({rpc:async()=>{throw new TypeError('offline')},from(){assert.fail('no network fallback')}}),TypeError);
+});
+test('legacy revision read errors and unsafe integer revisions fail closed',async()=>{
+ const {readServiceState}=await modulePromise;
+ for(const response of [{error:{code:'42501'}},{data:{revision:Number.MAX_SAFE_INTEGER+1}}]){
+  const c={rpc:async()=>({error:{code:'PGRST202'}}),from:()=>({select(){return this},maybeSingle:async()=>response})};
+  await assert.rejects(readServiceState(c),{code:response.error?'42501':'SYNC_CONTRACT'});
+ }
+});
+test('SQL capability changes during a snapshot require a full new read even at the same revision',async()=>{
+ const {readRevisionSnapshot}=await modulePromise,c=client({count:1});const rpc=c.rpc;let reads=0;
+ c.rpc=async name=>{const result=await rpc(name);if(++reads===1)result.data.capabilities={};return result};
+ const snapshot=await readRevisionSnapshot(c);assert.equal(snapshot.capabilities.reservation_edits,4);
+ assert.equal(c.calls.filter(x=>x.name==='reservations').length,2);
+});

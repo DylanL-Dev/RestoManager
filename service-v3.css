@@ -1293,3 +1293,8 @@ html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns
 #editCurrentValues:focus-visible{outline:3px solid #16815e;outline-offset:2px}
 #editConflict button{min-height:44px;white-space:normal;margin:4px 6px 4px 0}
 @media(max-width:620px){#editForm .editConflict{padding:12px}#editConflict button{width:100%;margin-right:0}#editForm label:has(#editNotes),#editForm label:has(#editAllergies){grid-column:1/-1}}
+.serviceDataStatus{margin:12px 0;padding:12px 14px;border:1px solid #c7ded5;border-radius:12px;background:#f0f7f3;color:#154b3b;font-size:14px;line-height:1.5}
+.serviceDataStatus p{margin:0}
+.serviceDataStatus button{margin-top:10px;min-height:44px;padding:8px 16px}
+.serviceDataStatus[data-state="error"]{background:#fff5e8;border-color:#ebcd9e;color:#68421a}
+.serviceDataStatus[hidden]{display:none}

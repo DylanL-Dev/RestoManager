@@ -300,7 +300,29 @@ const active=r=>ReservationEngine.isBlocking(r);
 const priority={seated:4,arrived:2,late:2,confirmed:2,reserved:2};
 function state(table){const related=bookings.filter(r=>r.tables.includes(table.number)&&active(r));const top=related.slice().sort((a,b)=>(priority[b.status]||0)-(priority[a.status]||0)||a.time.localeCompare(b.time))[0];if(!top)return {key:'free',label:'LIBRE',detail:'Disponible',booking:null};const key=top.status==='seated'?'present':'expected';return {key,label:{present:'PRÉSENTS',expected:'ATTENDUS'}[key],detail:key==='expected'?top.time:top.guests+' personne'+(top.guests>1?'s':''),booking:top}}
 function node(tag,className,content){const e=document.createElement(tag);if(className)e.className=className;if(content!==undefined)e.textContent=String(content);return e}
-function render(){const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted','Aucune table pour ce filtre.'));
+function serviceDisplayReady(){
+ if(!$('integrationGate'))return true;
+ const loaded=window.RestoSharedDataLoaded===true,state=window.RestoSyncState||'pending';
+ let status=$('serviceDataStatus');
+ if(!status){status=node('section','serviceDataStatus');status.id='serviceDataStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');$('tables').querySelector('.panelHead').after(status)}
+ const kind=state==='readonly'?'readonly':state==='ok'?'ready':state==='error'?'error':'loading';
+ status.dataset.state=kind;status.hidden=kind==='ready';status.replaceChildren();
+ const text=kind==='readonly'?'Consultation disponible. Les enregistrements restent suspendus jusqu’à la mise à jour du service.':
+  kind==='error'?(loaded?'Connexion interrompue. Les informations affichées peuvent être anciennes ; les modifications sont suspendues.':'Impossible de charger les tables. Vérifiez la connexion puis réessayez.'):
+  loaded?'Actualisation en cours. Les informations affichées sont celles de la dernière synchronisation.':'Chargement des salles et des tables…';
+ if(kind!=='ready')status.append(node('p','',text));
+ if(kind==='error'){
+  const retry=node('button','','Réessayer');retry.id='serviceDataRetry';retry.type='button';
+  retry.addEventListener('click',async()=>{retry.disabled=true;try{await window.RestoRefreshSharedService?.()}catch{/* The synchronization state explains the failure. */}finally{retry.disabled=false}});status.append(retry);
+ }
+ $('tableGrid').setAttribute('aria-busy',String(!loaded&&kind==='loading'));
+ if(loaded)return true;
+ const placeholder=kind==='error'?'Les données ne sont pas disponibles pour le moment. Réessayez après vérification de la connexion.':'Chargement des informations du service…';
+ $('tableGrid').replaceChildren(node('p','muted',text));$('upcoming').textContent=placeholder;
+ $('kpis').replaceChildren(node('p','muted',placeholder));$('currentOccupancy')?.replaceChildren(node('p','muted',placeholder));$('rushDashboard')?.replaceChildren(node('p','muted',placeholder));
+ return false;
+}
+function render(){if(!serviceDisplayReady())return;const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted',visible.length?'Aucune table pour ce filtre.':'Aucune table active dans cette salle.'));
 const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0)],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0)],['Tables occupées',occupiedNumbers.size],['Places sur tables libres',free]];$('kpis').replaceChildren(...kpis.map(([label,value])=>{const c=node('div','kpi');c.append(node('span','',label),node('strong','',value));return c}));
 const totalTables=plan.tables.length;
 const totalSeats=plan.tables.reduce((n,t)=>n+Math.max(0,Number(t.capacity)||0),0);
@@ -482,6 +504,8 @@ function confirmTableDeparture(kind,r){
 }
 $('bookingTable').addEventListener('change',()=>{$('bookingTable').dataset.manual='true'});
 function refreshAvailability(){
+ try{
+ window.RestoBookingAvailabilityError=false;
  const dateValue=$('bookingDate').value,time=$('bookingTime').value,guests=Number($('bookingGuests').value),select=$('bookingTable'),previous=select.value;
  const insight=$('availabilityInsight'),fusionPanel=$('fusionSuggestions');
  if(insight)insight.replaceChildren();
@@ -559,6 +583,11 @@ function refreshAvailability(){
    insight.append(choices);
   }else insight.append(node('p','muted','Aucune configuration compatible dans les créneaux proches testés. Essayez une autre date.'));
  }
+ }catch(error){
+  window.RestoBookingAvailabilityError=true;window.RestoErrors?.diagnostic('booking-availability',error);
+  $('bookingTable').replaceChildren();
+  $('availabilityInsight')?.replaceChildren(node('p','availabilityWarning','Les disponibilités ne peuvent pas être vérifiées pour le moment. Les tables restent consultables ; réessayez avant d’enregistrer.'));
+ }
 }
 function showBookingSuccess(reservation){
  const old=document.getElementById('bookingSuccessDialog');if(old)old.remove();
@@ -610,6 +639,7 @@ $('bookingTime').value=bookingNowTime();
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
+ if(window.RestoBookingAvailabilityError)throw (window.RestoErrors?.business||Error)('Les disponibilités ne peuvent pas être vérifiées. Réessayez avant d’enregistrer.');
  if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw (window.RestoErrors?.business||Error)('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<bookingToday())throw (window.RestoErrors?.business||Error)('Impossible de créer une réservation à une date passée.');
@@ -661,13 +691,13 @@ $('bookingForm').addEventListener('submit',async event=>{
  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;prepareNewReservation();render();showBookingSuccess(candidate);
  }catch(error){window.RestoErrors?.diagnostic('booking-save',error);feedback.textContent=window.RestoErrors?.message(error,'Enregistrement non confirmé. Votre saisie est conservée ; vérifiez les informations et la connexion.')||error.message}
 });
-refreshAvailability();
-function applyTableSnapshot(){plan=TableStore.get();const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;refreshAvailability();render()}
+function applyTableSnapshot(){plan=TableStore.get();syncServiceDay();bookings=readReservations().filter(r=>r.date===date);const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;render();refreshAvailability()}
 window.addEventListener('restomanager:v3-tables',applyTableSnapshot);
-window.addEventListener('restomanager:supabase-snapshot',()=>{applyTableSnapshot();syncServiceDay();bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()});
-window.addEventListener('restomanager:connection-state',refreshAvailability);
-window.addEventListener('restomanager:v3-change',()=>{try{syncServiceDay();bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()}catch(e){$('bookingFeedback').textContent=e.message}});
+window.addEventListener('restomanager:supabase-snapshot',applyTableSnapshot);
+window.addEventListener('restomanager:connection-state',()=>{if(window.RestoSharedDataLoaded)applyTableSnapshot();else{render();refreshAvailability()}});
+window.addEventListener('restomanager:v3-change',()=>{try{syncServiceDay();bookings=readReservations().filter(r=>r.date===date);render();refreshAvailability()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});
 setInterval(()=>{if(!modal.hidden&&selected){const t=plan.tables.find(x=>x.number===selected);if(t)detail(t,state(t))}},60000);
 render();
+refreshAvailability();
 })();

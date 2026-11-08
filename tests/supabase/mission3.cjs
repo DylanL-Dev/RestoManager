@@ -53,8 +53,6 @@ async function main(){
   .replace('create table auth.users(id uuid primary key);','')
   .replace(/create function auth\.uid\(\) returns uuid language sql stable as \$\$[\s\S]*?\$\$;/,'');
  await sql(fixture);
- await sql(fs.readFileSync(path.join(root,'supabase/scripts/mission2_reservation_edits.sql'),'utf8'));
- await sql(fs.readFileSync(path.join(root,'supabase/scripts/mission3_validation_integration.sql'),'utf8'));
  await runContainer('rest',{PGRST_DB_URI:`postgres://authenticator:${password}@${name}-db:5432/postgres`,PGRST_DB_SCHEMAS:'public',PGRST_DB_ANON_ROLE:'anon',PGRST_JWT_SECRET:secret,PGRST_DB_MAX_ROWS:100,PGRST_DB_EXTRA_SEARCH_PATH:'public,extensions'},['-p',`127.0.0.1:${ports.rest}:3000`]);
  await runContainer('realtime',{PORT:4000,DB_HOST:name+'-db',DB_PORT:5432,DB_USER:'supabase_admin',DB_PASSWORD:password,DB_NAME:'postgres',DB_AFTER_CONNECT_QUERY:'SET search_path TO _realtime',DB_ENC_KEY:'supabaserealtime',API_JWT_SECRET:secret,METRICS_JWT_SECRET:secret,SECRET_KEY_BASE:crypto.randomBytes(64).toString('hex'),ERL_AFLAGS:'-proto_dist inet_tcp +S 2:2',ECTO_IPV6:false,DNS_NODES:"''",APP_NAME:'realtime',SEED_SELF_HOST:true,RUN_JANITOR:true,DISABLE_HEALTHCHECK_LOGGING:true},['-p',`127.0.0.1:${ports.realtime}:4000`]);
  const targetFor=pathname=>pathname.startsWith('/auth/v1')?{port:ports.auth,path:pathname.slice(8)||'/'}:pathname.startsWith('/rest/v1')?{port:ports.rest,path:pathname.slice(8)||'/'}:pathname.startsWith('/realtime/v1')?{port:ports.realtime,path:pathname.replace('/realtime/v1','/socket'),realtime:true}:null;
@@ -73,9 +71,13 @@ async function main(){
  const day=await sql("select ((now() at time zone 'Europe/Paris')::date+1)::text;");
  const context={url,anonKey,accounts,sql,day,assert,ports,root};
  console.log('INFO isolated components started; real Auth sessions established for two fictional restaurants');
+ const legacy=await require('./browser-tests.cjs')({...context,readOnlyPhase:true});
+ await sql(fs.readFileSync(path.join(root,'supabase/scripts/mission2_reservation_edits.sql'),'utf8'));
+ await sql(fs.readFileSync(path.join(root,'supabase/scripts/mission3_validation_integration.sql'),'utf8'));
+ await waitFor(async()=>{const {data,error}=await accounts[0].client.rpc('service_sync_state_v1');return !error&&data?.capabilities?.reservation_edits===4;},'Mission 3 schema cache');
  const api=await require('./api-tests.cjs').run(context);
  const browser=await require('./browser-tests.cjs')(context);
- const result={status:'Réussi',backend:'real self-hosted Supabase components; loopback only',images,api,browser};
+ const result={status:'Réussi',backend:'real self-hosted Supabase components; loopback only',images,legacy,api,browser};
  if(process.env.MISSION3_ARTIFACTS){fs.mkdirSync(process.env.MISSION3_ARTIFACTS,{recursive:true});fs.writeFileSync(path.join(process.env.MISSION3_ARTIFACTS,'supabase-results.json'),JSON.stringify(result,null,2));}
  console.log(JSON.stringify(result));
  for(const a of accounts)if(a.client){await a.client.removeAllChannels();await a.client.auth.signOut();}

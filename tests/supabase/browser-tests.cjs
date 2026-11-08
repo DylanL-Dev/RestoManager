@@ -2,7 +2,7 @@
 const fs=require('node:fs');const path=require('node:path');const http=require('node:http');
 const assert=require('node:assert/strict');const {chromium}=require('playwright');
 
-module.exports=async function run({url,anonKey,accounts,root,sql}){
+module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=false}){
  assert.equal(new URL(url).hostname,'127.0.0.1');
  const results=[];const contexts=[];let browser;let appUrl;
  const sdk=fs.readFileSync(require.resolve('@supabase/supabase-js').replace(/dist\/main\/index\.js$/,'dist/umd/supabase.js'),'utf8');
@@ -27,7 +27,7 @@ module.exports=async function run({url,anonKey,accounts,root,sql}){
   const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
   if(loginUi){await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();await page.waitForURL('**/v3-connected.html');}
   else await page.goto(appUrl+'/v3-connected.html');
-  await page.waitForFunction(()=>window.RestoSupabaseReady===true,null,{timeout:45000});
+  await page.waitForFunction(readOnly=>readOnly?window.RestoSharedDataLoaded===true:window.RestoSupabaseReady===true,readOnlyPhase,{timeout:45000});
   return {context,page,errors};
  }
  async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();const card=page.locator('.reservationItem').filter({hasText:'Client fictif 1'});await card.locator('[data-reservation-action=edit]').click();await page.locator('#editForm').waitFor({state:'visible'});}
@@ -36,6 +36,19 @@ module.exports=async function run({url,anonKey,accounts,root,sql}){
  try{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));appUrl='http://127.0.0.1:'+server.address().port;
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
+  if(readOnlyPhase){
+   for(const account of [accounts[0],accounts[2]]){
+    const view=await open(account,true);
+    assert.equal(await view.page.locator('.tableCard').count(),8);
+    assert.equal(await view.page.evaluate(()=>window.RestoSupabaseReady),false);
+    assert.match(await view.page.locator('#serviceDataStatus').innerText(),/mise à jour/);
+    await view.page.evaluate(()=>window.RestoScreens.show('reservationForm'));
+    assert.equal(await view.page.locator('#bookingForm button[type=submit]').isDisabled(),true);
+    assert.deepEqual(view.errors,[]);
+    passed('Real pre-migration schema displays tables read-only and blocks writes: '+account.role);
+   }
+   return {passed:results.length,failed:0,results,backend:'real Auth/REST on original schema, before Mission 2 and Mission 3 migrations'};
+  }
   const a=await open(accounts[0],true),b=await open(accounts[2],true);
   passed('Real login UI: Restaurant and Reception use distinct Auth accounts and sessions');
   await edit(a.page);await edit(b.page);

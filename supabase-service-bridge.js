@@ -1,7 +1,7 @@
 // RestoManager V3 — read-only Supabase bridge, staged for integration.
 // Import only on the authenticated development preview; never on published V3.
 // No localStorage fallback and no direct reservation writes.
-import {readRevisionSnapshot} from './service-sync.js?v=20261107-mission3';
+import {readRevisionSnapshot} from './service-sync.js?v=20261108-tables-display';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 export const supabase=createClient(
  'https://tnsrkargogckgtsxipwd.supabase.co',

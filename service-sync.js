@@ -10,7 +10,18 @@ const collections=[
 ];
 export async function readServiceState(client){
  const {data,error}=await client.rpc('service_sync_state_v1');
- if(error)throw error;
+ if(error){
+  if(!['PGRST202','42883'].includes(error.code))throw error;
+  // Older schemas already expose a tenant-filtered revision. Preserve the
+  // same snapshot fence for consultation, without granting any write capability.
+  const legacy=await client.from('restaurant_service_changes').select('revision').maybeSingle();
+  if(legacy.error)throw legacy.error;
+  const revision=legacy.data?.revision??0;
+  if(!(typeof revision==='string'&&/^\d+$/.test(revision))&&!(Number.isSafeInteger(revision)&&revision>=0)){
+   throw Object.assign(Error('Révision du service incompatible.'),{code:'SYNC_CONTRACT'});
+  }
+  return {revision:String(revision),server_time:null,capabilities:{}};
+ }
  if(!data||typeof data.revision!=='string'||!data.server_time)throw Object.assign(Error('État de synchronisation indisponible.'),{code:'SYNC_CONTRACT'});
  return data;
 }
@@ -35,7 +46,7 @@ export async function readRevisionSnapshot(client,{attempts=3,pageSize=500}={}){
   const before=await readServiceState(client);
   const rows=await Promise.all(collections.map(([name,columns,orders])=>readCollection(client,name,columns,orders,pageSize)));
   const after=await readServiceState(client);
-  if(before.revision!==after.revision)continue;
+  if(before.revision!==after.revision||JSON.stringify(before.capabilities)!==JSON.stringify(after.capabilities))continue;
   const [reservations,assignments,rooms,tables,holds,fusionLinks,hours]=rows;
   if(hours.length!==1)throw Object.assign(Error('Configuration du service indisponible.'),{code:'SYNC_CONTRACT'});
   return {revision:after.revision,serverTime:after.server_time,capabilities:after.capabilities,
