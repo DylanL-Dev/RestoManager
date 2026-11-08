@@ -1,4 +1,4 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261108-tables-display';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261108-establishment1';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
