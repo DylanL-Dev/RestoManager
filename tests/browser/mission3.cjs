@@ -157,17 +157,22 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.equal(displayedDate.toLocaleLowerCase('fr-FR'),dateExpected);
    assert.ok(await view.page.locator('.serviceIntroDate svg').count(),'Date must have a Lucide calendar icon');
    const presentation=await view.page.locator('.serviceIntro').evaluate(intro=>{
-    const spans=[...intro.querySelectorAll('h1 span')];
-    const bounds=spans.map(x=>x.getBoundingClientRect());
+    const title=intro.querySelector('h1');
+    const range=document.createRange();
+    range.selectNodeContents(title);
+    const lineRects=[...range.getClientRects()];
     const date=intro.querySelector('.serviceIntroDate');
     const hello=intro.querySelector('#teamGreeting');
-    return {title:spans.map(x=>x.textContent),lineSeparated:bounds[1].top>bounds[0].top+5,
+    return {title:title.textContent,hasForcedBreaks:!!title.querySelector('br,span'),
+     headlineWidth:title.getBoundingClientRect().width,
+     textRectWidth:lineRects.length?Math.max(...lineRects.map(rect=>rect.width)):0,
      dateVisible:getComputedStyle(date).display!=='none',
      greetingHidden:getComputedStyle(hello).display==='none',
      width:document.documentElement.scrollWidth,viewport:innerWidth};
    });
-   assert.deepEqual(presentation.title,['Votre service,','en un coup d’œil']);
-   assert.equal(presentation.lineSeparated,viewport.width<=700,'Title must split only on mobile');
+   assert.equal(presentation.title,'Votre service, en un coup d’œil');
+   assert.equal(presentation.hasForcedBreaks,false,'The headline must wrap naturally without explicit spans or breaks');
+   assert.ok(presentation.textRectWidth<=presentation.headlineWidth+2,'Headline must fit the available width');
    assert.equal(presentation.dateVisible,viewport.width<=700,'Date should stay with mobile intro; desktop header keeps its date');
    assert.equal(presentation.greetingHidden,viewport.width<=700,'Mobile avoids redundant greeting');
    assert.ok(presentation.width<=presentation.viewport+1,'Intro must not create horizontal overflow');
@@ -177,7 +182,27 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    }));
    assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Header must not overflow viewport');
    assert.ok(headerLayout.refresh.width>=42,'Refresh button must keep its touch target');
-   pass(role+' '+viewport.width+'px service role, venue, calendar and two-line mobile title');
+   pass(role+' '+viewport.width+'px responsive service identity and naturally wrapping heading');
+   // Each indicator stays data-driven; only the Lucide presentation changes.
+   const kpiTitles=['Clients présents','Clients attendus','Tables occupées','Places sur tables libres'];
+   const iconChecks=await view.page.locator('#kpis .kpi').evaluateAll(cards=>cards.map(card=>({
+    title:card.querySelector('.kpiLabel')?.textContent,
+    svg:!!card.querySelector('.kpiHead svg'),
+    value:card.querySelector('strong')?.textContent,
+    compact:card.scrollWidth<=card.clientWidth+1
+   })));
+   assert.deepEqual(iconChecks.map(card=>card.title),kpiTitles);
+   assert.ok(iconChecks.every(card=>card.svg&&card.compact),'Each KPI must have a visible local Lucide icon without clipping');
+   assert.ok(iconChecks.every(card=>/^[0-9]+$/.test(card.value)),'KPI values must remain numeric');
+   const current=await view.page.locator('#currentOccupancy').evaluate(block=>({
+    title:block.querySelector('.occupancyTitleText')?.textContent,
+    icon:!!block.querySelector('.occupancyTitleText svg'),
+    count:block.querySelectorAll('[role="progressbar"]').length
+   }));
+   assert.equal(current.title,'Occupation actuelle');
+   assert.equal(current.icon,true,'Occupation actuelle must use an offline Lucide icon');
+   assert.equal(current.count,2,'Occupation chart must retain its existing two progress indicators');
+   pass(role+' '+viewport.width+'px four KPI and occupancy icons displayed with unchanged values');
 
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
     await view.page.evaluate(screen=>window.RestoScreens.show(screen),screen);await view.page.clock.runFor(32);
