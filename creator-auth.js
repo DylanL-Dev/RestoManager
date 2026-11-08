@@ -53,7 +53,7 @@ $('creatorLogin').addEventListener('submit',async event=>{
  }catch{
   await client.auth.signOut({scope:'local'}).catch(()=>{});
   $('ownerPassword').value='';
-  showLogin('Connexion impossible ou compte Créateur non activé. Vérifiez vos identifiants.');
+  showLogin('Connexion impossible. Vérifiez vos identifiants ou contactez l’administration de la plateforme.');
  }finally{
   verifying=false;button.disabled=false;
  }
