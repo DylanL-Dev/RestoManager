@@ -143,6 +143,48 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.ok(mobileNav.every(item=>item.svg),'Mobile navigation icons must render offline');
    assert.equal(await view.page.locator('.quickAction[href="#reservationForm"] span').innerText(),'Ajouter un client');
    pass(role+' '+viewport.width+'px coherent five-tab hierarchy and accessible Lucide icons');
+   const sidebarInfo=await view.page.evaluate(()=>{
+    const sidebar=document.querySelector('.shell > .sidebar');
+    const footer=sidebar.querySelector('.sidebarFooter');
+    const header=document.querySelector('body > header.top');
+    const r=sidebar.getBoundingClientRect();
+    return {visible:getComputedStyle(sidebar).display!=='none',
+     position:getComputedStyle(sidebar).position,
+     height:r.height,footerBottom:footer.getBoundingClientRect().bottom,
+     footerRole:document.getElementById('sidebarRole').textContent,
+     footerName:document.getElementById('sidebarVenue').textContent,
+     footerIcon:!!footer.querySelector('svg'),
+     headerHeight:header.getBoundingClientRect().height,
+     windowHeight:innerHeight};
+   });
+   assert.equal(sidebarInfo.footerRole,role==='reception'?'Espace Réception':'Espace Restaurant');
+   assert.equal(sidebarInfo.footerName,'À l’Épicerie');
+   assert.equal(sidebarInfo.footerIcon,true,'Sidebar establishment icon must render locally');
+   if(viewport.width>900){
+    assert.equal(sidebarInfo.position,'sticky');
+    assert.ok(sidebarInfo.visible);
+    assert.ok(sidebarInfo.height<=sidebarInfo.windowHeight-sidebarInfo.headerHeight+3,
+     'Sidebar must be limited to viewport below header');
+    assert.ok(sidebarInfo.footerBottom<=sidebarInfo.windowHeight+2,
+     'Establishment details should finish inside the visible viewport');
+    await view.page.evaluate(()=>window.scrollTo({top:document.documentElement.scrollHeight,behavior:'instant'}));
+    await view.page.clock.runFor(200);
+    const after=await view.page.evaluate(()=>{
+     const sidebar=document.querySelector('.shell > .sidebar');
+     return {top:sidebar.getBoundingClientRect().top,
+      footerBottom:sidebar.querySelector('.sidebarFooter').getBoundingClientRect().bottom,
+      headerBottom:document.querySelector('body > header.top').getBoundingClientRect().bottom,
+      pageScrolled:window.scrollY};
+    });
+    assert.ok(after.pageScrolled>100,'Long service page should scroll independently of the sidebar');
+    assert.ok(Math.abs(after.top-after.headerBottom)<=3,
+     'Sidebar must remain under the fixed header while the page scrolls');
+    assert.ok(after.footerBottom<=viewport.height+2,
+     'Sidebar footer remains accessible at the viewport bottom');
+    await view.page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+   }else assert.equal(sidebarInfo.visible,false,'Mobile and compact tablets keep the bottom navigation');
+   pass(role+' '+viewport.width+'px sticky viewport sidebar or mobile bottom navigation');
+
    const establishmentFull='À l’Épicerie — Mercure Rouen Centre Champ-de-Mars';
    assert.equal(await view.page.locator('#headerEstablishment').count(),0,
     'No establishment label should compete with the refresh and bell controls');
