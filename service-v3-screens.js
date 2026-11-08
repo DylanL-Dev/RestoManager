@@ -63,7 +63,8 @@ function bookingDirty(){const form=document.getElementById('bookingForm');return
 function walkinDirty(){const form=document.getElementById('walkinForm');return current==='passages'&&walkinBaseline!==null&&form&&!window.RestoReception&&walkinBaseline!==captureForm(form)}
 function updateBack(){
  const editor=editForm();
- const visible=!!editor||depth>0||current!=='tables';
+ // The home screen never needs an in-app Back button, even with history entries.
+ const visible=!!editor||current!=='tables';
  toolbar.hidden=!visible;
  context.textContent=editor?'Modifier une réservation':titles[current]||'RestoManager';
  back.disabled=!visible;
