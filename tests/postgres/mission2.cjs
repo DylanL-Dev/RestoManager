@@ -151,6 +151,8 @@ async function concurrent(firstWho,firstQuery,secondWho,secondQuery,expected){
    assert.equal(await ok("select count(*) from pg_proc where proname in ('update_reservation_v4','reception_update_reservation_v4') and (proconfig is null or not ('search_path=\"\"'=any(proconfig)))"),'0');
   });
   if(mission3)await require('./mission3-cases.cjs')({sql,ok,record,edit,ctx,fails,test,concurrent,lit,user,res,table,docker,container});
+  const hostedResults=await require('./hosted-migrations.cjs')({docker,container,mission3});
+  tests+=hostedResults.length;results.push(...hostedResults);
   console.log(JSON.stringify({mission:mission3?3:2,passed:tests,failed:0,containerNetwork:'none',tests:results}));
  }finally{if(created)await docker(['rm','-f',container]);}
 })().catch(error=>{console.error(error);process.exitCode=1});

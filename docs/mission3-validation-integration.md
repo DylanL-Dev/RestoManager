@@ -2,6 +2,8 @@
 
 Référence : `fec9cbe5b89c5323d126284def664d2a6c113fcd`, Mission 3 reprise dans `fix/v3-tables-display-mission3`, après sa validation initiale sur `fix/mission3-validation-integration`. Aucune publication ni migration partagée n’est comprise dans cette livraison. Le rapport et les résultats d’exécution sont livrés séparément, hors dépôt.
 
+**Mise à jour du 8 novembre, après cette livraison :** les migrations partagées ont été autorisées puis appliquées ensemble sous la version `20261108115320`. Le [compte rendu d’exécution](mission23-migration-2026-11-08.md) détaille les contrôles, la compatibilité avec l’administrateur non superutilisateur et les limites de sauvegarde. La fusion et Render restent en attente d’autorisation distincte ; les constats antérieurs ci-dessous décrivent l’état avant application.
+
 ## Contrat frontend / SQL
 
 Appliquer dans l’environnement de validation isolé, dans cet ordre :

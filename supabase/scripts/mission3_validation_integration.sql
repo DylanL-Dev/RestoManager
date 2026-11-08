@@ -48,6 +48,21 @@ begin
  end loop;
 end $preflight$;
 
+-- Hosted postgres is not a superuser. The future function owner needs CREATE
+-- during ownership transfers, with the original schema privileges restored
+-- before commit. Other sessions never observe these temporary grants.
+create temporary table mission3_owner_schema_grants(schema_name name primary key) on commit drop;
+insert into pg_temp.mission3_owner_schema_grants
+ select s from unnest(array['public','private']) s
+ where not has_schema_privilege('resto_service_writer',s,'CREATE');
+do $owner_grants$
+declare s name;
+begin
+ for s in select schema_name from pg_temp.mission3_owner_schema_grants loop
+  execute format('grant create on schema %I to resto_service_writer',s);
+ end loop;
+end $owner_grants$;
+
 -- Acquire this BEFORE any row/day/table/draft lock in every public mutation.
 -- Reentrant within one transaction, including nested legacy calls.
 create or replace function private.lock_restaurant_mutation_v1()
@@ -1136,4 +1151,12 @@ end $close_direct_dml$;
 revoke all on function private.release_table_hold(uuid) from public,anon,authenticated;
 
 notify pgrst,'reload schema';
+do $restore_owner_grants$
+declare s name;
+begin
+ for s in select schema_name from pg_temp.mission3_owner_schema_grants loop
+  execute format('revoke create on schema %I from resto_service_writer',s);
+ end loop;
+end $restore_owner_grants$;
+drop table pg_temp.mission3_owner_schema_grants;
 commit;
