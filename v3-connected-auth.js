@@ -97,6 +97,12 @@ try{
    if(!name)throw new Error('Nom non renseigné');
    establishmentName.textContent=name;
    window.RestoEstablishment={id:profile.restaurant_id,name};
+   const headerName=document.getElementById('headerEstablishment');
+   if(headerName){
+    headerName.textContent=name;
+    headerName.title=name;
+    headerName.hidden=false;
+   }
    document.getElementById('teamSpace').textContent+=' · '+name;
   }catch(_error){
    establishmentName.textContent='Nom de l’établissement indisponible';
