@@ -284,6 +284,54 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(await view.page.locator('#upcoming').locator('xpath=..').locator('h2 svg').count());
    }
    pass(role+' '+viewport.width+'px service dashboard headings and status cards preserve metrics with Lucide');
+   if(role==='fb_admin'){
+    // UX-only change: use existing walk-in form and recommendation engine.
+    await view.page.evaluate(()=>window.RestoScreens.show('passages'));
+    const form=view.page.locator('#walkinForm');
+    await form.waitFor({state:'visible'});
+    assert.equal(await form.locator('.walkinTypeField legend').innerText(),'Type de client');
+    assert.equal(await form.locator('.walkinGuestsField label').innerText(),'Nombre de personnes');
+    assert.ok(await view.page.locator('.walkinPanel .muted').first().innerText().then(t=>!t.includes('PAX')));
+    const customerCards=await form.locator('.walkinTypeChoices label').evaluateAll(items=>items.map(el=>({
+     svg:!!el.querySelector('svg'),text:el.innerText.trim(),checked:el.querySelector('input').checked
+    })));
+    assert.deepEqual(customerCards.map(x=>x.text),['Client de l’hôtel','Client extérieur']);
+    assert.ok(customerCards.every(x=>x.svg),'Both client types must have offline Lucide icons');
+    assert.equal(customerCards[0].checked,true);
+    assert.equal(await view.page.locator('#walkinRoomLabel').innerText(),'Chambre ou nom du client (facultatif)');
+    assert.equal(await view.page.locator('#walkinGuests').inputValue(),'2');
+    await form.locator('#walkinPlus').click();
+    assert.equal(await view.page.locator('#walkinGuests').inputValue(),'3');
+    assert.equal(await form.locator('[data-walkin-pax="3"]').getAttribute('aria-pressed'),'true');
+    await form.locator('#walkinMinus').click();
+    assert.equal(await view.page.locator('#walkinGuests').inputValue(),'2');
+    await form.locator('[data-walkin-pax="1"]').click();
+    assert.equal(await view.page.locator('#walkinGuests').inputValue(),'1');
+    assert.equal(await view.page.locator('#walkinGuestUnit').innerText(),'personne');
+    assert.equal(await form.locator('#walkinMinus').isDisabled(),true);
+    await form.locator('#walkinGuests').fill('8');
+    await form.locator('#walkinGuests').dispatchEvent('input');
+    assert.equal(await view.page.locator('#walkinGuestUnit').innerText(),'personnes');
+    assert.equal(await form.locator('[data-walkin-pax="1"]').getAttribute('aria-pressed'),'false');
+    await form.locator('input[name=walkinType][value=exterieur]').check();
+    assert.equal(await view.page.locator('#walkinRoomLabel').innerText(),'Nom du client (facultatif)');
+    assert.equal(await view.page.locator('#walkinRoom').getAttribute('placeholder'),'Ex. Dupont');
+    await form.locator('input[name=walkinType][value=hotel]').check();
+    assert.equal(await view.page.locator('#walkinRoomLabel').innerText(),'Chambre ou nom du client (facultatif)');
+    await form.locator('[data-walkin-pax="2"]').click();
+    const state=await form.evaluate(el=>({
+     n:Number(el.querySelector('#walkinGuests').value),
+     text:el.querySelector('#walkinRecommendation').textContent,
+     buttons:[...el.querySelectorAll('.walkinGuestStepper button')].every(x=>x.getBoundingClientRect().height>=44),
+     width:el.scrollWidth,clientWidth:el.clientWidth
+    }));
+    assert.equal(state.n,2);
+    assert.ok(state.text.length>0,'Existing table recommendation still updates');
+    assert.ok(state.buttons,'Stepper touch targets must remain accessible');
+    assert.ok(state.width<=state.clientWidth+2,'Walk-in form must fit responsive viewport');
+    pass(role+' '+viewport.width+'px clearer client selection, guest stepper and recommendation kept');
+   }
+
 
 
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
