@@ -144,19 +144,17 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.equal(await view.page.locator('.quickAction[href="#reservationForm"] span').innerText(),'Ajouter un client');
    pass(role+' '+viewport.width+'px coherent five-tab hierarchy and accessible Lucide icons');
    const establishmentFull='À l’Épicerie — Mercure Rouen Centre Champ-de-Mars';
-   const tenantHeader=view.page.locator('#headerEstablishment');
-   await tenantHeader.waitFor({state:'visible'});
-   assert.equal(await tenantHeader.innerText(),establishmentFull);
-   assert.equal(await tenantHeader.getAttribute('title'),establishmentFull);
+   assert.equal(await view.page.locator('#headerEstablishment').count(),0,
+    'No establishment label should compete with the refresh and bell controls');
    assert.equal(await view.page.locator('#currentEstablishmentName').innerText(),establishmentFull);
-   const headerLayout=await view.page.evaluate(()=>{
-    const name=document.getElementById('headerEstablishment').getBoundingClientRect();
-    const refresh=document.getElementById('refreshAppBtn').getBoundingClientRect();
-    return {nameRight:name.right,refreshLeft:refresh.left,viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth};
-   });
-   assert.ok(headerLayout.nameRight<=headerLayout.refreshLeft+1,'Establishment must precede Refresh without overlap');
-   assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Establishment header must not overflow viewport');
-   pass(role+' '+viewport.width+'px establishment name in header and Gestion without overflow');
+   assert.match(await view.page.locator('#teamSpace').innerText(),/À l’Épicerie — Mercure Rouen Centre Champ-de-Mars/);
+   const headerLayout=await view.page.evaluate(()=>({
+    viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
+    refresh:document.getElementById('refreshAppBtn').getBoundingClientRect().toJSON()
+   }));
+   assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Header must not overflow viewport');
+   assert.ok(headerLayout.refresh.width>=42,'Refresh button must keep its touch target');
+   pass(role+' '+viewport.width+'px establishment named only in section and Gestion, header clean');
 
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
     await view.page.evaluate(screen=>window.RestoScreens.show(screen),screen);await view.page.clock.runFor(32);
