@@ -34,3 +34,25 @@ test('historical local reservations retain client-as-room duplicate checks',()=>
  const a={id:'a',type:'hotel',client:'201',date:'2030-01-01',time:'12:00',duration:90,status:'reserved',tables:[1]};
  assert.equal(engine.findRoomConflict({...a,id:'b',tables:[2]},[a]).id,'a');
 });
+test('unrelated room edits preserve unchanged historical notes and allergies without truncation',()=>{
+ const historical={...base,notes:'N'.repeat(1400),allergies:'A'.repeat(750)};
+ const c=edit.candidate(edit.capture(historical),{...values,notes:historical.notes,allergies:historical.allergies});
+ assert.equal(c.notes,historical.notes);assert.equal(c.allergies,historical.allergies);assert.equal(c.hotelRoom,'202');
+});
+test('overlong new or changed details are rejected explicitly without modifying the input',()=>{
+ for(const [field,length] of [['notes',1001],['allergies',501]]){
+  const entered={...values,[field]:'X'.repeat(length)};
+  assert.throws(()=>edit.candidate(base,entered),{code:'RM003'});
+  assert.equal(entered[field].length,length);assert.equal(base.notes,'Note');assert.equal(base.allergies,'Noix');
+ }
+ const historical={...base,notes:'N'.repeat(1400)};
+ assert.throws(()=>edit.candidate(historical,{...values,notes:'N'.repeat(1401)}),{code:'RM003'});
+ assert.equal(edit.candidate(historical,{...values,notes:'Note raccourcie'}).notes,'Note raccourcie');
+});
+test('encoding and decoding never truncate long historical service information',async()=>{
+ const fs=require('node:fs');
+ const details=await import('data:text/javascript;base64,'+Buffer.from(fs.readFileSync(require.resolve('../reservation-details.js'))).toString('base64'));
+ const input={notes:'Note fictive '.repeat(160).trim(),allergies:'Allergie fictive '.repeat(60).trim(),type:'hotel'};
+ const decoded=details.decodeBookingDetails(details.encodeBookingDetails(input),'101');
+ assert.deepEqual(decoded,input);
+});

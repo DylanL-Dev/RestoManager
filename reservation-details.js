@@ -3,8 +3,10 @@ const allergyLabel='ALLERGIES À VÉRIFIER : ';
 const hotelTag='[RESTOMANAGER:HOTEL]';
 const exteriorTag='[RESTOMANAGER:EXTERIEUR]';
 export function encodeBookingDetails({notes='',allergies='',type}={}){
- const cleanNotes=String(notes||'').trim().slice(0,1000);
- const cleanAllergies=String(allergies||'').trim().replace(/\s*\n\s*/g,', ').slice(0,500);
+ // Entry limits are validated by the forms/model. Encoding must never truncate
+ // unchanged historical notes when another reservation field is edited.
+ const cleanNotes=String(notes||'').trim();
+ const cleanAllergies=String(allergies||'').trim().replace(/\s*\n\s*/g,', ');
  return [cleanNotes,cleanAllergies?allergyLabel+cleanAllergies:'',type==='hotel'?hotelTag:type==='exterieur'?exteriorTag:''].filter(Boolean).join('\n');
 }
 export function decodeBookingDetails(raw='',hotelRoom=''){

@@ -12,9 +12,15 @@
     "test:mission2:postgres": "node tests/postgres/mission2.cjs",
     "test:mission2:browser": "node tests/browser/mission2.cjs",
     "test": "node --test tests/*.test.js tests/*.test.cjs",
-    "serve": "python3 -m http.server 8000"
+    "serve": "python3 -m http.server 8000",
+    "test:mission3:postgres": "node tests/postgres/mission2.cjs --mission3",
+    "test:mission3:browser": "node tests/browser/mission3.cjs",
+    "test:mission3:supabase": "node tests/supabase/mission3.cjs",
+    "test:syntax": "node tests/check-syntax.cjs",
+    "test:display": "node tests/browser/table-display.cjs"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "2.57.0",
     "playwright": "1.56.1"
   }
 }

@@ -6,8 +6,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../..');
-const container='restomanager-mission2-tests-'+process.pid;
-const image='postgres:17-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994';
+const mission3=process.argv.includes('--mission3');
+const container='restomanager-mission'+(mission3?'3':'2')+'-tests-'+process.pid;
+const image=process.env.MISSION3_POSTGRES_IMAGE||'postgres:17-bookworm@sha256:665dc7b37ac52a17e298511414c21d23ffa4e6a6ef6225b3e5d59c7afb35e994';
 const env={...process.env};
 for(const name of ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH'])delete env[name];
 function docker(args,input='',onData){
@@ -29,10 +30,11 @@ const lit=s=>s==null?'null':"'"+String(s).replaceAll("'","''")+"'";
 const ctx=(who,query,role='authenticated')=>`begin;set local role ${role};select set_config('request.jwt.claim.sub',${lit(user(who))},true);${query};commit;`;
 async function record(n){return JSON.parse(await ok(`select row_to_json(r) from public.reservations r where id=${lit(res(n))};`));}
 function edit(r,changes={},reception=false){
+ const {table:chosenTable,...fields}=changes;
  const v={p_reservation_id:r.id,p_expected_version:r.edit_version,p_guest_name:r.guest_name,p_hotel_room:r.hotel_room,
-  p_party_size:r.party_size,p_starts_at:r.starts_at,p_ends_at:r.ends_at,p_notes:r.notes,...changes};
+  p_party_size:r.party_size,p_starts_at:r.starts_at,p_ends_at:r.ends_at,p_notes:r.notes,...fields};
  const args=Object.entries(v).map(([k,value])=>k+'=>'+lit(value));
- if(!reception)args.push('p_table_ids=>array['+lit(changes.table||table(Number(r.id.slice(-2))))+']::uuid[]');
+ if(!reception)args.push('p_table_ids=>array['+lit(chosenTable||table(Number(r.id.slice(-2))))+']::uuid[]');
  return 'select public.'+(reception?'reception_update_reservation_v4':'update_reservation_v4')+'('+args.join(',')+')';
 }
 async function fails(who,query,code,role){const r=await sql(ctx(who,query,role));assert.notEqual(r.code,0,'expected SQL rejection');assert.match(r.stderr,new RegExp(code),r.stderr);}
@@ -61,6 +63,10 @@ async function concurrent(firstWho,firstQuery,secondWho,secondQuery,expected){
   console.log('PostgreSQL '+await ok('show server_version;'));
   await ok(fs.readFileSync(path.join(__dirname,'fixture.sql'),'utf8'));
   const patch=fs.readFileSync(path.join(root,'supabase/scripts/mission2_reservation_edits.sql'),'utf8');await ok(patch);await ok(patch);
+  if(mission3){
+   const validation=fs.readFileSync(path.join(root,'supabase/scripts/mission3_validation_integration.sql'),'utf8');
+   await ok(validation);await ok(validation);
+  }
   console.log('PASS script applies atomically and can be reapplied locally');
   await test('Restaurant: room persisted, previous room gone, notes/allergies preserved',async()=>{
    const before=await record(1);await ok(ctx(1,edit(before,{p_hotel_room:'201'})));const after=await record(1);
@@ -144,6 +150,9 @@ async function concurrent(firstWho,firstQuery,secondWho,secondQuery,expected){
    assert.equal(await ok("select has_function_privilege('authenticated','private.update_reservation_v4(uuid,uuid,text,text,integer,timestamptz,timestamptz,uuid[],text)','execute')"),'f');
    assert.equal(await ok("select count(*) from pg_proc where proname in ('update_reservation_v4','reception_update_reservation_v4') and (proconfig is null or not ('search_path=\"\"'=any(proconfig)))"),'0');
   });
-  console.log(JSON.stringify({passed:tests,failed:0,containerNetwork:'none',tests:results}));
+  if(mission3)await require('./mission3-cases.cjs')({sql,ok,record,edit,ctx,fails,test,concurrent,lit,user,res,table,docker,container});
+  const hostedResults=await require('./hosted-migrations.cjs')({docker,container,mission3});
+  tests+=hostedResults.length;results.push(...hostedResults);
+  console.log(JSON.stringify({mission:mission3?3:2,passed:tests,failed:0,containerNetwork:'none',tests:results}));
  }finally{if(created)await docker(['rm','-f',container]);}
 })().catch(error=>{console.error(error);process.exitCode=1});

@@ -59,7 +59,7 @@
   if(!history.length)archive.textContent='Aucune clôture partagée enregistrée.';
  }
  async function getDb(){
-  const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261106-reconnect2');
+  const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261108-tables-display');
   const {profile}=await requireStaff();
   if(profile.role!=='fb_admin')throw Error('Action réservée au Restaurant.');
   return supabase;

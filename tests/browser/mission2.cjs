@@ -12,7 +12,7 @@ function reset(){
  ];
 }
 function snapshot(){return {
- syncSequence:++sequence,hours:{lunch_enabled:true,lunch_start:'11:00:00',lunch_end:'15:00:00',dinner_enabled:true,dinner_start:'18:00:00',dinner_end:'23:00:00',duration:90},
+ syncSequence:++sequence,capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},hours:{lunch_enabled:true,lunch_start:'11:00:00',lunch_end:'15:00:00',dinner_enabled:true,dinner_start:'18:00:00',dinner_end:'23:00:00',duration:90},
  rooms:[{id:'fictional-room',name:'Salle fictive',active:true,sort_order:0}],
  tables:Array.from({length:6},(_,i)=>({id:'table-'+(i+1),label:String(i+1),seats:6,active:true,room_id:'fictional-room'})),
  reservations:structuredClone(records),assignments:records.map((r,i)=>({reservation_id:r.id,table_id:'table-'+(i+1)})),holds:[],fusionLinks:[]

@@ -1282,3 +1282,19 @@ html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns
 #editForm .editConflict{grid-column:1/-1;padding:16px;border:1px solid #b87922;border-radius:12px;background:#fff9ed;color:#51370d}
 #editForm .editConflict[hidden],#editHotelRoomField[hidden]{display:none}
 #editCurrentValues{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px}
+
+/* Reservation edits preserve historical information and keep conflict review readable. */
+#editForm label{min-width:0}
+#editForm textarea{max-width:100%;min-width:0;resize:vertical;overflow-wrap:anywhere}
+#editForm .editDetailLimit{font-size:12px;font-weight:400;line-height:1.5;overflow-wrap:anywhere}
+#editForm textarea[aria-invalid="true"]{border-color:#a13434;outline-color:#a13434}
+#editCurrentValues{max-height:45dvh;overflow:auto;padding:12px;border-radius:8px;background:rgba(255,255,255,.6)}
+#editCurrentValues:empty{display:none}
+#editCurrentValues:focus-visible{outline:3px solid #16815e;outline-offset:2px}
+#editConflict button{min-height:44px;white-space:normal;margin:4px 6px 4px 0}
+@media(max-width:620px){#editForm .editConflict{padding:12px}#editConflict button{width:100%;margin-right:0}#editForm label:has(#editNotes),#editForm label:has(#editAllergies){grid-column:1/-1}}
+.serviceDataStatus{margin:12px 0;padding:12px 14px;border:1px solid #c7ded5;border-radius:12px;background:#f0f7f3;color:#154b3b;font-size:14px;line-height:1.5}
+.serviceDataStatus p{margin:0}
+.serviceDataStatus button{margin-top:10px;min-height:44px;padding:8px 16px}
+.serviceDataStatus[data-state="error"]{background:#fff5e8;border-color:#ebcd9e;color:#68421a}
+.serviceDataStatus[hidden]{display:none}

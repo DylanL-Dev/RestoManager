@@ -1,5 +1,7 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261106-reconnect2';
-import {decodeBookingDetails} from './reservation-details.js?v=20261107-exterior-type1';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261108-tables-display';
+import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
+import {canWrite} from './service-sync.js?v=20261108-tables-display';
+import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 const style=document.getElementById('integrationGate');
 const banner=document.createElement('section');banner.id='integrationBanner';
 const label=document.createElement('span');label.textContent='Connexion en cours…';
@@ -48,6 +50,7 @@ try{
  }
  window.RestoSharedReservations=[];
  window.RestoSupabaseReady=false;
+ window.RestoSharedDataLoaded=false;
  const management=document.querySelector('[data-screen="administration"]')||document.getElementById('administration');
  if(!management)throw new Error('Espace Gestion introuvable');
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
@@ -100,6 +103,7 @@ try{
  // The native reservation list now consumes the shared snapshot directly.
  // No duplicate prototype panel or independent local reservation list.
  window.RestoSaveSharedHours=async(shifts,duration)=>{
+  if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   if(profile.role!=='fb_admin')throw Error('La modification des horaires est réservée au responsable.');
   const values={duration};
   for(const key of ['lunch','dinner']){
@@ -115,13 +119,15 @@ try{
   return t.id;
  });
  window.RestoChangeFusion=async(oldPair,newPair)=>{
+  if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   const {error}=await supabase.rpc('change_fusion_link_v3',{p_old:oldPair?idsFor(oldPair):null,p_new:newPair?idsFor(newPair):null});
-  if(error)throw Error(error.code==='23505'?'Cette association existe déjà.':error.message);
+  if(error)throw window.RestoErrors?.business(error.code==='23505'?'Cette association existe déjà.':window.RestoErrors.message(error))||error;
   await window.RestoRefreshSharedService();
  };
  window.RestoInstallWalkin=async r=>{
+  if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   const {error}=await supabase.rpc('install_walkin_group_v3',{p_tables:idsFor(r.tables),p_guests:r.guests,p_name:r.client,p_type:r.type});
-  if(error)throw Error(error.message);
+  if(error)throw error;
   await window.RestoRefreshSharedService();
  };
  let channelReady=false,lastAppliedSequence=0,everConnected=false;
@@ -130,7 +136,9 @@ try{
   badge.dataset.state=state;
   badge.textContent=title;
   description.textContent=detail;
-  window.RestoSupabaseReady=state==='ok';
+  window.RestoSupabaseReady=state==='ok'&&canWrite(window.RestoServiceCapabilities);
+  window.RestoSyncState=state;
+  window.dispatchEvent(new Event('restomanager:connection-state'));
   const feedback=document.getElementById('bookingFeedback');
   if(!feedback)return;
   const text=feedback.textContent.trim();
@@ -155,70 +163,29 @@ try{
    PLAN_TABLES:'Le plan de salle reçu ne peut pas être affiché.'
   };
   const detail=messages[code]||'La lecture des données partagées a échoué.';
-  showState('error','Synchronisation interrompue',detail+' Code : '+code+'. Vérifiez la connexion puis actualisez si nécessaire.');
+  window.RestoErrors?.diagnostic('service-sync',error);
+  showState('error','Synchronisation interrompue',detail+' Vérifiez la connexion puis actualisez si nécessaire.');
  }
  window.addEventListener('offline',()=>showError({code:'HORS_LIGNE'}));
- window.addEventListener('online',()=>showState('pending','Reconnexion en cours','Mise à jour des réservations depuis Supabase…'));
+ window.addEventListener('online',()=>showState('pending','Reconnexion en cours','Mise à jour des réservations partagées…'));
  const applySharedSnapshot=snapshot=>{
   // Ignore responses started before a newer service snapshot request.
   if(Number(snapshot.syncSequence||0)<lastAppliedSequence)return;
   if(!navigator.onLine){showError({code:'HORS_LIGNE'});return}
+  const prepared=prepareServiceSnapshot(snapshot,decodeBookingDetails);
+  if(!TableStore.valid(prepared.plan))throw Object.assign(Error('Plan de salle invalide.'),{code:'PLAN_TABLES'});
+  // All decoding and validation precede publication. No listener sees a half snapshot.
+  TableStore.setShared(prepared.plan);
+  Object.assign(window,prepared.values);
+  window.RestoSharedDataLoaded=true;
   lastAppliedSequence=Number(snapshot.syncSequence||0);
-  const hours=snapshot.hours, shifts={};
-  for(const key of ['lunch','dinner'])shifts[key]={enabled:hours[key+'_enabled'],start:hours[key+'_start'].slice(0,5),end:hours[key+'_end'].slice(0,5)};
-  const settings={shifts,duration:hours.duration};
-  if(JSON.stringify(settings)!==JSON.stringify(window.RestoSharedHours)){
-   window.RestoSharedHours=settings;
-   window.dispatchEvent(new Event('restomanager:hours'));
-  }
-  const byTable=new Map(snapshot.tables.map(t=>[t.id,t.label]));
-  window.RestoSmartPlacementTableIds=new Map(snapshot.tables.filter(t=>t.active).map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t.id]).filter(([number])=>Number.isInteger(number)&&number>0));
-  window.RestoDraftHolds=snapshot.holds.map(h=>({id:h.id,number:Number(String(byTable.get(h.table_id)||'').replace(/^table\s*/i,'')),
-   start:Date.parse(h.starts_at),end:Date.parse(h.ends_at),expiry:Date.parse(h.expires_at),team:h.draft_role==='reception'?'Réception':'Restaurant'}));
-  // Supabase is the authoritative table configuration on the connected preview.
-  // Keep localStorage intact as a backup; do not persist this shared snapshot locally.
-  window.RestoInactiveRestaurantTables=snapshot.tables.filter(t=>!t.active);
-  const activeRooms=snapshot.rooms.filter(r=>r.active);
-  const primary=activeRooms[0];
-  if(primary){
-   const rooms=activeRooms.map((r,i)=>({id:i===0?'main':r.id,name:r.name}));
-   const roomIds=new Map(activeRooms.map((r,i)=>[r.id,i===0?'main':r.id]));
-   window.RestoSharedRoomIds=new Map(activeRooms.map((r,i)=>[i===0?'main':r.id,r.id]));
-   const tables=snapshot.tables.filter(t=>t.active&&roomIds.has(t.room_id)).map(t=>({
-    id:t.id,number:Number(String(t.label).trim().replace(/^table\s*/i,'')),
-    capacityMin:1,capacity:t.seats,roomId:roomIds.get(t.room_id)
-   }));
-   if(tables.every(t=>Number.isInteger(t.number)&&t.number>0)&&new Set(tables.map(t=>t.number)).size===tables.length){
-    const numbers=new Map(tables.map(t=>[t.id,t.number]));
-    window.RestoFusionLinks=snapshot.fusionLinks.map(l=>[numbers.get(l.table_a),numbers.get(l.table_b)]).filter(p=>p.every(Number.isInteger));
-    try{TableStore.setShared({version:1,rooms,tables});window.dispatchEvent(new Event('restomanager:v3-tables'));}
-    catch(err){throw Object.assign(new Error('Plan de salle invalide',{cause:err}),{code:'PLAN_TABLES'});}
-   }else throw Object.assign(new Error('Numérotation incompatible'),{code:'PLAN_TABLES'});
-  }
-  const assigned=new Map();
-  for(const a of snapshot.assignments){
-   if(!assigned.has(a.reservation_id))assigned.set(a.reservation_id,[]);
-   const label=byTable.get(a.table_id);
-   const tableNumber=Number(String(label||'').trim().replace(/^table\s*/i,''));
-   if(Number.isInteger(tableNumber)&&tableNumber>0)assigned.get(a.reservation_id).push(tableNumber);
-  }
-  window.RestoSharedReservations=snapshot.reservations.map(r=>{
-   const dt=new Date(r.starts_at);
-   const dateParts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(dt).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
-   const parts=dateParts.year+'-'+dateParts.month+'-'+dateParts.day;
-   const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hour12:false}).format(dt);
-   const details=decodeBookingDetails(r.notes,r.hotel_room);
-   return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status==='departed'?'released':r.status,
-    walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
-    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||'',editVersion:r.edit_version||null};
-  });
   if(navigator.onLine===false)showError({code:'HORS_LIGNE'});
-  else if(channelReady)showState('ok','Synchronisation active','Les données de cet appareil sont synchronisées en direct.');
-  window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
-  window.dispatchEvent(new Event('restomanager:v3-change'));
+  else if(channelReady&&canWrite(snapshot.capabilities))showState('ok','Synchronisation active','Les données de cet appareil sont synchronisées en direct.');
+  else if(channelReady)showState('readonly','Consultation seule','Les données sont consultables. Le responsable doit finaliser la mise à jour du service avant de permettre les modifications.');
   lastSync.textContent='Dernière synchronisation : '+new Date().toLocaleString('fr-FR',{timeZone:'Europe/Paris'});
   window.RestoLastSyncAt=Date.now();
   label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · '+snapshot.reservations.length+' réservations · '+snapshot.tables.length+' tables';
+  window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
  };
  window.RestoRefreshSharedService=async()=>{
   try{const snapshot=await loadSharedService();applySharedSnapshot(snapshot);return snapshot;}

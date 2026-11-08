@@ -42,7 +42,9 @@ test('suggestions exclude temporarily held and occupied tables',()=>{
  const suggestions=new Function('service','mins','clock','evaluate','ReservationEngine','TableStore','window',
   section('function suggestions(candidate,all,ignoreId){','function progress(data){')+'\nreturn suggestions;')(
    ()=>({start:'18:00',end:'22:00'}),mins,clock,evaluateCandidate,engine,{get:()=>({tables:[]})},app);
- const available=suggestions({date:'2026-11-07',time:'19:00',duration:90,guests:2,tables:[2]},[]);
+ // This case isolates holds and occupancy; today's clock filtering is covered
+ // separately. A fixed historical day becomes time-dependent during CI runs.
+ const available=suggestions({date:'2035-11-07',time:'19:00',duration:90,guests:2,tables:[2]},[]);
  assert.ok(available.some(s=>s.at==='18:30'));
  assert.ok(!available.some(s=>s.at==='19:30'||s.at==='20:00'));
  assert.ok(available.every(s=>Array.isArray(s.tables)&&s.tables.length));

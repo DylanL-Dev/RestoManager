@@ -300,7 +300,29 @@ const active=r=>ReservationEngine.isBlocking(r);
 const priority={seated:4,arrived:2,late:2,confirmed:2,reserved:2};
 function state(table){const related=bookings.filter(r=>r.tables.includes(table.number)&&active(r));const top=related.slice().sort((a,b)=>(priority[b.status]||0)-(priority[a.status]||0)||a.time.localeCompare(b.time))[0];if(!top)return {key:'free',label:'LIBRE',detail:'Disponible',booking:null};const key=top.status==='seated'?'present':'expected';return {key,label:{present:'PRÉSENTS',expected:'ATTENDUS'}[key],detail:key==='expected'?top.time:top.guests+' personne'+(top.guests>1?'s':''),booking:top}}
 function node(tag,className,content){const e=document.createElement(tag);if(className)e.className=className;if(content!==undefined)e.textContent=String(content);return e}
-function render(){const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted','Aucune table pour ce filtre.'));
+function serviceDisplayReady(){
+ if(!$('integrationGate'))return true;
+ const loaded=window.RestoSharedDataLoaded===true,state=window.RestoSyncState||'pending';
+ let status=$('serviceDataStatus');
+ if(!status){status=node('section','serviceDataStatus');status.id='serviceDataStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');$('tables').querySelector('.panelHead').after(status)}
+ const kind=state==='readonly'?'readonly':state==='ok'?'ready':state==='error'?'error':'loading';
+ status.dataset.state=kind;status.hidden=kind==='ready';status.replaceChildren();
+ const text=kind==='readonly'?'Consultation disponible. Les enregistrements restent suspendus jusqu’à la mise à jour du service.':
+  kind==='error'?(loaded?'Connexion interrompue. Les informations affichées peuvent être anciennes ; les modifications sont suspendues.':'Impossible de charger les tables. Vérifiez la connexion puis réessayez.'):
+  loaded?'Actualisation en cours. Les informations affichées sont celles de la dernière synchronisation.':'Chargement des salles et des tables…';
+ if(kind!=='ready')status.append(node('p','',text));
+ if(kind==='error'){
+  const retry=node('button','','Réessayer');retry.id='serviceDataRetry';retry.type='button';
+  retry.addEventListener('click',async()=>{retry.disabled=true;try{await window.RestoRefreshSharedService?.()}catch{/* The synchronization state explains the failure. */}finally{retry.disabled=false}});status.append(retry);
+ }
+ $('tableGrid').setAttribute('aria-busy',String(!loaded&&kind==='loading'));
+ if(loaded)return true;
+ const placeholder=kind==='error'?'Les données ne sont pas disponibles pour le moment. Réessayez après vérification de la connexion.':'Chargement des informations du service…';
+ $('tableGrid').replaceChildren(node('p','muted',text));$('upcoming').textContent=placeholder;
+ $('kpis').replaceChildren(node('p','muted',placeholder));$('currentOccupancy')?.replaceChildren(node('p','muted',placeholder));$('rushDashboard')?.replaceChildren(node('p','muted',placeholder));
+ return false;
+}
+function render(){if(!serviceDisplayReady())return;const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted',visible.length?'Aucune table pour ce filtre.':'Aucune table active dans cette salle.'));
 const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0)],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0)],['Tables occupées',occupiedNumbers.size],['Places sur tables libres',free]];$('kpis').replaceChildren(...kpis.map(([label,value])=>{const c=node('div','kpi');c.append(node('span','',label),node('strong','',value));return c}));
 const totalTables=plan.tables.length;
 const totalSeats=plan.tables.reduce((n,t)=>n+Math.max(0,Number(t.capacity)||0),0);
@@ -482,29 +504,49 @@ function confirmTableDeparture(kind,r){
 }
 $('bookingTable').addEventListener('change',()=>{$('bookingTable').dataset.manual='true'});
 function refreshAvailability(){
+ try{
+ window.RestoBookingAvailabilityError=false;
  const dateValue=$('bookingDate').value,time=$('bookingTime').value,guests=Number($('bookingGuests').value),select=$('bookingTable'),previous=select.value;
  const insight=$('availabilityInsight'),fusionPanel=$('fusionSuggestions');
  if(insight)insight.replaceChildren();
  if(fusionPanel)fusionPanel.replaceChildren();
- select.replaceChildren();window.RestoFusionSelected=null;select.required=!window.RestoReception;
- if(!dateValue||!time||!Number.isInteger(guests)||guests<1)return;
+ const applyState=(state,message)=>{select.dataset.availabilityState=state;select.dataset.availabilityMessage=message;if(insight)insight.append(node('p','availabilityWarning',message));window.RestoTableChoices?.refresh('bookingTable')};
+ select.required=!window.RestoReception;
+ const connected=Array.isArray(window.RestoSharedReservations);
+ if(connected&&(!window.RestoSupabaseReady||navigator.onLine===false)){
+  if(window.RestoSyncState==='readonly'&&navigator.onLine!==false){select.replaceChildren();applyState('readonly','Les réservations sont suspendues jusqu’à la mise à jour du service. Les données restent consultables.');return;}
+  select.replaceChildren();applyState(navigator.onLine===false?'offline':window.RestoSyncState==='error'?'error':'syncing',navigator.onLine===false?'Connexion interrompue. Disponibilités à revérifier.':window.RestoSyncState==='error'?'Les disponibilités ne sont pas actualisées. Vérifiez la connexion ou contactez le responsable.':'Synchronisation des disponibilités en cours…');return;
+ }
+ // An own hold can arrive in realtime before its RPC response supplies its IDs.
+ // Keep the selection until that response settles; never label it unavailable.
+ if(window.RestoBookingDraft?.checking()){
+  applyState('checking','Vérification de la disponibilité et des confirmations en cours…');return;
+ }
+ select.replaceChildren();window.RestoFusionSelected=null;
+ if(!dateValue||!time||!Number.isInteger(guests)||guests<1){applyState('invalid','Renseignez la date, l’heure et le nombre de couverts.');return;}
  // Explain a closed booking slot instead of pretending that every table is occupied.
  const bookingMinutes=value=>Number(String(value).slice(0,2))*60+Number(String(value).slice(3,5));
  const allowedShifts=Object.values(ReservationEngine.getShifts()).filter(shift=>shift.enabled);
  const inBookingHours=allowedShifts.some(shift=>bookingMinutes(time)>=bookingMinutes(shift.start)&&bookingMinutes(time)<=bookingMinutes(shift.end));
  if(!inBookingHours){
   if(insight)insight.append(node('p','availabilityWarning','Horaire hors service : aucune réservation ne peut être prise à '+time+'. Horaires autorisés : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
+  select.dataset.availabilityState='out_of_service';select.dataset.availabilityMessage='Horaire hors service';
   window.RestoTableChoices?.refresh('bookingTable');
   return;
  }
  const reservationsAll=readReservations(),duration=ReservationEngine.getDefaultDuration();
  const choices=ReservationEngine.rankedTableChoices(plan.tables,window.RestoFusion?.pairs()||[],guests);
  function candidate(at,tables){return {id:'availability-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time:at,guests,duration,tables,status:'reserved'};}
- function matches(at){
+ function availability(at){
   const interval=window.RestoBookingInterval?.(dateValue,at,duration);
-  return choices.filter(c=>!(interval&&window.RestoBookingDraft.occupied(c.numbers,...interval).length)&&ReservationEngine.validate(candidate(at,c.numbers),reservationsAll).valid);
+  return window.RestoAvailability.evaluate({choices,assess:c=>{
+   const result=ReservationEngine.validate(candidate(at,c.numbers),reservationsAll);
+   return {valid:result.valid,roomConflict:!!result.roomConflict,held:!!(interval&&window.RestoBookingDraft?.occupied(c.numbers,...interval).length)};
+  }});
  }
- const available=matches(time),best=available[0];
+ function matches(at){return availability(at).available}
+ const evaluated=availability(time),available=evaluated.available,best=available[0];
+ select.dataset.availabilityState=evaluated.state;select.dataset.availabilityMessage=evaluated.message;
  const context=[dateValue,time,guests].join('/');
  if(select.dataset.context!==context){delete select.dataset.manual;select.dataset.context=context}
  for(const c of available){
@@ -520,26 +562,32 @@ function refreshAvailability(){
  const total=available.length,previewTables=best?.numbers||[];
  const interval=window.RestoBookingInterval?.(dateValue,time,duration);
  if(interval){
-  const held=window.RestoBookingDraft.occupied(plan.tables.map(t=>t.number),...interval);
-  if(held.length)insight.append(node('p','availabilityWarning','Saisie sur un autre appareil : '+held.map(h=>'table '+h.number+' · '+h.team).join(', ')+'.'));
+  const held=window.RestoBookingDraft?.occupied(plan.tables.map(t=>t.number),...interval);
+  if(held?.length)insight.append(node('p','availabilityWarning','Saisie sur un autre appareil : '+held.map(h=>'table '+h.number+' · '+h.team).join(', ')+'.'));
  }
  if(best)insight.append(node('p','availabilitySummary',best.label+' recommandée'+(best.numbers.length>1?'s':'')+' · '+best.capacity+' places pour '+guests+' couvert(s).'));
  if(previewTables.length&&window.RestoRush){const preview=candidate(time,previewTables),rush=window.RestoRush.evaluate(preview,reservationsAll);insight.append(node('p','rushAvailabilityHint','Charge des arrivées : '+rush.current+' / '+rush.limit+' déjà attendus entre '+rush.range+'.'));if(rush.blocked){insight.append(node('p','availabilityWarning','Forte affluence : des horaires alternatifs vous seront proposés à la validation.'))}}
- if(!total&&!window.RestoReception){
-  insight.append(node('p','availabilityWarning','Aucune table ou fusion autorisée disponible pour '+guests+' couvert(s) à cet horaire.'));
+ if(!total){
+  insight.append(node('p','availabilityWarning',evaluated.message));
   const current=Number(time.slice(0,2))*60+Number(time.slice(3,5)),alternatives=[];
   for(const delta of [-60,-30,30,60,90]){
    const mins=current+delta;if(mins<0||mins>=24*60)continue;
    const at=String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+   if(!window.RestoAvailability.allowedAlternative(dateValue,at,bookingToday(),bookingNowTime()))continue;
    const count=matches(at).length;
    if(count)alternatives.push({at,count});
   }
   if(alternatives.length){
    insight.append(node('p','availabilityAlternativesTitle','Autres horaires disponibles :'));
    const choices=node('div','availabilityAlternatives');
-   alternatives.forEach(({at,count})=>{const button=node('button','availabilityTimeOption',at+' · '+count+' possibilité(s)');button.type='button';button.addEventListener('click',()=>{$('bookingTime').value=at;refreshAvailability()});choices.append(button)});
+   alternatives.slice(0,3).forEach(({at,count})=>{const button=node('button','availabilityTimeOption',at+' · '+count+' possibilité(s)');button.type='button';button.addEventListener('click',()=>{$('bookingTime').value=at;$('bookingTime').dispatchEvent(new Event('change',{bubbles:true}))});choices.append(button)});
    insight.append(choices);
   }else insight.append(node('p','muted','Aucune configuration compatible dans les créneaux proches testés. Essayez une autre date.'));
+ }
+ }catch(error){
+  window.RestoBookingAvailabilityError=true;window.RestoErrors?.diagnostic('booking-availability',error);
+  $('bookingTable').replaceChildren();
+  $('availabilityInsight')?.replaceChildren(node('p','availabilityWarning','Les disponibilités ne peuvent pas être vérifiées pour le moment. Les tables restent consultables ; réessayez avant d’enregistrer.'));
  }
 }
 function showBookingSuccess(reservation){
@@ -549,6 +597,7 @@ function showBookingSuccess(reservation){
  const dismiss=document.createElement('button');dismiss.type='button';dismiss.className='bookingSuccessDismiss';
  dismiss.setAttribute('aria-label','Fermer la confirmation de réservation');dismiss.title='Fermer';
  dismiss.textContent='×';
+ const previousFocus=document.activeElement;
  dismiss.addEventListener('click',()=>close());
  const mark=document.createElement('div');mark.className='bookingSuccessIcon';mark.innerHTML='<i data-lucide="check"></i>';
  const heading=document.createElement('h2');heading.id='bookingSuccessTitle';heading.textContent='Réservation enregistrée !';
@@ -557,13 +606,15 @@ function showBookingSuccess(reservation){
  const actions=document.createElement('div');actions.className='bookingSuccessActions';
  const view=document.createElement('button');view.type='button';view.textContent='Voir la réservation';
  const again=document.createElement('button');again.type='button';again.className='bookingSuccessSecondary';again.textContent='Ajouter une autre';
- function close(){overlay.remove();document.removeEventListener('keydown',escape)}
- function escape(e){if(e.key==='Escape')close()}
+ function close(){overlay.remove();document.removeEventListener('keydown',escape);if(previousFocus?.isConnected)previousFocus.focus()}
+ function escape(e){if(e.key==='Escape'){e.preventDefault();close();return}if(e.key==='Tab'){const controls=Array.from(dialog.querySelectorAll('button:not([disabled])'));const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}}
  view.addEventListener('click',()=>{close();window.RestoScreens?.show('reservations');const dateField=$('reservationDate'),query=$('reservationQuery');if(dateField)dateField.value=reservation.date;if(query){query.value=reservation.client;query.dispatchEvent(new Event('input',{bubbles:true}))}document.getElementById('reservations')?.scrollIntoView({block:'start'})});
  again.addEventListener('click',()=>{close();prepareNewReservation();$('bookingClient').focus()});
  actions.append(view,again);dialog.append(dismiss,mark,heading,summary,note,actions);overlay.append(dialog);document.body.append(overlay);document.addEventListener('keydown',escape);dismiss.focus();
 }
 function prepareNewReservation(){
+ // An unresolved or recovered confirmation must survive navigation until an explicit decision.
+ if(window.RestoBookingDraft?.recoveryState()){refreshAvailability();return;}
  // Roll an expired booking date forward, while preserving future dates chosen by staff.
  const bookingDateField=$('bookingDate');
  if(bookingDateField&&(!bookingDateField.value||bookingDateField.value<bookingToday()))bookingDateField.value=bookingToday();
@@ -578,21 +629,24 @@ function prepareNewReservation(){
  refreshAvailability();
 }
 window.RestoPrepareNewReservation=prepareNewReservation;
+window.RestoRefreshBookingAvailability=refreshAvailability;
 window.addEventListener('restomanager:screen',e=>{
  if(e.detail==='reservationForm')prepareNewReservation();
 });
 function readReservations(){const raw=window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
 $('bookingDate').value=bookingToday();
 $('bookingTime').value=bookingNowTime();
-['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient'].forEach(id=>$(id).addEventListener('change',refreshAvailability));
+['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient'].forEach(id=>{for(const type of ['input','change'])$(id).addEventListener(type,refreshAvailability)});
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
- if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw Error('Synchronisation en cours. Réessayez dans un instant.');
+ if(window.RestoBookingAvailabilityError)throw (window.RestoErrors?.business||Error)('Les disponibilités ne peuvent pas être vérifiées. Réessayez avant d’enregistrer.');
+ if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw (window.RestoErrors?.business||Error)('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
- if($('bookingDate').value<bookingToday())throw Error('Impossible de créer une réservation à une date passée.');
- const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim().slice(0,1000),allergies:$('bookingAllergies').value.trim().slice(0,500),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
- if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw Error('Fusion non autorisée.');
+ if($('bookingDate').value<bookingToday())throw (window.RestoErrors?.business||Error)('Impossible de créer une réservation à une date passée.');
+ const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
+ if(candidate.notes.length>1000||candidate.allergies.length>500)throw (window.RestoErrors?.business||Error)('Les notes ou allergies dépassent la longueur autorisée. Raccourcissez votre saisie.');
+ if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw (window.RestoErrors?.business||Error)('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
  if(!window.RestoReception&&!result.valid){feedback.textContent=result.errors.join(' ');refreshAvailability();return}
  const latest=readReservations(),again=ReservationEngine.validate(candidate,latest);
@@ -611,12 +665,12 @@ $('bookingForm').addEventListener('submit',async event=>{
  if(!ok){feedback.textContent='Réservation non enregistrée. Choisissez un autre horaire ou revenez au formulaire.';return}
  const fresh=readReservations();if((!window.RestoReception&&!ReservationEngine.validate(candidate,fresh).valid)||window.RestoRush.evaluate(candidate,fresh).current!==loadState.current){feedback.textContent='Situation modifiée : réessayez.';return}candidate.rushOverride={confirmedAt:new Date().toISOString(),range:loadState.range}}
  if(window.RestoSharedReservations){
-  if(typeof window.RestoCreateSharedBooking!=='function')throw Error('Connexion en cours. Réessayez dans un instant.');
+  if(typeof window.RestoCreateSharedBooking!=='function')throw (window.RestoErrors?.business||Error)('Connexion en cours. Réessayez dans un instant.');
   feedback.textContent='Enregistrement en cours…';
   await window.RestoCreateSharedBooking(candidate);
   feedback.textContent='✓ Réservation enregistrée · '+candidate.client+' · '+candidate.time+'.';
   try{if(typeof window.RestoRefreshSharedService==='function')await window.RestoRefreshSharedService();}
-  catch(syncError){feedback.textContent+=' Actualisation en attente : '+syncError.message;}
+  catch(syncError){feedback.textContent+=' Actualisation des réservations en attente.';window.RestoErrors?.diagnostic('booking-refresh',syncError);}
   window.RestoFusionSelected=null;
   prepareNewReservation();
   showBookingSuccess(candidate);
@@ -636,12 +690,15 @@ $('bookingForm').addEventListener('submit',async event=>{
  const current=readReservations();if(!ReservationEngine.validate(candidate,current).valid){feedback.textContent='La disponibilité a changé. Réessayez.';refreshAvailability();return}
  localStorage.setItem('restomanager_reservations',JSON.stringify(current.concat(candidate)));
  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;prepareNewReservation();render();showBookingSuccess(candidate);
- }catch(error){feedback.textContent='Enregistrement impossible : '+error.message}
+ }catch(error){window.RestoErrors?.diagnostic('booking-save',error);feedback.textContent=window.RestoErrors?.message(error,'Enregistrement non confirmé. Votre saisie est conservée ; vérifiez les informations et la connexion.')||error.message}
 });
-refreshAvailability();
-window.addEventListener('restomanager:v3-tables',()=>{plan=TableStore.get();const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;refreshAvailability();render()});
-window.addEventListener('restomanager:v3-change',()=>{try{syncServiceDay();bookings=readReservations().filter(r=>r.date===date);refreshAvailability();render()}catch(e){$('bookingFeedback').textContent=e.message}});
+function applyTableSnapshot(){plan=TableStore.get();syncServiceDay();bookings=readReservations().filter(r=>r.date===date);const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;render();refreshAvailability()}
+window.addEventListener('restomanager:v3-tables',applyTableSnapshot);
+window.addEventListener('restomanager:supabase-snapshot',applyTableSnapshot);
+window.addEventListener('restomanager:connection-state',()=>{if(window.RestoSharedDataLoaded)applyTableSnapshot();else{render();refreshAvailability()}});
+window.addEventListener('restomanager:v3-change',()=>{try{syncServiceDay();bookings=readReservations().filter(r=>r.date===date);render();refreshAvailability()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});
 setInterval(()=>{if(!modal.hidden&&selected){const t=plan.tables.find(x=>x.number===selected);if(t)detail(t,state(t))}},60000);
 render();
+refreshAvailability();
 })();

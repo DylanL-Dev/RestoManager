@@ -1,0 +1,97 @@
+name: Mission 3 integration validation
+on:
+  push:
+    branches: [fix/mission3-validation-integration, fix/v3-tables-display-mission3]
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mission3-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:syntax
+      - run: npm test
+      - name: Preserve the current floor plan and retired-editor boundary
+        run: |
+          node - <<'NODE'
+          const fs=require('node:fs'),assert=require('node:assert/strict');
+          const html=fs.readFileSync('v3-connected.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
+          for(const file of ['floor-3d.mjs','floor-art.js','floor-editor.js','floor-plan.js','floor-properties.js','floor-zoom.js','app.js','service-ui.js','style.css']){
+            assert.equal(fs.existsSync(file),false,'Retired editor restored: '+file);
+            assert.equal(html.includes(file),false,'Retired editor loaded: '+file);
+            assert.equal(sw.includes("'"+file+"'"),false,'Retired editor cached: '+file);
+          }
+          for(const file of ['service-v3-table-store.js','service-v3-table-admin.js','reservation-engine.js']){
+            assert.ok(fs.existsSync(file)&&html.includes(file),'Current floor function missing: '+file);
+          }
+          NODE
+
+  postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Disposable PostgreSQL migrations, concurrency and tenant isolation
+        run: npm run test:mission3:postgres
+
+  browser-mock:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Prepare temporary browser evidence directory
+        run: echo "BROWSER_ARTIFACTS=${RUNNER_TEMP}/restomanager-mission3-browser" >> "$GITHUB_ENV"
+      - name: Mission 2 UI regressions with simulated backend
+        run: npm run test:mission2:browser
+      - name: Mission 3 responsive, conflict and controlled-clock UI regressions
+        run: npm run test:mission3:browser
+      - name: Tables rendering, loading and pre-migration consultation
+        run: npm run test:display
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mission3-browser-fictitious-data
+          path: ${{ runner.temp }}/restomanager-mission3-browser
+          if-no-files-found: ignore
+          retention-days: 7
+
+  supabase-isolated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Local Docker Auth, PostgREST, Realtime and independent browser accounts
+        run: npm run test:mission3:supabase
+      # This workflow has no deployment steps, shared credentials or remote SQL.

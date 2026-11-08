@@ -21,9 +21,9 @@ configs.forEach(id=>{
  const options=Array.from(select.options).filter(o=>o.value);
  const chosen=options.find(o=>o.value===select.value);
  trigger.replaceChildren();
- const label=document.createElement('span');label.textContent=chosen?(chosen.textContent):'Aucune table disponible';
+ const label=document.createElement('span');label.textContent=chosen?(chosen.textContent):(select.dataset.availabilityMessage||'Choisissez les informations de réservation');
  const action=document.createElement('span');action.className='tableChoiceAction';action.textContent=chosen?'Changer':'Choisir';
- trigger.append(label,action);trigger.disabled=!options.length;
+ trigger.append(label,action);trigger.disabled=!options.length||['checking','syncing','offline','error'].includes(select.dataset.availabilityState);
  if(active===id)render();
  }
  function render(){

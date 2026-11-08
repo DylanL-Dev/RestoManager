@@ -11,7 +11,7 @@
     if(loading){again=true;return;}
     loading=true;
     try{
-      const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261106-reconnect2');
+      const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261108-tables-display');
       const {profile}=await requireStaff();
       if(profile.role!=='fb_admin')return;
       const [bookings,changes]=await Promise.all([
@@ -28,7 +28,7 @@
   }
   window.RestoMarkFbChangeRead=async id=>{
     if(window.RestoReception!==false)throw Error('Accès réservé au Restaurant.');
-    const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261106-reconnect2');
+    const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261108-tables-display');
     const {profile}=await requireStaff();
     if(profile.role!=='fb_admin')throw Error('Accès refusé.');
     const {error}=await supabase.from('reservation_change_alerts')
@@ -38,7 +38,7 @@
   };
   window.RestoMarkFbAlertRead=async id=>{
     if(window.RestoReception!==false)throw Error('Accès réservé au Restaurant.');
-    const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261106-reconnect2');
+    const {supabase,requireStaff}=await import('./supabase-service-bridge.js?v=20261108-tables-display');
     const {profile}=await requireStaff();
     if(profile.role!=='fb_admin')throw Error('Accès refusé.');
     const {data,error}=await supabase.from('fb_reservation_alerts').update({read_at:new Date().toISOString()})

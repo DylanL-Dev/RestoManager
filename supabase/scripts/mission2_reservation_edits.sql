@@ -21,6 +21,21 @@ begin
  end if;
 end $$;
 
+-- Hosted postgres is not a superuser. ALTER FUNCTION ... OWNER TO requires
+-- schema CREATE for the target owner. Expose this grant only in this transaction
+-- and restore the original privileges before committing.
+create temporary table mission2_owner_schema_grants(schema_name name primary key) on commit drop;
+insert into pg_temp.mission2_owner_schema_grants
+ select s from unnest(array['public','private']) s
+ where not has_schema_privilege('resto_service_writer',s,'CREATE');
+do $owner_grants$
+declare s name;
+begin
+ for s in select schema_name from pg_temp.mission2_owner_schema_grants loop
+  execute format('grant create on schema %I to resto_service_writer',s);
+ end loop;
+end $owner_grants$;
+
 -- Opaque UUID revision: safe across JSON/JavaScript, no timestamp precision loss.
 alter table public.reservations add column if not exists edit_version uuid not null default gen_random_uuid();
 
@@ -197,4 +212,12 @@ end $$;
 alter function private.update_reservation_v3(uuid,text,integer,timestamptz,timestamptz,uuid[],text) owner to resto_service_writer;
 
 notify pgrst,'reload schema';
+do $restore_owner_grants$
+declare s name;
+begin
+ for s in select schema_name from pg_temp.mission2_owner_schema_grants loop
+  execute format('revoke create on schema %I from resto_service_writer',s);
+ end loop;
+end $restore_owner_grants$;
+drop table pg_temp.mission2_owner_schema_grants;
 commit;
