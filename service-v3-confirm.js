@@ -1,0 +1,109 @@
+'use strict';
+(function(){
+ const overlay=document.createElement('div');
+ overlay.className='restoConfirmOverlay';
+ overlay.hidden=true;
+ overlay.innerHTML='<div class="restoConfirmBackdrop"></div><section class="restoConfirmSheet" role="alertdialog" aria-modal="true" aria-labelledby="restoConfirmTitle" aria-describedby="restoConfirmDescription"><div class="restoConfirmSymbol" aria-hidden="true">!</div><p class="restoConfirmEyebrow">ATTRIBUTION À VÉRIFIER</p><h2 id="restoConfirmTitle">Table encore occupée</h2><p id="restoConfirmDescription">Un départ reste à confirmer.</p><div class="restoConfirmWarnings"></div><p class="restoConfirmNote">Le départ est estimé sur la durée prévue. La réservation existante restera « Installé » tant que son départ ne sera pas confirmé.</p><div class="restoConfirmActions"><button type="button" data-decision="cancel">Choisir une autre table</button><button type="button" data-decision="accept">Confirmer l’attribution</button></div></section>';
+ document.body.append(overlay);
+ let resolvePending=null,focusBefore=null;
+ const finish=answer=>{
+  if(!resolvePending)return;
+  const done=resolvePending;resolvePending=null;overlay.hidden=true;document.body.classList.remove('restoConfirmOpen');focusBefore?.focus();done(answer);
+ };
+ overlay.querySelector('[data-decision="cancel"]').addEventListener('click',()=>finish(false));
+ overlay.querySelector('[data-decision="accept"]').addEventListener('click',()=>finish(true));
+ overlay.querySelector('.restoConfirmBackdrop').addEventListener('click',()=>finish(false));
+ document.addEventListener('keydown',event=>{
+  if(overlay.hidden)return;
+  if(event.key==='Escape'){event.preventDefault();finish(false)}
+  if(event.key==='Tab'){
+   const buttons=[...overlay.querySelectorAll('button')],first=buttons[0],last=buttons[buttons.length-1];
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus()}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus()}
+  }
+ });
+ window.RestoCheckOccupiedTables=function(reservation,records){
+  const occupied=(records||[]).filter(other=>other.id!==reservation.id&&other.date===reservation.date&&other.status==='seated'&&other.tables.some(table=>reservation.tables.includes(table)));
+  if(!occupied.length)return false;
+  const conflict=occupied[0],shared=conflict.tables.filter(table=>reservation.tables.includes(table));
+  const block=document.createElement('div');block.className='restoConfirmOverlay';block.setAttribute('role','presentation');
+  const backdrop=document.createElement('div');backdrop.className='restoConfirmBackdrop';
+  const sheet=document.createElement('section');sheet.className='restoConfirmSheet';sheet.setAttribute('role','alertdialog');sheet.setAttribute('aria-modal','true');sheet.setAttribute('aria-label','Table déjà occupée');
+  const eyebrow=document.createElement('p');eyebrow.className='restoConfirmEyebrow';eyebrow.textContent='INSTALLATION IMPOSSIBLE';
+  const title=document.createElement('h2');title.textContent='Table '+shared.join(' + ')+' déjà occupée';
+  const message=document.createElement('p');message.textContent='Le client '+conflict.client+' est actuellement installé à cette table.';
+  const advice=document.createElement('p');advice.className='restoConfirmNote';advice.textContent='Pour installer le client '+reservation.client+', libérez d’abord la table ou attribuez-lui une autre table disponible.';
+  const actions=document.createElement('div');actions.className='restoConfirmActions';
+  const close=document.createElement('button');close.type='button';close.textContent='Compris';close.className='restoConfirmBlockClose';
+  const previous=document.activeElement;
+  const dismiss=()=>{block.remove();previous?.focus()};
+  close.addEventListener('click',dismiss);backdrop.addEventListener('click',dismiss);
+  block.addEventListener('keydown',event=>{if(event.key==='Escape'){event.preventDefault();dismiss()}});
+  actions.append(close);sheet.append(eyebrow,title,message,advice,actions);block.append(backdrop,sheet);document.body.append(block);close.focus();
+  return true;
+ };
+ window.RestoConfirmEarlySeating=function(reservation){
+  const d=/^(\d{4})-(\d{2})-(\d{2})$/.exec(reservation.date||''),t=/^(\d{2}):(\d{2})$/.exec(reservation.time||'');
+  if(!d||!t)return Promise.resolve(true);
+  const scheduled=new Date(+d[1],+d[2]-1,+d[3],+t[1],+t[2]);
+  const early=Math.ceil((scheduled.getTime()-Date.now())/60000);
+  if(early<=30)return Promise.resolve(true);
+  if(resolvePending)return Promise.resolve(false);
+  focusBefore=document.activeElement;
+  overlay.querySelector('.restoConfirmEyebrow').textContent='INSTALLATION ANTICIPÉE';
+  overlay.querySelector('#restoConfirmTitle').textContent='Installer le client en avance ?';
+  overlay.querySelector('#restoConfirmDescription').textContent='Cette réservation est prévue à '+reservation.time+'. Vous allez installer le client maintenant.';
+  const list=overlay.querySelector('.restoConfirmWarnings');list.replaceChildren();
+  const card=document.createElement('div');card.className='restoConfirmWarning';
+  const name=document.createElement('strong');name.textContent='Client '+reservation.client;
+  const delay=document.createElement('span');delay.textContent='Avance sur la réservation : '+early+' minutes';
+  const table=document.createElement('span');table.textContent='Table'+(reservation.tables.length>1?'s ':' ')+reservation.tables.join(' + ');
+  card.append(name,delay,table);list.append(card);
+  overlay.querySelector('.restoConfirmNote').textContent='En confirmant, le client passera en « Installé » et son heure réelle d’installation sera enregistrée. Le suivi de présence démarrera maintenant.';
+  overlay.querySelector('[data-decision="cancel"]').textContent='Annuler';
+  overlay.querySelector('[data-decision="accept"]').textContent='Oui, installer le client';
+  overlay.hidden=false;document.body.classList.add('restoConfirmOpen');
+  overlay.querySelector('[data-decision="cancel"]').focus();
+  return new Promise(resolve=>{resolvePending=resolve});
+ };
+ window.RestoConfirmRelease=function(reservation){
+  if(resolvePending)return Promise.resolve(false);
+  focusBefore=document.activeElement;
+  overlay.querySelector('.restoConfirmEyebrow').textContent='DÉPART À CONFIRMER';
+  overlay.querySelector('#restoConfirmTitle').textContent='Libérer la table ?';
+  overlay.querySelector('#restoConfirmDescription').textContent='Vérifiez que les clients ont réellement quitté leur table avant de la rendre disponible.';
+  const list=overlay.querySelector('.restoConfirmWarnings');list.replaceChildren();
+  const card=document.createElement('div');card.className='restoConfirmWarning';
+  const client=document.createElement('strong');client.textContent='Client '+reservation.client;
+  const tables=document.createElement('span');tables.textContent='Table'+(reservation.tables.length>1?'s ':' ')+reservation.tables.join(' + ');
+  const count=document.createElement('span');count.textContent=reservation.guests+' couvert(s)';
+  card.append(client,tables,count);list.append(card);
+  overlay.querySelector('.restoConfirmNote').textContent='Cette action enregistrera le départ réel et libérera la table pour les prochaines réservations.';
+  overlay.querySelector('[data-decision="cancel"]').textContent='Non, toujours occupée';
+  overlay.querySelector('[data-decision="accept"]').textContent='Oui, libérer la table';
+  overlay.hidden=false;document.body.classList.add('restoConfirmOpen');
+  overlay.querySelector('[data-decision="cancel"]').focus();
+  return new Promise(resolve=>{resolvePending=resolve});
+ };
+ window.RestoConfirmSeating=function(warnings,client,time){
+  if(resolvePending)return Promise.resolve(false);
+  focusBefore=document.activeElement;
+  overlay.querySelector('.restoConfirmEyebrow').textContent='ATTRIBUTION À VÉRIFIER';
+  overlay.querySelector('#restoConfirmTitle').textContent='Table encore occupée';
+  overlay.querySelector('.restoConfirmNote').textContent='Le départ est estimé sur la durée prévue. La réservation existante restera « Installé » tant que son départ ne sera pas confirmé.';
+  overlay.querySelector('[data-decision="cancel"]').textContent='Choisir une autre table';
+  overlay.querySelector('[data-decision="accept"]').textContent='Confirmer l’attribution';
+  overlay.querySelector('#restoConfirmDescription').textContent='Pour '+client+' à '+time+', les tables sélectionnées sont encore marquées occupées.';
+  const list=overlay.querySelector('.restoConfirmWarnings');list.replaceChildren();
+  warnings.forEach(w=>{
+   const card=document.createElement('div');card.className='restoConfirmWarning';
+   const label=document.createElement('strong');label.textContent='Client '+w.client+' · Tables '+w.tables.join(' + ');
+   const end=document.createElement('span');end.textContent='Fin de repas prévue : '+w.plannedEnd;
+   const gap=document.createElement('span');gap.textContent='Marge avant la nouvelle réservation : '+w.gapMinutes+' min';
+   card.append(label,end,gap);list.append(card);
+  });
+  overlay.hidden=false;document.body.classList.add('restoConfirmOpen');
+  overlay.querySelector('[data-decision="cancel"]').focus();
+  return new Promise(resolve=>{resolvePending=resolve});
+ };
+})();

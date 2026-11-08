@@ -10,6 +10,11 @@
     root.ReservationEngine = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
     const DEFAULT_DURATION = 90;
+    const DURATION_KEY = 'restomanager_default_duration_v1';
+    function getDefaultDuration(){if(globalThis.RestoSharedHours)return globalThis.RestoSharedHours.duration;try{const saved=Number(localStorage.getItem(DURATION_KEY));return [30,45,60,75,90,105,120,150,180].includes(saved)?saved:DEFAULT_DURATION}catch(e){return DEFAULT_DURATION}}
+    const LUNCH_START = 12 * 60;
+    const LUNCH_LAST_ORDER = 14 * 60 + 30;
+    const DINNER_START = 19 * 60;
     const CLOSING_MINUTES = 21 * 60 + 30;
     const TABLES = [
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 17, 18, 19, 20, 21, 22, 23,
@@ -45,6 +50,7 @@
     ];
 
     function minutes(time) {
+        if (!/^\d{2}:\d{2}$/.test(String(time || ''))) return NaN;
         const parts = String(time || '').split(':');
         const hours = Number(parts[0]);
         const mins = Number(parts[1]);
@@ -54,15 +60,41 @@
             : NaN;
     }
 
+    function startMinutes(reservation) {
+        if (reservation.status === STATUS.SEATED && reservation.seatedAt) {
+            const actual = new Date(reservation.seatedAt);
+            if (Number.isFinite(actual.getTime())) {
+                const day = [actual.getFullYear(),String(actual.getMonth()+1).padStart(2,'0'),String(actual.getDate()).padStart(2,'0')].join('-');
+                if (day === reservation.date) return actual.getHours()*60+actual.getMinutes();
+            }
+        }
+        return minutes(reservation.time);
+    }
     function endMinutes(reservation) {
-        return minutes(reservation.time) + Number(reservation.duration || DEFAULT_DURATION);
+        return startMinutes(reservation) + Number(reservation.duration || getDefaultDuration());
     }
 
     function isBlocking(reservation) {
         return BLOCKING_STATUSES.includes(reservation.status);
     }
 
+    function rankedTableChoices(tables, groups, guests) {
+        const byNumber = new Map(tables.map(t => [t.number, t]));
+        const choices = tables.filter(t => guests >= (t.capacityMin || 1)).map(t => [t.number]).concat(groups);
+        return choices.filter(numbers => numbers.every(n => byNumber.has(n))).map(numbers => {
+            const capacity = numbers.reduce((sum,n) => sum + byNumber.get(n).capacity, 0);
+            const label = (numbers.length === 1 ? 'Table ' : 'Tables ') + numbers.join(' + ');
+            return {numbers, capacity, label, value: numbers.join(',')};
+        }).filter(c => c.capacity >= guests).sort((a,b) =>
+            a.capacity - b.capacity || a.numbers.length - b.numbers.length ||
+            a.value.localeCompare(b.value, 'fr', {numeric:true}));
+    }
+
     function tableCapacity(tables) {
+        if(globalThis.RestoSharedReservations){
+            const plan=TableStore.get().tables;
+            return tables.reduce((sum,n)=>sum+(plan.find(t=>t.number===Number(n))?.capacity||0),0);
+        }
         return tables.reduce(function (total, table) {
             return total + (CAPACITY[table] || 0);
         }, 0);
@@ -75,20 +107,27 @@
     }
 
     function overlaps(first, second) {
-        return minutes(first.time) < endMinutes(second) &&
-            endMinutes(first) > minutes(second.time);
+        return startMinutes(first) < endMinutes(second) &&
+            endMinutes(first) > startMinutes(second);
     }
 
     function normalizeRoom(value) {
         return String(value || '').trim().toLocaleUpperCase('fr-FR');
     }
 
+    function roomIdentity(reservation) {
+        // Connected records carry an explicit room. Only historical local
+        // records without this property use the old client-as-room convention.
+        return normalizeRoom(Object.prototype.hasOwnProperty.call(reservation, 'hotelRoom')
+            ? reservation.hotelRoom : reservation.client);
+    }
+
     function findRoomConflict(candidate, reservations, ignoredId) {
-        if (candidate.type !== 'hotel' || !normalizeRoom(candidate.client)) return null;
+        if (candidate.type !== 'hotel' || !roomIdentity(candidate) || (candidate.walkIn && roomIdentity(candidate) === 'CLIENT DE PASSAGE')) return null;
         return normalizeReservations(reservations).find(function (other) {
             return other.id !== ignoredId && other.type === 'hotel' &&
                 other.date === candidate.date && isBlocking(other) &&
-                normalizeRoom(other.client) === normalizeRoom(candidate.client) &&
+                roomIdentity(other) === roomIdentity(candidate) &&
                 overlaps(candidate, other);
         }) || null;
     }
@@ -101,7 +140,9 @@
             : STATUS.RESERVED;
         const tables = Array.isArray(source.tables)
             ? source.tables.map(Number).filter(function (table, index, array) {
-                return TABLES.includes(table) && array.indexOf(table) === index;
+                // Keep saved associations even when a plan is temporarily unreadable
+                // or the table is absent from the current catalogue.
+                return Number.isInteger(table) && table > 0 && array.indexOf(table) === index;
             })
             : [];
         return Object.assign({}, source, {
@@ -111,7 +152,7 @@
             date: typeof source.date === 'string' ? source.date : '',
             time: typeof source.time === 'string' ? source.time : '',
             guests: Math.max(1, Number(source.guests) || 1),
-            duration: Math.max(1, Number(source.duration) || DEFAULT_DURATION),
+            duration: Math.max(1, Number(source.duration) || getDefaultDuration()),
             tables: tables,
             status: status,
         });
@@ -121,37 +162,90 @@
         return Array.isArray(raw) ? raw.map(normalizeReservation) : [];
     }
 
+    function validDate(value) {
+        if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+        const [year, month, day] = value.split('-').map(Number);
+        if (year < 2000 || year > 2100) return false;
+        const date = new Date(Date.UTC(year, month - 1, day));
+        return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+    }
+
+    const SHIFT_KEY = 'restomanager_shifts_v1';
+    const SHIFT_DEFAULTS = {lunch:{enabled:true,start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'21:30'}};
+    function getShifts(){
+        if(globalThis.RestoSharedHours)return globalThis.RestoSharedHours.shifts;
+        let stored={};
+        try{if(typeof localStorage!=='undefined')stored=JSON.parse(localStorage.getItem(SHIFT_KEY)||'{}')||{}}catch(e){}
+        const result={};
+        for(const key of ['lunch','dinner']){
+            const raw=stored[key]||{},fallback=SHIFT_DEFAULTS[key];
+            result[key]={enabled:typeof raw.enabled==='boolean'?raw.enabled:fallback.enabled,start:Number.isFinite(minutes(raw.start))?raw.start:fallback.start,end:Number.isFinite(minutes(raw.end))?raw.end:fallback.end};
+        }
+        return result;
+    }
+
     function validate(candidate, reservations, ignoredId) {
         const errors = [];
+        if (!candidate || typeof candidate !== 'object') return {valid:false,errors:['Réservation invalide.'],conflict:null,roomConflict:null};
         if (!candidate.client || !String(candidate.client).trim()) errors.push('Client requis.');
-        if (!candidate.date) errors.push('Date requise.');
+        if (!validDate(candidate.date)) errors.push('Date invalide (AAAA-MM-JJ).');
         if (!Number.isFinite(minutes(candidate.time))) errors.push('Heure invalide.');
-        if (!Number.isFinite(Number(candidate.guests)) || Number(candidate.guests) < 1) {
+        if (!Number.isInteger(Number(candidate.guests)) || Number(candidate.guests) < 1) {
             errors.push('Le nombre de personnes doit être supérieur à 0.');
         }
+        const duration = Number(candidate.duration == null ? getDefaultDuration() : candidate.duration);
+        if (!Number.isInteger(duration) || duration < 1) errors.push('Durée de réservation invalide.');
         if (!Array.isArray(candidate.tables) || candidate.tables.length === 0) {
             errors.push('Sélectionnez au moins une table.');
         }
-        if ((candidate.tables || []).some(function (table) { return !TABLES.includes(Number(table)); })) {
+        const selectedTables = Array.isArray(candidate.tables) ? candidate.tables : [];
+        if (selectedTables.some(function (table) { return !Number.isInteger(Number(table)) || Number(table) < 1; }) ||
+            new Set(selectedTables.map(Number)).size !== selectedTables.length) {
+            errors.push('Les numéros de tables doivent être uniques et valides.');
+        }
+        if (selectedTables.some(function (table) { return !(globalThis.RestoSharedReservations ? TableStore.get().tables.some(t=>t.number===Number(table)) : TABLES.includes(Number(table))); })) {
             errors.push('Une table sélectionnée est inconnue.');
         }
-        if (tableCapacity(candidate.tables || []) < Number(candidate.guests)) {
+        if (tableCapacity([...new Set(selectedTables.map(Number))]) < Number(candidate.guests)) {
             errors.push('La capacité des tables sélectionnées est insuffisante.');
         }
-        if (endMinutes(candidate) > CLOSING_MINUTES) {
-            errors.push('La réservation dépasse la fermeture à 21h30.');
+        if (Number.isFinite(minutes(candidate.time))) {
+            const arrival = minutes(candidate.time);
+            const shifts = getShifts();
+            const allowed = Object.values(shifts).some(shift => shift.enabled && arrival >= minutes(shift.start) && arrival <= minutes(shift.end));
+            if (!allowed) errors.push('Horaire hors des services ouverts. Vérifiez les horaires dans Gestion du restaurant.');
         }
+        if (errors.length) return { valid: false, errors: errors, conflict: null, roomConflict: null };
         const conflict = normalizeReservations(reservations).find(function (other) {
             return other.id !== ignoredId && other.date === candidate.date &&
                 isBlocking(other) && sharesTable(candidate, other) && overlaps(candidate, other);
         });
         if (conflict) errors.push('Conflit avec la réservation de ' + conflict.client + ' à ' + conflict.time + '.');
         const roomConflict = findRoomConflict(candidate, reservations, ignoredId);
-        if (roomConflict) errors.push('La chambre ' + normalizeRoom(candidate.client) + ' possède déjà une réservation qui chevauche ce créneau.');
+        if (roomConflict) errors.push('La chambre ' + roomIdentity(candidate) + ' possède déjà une réservation qui chevauche ce créneau.');
         return { valid: errors.length === 0, errors: errors, conflict: conflict || null, roomConflict: roomConflict };
     }
 
-    function transition(reservation, status, now) {
+    // A seated party can still be present after its planned end. This is a
+    // warning requiring staff approval, not an automatic table release.
+    function seatingWarnings(candidate, reservations, ignoredId) {
+        if (!candidate || !Array.isArray(candidate.tables) || !Number.isFinite(minutes(candidate.time))) return [];
+        return normalizeReservations(reservations).filter(function (other) {
+            return other.id !== ignoredId && other.date === candidate.date &&
+                other.status === STATUS.SEATED && sharesTable(candidate, other) &&
+                !overlaps(candidate, other) && endMinutes(other) <= minutes(candidate.time);
+        }).map(function (other) {
+            return {
+                id: other.id, client: other.client, time: other.time,
+                plannedEnd: String(Math.floor(endMinutes(other) / 60)).padStart(2, '0') + ':' +
+                    String(endMinutes(other) % 60).padStart(2, '0'),
+                gapMinutes: startMinutes(candidate) - endMinutes(other),
+                tables: other.tables.slice()
+            };
+        });
+    }
+
+    function transition(reservation, status, now, reservations) {
         const allowed = {
             reserved: [STATUS.CONFIRMED, STATUS.LATE, STATUS.ARRIVED, STATUS.SEATED, STATUS.CANCELLED, STATUS.NO_SHOW],
             confirmed: [STATUS.LATE, STATUS.ARRIVED, STATUS.SEATED, STATUS.CANCELLED, STATUS.NO_SHOW],
@@ -161,6 +255,13 @@
         };
         if (!(allowed[reservation.status] || []).includes(status)) {
             return { valid: false, error: 'Transition de statut non autorisée.' };
+        }
+        if (status === STATUS.SEATED && Array.isArray(reservations)) {
+            const conflict = normalizeReservations(reservations).find(function (other) {
+                return other.id !== reservation.id && other.date === reservation.date &&
+                    other.status === STATUS.SEATED && sharesTable(reservation, other);
+            });
+            if (conflict) return { valid: false, error: 'Installation impossible : la table est encore occupée par ' + conflict.client + '. Confirmez d’abord son départ.' };
         }
         const updated = Object.assign({}, reservation, { status: status, updatedAt: now || new Date().toISOString() });
         if (status === STATUS.ARRIVED) updated.arrivedAt = updated.updatedAt;
@@ -185,10 +286,13 @@
         CAPACITY: CAPACITY,
         STATUS: STATUS,
         DEFAULT_DURATION: DEFAULT_DURATION,
+        rankedTableChoices,
+        getDefaultDuration: getDefaultDuration,
         CLOSING_MINUTES: CLOSING_MINUTES,
         TERMINAL_STATUSES: TERMINAL_STATUSES,
         isBlocking: isBlocking,
         endMinutes: endMinutes,
+        startMinutes: startMinutes,
         tableCapacity: tableCapacity,
         overlaps: overlaps,
         normalizeRoom: normalizeRoom,
@@ -196,6 +300,8 @@
         normalizeReservation: normalizeReservation,
         normalizeReservations: normalizeReservations,
         validate: validate,
+        getShifts: getShifts,
+        seatingWarnings: seatingWarnings,
         transition: transition,
         extend: extend,
     };

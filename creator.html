@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#103e33">
+<meta name="robots" content="noindex,nofollow">
+<title>Assistance & administration · RestoManager</title>
+<link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
+<link rel="stylesheet" href="creator-console.css?v=20261108-rootconsole1">
+</head>
+<body>
+<section id="loginPanel" class="loginSurface">
+ <main class="loginCard">
+  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div>
+  <span class="ownerBadge">ESPACE ADMINISTRATION</span>
+  <h1>Espace Assistance & administration</h1>
+  <p class="ownerIntro">Accédez à votre espace de pilotage pour superviser les établissements, traiter les demandes d’assistance et suivre la plateforme. Connexion sécurisée réservée aux administrateurs autorisés.</p>
+  <form id="creatorLogin">
+   <label for="ownerUsername">Identifiant administrateur</label>
+   <input id="ownerUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="root" required>
+   <label for="ownerPassword">Mot de passe</label>
+   <input id="ownerPassword" type="password" autocomplete="current-password" required>
+   <button id="ownerSubmit" type="submit">Se connecter à l’administration</button>
+  </form>
+  <a class="loginBack" href="login.html">Retour à la connexion des équipes</a>
+ </main>
+</section>
+<div id="ownerPanel" class="ownerShell" hidden>
+ <aside class="ownerSidebar" id="ownerSidebar">
+  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div>
+  <span class="ownerSidebarCaption">PLATEFORME</span>
+  <nav class="ownerNavigation" aria-label="Navigation Root">
+   <button type="button" data-owner-nav="dashboard" class="active">▦ <span>Vue générale</span></button>
+   <button type="button" data-owner-nav="restaurants">⌂ <span>Établissements</span></button>
+   <button type="button" data-owner-nav="reports">✉ <span>Assistance & bugs</span></button>
+   <button type="button" data-owner-nav="monitoring">◉ <span>Supervision</span></button>
+   <button type="button" data-owner-nav="settings">⚙ <span>Paramètres</span></button>
+  </nav>
+  <div class="ownerSidebarBottom"><span class="ownerBadge">ROOT · ACTIF</span><small>Administration séparée du service restaurant.</small><button id="ownerLogout" class="ownerLogout" type="button">Se déconnecter</button></div>
+ </aside>
+ <div class="ownerWorkspace">
+  <header class="ownerTopbar">
+   <div class="ownerTopbarLeft"><button id="ownerNavToggle" class="ownerNavToggle" type="button" aria-label="Ouvrir la navigation" aria-expanded="false">☰</button><div><small>RestoManager / Administration</small><strong id="ownerPageTitle">Vue générale</strong></div></div>
+   <span class="ownerAccount">● Administration</span>
+  </header>
+  <main class="ownerContent">
+   <section data-owner-section="dashboard">
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">CONSOLE DE CONTRÔLE</span><h1>Vue générale</h1><p>Suivez l’activité de la plateforme et les demandes d’assistance, sans intervenir dans les réservations.</p></div><button id="ownerRefreshOverview" class="secondary" type="button">↻ Actualiser</button></div>
+    <div class="ownerMetrics">
+     <article class="ownerMetric"><small>Établissements</small><strong id="ownerTotalRestaurants">—</strong><span>Enregistrés sur la plateforme</span></article>
+     <article class="ownerMetric"><small>Signalements reçus</small><strong id="ownerTotalReports">—</strong><span>1000 derniers au maximum</span></article>
+     <article class="ownerMetric"><small>À traiter</small><strong id="ownerOpenReports">—</strong><span>Nouveaux et en cours</span></article>
+     <article class="ownerMetric"><small>Urgences ouvertes</small><strong id="ownerUrgentReports">—</strong><span>Signalements urgents non résolus</span></article>
+    </div>
+    <div class="ownerDashboardGrid">
+     <section class="ownerSurface"><h2>Centre d'assistance</h2><p>Les signalements Restaurant et Réception sont regroupés dans une boîte privée.</p><button type="button" data-owner-nav="reports" class="ownerAction">Consulter les signalements →</button></section>
+     <section class="ownerSurface"><h2>Établissements</h2><p>Consulte les établissements enregistrés. Aucune entrée dans les comptes des équipes n'est autorisée depuis cette version.</p><button type="button" data-owner-nav="restaurants" class="ownerAction">Afficher les établissements →</button></section>
+    </div>
+    <p class="ownerStatusLine" id="ownerLoadState" role="status">Chargement des données…</p>
+   </section>
+   <section data-owner-section="restaurants" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">ANNUAIRE</span><h1>Établissements</h1><p>Liste des restaurants associés à RestoManager, en lecture seule.</p></div></div>
+    <div id="ownerRestaurantList" class="ownerRestaurantList"></div>
+    <p class="ownerHint">Le mode assistance et l'administration des comptes seront ajoutés séparément, avec permissions et journal d'audit.</p>
+   </section>
+   <section data-owner-section="reports" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">SUPPORT PRIVÉ</span><h1>Assistance & signalements</h1><p>Traite les remontées transmises depuis Gestion. Accès réservé au compte Root actif.</p></div></div>
+    <div class="ownerSurface" id="ownerInbox" aria-label="Signalements privés"><p>Chargement des signalements…</p></div>
+   </section>
+   <section data-owner-section="monitoring" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">PROCHAIN MODULE</span><h1>Supervision</h1><p>Monitoring technique à venir.</p></div></div>
+    <div class="ownerSurface"><h2>En préparation</h2><p>À terme : disponibilité de l'application, incidents Supabase, erreurs de synchronisation et état des déploiements.</p><p class="ownerHint">Aucune mesure de disponibilité en temps réel n'est affichée actuellement.</p></div>
+   </section>
+   <section data-owner-section="settings" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">SÉCURITÉ</span><h1>Paramètres Root</h1><p>Votre identité Root est vérifiée par Supabase Auth et la table platform_admins.</p></div></div>
+    <div class="ownerSurface"><h2>Accès administrateur</h2><p>Rôle : <strong>platform_admin</strong></p><p>Les identifiants et le mot de passe sont gérés exclusivement dans Supabase. Aucun mot de passe n'est enregistré ici.</p><p class="ownerHint">À prévoir avant ouverture à d'autres établissements : adresse de récupération réelle, MFA, comptes administrateurs nominatifs et journal d'audit.</p></div>
+   </section>
+  </main>
+  <footer class="ownerFooter">RestoManager · Administration de la plateforme <span id="ownerToday"></span></footer>
+ </div>
+</div>
+<p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
+<script type="module" src="creator-auth.js?v=20261108-rootconsole1"></script>
+</body>
+</html>

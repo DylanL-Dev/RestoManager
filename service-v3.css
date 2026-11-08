@@ -1,0 +1,1752 @@
+:root{font-family:Arial,Helvetica,sans-serif;color:#163c33;background:#f4f8f5}*{box-sizing:border-box}body{margin:0}button,select{font:inherit}button{cursor:pointer}.top{background:#123b34;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:14px 24px;min-height:82px}.brand{display:flex;align-items:center;gap:12px;color:inherit;text-decoration:none}.brand img{width:52px;height:52px;object-fit:contain}.brand span{display:flex;flex-direction:column}.brand strong{font-size:23px}.brand small{color:#d7dfe9;margin-top:3px}.heading{display:flex;gap:7px;flex-direction:column;text-align:center}.heading span{font-size:12px;color:#cbd5e1}.legacy{color:#b8e4ca;text-decoration:none;font-weight:700}.shell{display:grid;grid-template-columns:206px minmax(0,1fr);min-height:calc(100vh - 82px)}.sidebar{background:#16483d;padding:22px 12px;display:flex;flex-direction:column;gap:10px}.sidebar a{padding:14px;border-radius:12px;color:#eaf0f8;text-decoration:none}.sidebar a.selected{background:#b8e4ca;color:#163c33;font-weight:700}.sidebar p{font-size:12px;line-height:1.5;color:#b5c5da;padding:8px}main{min-width:0;padding:22px}.notice{background:#eff9f2;border:1px solid #c9e5d6;border-radius:12px;padding:12px 16px;font-size:13px;margin-bottom:18px}.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:18px}.kpi{background:#fff;border:1px solid #e1e7ef;border-radius:14px;padding:18px;box-shadow:0 4px 16px #12274608}.kpi span{display:block;font-size:13px;color:#526176}.kpi strong{display:block;font-size:28px;margin-top:8px}.content{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;align-items:start}.panel{min-width:0;background:#fff;border:1px solid #e1e7ef;border-radius:17px;padding:18px;box-shadow:0 5px 18px #12274608}.panelHead{display:flex;justify-content:space-between;align-items:center;gap:10px}.panelHead p{font-size:13px;color:#637187;margin:4px 0 0}h1,h2{margin:0;font-size:21px}h2{font-size:17px;margin-bottom:16px}.subhead{margin-top:24px;padding-top:20px;border-top:1px solid #e1e7ef}.panelHead select{padding:9px;border:1px solid #d3dce8;border-radius:9px;max-width:170px}.filters{display:flex;gap:7px;flex-wrap:wrap;margin:18px 0}.filters button{background:#f5f7fa;border:1px solid #dce3ed;padding:9px 13px;border-radius:22px;font-size:13px}.filters button.active{background:#b8e4ca;border-color:#8ac6a6;font-weight:700}.tableGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.tableCard{border:1px solid #cdd6e1;border-radius:13px;background:#f8fafc;min-width:0;min-height:140px;text-align:left;padding:14px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s}.tableCard:hover,.tableCard:focus-visible{outline:2px solid #16836d;outline-offset:1px}.tableCard .num{font-size:19px;font-weight:800}.tableCard .status{font-size:12px;font-weight:800;border-radius:20px;padding:6px 9px;align-self:flex-start}.tableCard .info{font-size:13px;font-weight:700}.tableCard .capacity{font-size:12px;color:#526176;margin-top:auto}.tableCard.free{background:#f0fbf2;border-color:#b8dfc1}.free .status{background:#baf2c4;color:#145c2d}.tableCard.expected{background:#edf6ff;border-color:#b5d7f7}.expected .status{background:#c7e4ff;color:#124d91}.tableCard.arrived{background:#fff7e8;border-color:#f0d19a}.arrived .status{background:#ffdc8e;color:#754500}.tableCard.present{background:#e8f8ed;border-color:#8acfa0}.present .status{background:#168042;color:white}.tableCard.unknown{background:#f2f3f5}.unknown .status{background:#d9dee5;color:#45515e}.arrival{border-bottom:1px solid #e5eaf0;padding:11px 0;font-size:13px;display:grid;gap:4px}.arrival b{color:#16785f}.arrival small{color:#526176}.muted{color:#68788b;font-size:13px;line-height:1.5}.detailLine{margin:9px 0;font-size:13px}.detailLine strong{display:block;margin-bottom:3px}@media(max-width:1200px){.tableGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.content{grid-template-columns:minmax(0,1fr) 255px}}@media(max-width:900px){.sidebar{display:none}.shell{display:block}.content{grid-template-columns:1fr}.tableGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.top{padding:10px 12px;gap:8px}.brand img{width:39px;height:39px}.brand strong{font-size:17px}.brand small{font-size:10px}.heading{display:none}.legacy{font-size:11px}main{padding:10px}.panel{padding:12px}.tableGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.tableCard{padding:11px;min-height:133px;gap:7px}.tableCard .num{font-size:18px}.tableCard .status{font-size:11px}.kpi{padding:12px}.kpi strong{font-size:24px}.panelHead{align-items:start}.panelHead select{max-width:128px}.panelHead p{max-width:220px}}
+/* Palette restaurant : vert profond et fonds doux, statuts toujours textuels. */
+:root{--brand:#146c55;--brand-soft:#e7f5ec}a:focus-visible,button:focus-visible,select:focus-visible{outline:3px solid #14836a;outline-offset:2px}.tableCard:hover{box-shadow:0 6px 16px #123b3414}.notice{color:#23523f}
+
+.bookingTools{margin-bottom:18px}.bookingTools h2{margin-bottom:12px}.bookingTools form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}.bookingTools label{display:grid;gap:5px;font-size:13px;font-weight:600}.bookingTools input,.bookingTools select{width:100%;min-width:0;padding:11px;border:1px solid #cbd9d2;border-radius:9px;background:#fff;color:#173d32}.bookingTools button{border:0;border-radius:9px;background:#146c55;color:white;font-weight:700;padding:12px}.bookingTools #bookingFeedback{font-size:13px;margin-top:10px}.bookingTools #bookingFeedback:empty{display:none}@media(max-width:900px){.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr))}.bookingTools button{grid-column:1/-1}}
+.reservationPanel{margin-top:18px}.reservationSearch{display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin:14px 0}.reservationSearch label,#editForm label{display:grid;gap:5px;font-size:13px;font-weight:600}.reservationSearch input,#editForm input,#editForm select{padding:10px;border:1px solid #cbd9d2;border-radius:9px;min-width:0}.reservationSearch button,#editForm button,.reservationActions button{padding:9px 12px;border:1px solid #cbd9d2;border-radius:9px;background:#f4f8f5;color:#163c33;cursor:pointer}.reservationItem{padding:14px 0;border-top:1px solid #e3e9e5}.reservationItem p{font-size:13px;color:#526176;margin:8px 0}.reservationHead{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}.reservationStatus{font-size:12px;font-weight:700;background:#e7f5ec;border-radius:20px;padding:4px 10px}.reservationActions{display:flex;flex-wrap:wrap;gap:7px}#editForm{background:#f5faf7;border:1px solid #cbd9d2;border-radius:12px;padding:14px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}#editForm[hidden]{display:none}#editForm h2{grid-column:1/-1}#reservationMessage{color:#146c55;font-size:13px}@media(max-width:620px){#editForm{grid-template-columns:repeat(2,minmax(0,1fr))}.reservationSearch label{width:100%}.reservationSearch input{width:100%}}
+
+/* UI 2027: mobile-first service dashboard, tactile and legible */
+:root{font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;color:#183b32;background:#f6f8f6}
+html{scroll-behavior:smooth;scroll-padding-top:18px}
+body{line-height:1.45}
+main{max-width:1600px;margin:0 auto}
+.top{min-height:74px;background:#103f35}
+.brand strong{letter-spacing:-.7px}
+.serviceIntro{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:4px 0 18px}
+.serviceIntro h1{font-size:clamp(23px,3vw,33px);letter-spacing:-.8px;margin:2px 0 5px}
+.serviceIntro p{margin:0;color:#667a71;font-size:14px}
+.serviceIntro .eyebrow{font-size:11px;font-weight:800;letter-spacing:1.8px;color:#178164}
+.liveTag{white-space:nowrap;border-radius:30px;padding:9px 14px;background:#e3f5eb;color:#176b4c;font-size:12px;font-weight:700}
+.quickActions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.quickAction{display:flex;align-items:center;justify-content:center;min-height:50px;padding:11px;text-align:center;background:white;border:1px solid #dce7e0;border-radius:13px;text-decoration:none;color:#174b3d;font-weight:750;font-size:14px}
+.quickAction.primary{background:#146c55;color:white;border-color:#146c55}
+.kpis{gap:10px}
+.kpi{border-radius:15px;box-shadow:none;padding:15px}
+.kpi strong{font-size:clamp(23px,3vw,32px);letter-spacing:-.8px}
+.panel{box-shadow:0 2px 12px #0e39240a;border-color:#e0e9e2}
+.actionPanel{margin:0 0 12px;padding:0;overflow:hidden}
+.actionPanel summary{list-style:none;cursor:pointer;position:relative;padding:17px 48px 17px 19px;font-size:17px;font-weight:800}
+.actionPanel summary::-webkit-details-marker{display:none}
+.actionPanel summary span{display:block;color:#718278;font-size:12px;font-weight:400;margin-top:3px}
+.actionPanel summary:after{content:"+";position:absolute;right:18px;top:18px;font-size:23px;color:#146c55}
+.actionPanel[open] summary:after{content:"−"}
+.actionPanelBody{padding:0 18px 18px}
+.actionPanelBody>h2{display:none}
+.walkinPanel form,.bookingTools form{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:end}
+.walkinPanel label,.bookingTools label{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:12px;font-weight:700;color:#456357}
+.walkinPanel input,.walkinPanel select,.bookingTools input,.bookingTools select{width:100%;min-width:0;max-width:100%;height:46px;border:1px solid #d6e1d9;border-radius:11px;background:white;padding:10px 12px;font-size:15px;color:#1b4135}
+.walkinPanel button,.bookingTools button{height:46px;border:0;border-radius:11px;background:#146c55;color:white;font-weight:800;padding:0 15px}
+.walkinPanel #walkinFeedback,.bookingTools #bookingFeedback{font-size:12px;line-height:1.5;color:#6a776f}
+.content{margin-top:18px}
+.tableGrid{gap:10px}
+.tableCard{min-height:128px;border-radius:14px;gap:7px;padding:12px}
+.tableCard .num{font-size:17px}
+.tableCard .status{font-size:10px;letter-spacing:.3px}
+.tableCard .info{font-size:12px}
+.filters button{white-space:nowrap}
+.reservationPanel{margin-top:14px}
+.reservationSearch{display:grid;grid-template-columns:180px minmax(0,1fr) auto;align-items:end}
+.reservationSearch label{min-width:0}
+.reservationSearch input{width:100%;min-width:0;height:44px}
+.reservationSearch button{min-height:44px}
+@media(max-width:900px){.quickActions{grid-template-columns:repeat(2,minmax(0,1fr))}.walkinPanel form,.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){
+ .top{min-height:68px;padding:9px 16px}
+ main{padding:14px 12px 92px}
+ .serviceIntro{margin:6px 2px 15px;align-items:flex-start}
+ .serviceIntro h1{font-size:25px;line-height:1.12}
+ .serviceIntro>div>p:last-child{font-size:12px;margin-top:7px}
+ .liveTag{display:none}
+ .quickActions{gap:8px;margin-bottom:14px}
+ .quickAction{min-height:49px;font-size:12px;padding:9px 5px}
+ .kpis{gap:8px;margin-bottom:14px}
+ .kpi{padding:13px 12px}
+ .kpi span{font-size:11px}
+ .kpi strong{font-size:25px;margin-top:4px}
+ .actionPanel summary{font-size:15px;padding:14px 40px 14px 15px}
+ .actionPanel summary:after{right:14px;top:14px}
+ .actionPanelBody{padding:0 14px 15px}
+ .walkinPanel form,.bookingTools form{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .walkinPanel label,.bookingTools label{font-size:11px}
+ .walkinPanel input,.walkinPanel select,.bookingTools input,.bookingTools select{height:44px;font-size:14px;padding:8px}
+ .walkinPanel button,.bookingTools button{grid-column:1/-1;width:100%;height:46px}
+ .panel{padding:14px}
+ .actionPanel{padding:0}
+ .panelHead h1{font-size:19px}
+ .panelHead p{font-size:11px}
+ .panelHead{gap:7px}
+ .panelHead label{font-size:12px;min-width:0}
+ .panelHead select{max-width:132px;width:100%;font-size:13px}
+ .filters{flex-wrap:nowrap;overflow-x:auto;padding:2px 0 9px;margin:13px 0 7px;scrollbar-width:thin}
+ .filters button{flex:0 0 auto;font-size:12px;padding:8px 12px}
+ .tableGrid{gap:8px}
+ .tableCard{min-height:121px;padding:11px;gap:5px}
+ .tableCard .num{font-size:16px}
+ .tableCard .capacity{font-size:11px}
+ .reservationSearch{grid-template-columns:1fr 1fr;gap:10px}
+ .reservationSearch label{width:auto}
+ .reservationSearch button{grid-column:1/-1}
+ #editForm{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* Accessible table recommendations instead of the native long select. */
+.tableChoice{position:relative;min-width:0}
+.visuallyHiddenSelect{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}
+.tableChoiceTrigger{display:flex!important;align-items:center!important;justify-content:space-between!important;width:100%!important;min-width:0!important;min-height:46px!important;height:auto!important;text-align:left!important;background:#fff!important;color:#174b3d!important;border:1px solid #cbded1!important;border-radius:12px!important;font-size:14px!important;font-weight:700!important;padding:11px 14px!important}
+.tableChoiceTrigger:after{content:'⌄';font-size:20px;color:#14775c}
+.tableChoiceTrigger:disabled{opacity:.65}
+.tableChoicePanel{position:relative;margin-top:8px;background:#f8fbf9;border:1px solid #dce9df;border-radius:14px;padding:12px;box-shadow:0 8px 24px #103f3510}
+.tableChoicePanel[hidden]{display:none}
+.tableChoiceCaption{font-size:12px;color:#60796a;margin:0 0 10px}
+.tableChoiceGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:290px;overflow:auto}
+.tableChoiceCard{display:flex!important;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;min-width:0;height:auto!important;min-height:72px;background:white!important;color:#163c33!important;border:1px solid #d6e5da!important;border-radius:12px!important;padding:11px!important;font-weight:500!important}
+.tableChoiceCard strong{font-size:14px}
+.tableChoiceCard small{font-size:11px;color:#60796a}
+.tableChoiceCard em{font-style:normal;font-size:10px;font-weight:800;color:#117453;background:#e0f5e9;padding:3px 7px;border-radius:20px}
+.tableChoiceCard.selected{border:2px solid #168466!important;background:#eaf8ef!important}
+.tableChoiceCard:focus-visible,.tableChoiceTrigger:focus-visible{outline:3px solid #178466;outline-offset:2px}
+@media(max-width:620px){.tableChoiceGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.tableChoicePanel{padding:9px}.tableChoiceCard{padding:9px!important}}
+
+/* Table picker V2: centered dialog desktop, bottom sheet mobile. */
+.tablePickerOverlay[hidden]{display:none!important}
+.tablePickerOverlay{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:18px}
+.tablePickerBackdrop{position:absolute;inset:0;background:#102b25b8;backdrop-filter:blur(4px)}
+.tablePickerSheet{position:relative;width:min(620px,100%);max-height:min(78vh,780px);display:flex;flex-direction:column;background:#fff;border-radius:24px;box-shadow:0 24px 80px #0d251c50;overflow:hidden}
+.tablePickerHeader{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:23px 24px 17px;border-bottom:1px solid #e7eee8}
+.tablePickerEyebrow{font-size:10px;letter-spacing:1.5px;font-weight:850;color:#19805e}
+.tablePickerHeader h2{font-size:23px;letter-spacing:-.5px;margin:5px 0 3px;color:#143d31}
+.tablePickerHeader p{font-size:12px;color:#738278;margin:0}
+.tablePickerClose{flex:0 0 36px;width:36px;height:36px;border:0;border-radius:50%;background:#edf4ef;color:#21483a;font-size:16px;cursor:pointer}
+.tablePickerGrid{overflow-y:auto;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-content:start;gap:10px;padding:18px 24px}
+.tablePickerCard{display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:8px;min-height:110px;padding:15px;border:1px solid #dce8df;border-radius:15px;background:#fff;color:#183e32;cursor:pointer}
+.tablePickerCard.selected{background:#eaf8f0;border:2px solid #19815f;padding:14px}
+.tablePickerCardTop{display:flex;align-items:flex-start;justify-content:space-between;gap:5px;flex-wrap:wrap}
+.tablePickerCard strong{font-size:17px}
+.tablePickerCard small{font-size:12px;color:#64796d}
+.tablePickerBest{font-size:10px;font-weight:750;border-radius:16px;padding:4px 7px;color:#116646;background:#d7f2e3}
+.tablePickerIndicator{font-size:11px;color:#16815e;font-weight:750;margin-top:auto}
+.tablePickerFooter{padding:13px 24px 17px;border-top:1px solid #e7eee8;color:#77857a;font-size:11px}
+body.tablePickerOpen{overflow:hidden}
+.tableChoiceTrigger{gap:8px;justify-content:space-between!important}
+.tableChoiceAction{flex:0 0 auto;color:#178362;font-size:12px;font-weight:800}
+.tableChoiceTrigger:after{display:none}
+@media(max-width:620px){
+.tablePickerOverlay{padding:0;align-items:end}
+.tablePickerSheet{width:100%;max-height:84dvh;border-radius:24px 24px 0 0;padding-bottom:env(safe-area-inset-bottom)}
+.tablePickerHeader{padding:20px 18px 14px}
+.tablePickerHeader h2{font-size:21px}
+.tablePickerGrid{gap:9px;padding:14px 16px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.tablePickerCard{padding:12px;min-height:105px;border-radius:13px}
+.tablePickerCard.selected{padding:11px}
+.tablePickerCard strong{font-size:15px}
+.tablePickerBest{font-size:9px}
+.tablePickerFooter{padding:12px 17px}
+}
+
+/* Segmented client type: no native Android popup */
+.bookingTypeField{grid-column:1/-1;border:0;padding:0;margin:0;min-width:0}
+.bookingTypeField legend{font-size:12px;font-weight:750;color:#456357;margin-bottom:8px}
+.bookingTypeChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.bookingTypeOption{position:relative;display:block!important;cursor:pointer;min-width:0}
+.bookingTypeOption input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none}
+.bookingTypeOption span{display:flex;flex-direction:column;justify-content:center;gap:3px;min-height:65px;padding:11px 13px;background:#fff;border:1px solid #dce6df;border-radius:13px;transition:background .12s,border-color .12s}
+.bookingTypeOption strong{font-size:13px;font-weight:800;color:#25493c}
+.bookingTypeOption small{font-size:11px;font-weight:450;color:#748278}
+.bookingTypeOption input:checked+span{background:#eaf7ef;border:2px solid #16815e;padding:10px 12px}
+.bookingTypeOption input:checked+span strong{color:#116e4e}
+.bookingTypeOption input:focus-visible+span{outline:3px solid #16815e;outline-offset:2px}
+@media(max-width:620px){.bookingTypeChoices{gap:8px}.bookingTypeOption span{padding:10px;min-height:63px}.bookingTypeOption strong{font-size:12px}.bookingTypeOption small{font-size:10px}}
+
+.tableDetailActions{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 5px}.tableDetailAction{border:1px solid #badbc9;border-radius:10px;background:#eaf7ef;color:#116747;font-size:12px;font-weight:750;padding:10px 12px;min-height:42px;cursor:pointer}.tableDetailAction:focus-visible{outline:3px solid #16815e;outline-offset:2px}@media(max-width:620px){.tableDetailActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.tableDetailAction{font-size:11px;padding:9px 7px}}
+
+.tableAdminPanel{margin-top:16px}.tableAdminPanel form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}.tableAdminPanel label{display:grid;gap:5px;font-size:12px;font-weight:700}.tableAdminPanel input,.tableAdminPanel select{min-width:0;width:100%;height:44px;padding:8px;border:1px solid #d4e3d8;border-radius:10px}.tableAdminPanel button{padding:10px;border:1px solid #c9ded0;border-radius:10px;background:#e9f6ee;color:#14674b;font-weight:700}.tableAdminPanel #tableAdminSubmit{grid-column:1/-1;background:#146c55;color:white}.tableAdminItem{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;border-top:1px solid #e3ece6}.tableAdminItem span{flex:1;min-width:140px;font-size:13px}#tableAdminFeedback{font-size:12px;color:#14674b}
+
+/* Fixed bottom navigation — service-first mobile UI */
+.mobileBottomNav{display:none}
+@media(max-width:900px){
+.mobileBottomNav{position:fixed;bottom:0;left:0;right:0;z-index:500;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:stretch;gap:0;background:#fff;border-top:1px solid #dce8e0;box-shadow:0 -6px 25px #103e3414;padding:7px max(7px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-left))}
+.mobileNavItem{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-width:0;min-height:51px;padding:4px 2px;border-radius:11px;color:#6c7f73;text-decoration:none;font-size:10px;font-weight:650;white-space:nowrap}
+.mobileNavIcon{display:grid;place-items:center;width:29px;height:27px;font-size:23px;line-height:1}
+.mobileNavItem.active{background:#e8f6ee;color:#126d4f;font-weight:850}
+.mobileNavAdd .mobileNavIcon{background:#176e55;color:#fff;border-radius:11px;width:34px;height:32px;font-size:25px}
+.mobileNavAdd.active .mobileNavIcon{background:#0e543f}
+.mobileNavItem:focus-visible{outline:3px solid #16815e;outline-offset:-2px}
+main{padding-bottom:max(110px,calc(95px + env(safe-area-inset-bottom)))!important}
+html{scroll-padding-bottom:110px}
+}
+@media(max-width:360px){.mobileNavItem{font-size:9px}.mobileBottomNav{padding-left:3px;padding-right:3px}}
+
+/* Motion system V3: subtle, purposeful and reduced-motion aware */
+:root{--motion-fast:150ms;--motion-normal:240ms;--motion-slow:360ms;--motion-ease:cubic-bezier(.2,.8,.2,1)}
+@keyframes restoFadeUp{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@keyframes restoSheetIn{from{opacity:.65;transform:translateY(24px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes restoBackdropIn{from{opacity:0}to{opacity:1}}
+@keyframes restoSelection{0%{box-shadow:0 0 0 0 #16815e55}100%{box-shadow:0 0 0 7px #16815e00}}
+@keyframes restoSoftAppear{from{opacity:.5}to{opacity:1}}
+.serviceIntro,.quickActions,.kpis{animation:restoFadeUp var(--motion-slow) var(--motion-ease) both}
+.quickActions{animation-delay:45ms}.kpis{animation-delay:85ms}
+.mobileNavItem,.quickAction,.tableChoiceTrigger,.tablePickerCard,.tableAdminItem button,.reservationActions button,.tableDetailAction{transition:background-color var(--motion-fast) ease,color var(--motion-fast) ease,border-color var(--motion-fast) ease,transform var(--motion-fast) var(--motion-ease),box-shadow var(--motion-fast) ease}
+.mobileNavItem:active,.quickAction:active,.tablePickerCard:active,.tableDetailAction:active{transform:scale(.965)}
+.mobileNavItem.active .mobileNavIcon{animation:restoSoftAppear var(--motion-normal) ease}
+.tableCard{transition:transform var(--motion-fast) var(--motion-ease),box-shadow var(--motion-fast) ease,border-color var(--motion-fast) ease}
+.tableCard:active{transform:scale(.975)}
+.tablePickerOverlay:not([hidden]) .tablePickerBackdrop{animation:restoBackdropIn 180ms ease both}
+.tablePickerOverlay:not([hidden]) .tablePickerSheet{animation:restoSheetIn var(--motion-normal) var(--motion-ease) both}
+.tablePickerCard.selected{animation:restoSelection var(--motion-slow) ease-out}
+.actionPanel[open] .actionPanelBody{animation:restoFadeUp var(--motion-normal) var(--motion-ease) both}
+.actionPanel summary:after{transition:transform var(--motion-fast) ease}
+.reservationItem,.tableAdminItem{animation:restoSoftAppear var(--motion-normal) ease both}
+@media(hover:hover){.quickAction:hover,.tableDetailAction:hover{transform:translateY(-2px);box-shadow:0 5px 15px #103f3516}.tablePickerCard:hover{transform:translateY(-2px);border-color:#16815e}}
+@media(prefers-reduced-motion:reduce){
+ *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
+/* Custom room selector replaces Android native popup */
+.roomChoiceTrigger{display:flex!important;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:46px;padding:10px 14px;border:1px solid #cbded3;border-radius:12px;background:#fff;color:#184e3d;text-align:left;font:inherit;font-weight:700;cursor:pointer}
+.roomChoiceTrigger>span:last-child{font-size:23px;color:#247357}
+.roomChoiceTrigger:focus-visible{outline:3px solid #16815e;outline-offset:2px}
+.roomPickerOverlay[hidden]{display:none!important}
+.roomPickerOverlay{position:fixed;inset:0;z-index:2000;display:flex;align-items:flex-end;justify-content:center}
+.roomPickerBackdrop{position:absolute;inset:0;background:rgba(9,25,19,.52);animation:restoBackdropIn .18s ease both}
+.roomPickerSheet{position:relative;width:min(100%,520px);max-height:80dvh;overflow:auto;padding:20px 18px calc(24px + env(safe-area-inset-bottom));border-radius:24px 24px 0 0;background:#fff;box-shadow:0 -12px 35px #102c2333;animation:restoSheetIn .26s cubic-bezier(.2,.8,.2,1) both}
+.roomPickerHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
+.roomPickerHeader small{font-size:10px;font-weight:850;letter-spacing:.13em;color:#16815e}
+.roomPickerHeader h2{font-size:22px;margin:5px 0;color:#123d30}
+.roomPickerHeader p{font-size:13px;margin:0;color:#64766d}
+.roomPickerClose{width:39px;height:39px;flex:none;border:0;border-radius:12px;background:#eef5f0;color:#245b46;font-size:20px}
+.roomPickerOptions{display:grid;gap:9px}
+.roomPickerOption{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:58px;padding:14px 16px;border:1px solid #dbe8df;border-radius:14px;background:#f9fcfa;color:#234c3d;text-align:left;font:inherit;font-weight:750}
+.roomPickerOption.selected{border-color:#1c8863;background:#e9f7ef;color:#116747}
+.roomPickerOption>span:last-child{font-size:20px;color:#13865f}
+.roomPickerOpen{overflow:hidden}
+@media(min-width:901px){.roomPickerOverlay{align-items:center;padding:20px}.roomPickerSheet{border-radius:22px;padding-bottom:24px}}
+@media(prefers-reduced-motion:reduce){.roomPickerBackdrop,.roomPickerSheet{animation:none!important}}
+
+/* Independent screens: one active destination, no long vertical page */
+.appScreen[hidden]{display:none!important}
+.appScreenActive{animation:restoScreenEnter 230ms cubic-bezier(.2,.8,.2,1) both;min-width:0}
+@keyframes restoScreenEnter{from{opacity:.45;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.appScreen>.panel,.appScreen>.actionPanel{margin-top:0}
+.appScreen>.content{min-width:0}
+@media(prefers-reduced-motion:reduce){.appScreenActive{animation:none!important}}
+
+/* Unified vector icon system, Lucide-style outline */
+.navSvgIcon{display:inline-block;width:20px;height:20px;flex:none;vertical-align:middle;stroke:currentColor}
+.mobileNavIcon .navSvgIcon{width:24px;height:24px}
+.mobileNavAdd .navSvgIcon{width:24px;height:24px;stroke-width:2.4}
+.sidebar a{display:flex;align-items:center;gap:10px}
+.quickAction{display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.quickAction .navSvgIcon{width:18px;height:18px}
+@media(max-width:360px){.mobileNavIcon .navSvgIcon{width:22px;height:22px}}
+
+/* Direct table actions: accessible responsive sheet */
+.tableDetailModal[hidden]{display:none!important}
+.tableDetailModal{position:fixed;inset:0;z-index:1700;display:flex;align-items:flex-end;justify-content:center}
+.tableDetailBackdrop{position:absolute;inset:0;background:rgba(8,28,22,.54);animation:restoBackdropIn .18s ease both}
+.tableDetailSheet{position:relative;width:min(100%,540px);max-height:min(84dvh,800px);overflow:auto;overscroll-behavior:contain;background:#fff;border-radius:24px 24px 0 0;padding:22px 18px calc(24px + env(safe-area-inset-bottom));box-shadow:0 -12px 35px #102c2338;animation:restoSheetIn .25s cubic-bezier(.2,.8,.2,1) both}
+.tableDetailSheetHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:14px;border-bottom:1px solid #e4eee8}
+.tableDetailSheetHeader small{font-size:10px;letter-spacing:.13em;font-weight:850;color:#16815e}
+.tableDetailSheetHeader h2{font-size:23px;margin:5px 0;color:#123d30}
+.tableDetailClose{border:0;border-radius:11px;background:#edf6f0;color:#1b5c45;min-width:40px;min-height:40px;font-size:19px}
+.tableDetailSheetBody{padding-top:15px}
+.tableDetailSheetBody #detail{display:grid;gap:8px}
+.tableDetailSheetBody .tableDetailActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tableDetailSheetBody .tableDetailAction{min-height:52px;font-size:13px}
+.tableDetailOpen{overflow:hidden}
+@media(min-width:901px){.tableDetailModal{align-items:center;padding:20px}.tableDetailSheet{border-radius:22px;padding:24px}}
+@media(prefers-reduced-motion:reduce){.tableDetailBackdrop,.tableDetailSheet{animation:none!important}}
+
+/* Service status controls inside table details */
+.tableStatusActions{display:flex;flex-wrap:wrap;gap:7px;margin-top:9px}
+.tableStatusAction{border:1px solid #b8d9c7;border-radius:10px;background:#eaf7ef;color:#12694b;min-height:40px;padding:9px 12px;font-size:12px;font-weight:750;transition:transform .15s ease,background .15s ease}
+.tableStatusAction:active{transform:scale(.97)}
+.tableStatusAction:focus-visible{outline:3px solid #16815e;outline-offset:2px}
+.tableActionError{font-size:12px;color:#ae3333;margin:8px 0}
+.tableDetailSheetBody .detailLine{padding:12px 0;border-top:1px solid #e4eee8}
+@media(max-width:620px){.tableStatusActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.tableStatusAction{padding:9px 6px;font-size:11px}}
+
+/* Intelligent availability suggestions */
+.availabilityInsight{display:grid;gap:8px;margin:12px 0}
+.availabilitySummary{margin:0;padding:12px 14px;border-radius:12px;background:#e9f6ee;color:#166447;font-size:13px;font-weight:700}
+.availabilityWarning{margin:0;padding:11px 14px;border-radius:12px;background:#fff4e2;color:#8a5b12;font-size:13px;font-weight:700}
+.availabilityAlternativesTitle{margin:3px 0 0;font-size:13px;font-weight:800;color:#244b3c}
+.availabilityAlternatives{display:flex;flex-wrap:wrap;gap:8px}
+.availabilityTimeOption{min-height:43px;border:1px solid #b5d9c4;border-radius:12px;background:#fff;color:#176749;font-size:12px;font-weight:750;padding:9px 12px;transition:transform .15s ease,background .15s ease}
+.availabilityTimeOption:active{transform:scale(.96);background:#e8f6ee}
+.availabilityTimeOption:focus-visible{outline:3px solid #16815e;outline-offset:2px}
+
+.fusionAdmin{margin-top:24px;padding-top:18px;border-top:1px solid #d8e8df}.fusionAdmin h3{margin:0 0 8px;color:#174c38}.fusionAdmin>p{font-size:13px;color:#577263}.fusionAdmin form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.fusionAdmin form button{grid-column:1/-1}.fusionRow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #d7e7dd;border-radius:12px;margin:8px 0}.fusionRow button{border:1px solid #d6e4db;background:white;color:#315b45;border-radius:9px;padding:9px 12px}.fusionSuggestions{display:grid;gap:8px;margin:10px 0}.fusionSuggestions>strong{color:#185c40;font-size:14px}.fusionSuggestion{min-height:46px;text-align:left;border:1px solid #b6d9c4;border-radius:12px;background:#f2faf5;color:#176547;font-weight:700;padding:10px 14px}.fusionSuggestion.active{background:#177451;color:white;border-color:#177451}.fusionSuggestion:focus-visible{outline:3px solid #158258;outline-offset:2px}@media(max-width:400px){.fusionAdmin form{grid-template-columns:1fr}}
+
+.fusionAdmin form{display:flex;flex-direction:column;align-items:stretch;gap:12px}.fusionSelected{margin:0;font-size:14px;font-weight:750;color:#176749}.fusionPicker{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:9px;max-height:340px;overflow-y:auto;overscroll-behavior:contain;padding:5px;border-radius:14px}.fusionPick{min-height:58px;border:1px solid #d0e0d6;border-radius:13px;background:#fff;color:#245a45;font-weight:700;padding:10px;text-align:center}.fusionPick.active{border:2px solid #147754;background:#e4f5ec;color:#075d3b}.fusionPick:focus-visible{outline:3px solid #16815e;outline-offset:2px}.fusionRow{flex-wrap:wrap}.fusionRowActions{display:flex;gap:8px;flex-wrap:wrap}.fusionAdmin button[hidden]{display:none!important}@media(max-width:440px){.fusionPicker{grid-template-columns:repeat(2,minmax(0,1fr))}.fusionRowActions{width:100%;justify-content:flex-end}}
+
+.fusionTableBadge{display:block;margin-top:6px;font-size:12px;font-weight:800;color:#146747}.fusionCoverHint{display:block;margin-top:5px;padding:6px 9px;border-radius:8px;background:#fff2d7;color:#835300;font-size:12px;font-weight:750}.fusionDetailNote{display:block;margin-top:7px;color:#176447;font-size:13px;font-weight:700}
+
+.groupedFusionCard{border:2px solid #85bca2;background:#edf8f1}.reservationPrimaryActions{display:flex;gap:8px;flex-wrap:wrap}.reservationMoreActions{margin-top:9px;border:1px solid #d6e3da;border-radius:12px;padding:9px 12px}.reservationMoreActions summary{cursor:pointer;font-weight:700;color:#23654c;min-height:35px;display:flex;align-items:center}.reservationMoreActions button{margin:5px 6px 5px 0}.reservationActions{display:block}
+
+.tableAlreadyReserved{padding:10px 12px;border-radius:11px;background:#f0f7f3;color:#34614d;font-size:13px;line-height:1.45}
+
+/* Reservation edit: same custom table picker as booking and walk-in. */
+#editForm .tableChoice{width:100%}
+#editForm .tableChoiceTrigger{font-size:14px!important;overflow-wrap:anywhere;gap:8px}
+#editForm .tableChoiceTrigger>span:first-child{min-width:0;flex:1}
+#editForm #editFusionNotice{grid-column:1/-1;margin:0}
+#editForm>button{grid-column:1/-1;min-height:50px;font-size:14px;font-weight:750;white-space:normal;line-height:1.3}
+#editForm>button[type=submit]{background:#177451;color:#fff;border-color:#177451}
+#editForm>button#editCancel{background:#fff;color:#245b46}
+@media(min-width:700px){#editForm>button{grid-column:auto}}
+
+/* Availability states in the reservation edit table picker */
+.tablePickerCard.unavailable{background:#f5f6f5!important;border-color:#dce1de!important;color:#7a8580!important;opacity:.78;cursor:not-allowed}
+.tablePickerCard.unavailable strong{color:#7a8580!important}
+.tablePickerCard.unavailable .tablePickerIndicator{color:#a34d35!important;font-weight:750}
+.tablePickerCard.unavailable small{color:#7a8580!important}
+.tablePickerCard.unavailable.selected{border-color:#d6a37d!important}
+
+.tablePickerCard.caution{border-color:#d5a35d!important;background:#fff9e9!important}.tablePickerCard.caution .tablePickerIndicator{color:#93611b!important;font-weight:750}
+
+/* Branded seated-guest confirmation */
+.restoConfirmOverlay[hidden]{display:none!important}
+.restoConfirmOverlay{position:fixed;inset:0;z-index:12000;display:flex;align-items:center;justify-content:center;padding:18px}
+.restoConfirmBackdrop{position:absolute;inset:0;background:rgba(12,34,27,.56);backdrop-filter:blur(5px)}
+.restoConfirmSheet{position:relative;z-index:1;width:min(100%,490px);max-height:min(88dvh,740px);overflow-y:auto;background:#fffdf9;border-radius:24px;padding:26px 22px;box-shadow:0 24px 65px #102b2450;color:#183f32}
+.restoConfirmSymbol{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#fff0d2;color:#9b6419;font-size:27px;font-weight:900;margin-bottom:14px}
+.restoConfirmEyebrow{color:#9b6419;font-size:11px;font-weight:850;letter-spacing:.12em;margin:0 0 5px}
+.restoConfirmSheet h2{font-size:25px;line-height:1.2;color:#163e31;margin:0 0 9px}
+.restoConfirmSheet #restoConfirmDescription{font-size:14px;color:#5b7168;line-height:1.5;margin:0 0 17px}
+.restoConfirmWarnings{display:grid;gap:10px}
+.restoConfirmWarning{display:grid;gap:7px;background:#fff8e9;border:1px solid #f0d8a8;border-radius:15px;padding:15px}
+.restoConfirmWarning strong{font-size:15px;color:#3b4d3f}
+.restoConfirmWarning span{font-size:13px;color:#745627}
+.restoConfirmNote{font-size:12px;line-height:1.5;color:#65756b;margin:15px 0 20px}
+.restoConfirmActions{display:grid;gap:10px}
+.restoConfirmActions button{border-radius:13px;min-height:52px;padding:12px;font-size:14px;font-weight:800;white-space:normal}
+.restoConfirmActions [data-decision=accept]{background:#187652;border:1px solid #187652;color:#fff}
+.restoConfirmActions [data-decision=cancel]{background:#f5f8f5;border:1px solid #d1ded5;color:#265743}
+.restoConfirmOpen{overflow:hidden}
+.tableTimeProgress{display:grid;gap:10px;background:#f0f8f3;border:1px solid #d3e8da;border-radius:15px;padding:15px;margin:10px 0}
+.tableTimeProgressHead,.tableTimeProgressFoot{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.tableTimeProgressHead strong{font-size:14px;color:#204e3b}
+.tableTimeProgressHead span{font-size:13px;font-weight:800;color:#277454}
+.tableTimeProgressTrack{height:12px;border-radius:99px;background:#dbe7de;overflow:hidden}
+.tableTimeProgressFill{height:100%;border-radius:99px;background:linear-gradient(90deg,#78bfa0,#167a55);transition:width .3s ease}
+.tableTimeProgressFill.overdue{background:#c17c32}
+.tableTimeProgressFoot{font-size:11px;color:#61776a}
+.tableTimeProgressHint{font-size:11px;color:#61776a;line-height:1.4}
+@media(max-width:480px){.restoConfirmSheet{padding:23px 18px;border-radius:21px}.restoConfirmSheet h2{font-size:23px}}
+
+/* Fiche réservation : consultation mobile et informations de service */
+.reservationOpenDetail{display:block;width:100%;text-align:left;background:#edf7f1;color:#176c52;border:1px solid #c8e1d4;border-radius:12px;padding:12px 15px;margin:12px 0;font-weight:700}
+.reservationExpanded{background:#f2f8f5;border:1px solid #d4e7dd;border-radius:14px;padding:16px;margin:12px 0;color:#244c40}
+.reservationExpanded h3{margin:0 0 10px;font-size:1rem}
+.reservationExpanded p{margin:8px 0}
+.reservationExpanded progress{width:100%;height:14px;accent-color:#178063}
+.reservationAllergy{background:#fff0dd;color:#794313;border:1px solid #f1d5a9;border-radius:12px;padding:12px;font-weight:700;white-space:pre-wrap}
+.reservationNotes{background:#f4f7f5;border-left:4px solid #438b73;border-radius:8px;padding:12px;white-space:pre-wrap}
+#editForm textarea{width:100%;font:inherit;resize:vertical;min-height:75px;border:1px solid #cadbd2;border-radius:12px;padding:12px;background:#fff;color:#183f34}
+
+.bookingSuccessOverlay{position:fixed;inset:0;z-index:10020;background:rgba(10,37,30,.62);display:flex;align-items:center;justify-content:center;padding:20px}
+.bookingSuccessCard{width:min(100%,460px);background:#fff;border-radius:24px;padding:30px 24px;box-shadow:0 20px 65px #10291f50;text-align:center;color:#153e31}
+.bookingSuccessIcon{width:70px;height:70px;display:grid;place-items:center;margin:0 auto 20px;border-radius:50%;background:#e2f5e9;color:#137b51;font-size:38px;font-weight:800}
+.bookingSuccessCard h2{font-size:25px;margin:0 0 15px}
+.bookingSuccessCard p{line-height:1.5;overflow-wrap:anywhere}
+.bookingSuccessSub{color:#63796e}
+.bookingSuccessActions{display:grid;gap:10px;margin-top:24px}
+.bookingSuccessActions button{min-height:54px;border:0;border-radius:13px;background:#147655;color:white;font-weight:750;font-size:16px}
+.bookingSuccessActions .bookingSuccessSecondary{background:#edf5f0;color:#176046;border:1px solid #c9e1d3}
+
+.bookingExtraFields{display:grid;gap:12px;margin:16px 0;padding:18px;border:1px solid #cfe3d7;border-radius:16px;background:#f4faf6}
+.bookingExtraFields h3{margin:0;font-size:1.08rem;color:#194c3c}
+.bookingExtraFields label{display:grid;gap:7px;font-weight:650;color:#34594c}
+.bookingExtraFields textarea{width:100%;box-sizing:border-box;min-height:76px;resize:vertical;font:inherit;font-weight:400;line-height:1.45;color:#193f34;background:white;border:1px solid #c7d9ce;border-radius:12px;padding:12px}
+.bookingExtraFields textarea:focus-visible{outline:3px solid #9bd7bd;outline-offset:2px}
+.bookingExtraHint{margin:0;font-size:.85rem;color:#637a70;line-height:1.45}
+
+/* Les consignes de service occupent toute la grille du formulaire. */
+.bookingTools form>.bookingExtraFields{grid-column:1/-1;min-width:0;width:100%;align-self:stretch;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:14px 18px}
+.bookingTools .bookingExtraFields h3,.bookingTools .bookingExtraFields .bookingExtraHint{grid-column:1/-1}
+.bookingTools .bookingExtraFields label{min-width:0;align-self:start;font-size:14px}
+.bookingTools .bookingExtraFields textarea{display:block;max-width:100%;min-width:0;min-height:105px}
+@media(max-width:720px){.bookingTools form>.bookingExtraFields{grid-template-columns:minmax(0,1fr);padding:16px;gap:14px}.bookingTools .bookingExtraFields h3,.bookingTools .bookingExtraFields .bookingExtraHint{grid-column:1}.bookingTools .bookingExtraFields textarea{min-height:90px}}
+
+/* Fiche de modification : les informations de service ne doivent jamais être
+   contraintes à une demi-colonne, quelle que soit la taille de l'écran. */
+#editForm>label:has(#editAllergies),#editForm>label:has(#editNotes){grid-column:1/-1;min-width:0;width:100%;display:grid;gap:8px;align-self:stretch}
+#editForm #editAllergies,#editForm #editNotes{display:block;width:100%;max-width:100%;min-width:0;box-sizing:border-box;min-height:108px;resize:vertical;line-height:1.45}
+
+/* Rappels de service accessibles pendant le rush */
+.top{position:relative}
+.serviceBell{position:relative;flex:0 0 auto;display:grid;place-items:center;width:46px;height:46px;border:1px solid #c8ded2;border-radius:15px;background:#f0f8f3;color:#12684c;cursor:pointer;margin-left:auto}
+.serviceBellCount{position:absolute;top:-5px;right:-5px;min-width:21px;height:21px;padding:1px 5px;box-sizing:border-box;border-radius:20px;background:#b65122;color:white;font-size:12px;font-weight:800;line-height:19px;text-align:center}
+.serviceReminderPanel{position:fixed;z-index:1100;right:14px;top:82px;width:min(440px,calc(100vw - 28px));max-height:min(75vh,650px);overflow:auto;padding:18px;box-sizing:border-box;background:#fff;border:1px solid #d7e6dc;border-radius:22px;box-shadow:0 16px 60px #122d2440;color:#183d31}
+.serviceReminderPanel[hidden]{display:none}
+.serviceReminderHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;font-size:19px}
+.serviceReminderClose{border:0;background:#edf5f0;border-radius:10px;padding:8px 12px;color:#245b48}
+.serviceReminderItem{padding:15px 0;border-top:1px solid #e0eae4}
+.serviceReminderItem p{line-height:1.5;color:#53645c;margin:9px 0 14px}
+.serviceReminderActions{display:flex;flex-wrap:wrap;gap:8px}
+.serviceReminderActions button{flex:1 1 140px;min-height:44px;padding:9px;border:1px solid #c5d9cc;border-radius:12px;background:#f2f8f4;color:#175a44;font-weight:700}
+.serviceReminderActions .serviceReminderPrimary{background:#157452;color:white;border-color:#157452}
+@media(max-width:650px){.serviceReminderPanel{top:75px;right:10px;width:calc(100vw - 20px)}.serviceBell{width:42px;height:42px}}
+
+/* Champs principaux lisibles sur mobile, tablette et ordinateur. */
+#bookingForm>label:has(#bookingClient),
+#bookingForm>label:has(#bookingTable),
+#editForm>label:has(#editTable){grid-column:1/-1;min-width:0;width:100%;box-sizing:border-box}
+#bookingForm>label:has(#bookingClient) input,
+#bookingForm>label:has(#bookingTable) select,
+#editForm>label:has(#editTable) select{width:100%;min-width:0;max-width:100%;box-sizing:border-box}
+#bookingForm>label:has(#bookingClient),
+#bookingForm>label:has(#bookingTable),
+#editForm>label:has(#editTable){display:grid;gap:8px;align-content:start}
+#bookingForm>label:has(#bookingTable) .tableChoiceTrigger,
+#editForm>label:has(#editTable) .tableChoiceTrigger,
+#bookingForm>label:has(#bookingTable) button,
+#editForm>label:has(#editTable) button{max-width:100%;min-width:0;box-sizing:border-box}
+
+/* Suivi des réservations : filtres opérationnels */
+.reservationViewTabs{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 20px}
+.reservationViewTab{flex:1 1 145px;min-width:0;padding:12px 10px;border:1px solid #cbdcd2;border-radius:14px;background:#f5f8f6;color:#285746;font:inherit;font-weight:650;cursor:pointer}
+.reservationViewTab.isActive{background:#176b50;color:#fff;border-color:#176b50}
+.reservationViewEmpty{padding:18px 8px;color:#66766e}
+@media(max-width:480px){.reservationViewTabs{display:grid;grid-template-columns:1fr 1fr}.reservationViewTab:last-child{grid-column:1/-1}}
+
+/* Confirmation intégrée des départs et libérations */
+.restoDepartureOverlay{position:fixed;inset:0;z-index:99999;background:rgba(12,35,28,.62);display:flex;align-items:center;justify-content:center;padding:18px}
+.restoDepartureDialog{box-sizing:border-box;width:min(100%,460px);max-height:calc(100dvh - 36px);overflow:auto;background:#fffdfb;border-radius:26px;padding:clamp(22px,5vw,34px);box-shadow:0 22px 70px rgba(0,0,0,.22);color:#163e32}
+.restoDepartureIcon{width:54px;height:54px;display:grid;place-items:center;border-radius:17px;background:#e7f4ec;color:#176b50;font-size:28px;font-weight:800;margin-bottom:18px}
+.restoDepartureEyebrow{font-size:12px;letter-spacing:.12em;font-weight:800;color:#28765e;margin-bottom:8px}
+.restoDepartureDialog h2{font-size:clamp(23px,5vw,30px);line-height:1.2;margin:0 0 12px;color:#173f32}
+.restoDepartureDialog p{font-size:16px;line-height:1.55;color:#5c7068;margin:0 0 18px}
+.restoDepartureInfo{padding:15px 17px;border-radius:14px;background:#edf6f0;font-weight:750;margin-bottom:24px;overflow-wrap:anywhere}
+.restoDepartureActions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.restoDepartureActions button{min-height:54px;padding:12px;border-radius:14px;font:inherit;font-weight:750;cursor:pointer}
+.restoDepartureCancel{background:#f3f7f5;color:#245747;border:1px solid #cbdcd2}
+.restoDepartureAccept{background:#176b50;color:white;border:1px solid #176b50}
+@media(max-width:380px){.restoDepartureActions{grid-template-columns:1fr}.restoDepartureDialog{padding:22px}}
+
+/* Historique et statistiques */
+.historyPanel{padding:20px;display:grid;gap:16px}.historyHeading h2{margin:4px 0}.historyControls{display:flex;flex-wrap:wrap;gap:12px;align-items:end}.historyControls label{display:grid;gap:5px;min-width:145px;flex:1}.historyControls input,.historyControls select{width:100%;min-height:42px}.historyControls button{min-height:42px}.historySummary{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}.historyMetric{background:#f0f7f3;border:1px solid #dcebe1;border-radius:13px;padding:14px;display:grid;gap:7px}.historyMetric span{font-size:13px;color:#466456}.historyMetric strong{font-size:26px;color:#087f5b}.historyRows{display:grid;gap:8px}.historyEntry{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid #e0e8e3;border-radius:12px}.historyEntry>div{display:grid;gap:4px;min-width:0}.historyEntry small{color:#61736a}.historyEntryRight{text-align:right;flex-shrink:0}.historyEmpty{color:#61736a}.historyShortcut{display:inline-flex;margin:12px 0;align-items:center;justify-content:center;text-decoration:none;max-width:310px;background:#087f5b;color:white;border-radius:12px;padding:12px 16px;font-weight:650}
+@media(max-width:600px){.historyPanel{padding:14px}.historyControls{display:grid;grid-template-columns:1fr 1fr}.historyControls button{grid-column:1/-1}.historyMetric strong{font-size:23px}.historyEntry{align-items:flex-start}.historyEntry small{font-size:12px}}
+
+#historyStats{display:none!important}
+.appScreen[data-screen='administration']:not([hidden]) #historyStats{display:grid!important}
+
+.walkinPaxButtons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}.walkinPaxButtons button{min-height:52px;border:1px solid #bedbcb;border-radius:12px;background:#f1f8f4;color:#155a41;font-weight:750}.walkinPaxButtons button.selected{background:#087f5b;color:#fff}.walkinRecommendation{padding:16px;border-radius:12px;background:#e8f6ed;color:#155c41;font-weight:750}.walkinInstall{min-height:58px;width:100%;font-weight:800;font-size:17px}.walkinInstall:disabled{opacity:.5}@media(max-width:450px){.walkinPaxButtons{grid-template-columns:repeat(3,1fr)}}
+
+/* Passage express : grille compacte sur tous les écrans */
+.walkinPanel #walkinForm{display:flex;flex-direction:column;align-items:stretch;gap:14px}
+.walkinPanel #walkinForm>label{display:flex;flex-direction:column;gap:6px;font-size:14px}
+.walkinPanel #walkinGuests{height:48px;font-size:18px}
+.walkinPanel #walkinForm .walkinPaxButtons{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;width:100%}
+.walkinPanel #walkinForm .walkinPaxButtons button{grid-column:auto;width:100%;height:48px;min-height:48px;padding:0;border:1px solid #c8ded1;border-radius:11px;background:#edf6f0;color:#165a43;font-size:18px;font-weight:800}
+.walkinPanel #walkinForm .walkinPaxButtons button.selected{background:#087f5b;color:white;border-color:#087f5b}
+.walkinPanel #walkinForm .walkinRecommendation{margin:0;padding:12px 14px;border-radius:11px;background:#edf6f0;color:#205741;font-size:14px;line-height:1.5}
+.walkinPanel #walkinForm .walkinInstall{width:100%;height:54px;min-height:54px;grid-column:auto;font-size:16px;border-radius:12px}
+.walkinPanel #walkinForm .walkinInstall:disabled{opacity:.5}
+@media(max-width:450px){.walkinPanel #walkinForm .walkinPaxButtons{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.closurePanel{display:grid;gap:10px;border:1px solid #d8e9df;background:#f5faf7;border-radius:14px;padding:15px}.closurePanel h3{margin:0}.closurePanel p{margin:0;color:#365a49}.closurePanel button{min-height:44px;border:0;border-radius:10px;background:#087f5b;color:white;font-weight:750;padding:10px 16px}.closurePanel details{font-size:14px}.closurePanel #closureArchive{max-height:220px;overflow:auto;padding-top:8px}.closurePanel #closureArchive p{padding:6px 0;border-bottom:1px solid #d8e9df}
+
+.shiftSettings{padding:18px}.shiftSettings h2{margin:0 0 8px}.shiftSettings form{display:grid;gap:14px}.shiftSettingsGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.shiftSettings fieldset{border:1px solid #d6e8dd;border-radius:12px;padding:12px;display:grid;gap:12px;min-width:0}.shiftSettings legend{font-weight:750;padding:0 5px}.shiftSettings label{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.shiftSettings input[type=time]{min-height:42px;max-width:145px}.shiftSettings button{background:#087f5b;color:#fff;border:0;border-radius:11px;min-height:46px;font-weight:750}@media(max-width:540px){.shiftSettingsGrid{grid-template-columns:1fr}}
+
+/* Gestion V3 : tableau de bord mobile compact */
+.appScreen[data-screen="administration"]{display:flex;flex-direction:column;gap:12px;max-width:900px;margin-inline:auto}
+.appScreen[data-screen="administration"][hidden]{display:none}
+.managementIntro{padding:6px 4px 12px}
+.managementEyebrow{display:block;color:#087f5b;font-size:11px;font-weight:800;letter-spacing:.12em;margin-bottom:7px}
+.managementIntro h1{font-size:clamp(24px,5vw,30px);line-height:1.15;margin:0 0 7px;color:#153d33}
+.managementIntro p{margin:0;color:#667b72;font-size:14px;line-height:1.5}
+.managementGroup{background:#fff;border:1px solid #e0eae3;border-radius:18px;box-shadow:0 3px 13px #153d3309;overflow:hidden;min-width:0}
+.managementGroupHead{list-style:none;display:flex;align-items:center;gap:13px;padding:16px;cursor:pointer;min-height:78px}
+.managementGroupHead::-webkit-details-marker{display:none}
+.managementGroupIcon{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;background:#e9f6ef;color:#087f5b;font-size:23px;flex-shrink:0;font-weight:700}
+.managementGroupWords{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.managementGroupWords strong{font-size:16px;color:#173e33;line-height:1.3}
+.managementGroupWords small{font-size:12px;color:#6b7e75;line-height:1.4}
+.managementChevron{font-size:27px;color:#648578;transition:transform .2s}
+.managementGroup[open]>.managementGroupHead .managementChevron{transform:rotate(180deg)}
+.managementGroup[open]>.managementGroupHead{border-bottom:1px solid #edf1ed}
+.managementGroupBody{padding:16px;min-width:0}
+.managementGroupBody>.panel,.managementGroupBody>.closurePanel{border:0;box-shadow:none;background:transparent;border-radius:0;margin:0;padding:0;max-width:none}
+.managementGroupBody .shiftSettings h2,.managementGroupBody .historyHeading .eyebrow{display:none}
+.managementGroupBody .shiftSettings>.muted{font-size:13px;margin:0 0 14px;color:#6b7e75}
+.managementGroupBody .shiftSettingsGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.managementGroupBody .shiftSettings fieldset{background:#f8fbf9;border:1px solid #e1eae4;border-radius:13px;padding:13px;gap:12px}
+.managementGroupBody .shiftSettings legend{font-size:14px}
+.managementGroupBody .shiftSettings label{font-size:13px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
+.managementGroupBody .shiftSettings label:has(input[type=time]){grid-template-columns:1fr}
+.managementGroupBody .shiftSettings input[type=time]{width:100%;max-width:none;min-width:0;border-radius:9px;min-height:44px}
+.managementGroupBody .shiftSettings input[type=checkbox]{width:19px;height:19px;accent-color:#087f5b}
+.managementGroupBody .shiftSettings button{width:100%;font-size:15px}
+.managementGroupBody #administration>summary{font-size:14px}
+.managementGroupBody #historyStats .historyHeading h2{font-size:19px;margin:0 0 8px}
+.managementGroupBody #historyStats .historyHeading .muted{font-size:13px}
+.managementGroupBody .historyControls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.managementGroupBody .historyControls label{min-width:0;font-size:13px}
+.managementGroupBody .historyControls input,.managementGroupBody .historyControls select{width:100%;min-width:0}
+.managementGroupBody #historyPdf{grid-column:1/-1;width:100%;min-height:45px;border-radius:10px}
+.managementGroupBody .closurePanel{display:grid;gap:12px}
+.managementGroupBody .closurePanel h3{font-size:17px}
+@media(max-width:620px){.managementGroupBody .shiftSettingsGrid{grid-template-columns:1fr}.managementGroupBody{padding:14px}.managementGroupHead{padding:13px 14px}.managementGroupBody .shiftSettings fieldset{padding:12px}.managementGroupBody .historyControls{grid-template-columns:1fr}.managementGroupBody #historyPdf{grid-column:auto}}
+
+/* Lucide icon sizing: one visual system throughout the service interface */
+.navSvgIcon{width:22px;height:22px;flex-shrink:0;stroke-width:1.9}
+.managementGroupIcon svg{width:23px;height:23px;stroke-width:1.9}
+.managementChevron svg{width:20px;height:20px;stroke-width:2}
+.quickAction .navSvgIcon{width:22px;height:22px}
+.mobileNavIcon svg{width:24px;height:24px}
+
+/* Passage express : liste des clients installés */
+.quickReleasePanel{background:#fff;border:1px solid #dce9e1;border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:0 3px 12px #123b2c0a}
+.quickReleaseHeader h2{display:flex;align-items:center;gap:9px;margin:0;color:#143e32;font-size:20px}
+.quickReleaseHeader h2 svg{color:#087f5b;width:23px;height:23px}
+#quickReleaseCount{background:#e6f5ed;color:#087f5b;border-radius:20px;font-size:13px;padding:4px 9px}
+.quickReleaseHeader p{font-size:13px;color:#697b72;margin:8px 0 16px}
+.quickReleaseTools{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.quickReleaseTools label{font-size:13px;color:#3c5a4e;font-weight:600;min-width:0}
+.quickReleaseTools input,.quickReleaseTools select{display:block;width:100%;min-width:0;min-height:45px;border:1px solid #cdded3;border-radius:10px;margin-top:6px;padding:8px;background:#fff;color:#193e33}
+.quickReleaseList{display:grid;gap:9px}
+.quickReleaseRow{display:flex;align-items:center;justify-content:space-between;gap:12px;border:1px solid #e0eae3;border-radius:13px;padding:12px;background:#f8fbf9}
+.quickReleaseInfo{min-width:0;display:grid;gap:5px}
+.quickReleaseInfo strong{font-size:16px;color:#173e33}
+.quickReleaseInfo span{font-size:13px;color:#657a70;overflow-wrap:anywhere}
+.quickReleaseButton{border:0;border-radius:10px;background:#087f5b;color:white;font-weight:750;min-width:96px;min-height:47px;padding:9px 12px;flex-shrink:0;cursor:pointer}
+.quickReleaseButton:active{transform:scale(.97)}
+.quickReleaseEmpty{color:#708277;text-align:center;padding:14px 6px}
+#quickReleaseUndo:not(:empty){background:#eaf7ee;border-radius:10px;padding:11px;margin-bottom:12px;color:#17533d;font-size:13px}
+.quickReleaseUndoButton{border:0;background:transparent;color:#075e44;text-decoration:underline;font-weight:800;cursor:pointer;padding:6px}
+#quickReleaseFeedback:not(:empty){color:#9d421d}
+@media(max-width:560px){.quickReleasePanel{padding:14px}.quickReleaseTools{grid-template-columns:1fr}.quickReleaseRow{padding:10px}.quickReleaseInfo strong{font-size:15px}.quickReleaseInfo span{font-size:12px}.quickReleaseButton{min-width:85px}}
+
+/* Fiche table : action d'accueil prioritaire */
+.tableSecondaryActions{width:100%;border:1px solid #d5e2da;border-radius:12px;padding:0;background:#fff}
+.tableSecondaryActions summary{cursor:pointer;list-style:none;padding:13px 15px;color:#315f4e;font-weight:700}
+.tableSecondaryActions summary::-webkit-details-marker{display:none}
+.tableSecondaryActions summary:after{content:'⌄';float:right}
+.tableSecondaryActions[open] summary:after{content:'⌃'}
+.tableSecondaryActions .tableStatusAction{margin:6px;min-height:42px}
+.tableStatusActions>.tableStatusAction:first-child{background:#087f5b;color:white;border-color:#087f5b;font-weight:750}
+
+/* Choix rapide du bouton Ajouter */
+.restoAddChoiceOverlay[hidden]{display:none!important}
+.restoAddChoiceOverlay{position:fixed;inset:0;z-index:15000;display:flex;align-items:center;justify-content:center;padding:18px}
+.restoAddChoiceBackdrop{position:absolute;inset:0;background:rgba(11,35,28,.56)}
+.restoAddChoiceDialog{position:relative;width:min(100%,470px);background:#fff;border-radius:23px;padding:23px;box-shadow:0 22px 65px #09281b44;display:grid;gap:12px}
+.restoAddChoiceTop{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px;gap:10px}
+.restoAddChoiceTop p{color:#087f5b;font-weight:800;letter-spacing:.11em;font-size:11px;margin:0 0 8px}
+.restoAddChoiceTop h2{color:#173e33;font-size:25px;margin:0 0 6px}
+.restoAddChoiceTop span{color:#718078;font-size:14px}
+.restoAddChoiceClose{border:0;border-radius:12px;background:#eaf5ee;color:#235d49;width:44px;height:44px;display:grid;place-items:center;cursor:pointer}
+.restoAddChoiceOption{border:1px solid #d9e6dd;border-radius:15px;background:#f8fbf9;color:#164637;padding:16px;display:flex;align-items:center;gap:13px;text-align:left;min-height:92px;cursor:pointer}
+.restoAddChoiceOption:active{background:#eaf7ef}
+.restoAddChoiceOption>svg:first-child{width:26px;height:26px;flex-shrink:0;color:#087f5b}
+.restoAddChoiceOption>svg:last-child{width:19px;height:19px;flex-shrink:0;color:#77968a}
+.restoAddChoiceOption span{flex:1;display:grid;gap:5px}
+.restoAddChoiceOption strong{font-size:16px}
+.restoAddChoiceOption small{font-size:13px;color:#718078;line-height:1.4}
+.restoAddChoiceOpen{overflow:hidden}
+
+/* Sélecteur horaire unique, accessible et hors ligne */
+.rmTimeOverlay[hidden]{display:none!important}
+.rmTimeOverlay{position:fixed;inset:0;z-index:16000;display:flex;align-items:center;justify-content:center;padding:18px}
+.rmTimeBackdrop{position:absolute;inset:0;background:rgba(10,34,27,.58)}
+.rmTimeDialog{position:relative;background:#fff;border-radius:22px;width:min(100%,420px);padding:24px;box-shadow:0 25px 65px #0a251e40;display:grid;gap:19px;color:#1a4537}
+.rmTimeDialog header{display:flex;justify-content:space-between;align-items:start;gap:12px}
+.rmTimeDialog h2{font-size:24px;margin:6px 0 0}
+.rmTimeEyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;color:#087f5b}
+.rmTimeClose{width:43px;height:43px;border:0;border-radius:12px;background:#e9f4ed;color:#195943;font-size:30px;cursor:pointer}
+.rmTimePreview{background:#edf7f0;border-radius:14px;text-align:center;font-size:43px;font-weight:750;letter-spacing:.02em;padding:17px;color:#087f5b;font-variant-numeric:tabular-nums}
+.rmTimeFields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rmTimeFields label{display:grid;gap:9px;font-weight:650;font-size:14px}
+.rmTimeFields select{width:100%;min-width:0;border:1px solid #cbdcd2;border-radius:12px;background:white;color:#173d31;padding:13px;font-size:18px;min-height:52px}
+.rmTimePrecision{display:flex;align-items:center;gap:9px;font-size:13px;color:#52675c}
+.rmTimePrecision input{accent-color:#087f5b;width:18px;height:18px}
+.rmTimeActions{display:grid;grid-template-columns:1fr 1.25fr;gap:10px}
+.rmTimeActions button{border-radius:12px;min-height:49px;padding:10px;border:1px solid #cbdcd2;background:#f5f8f5;color:#245a47;font-weight:750}
+.rmTimeActions .rmTimeSave{background:#087f5b;border-color:#087f5b;color:#fff}
+.rmTimeOpen{overflow:hidden}
+.rmTimeInput{cursor:pointer}
+
+/* v2 : affichage intégré et boutons sans menu Android */
+.rmTimeDialog{gap:14px;max-height:min(92dvh,760px);overflow:auto;padding:22px}
+.rmTimePreview{display:flex;align-items:center;justify-content:center;gap:4px;padding:12px;font-size:38px}
+.rmTimePreview button{font:inherit;font-weight:800;color:#087f5b;border:0;background:transparent;border-radius:10px;padding:5px 9px;min-width:70px}
+.rmTimePreview button.isActive{background:#d4eddf}
+.rmTimeSwitch{display:grid;grid-template-columns:1fr 1fr;gap:7px;padding:4px;background:#f0f5f1;border-radius:12px}
+.rmTimeSwitch button{border:0;background:transparent;color:#49695a;padding:10px;border-radius:9px;font-size:15px;font-weight:700}
+.rmTimeSwitch button.isActive{background:white;color:#087f5b;box-shadow:0 2px 7px #173c2814}
+.rmTimeGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-height:240px;overflow-y:auto;overscroll-behavior:contain;padding:3px}
+.rmTimeGrid.rmTimeGridHours{grid-template-columns:repeat(6,minmax(0,1fr))}
+.rmTimeNumber{min-height:43px;border-radius:10px;border:1px solid #dce8df;background:#f8faf8;color:#245444;font-weight:750;font-size:15px}
+.rmTimeNumber.isSelected{background:#087f5b;color:#fff;border-color:#087f5b}
+.rmTimeNumber:active{transform:scale(.97)}
+.rmTimeInput{box-sizing:border-box!important;width:100%!important;min-height:48px!important;border:1px solid #cbdcd2!important;border-radius:12px!important;background:#fff!important;padding:11px 40px 11px 14px!important;color:#194436!important;font-size:16px!important;font-weight:700!important;box-shadow:none!important;appearance:none!important}
+.rmTimeInput:focus-visible{outline:2px solid #087f5b!important;outline-offset:2px}
+@media(max-width:600px){
+ #shift-lunch-start.rmTimeInput,#shift-lunch-end.rmTimeInput,#shift-dinner-start.rmTimeInput,#shift-dinner-end.rmTimeInput{width:100%!important;max-width:none!important;display:block!important}
+ .rmTimeDialog{padding:20px;gap:12px}
+ .rmTimeGrid{max-height:230px}
+}
+
+/* Correctif : les champs textuels remplacent input[type=time] ; éviter le chevauchement des libellés */
+.managementGroupBody .shiftSettings label:has(> .rmTimeInput),
+.shiftSettings label:has(> .rmTimeInput){
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr) minmax(0,1.55fr)!important;
+ align-items:center!important;
+ column-gap:12px!important;
+ row-gap:6px!important;
+ width:100%!important;
+ min-width:0!important;
+}
+.managementGroupBody .shiftSettings label:has(> .rmTimeInput) .rmTimeInput,
+.shiftSettings label:has(> .rmTimeInput) .rmTimeInput{
+ width:100%!important;max-width:100%!important;min-width:0!important;
+ margin:0!important;position:static!important;
+}
+@media(max-width:390px){
+ .managementGroupBody .shiftSettings label:has(> .rmTimeInput),
+ .shiftSettings label:has(> .rmTimeInput){grid-template-columns:minmax(0,1fr)!important}
+}
+
+
+/* Arrival load and reservation rush guard — responsive on phone, tablet and desktop */
+.rushDashboard{background:#fff;border:1px solid #dce8e0;border-radius:18px;padding:18px;margin:0 0 18px;box-shadow:0 5px 18px #12274608;min-width:0}
+.rushDashHead h2{margin:0 0 4px;font-size:19px;color:#163c33}.rushDashHead p{font-size:13px;color:#64786f;margin:0 0 14px}
+.rushDashboard select,.rushSettings select{width:100%;max-width:380px;min-height:44px;padding:10px 12px;border:1px solid #cbdcd2;border-radius:11px;background:white;color:#163c33;font:inherit}
+.rushDashContent{margin-top:14px}.rushFigures{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}
+.rushFigures>div{background:#f1f7f3;border-radius:12px;padding:13px;min-width:0}.rushFigures strong{display:block;font-size:clamp(24px,4vw,32px);color:#163c33;font-variant-numeric:tabular-nums}.rushFigures span{display:block;margin-top:5px;font-size:12px;line-height:1.4;color:#53695e;overflow-wrap:anywhere}
+.rushProgress{height:14px;background:#e0eae3;border-radius:999px;overflow:hidden}.rushProgressFill{height:100%;background:#087f5b;border-radius:999px;transition:width .25s ease}.rushProgressFill.busy{background:#dc9b35}.rushProgressFill.full{background:#b53e38}
+.rushHint{font-size:13px;line-height:1.5;color:#576d63;margin:11px 0 0}.rushSettings{margin-top:20px;padding-top:20px;border-top:1px solid #dce8e0}.rushSettings h3{margin:0 0 8px}.rushSettings>p{font-size:13px;line-height:1.55;color:#576d63}.rushSettings label{display:grid;gap:8px;font-size:13px;font-weight:700}
+.rushAvailabilityHint{padding:10px 12px;background:#f1f7f3;border-radius:11px;color:#195c43;font-size:13px;font-weight:700}
+.rushOverlay{position:fixed;inset:0;z-index:100010;display:flex;justify-content:center;align-items:center;padding:16px;background:#092d23a8;backdrop-filter:blur(4px)}
+.rushModal{width:min(100%,520px);max-height:calc(100dvh - 32px);overflow-y:auto;background:white;border-radius:22px;padding:clamp(16px,4vw,25px);color:#173e32;box-shadow:0 20px 70px #09281d55}
+.rushModal h2{font-size:clamp(21px,4vw,26px);margin:0 0 10px}.rushModal>p{font-size:14px;line-height:1.55;color:#53695e}
+.rushModal .rushAfter{font-weight:800;color:#9a5d10}.rushAlternatives{border-top:1px solid #e0eae3;margin-top:16px;padding-top:14px}.rushAlternatives>strong{font-size:14px}.rushAlternatives p{font-size:13px;padding:8px 10px;margin:7px 0;background:#f1f7f3;border-radius:9px}
+.rushActions{display:flex;gap:10px;margin-top:18px}.rushActions button{flex:1;min-height:48px;border-radius:12px;border:1px solid #cbdcd2;background:#f3f8f5;color:#163c33;font:700 14px inherit;padding:10px;cursor:pointer}.rushActions .rushAccept{background:#087f5b;border-color:#087f5b;color:white}
+@media(max-width:620px){.rushDashboard{padding:13px;margin-bottom:14px}.rushModal{border-radius:17px}.rushActions{flex-direction:column}.rushActions button{width:100%}.rushFigures>div{padding:11px}.rushFigures span{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.rushProgressFill{transition:none}}
+
+
+/* V3 desktop workspace: wider screens, compact header, readable panels */
+@media (min-width: 901px) {
+  .top { min-height: 64px; padding: 8px 22px; }
+  .brand img { width: 42px; height: 42px; }
+  .brand strong { font-size: 20px; }
+  .brand small { font-size: 11px; }
+  .shell { min-height: calc(100vh - 64px); }
+  main { max-width: none; width: 100%; padding: 22px clamp(20px, 2.5vw, 44px); }
+  .appScreen[data-screen="administration"] { max-width: 1280px; width: 100%; }
+  .appScreen[data-screen="reservations"],
+  .appScreen[data-screen="passages"],
+  .appScreen[data-screen="tables"] { max-width: 1440px; width: 100%; margin-inline: auto; }
+  .appScreen[data-screen="administration"] .managementGroupBody { min-width: 0; }
+}
+@media (min-width: 1450px) {
+  .appScreen[data-screen="administration"] { max-width: 1360px; }
+  .appScreen[data-screen="reservations"],
+  .appScreen[data-screen="passages"],
+  .appScreen[data-screen="tables"] { max-width: 1600px; }
+}
+
+/* Room selector remains accessible without a redundant visible label. */
+.srOnlyRoom{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.roomFilterLabel{display:block}
+
+/* Table sorting: compact desktop control, accessible on touch screens. */
+.tableSortLabel{display:flex;align-items:center;justify-content:flex-end;gap:9px;margin:0 0 12px;color:#365b4e;font-size:13px;font-weight:650}.tableSortLabel select{width:auto;min-width:190px;min-height:40px;padding:8px 12px;border:1px solid #c9ded0;border-radius:10px;background:#fff;color:#174c38;font:inherit}@media(max-width:600px){.tableSortLabel{justify-content:stretch}.tableSortLabel select{flex:1;min-width:0}}
+
+/* V3 table filter toolbar: single aligned row, responsive without native-looking form clutter. */
+#filters.tableFiltersToolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;overflow:visible;padding:4px 0 12px;margin:12px 0 4px}#filters.tableFiltersToolbar>button{flex:0 0 auto}#filters.tableFiltersToolbar .tableSortLabel{margin:0 0 0 auto;display:flex;align-items:center;gap:8px;color:#526f64;font-size:12px;font-weight:600;white-space:nowrap}#filters.tableFiltersToolbar .tableSortLabel select{appearance:none;-webkit-appearance:none;min-width:166px;max-width:220px;min-height:36px;padding:7px 32px 7px 13px;border:1px solid #cbded5;border-radius:999px;background-color:#f5faf7;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23164e3c' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;color:#164e3c;font-size:12px;font-weight:650;cursor:pointer}#filters.tableFiltersToolbar .tableSortLabel select:focus-visible{outline:3px solid #83c9ab;outline-offset:2px}@media(max-width:720px){#filters.tableFiltersToolbar{gap:6px}#filters.tableFiltersToolbar .tableSortLabel{width:100%;margin:4px 0 0;justify-content:flex-end}#filters.tableFiltersToolbar .tableSortLabel select{min-width:160px}}
+
+/* Center the service title in the viewport, independent of logo and notification width. */
+@media(min-width:901px){header.top{position:relative}header.top>.heading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:max-content;max-width:40%;text-align:center;pointer-events:none}header.top>.heading b{font-size:15px}header.top>.heading span{font-size:12px}}
+@media(max-width:900px){header.top>.heading{position:static;transform:none;min-width:0;text-align:left}}
+
+/* Header V3: true center using three equal grid tracks, regardless of brand width. */
+@media(min-width:901px){body>header.top{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;position:relative}body>header.top>.brand{grid-column:1;justify-self:start;min-width:0}body>header.top>.heading{grid-column:2;position:static;left:auto;top:auto;transform:none;display:flex;align-items:center;justify-self:center;text-align:center;max-width:none;width:auto;white-space:nowrap}body>header.top>.notificationBell,body>header.top>.notificationButton,body>header.top>button:last-child{grid-column:3;justify-self:end}}
+
+
+/* V3 appearance settings: no header controls, no extra header height. */
+.themeSettingsGroup{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:20px}
+.themeSettingsHead strong{font-size:16px}.themeSettingsHead p{font-size:13px;color:#667b70;margin:5px 0 0}
+.themeModeControl{display:flex;align-items:center;gap:12px;color:#36594b;font-size:13px;font-weight:700}
+.themeModeControl select{min-height:42px;min-width:158px;padding:9px 12px;border:1px solid #c8ded1;border-radius:11px;background:#fff;color:#184b39;font:inherit;cursor:pointer}
+.themeModeControl select:focus-visible{outline:3px solid #8bd2b1;outline-offset:2px}
+@media(max-width:620px){.themeSettingsGroup{flex-direction:column;align-items:stretch}.themeModeControl{justify-content:space-between}}
+/* Dark theme uses a coherent surface and text hierarchy. */
+html[data-theme="dark"]{--dark-bg:#101e1b;--dark-card:#1a2d27;--dark-subtle:#243c32;--dark-line:#3a5b4b;--dark-text:#edf7f0;--dark-muted:#b4cbbd;background:var(--dark-bg);color:var(--dark-text);color-scheme:dark}
+html[data-theme="dark"] body,html[data-theme="dark"] main,html[data-theme="dark"] .shell{background:var(--dark-bg);color:var(--dark-text)}
+html[data-theme="dark"] .top{background:#11372e}
+html[data-theme="dark"] .sidebar{background:#143e32}
+html[data-theme="dark"] :is(.panel,.rushDashboard,.managementGroup,.kpi,.tableCard,.actionPanel,.reservationItem,.reservationPanel,.walkinPanel,.quickReleasePanel,.tableChoicePanel,.tablePickerSheet,.roomPickerSheet,.tableDetailSheet,.restoConfirmSheet,.bookingSuccessCard,.adminCard,.card,.modal,dialog,fieldset){background:var(--dark-card);color:var(--dark-text);border-color:var(--dark-line)}
+html[data-theme="dark"] :is(.rushFigures>div,.rushSettings,.rushSummary,.availabilitySummary,.liveTag,.tableChoiceCard,.tablePickerCard,.roomPickerOption,.fusionRow,.fusionSuggestion,.reservationActions,.tableDetailAction,.tableStatusAction,.tableAdminItem,.managementGroupIcon){background:var(--dark-subtle);color:var(--dark-text);border-color:var(--dark-line)}
+html[data-theme="dark"] :is(h1,h2,h3,h4,h5,h6,.rushDashHead h2,.rushFigures strong,.managementGroupWords strong,.tableCard .num,.serviceIntro h1,.panelHead,.subhead,.managementIntro h1,.themeSettingsHead strong){color:var(--dark-text)}
+html[data-theme="dark"] :is(.muted,.rushDashHead p,.rushFigures span,.serviceIntro p,.managementGroupWords small,.themeSettingsHead p,.info,.capacity,.detailLine,.managementIntro p,.panel p,.tableCard small){color:var(--dark-muted)}
+html[data-theme="dark"] :is(input,select,textarea,option,.rushDashboard select,.rushSettings select,.themeModeControl select){background-color:#223c32;color:var(--dark-text);border-color:#547461}
+html[data-theme="dark"] :is(input,textarea)::placeholder{color:#b4c9bc}
+html[data-theme="dark"] :is(.quickAction:not(.primary),.availabilityTimeOption,button:not(.primary):not(.selected),.tableSortLabel select){background-color:#274438;color:var(--dark-text);border-color:#52715e}
+html[data-theme="dark"] :is(.quickAction.primary,.primary){background-color:#14795b;color:#fff;border-color:#14795b}
+html[data-theme="dark"] :is(.sidebar a.selected,.filters button.active,button.selected){background:#b2e6c5;color:#14372b}
+html[data-theme="dark"] :is(.availabilityWarning,.caution){background:#483921;color:#ffdc9a;border-color:#86663b}
+html[data-theme="dark"] :is(.tableCard.free,.tableCard.expected,.tableCard.arrived,.tableCard.present){background:#1d392f;color:var(--dark-text);border-color:#48765d}
+html[data-theme="dark"] :is(.status,.liveTag){color:#d6f5df;background:#285540}
+html[data-theme="dark"] :is(.rushProgress,.rushProgressTrack,.tableTimeProgressTrack){background:#3c5749}
+html[data-theme="dark"] :is(.tableSortLabel,.tableSortLabel span,.themeModeControl){color:var(--dark-text)}
+html[data-theme="dark"] .tableSortLabel select{background-image:none;padding-right:14px}
+html[data-theme="dark"] :is(a:not(.brand):not(.quickAction):not(.selected)){color:#b7e9c9}
+
+/* Dark-theme visual repair: scoped to V3, preserving business logic. */
+html[data-theme="dark"] :is(.bookingExtraFields,.roomAdminPanel,.roomManager,.roomsAdmin,.roomSettings,.historyMetric,.historyStat,.historyKpi,.statsCard,.rushSettings,.rushDashContent>div,.managementGroupBody .panel){background:var(--dark-card);color:var(--dark-text);border-color:var(--dark-line)}
+html[data-theme="dark"] .bookingExtraFields{background:#20382f!important;border:1px solid var(--dark-line);border-radius:15px;padding:16px}
+html[data-theme="dark"] .bookingExtraFields :is(h3,label,p,small){color:var(--dark-text)!important}
+html[data-theme="dark"] .bookingExtraFields :is(textarea,input){background:#142b23!important;color:var(--dark-text)!important;border-color:#527461!important}
+html[data-theme="dark"] .bookingTypeOption span{background:#233d33!important;border-color:#4c6c5b!important;color:var(--dark-text)!important}
+html[data-theme="dark"] .bookingTypeOption :is(strong,small){color:var(--dark-text)!important}
+html[data-theme="dark"] .bookingTypeOption input:checked+span{background:#255d47!important;border-color:#72caa2!important;box-shadow:inset 0 0 0 1px #72caa2}
+html[data-theme="dark"] .bookingTypeOption input:focus-visible+span{outline:3px solid #8bdfb5;outline-offset:2px}
+html[data-theme="dark"] :is(#bookingDate,#bookingTime,#bookingGuests,#bookingTable){background:#223c32!important;color:var(--dark-text)!important;border-color:#547461!important;color-scheme:dark}
+html[data-theme="dark"] :is(.tableChoiceTrigger,.tablePickerOpen,.roomChoiceTrigger,.availabilitySummary,.availabilityInsight>p,.bookingExtraFields~p){background:#244236!important;color:var(--dark-text)!important;border-color:var(--dark-line)}
+html[data-theme="dark"] :is(.tableChoiceTrigger,.tablePickerOpen,.roomChoiceTrigger) :is(span,strong,small){color:var(--dark-text)!important}
+html[data-theme="dark"] :is(.tableAdminPanel,.tableAdminPanel section,.tableAdminPanel fieldset,.tableAdminPanel .roomAdmin,.tableAdminPanel .roomList,.tableAdminPanel .roomManager,.tableAdminPanel .roomSettings){background:#20382f!important;color:var(--dark-text)!important;border-color:var(--dark-line)!important}
+html[data-theme="dark"] .tableAdminPanel :is(h2,h3,h4,p,small,label,span){color:var(--dark-text)}
+html[data-theme="dark"] .tableAdminPanel :is(input,select,textarea){background:#142b23!important;color:var(--dark-text)!important;border-color:#527461!important}
+html[data-theme="dark"] :is(.historyPanel .historyStat,.historyPanel .historyMetric,.historyPanel .historyKpi,.historyPanel .statCard,.historyPanel .statsCard,.historyPanel .summaryCard,.historyPanel .historySummary>div){background:#233e33!important;color:var(--dark-text)!important;border-color:var(--dark-line)}
+html[data-theme="dark"] .historyPanel :is(.historyStat,.historyMetric,.historyKpi,.statCard,.statsCard,.summaryCard) :is(span,strong,p,small){color:var(--dark-text)!important}
+html[data-theme="dark"] :is(.historyPanel input[type="date"],.shiftSettings input[type="time"]){background:#223c32!important;color:var(--dark-text)!important;border-color:#547461!important;color-scheme:dark}
+html[data-theme="dark"] :is(.managementGroupBody .shiftSettings>.muted,.managementGroupBody .historyHeading .muted,.tableAdminPanel .muted,.walkinPanel .muted,.quickReleasePanel .muted){color:var(--dark-muted)!important}
+html[data-theme="dark"] :is(.managementGroupBody .shiftSettings,.managementGroupBody .historyPanel){background:transparent!important}
+html[data-theme="dark"] :is(.bookingExtraFields,.tableAdminPanel,.historyPanel) :is(button[type="submit"],button.primary){background:#14795b!important;color:#fff!important;border-color:#14795b!important}
+
+/* Administration: consistent spacing, controls and hierarchy across viewports. */
+.tableAdminPanel .actionPanelBody{padding:clamp(16px,2.2vw,28px);min-width:0}
+.tableAdminPanel .actionPanelBody>#tableAdminNew{margin:0 0 18px;min-height:44px;padding:10px 16px}
+.tableAdminPanel .roomManager{padding:clamp(16px,2vw,24px);margin:0 0 24px;border-radius:16px}
+.tableAdminPanel .roomManager h3{font-size:18px;line-height:1.3;margin:0 0 8px}
+.tableAdminPanel .roomManager>.muted{margin:0 0 14px;line-height:1.5}
+.tableAdminPanel .roomManagerItem{padding:14px 0;min-height:50px}
+.tableAdminPanel .roomManagerForm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:12px;margin:18px 0 0}
+.tableAdminPanel .roomManagerForm label{min-width:0}
+.tableAdminPanel .roomManagerForm :is(input,button){height:46px;min-height:46px;box-sizing:border-box;margin:0}
+.tableAdminPanel #tableAdminForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 14px;margin:0 0 20px}
+.tableAdminPanel #tableAdminForm label{display:grid;gap:8px;min-width:0;align-content:end;font-size:13px;line-height:1.35}
+.tableAdminPanel #tableAdminForm :is(input,select){width:100%;height:46px;min-height:46px;box-sizing:border-box;padding:10px 12px;font-size:14px}
+.tableAdminPanel #tableAdminForm #tableAdminSubmit{height:46px;min-height:46px;margin-top:2px}
+.tableAdminPanel :is(#roomManagerFeedback,#tableAdminFeedback){line-height:1.5}
+.tableAdminPanel #tableAdminList{margin-top:16px}
+.tableAdminPanel .tableAdminItem{gap:12px;padding:14px 0}
+.tableAdminPanel .tableAdminItem button{min-height:42px}
+.tableAdminPanel .fusionAdmin{margin-top:28px;padding-top:24px}
+@media(max-width:650px){.tableAdminPanel .roomManagerForm,.tableAdminPanel #tableAdminForm{grid-template-columns:1fr;gap:14px}.tableAdminPanel #tableAdminForm #tableAdminSubmit{grid-column:1}.tableAdminPanel .actionPanelBody{padding:16px}.tableAdminPanel .roomManager{margin-bottom:22px}}
+html[data-theme="dark"] .tableAdminPanel .roomManager{background:#20382f!important;border-color:#426352!important}
+html[data-theme="dark"] .tableAdminPanel .roomManagerItem{border-color:#426352}
+html[data-theme="dark"] .tableAdminPanel .roomManagerForm button{background:#14795b!important;color:#fff!important;border-color:#14795b!important}
+
+/* Dark theme: add-client dialog and walk-in controls */
+html[data-theme="dark"] .restoAddChoiceDialog{background:#1b342b;color:#f0f8f3;border:1px solid #476759;box-shadow:0 24px 70px #06150fcc}
+html[data-theme="dark"] .restoAddChoiceTop p{color:#7be1b7}
+html[data-theme="dark"] .restoAddChoiceTop h2{color:#f0f8f3}
+html[data-theme="dark"] .restoAddChoiceTop span{color:#c1d4c9}
+html[data-theme="dark"] .restoAddChoiceClose{background:#315347;color:#f0f8f3}
+html[data-theme="dark"] .restoAddChoiceOption{background:#254438;color:#f0f8f3;border-color:#4b7060}
+html[data-theme="dark"] .restoAddChoiceOption:hover,html[data-theme="dark"] .restoAddChoiceOption:focus-visible{background:#315c4a;border-color:#77c4a0}
+html[data-theme="dark"] .restoAddChoiceOption:active{background:#366c54}
+html[data-theme="dark"] .restoAddChoiceOption strong{color:#f0f8f3}
+html[data-theme="dark"] .restoAddChoiceOption small{color:#c1d4c9}
+html[data-theme="dark"] .restoAddChoiceOption>svg:first-child{color:#67d8a5}
+html[data-theme="dark"] .restoAddChoiceOption>svg:last-child{color:#b3d7c5}
+html[data-theme="dark"] .walkinPanel :is(label,.muted,.actionPanelBody>p){color:#c4d8cd!important}
+html[data-theme="dark"] .walkinPanel #walkinGuests{background:#203c31!important;color:#f0f8f3!important;border-color:#567969!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinPaxButtons button{background:#2a483c!important;color:#eef8f1!important;border-color:#4b7060!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinPaxButtons button.selected{background:#098363!important;color:#fff!important;border-color:#4bd5a2!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinRecommendation{background:#29493b!important;color:#e6f7ed!important;border:1px solid #496c59}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinInstall{background:#14795b!important;color:#fff!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinInstall:disabled{background:#355449!important;color:#c5d6ce!important;opacity:.75}
+html[data-theme="dark"] .walkinPanel #walkinForm :is(.tableChoiceTrigger,.tablePickerOpen){background:#29493b!important;color:#f0f8f3!important;border-color:#4b7060!important}
+html[data-theme="dark"] :is(.restoAddChoiceClose,.restoAddChoiceOption,.walkinPaxButtons button):focus-visible{outline:3px solid #7be1b7;outline-offset:2px}
+
+/* Management rhythm: separate configuration blocks without visual clutter. */
+.managementGroup{margin-block:0 26px}
+.managementGroup:last-child{margin-bottom:0}
+.managementGroupBody{padding:clamp(18px,2vw,26px)}
+.managementGroupBody .shiftSettings form{gap:20px}
+.managementGroupBody .rushSettings{margin-top:32px;padding:28px 0 4px;border-top:1px solid #54746155}
+.managementGroupBody .rushSettings h3{margin:0 0 12px;line-height:1.35}
+.managementGroupBody .rushSettings>p{margin:0 0 20px;line-height:1.65}
+.managementGroupBody .rushSettings label{gap:12px}
+.managementGroupBody .rushHint{margin-top:18px;line-height:1.6}
+.managementGroupBody .managementGroupHead{padding-block:20px}
+@media(max-width:620px){.managementGroup{margin-bottom:18px}.managementGroupBody{padding:17px}.managementGroupBody .rushSettings{margin-top:24px;padding-top:22px}.managementGroupBody .rushSettings>p{margin-bottom:16px}}
+
+/* Dark mode: consistent date/time controls, including custom time text inputs. */
+html[data-theme="dark"] .shiftSettings input.rmTimeInput,
+html[data-theme="dark"] .managementGroupBody .shiftSettings input.rmTimeInput,
+html[data-theme="dark"] .shiftSettings input[type="time"],
+html[data-theme="dark"] input[type="date"],
+html[data-theme="dark"] #bookingDate{
+ background:#243c32!important;color:#edf7f0!important;border:1px solid #547461!important;
+ box-shadow:none!important;color-scheme:dark!important;
+}
+html[data-theme="dark"] :is(.shiftSettings input.rmTimeInput,.shiftSettings input[type="time"],input[type="date"],#bookingDate):focus-visible{
+ outline:2px solid #92dfba!important;outline-offset:2px!important;border-color:#92dfba!important;
+}
+html[data-theme="dark"] input[type="date"]::-webkit-calendar-picker-indicator,
+html[data-theme="dark"] input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1) sepia(.2) saturate(1.4);opacity:.85}
+
+/* Reports: ensure the reference date and export action respect dark mode. */
+html[data-theme="dark"] .historyPanel .historyControls #historyDate{
+ background:#243c32!important;color:#edf7f0!important;border:1px solid #547461!important;
+ color-scheme:dark!important;-webkit-text-fill-color:#edf7f0!important;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyDate::-webkit-calendar-picker-indicator{
+ filter:invert(1) sepia(.2) saturate(1.4);opacity:.85;cursor:pointer;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyDate:focus-visible{
+ outline:2px solid #92dfba!important;outline-offset:2px!important;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyPdf{
+ background:#14795b!important;color:#fff!important;border:1px solid #208c6b!important;
+ font-weight:700!important;cursor:pointer;
+}
+html[data-theme="dark"] .historyPanel .historyControls #historyPdf:hover{background:#198969!important}
+html[data-theme="dark"] .historyPanel .historyControls #historyPdf:focus-visible{outline:2px solid #92dfba!important;outline-offset:2px!important}
+
+/* Mobile bottom navigation follows the selected dark theme. */
+@media(max-width:768px){
+ html[data-theme="dark"] .mobileBottomNav{
+  background:#152b24!important;border-top:1px solid #3a5b4b!important;
+  box-shadow:0 -6px 24px #0005!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem{
+  color:#b8d5c6!important;background:transparent;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem.active{
+  background:#294a3d!important;color:#f0fff6!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd .mobileNavIcon{
+  background:#168665!important;color:#fff!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd.active .mobileNavIcon{
+  background:#21a37a!important;
+ }
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem:focus-visible{
+  outline:2px solid #a5e8c7!important;outline-offset:-2px;
+ }
+}
+
+/* Service closure: legible archive and status in dark mode. */
+html[data-theme="dark"] .closurePanel,
+html[data-theme="dark"] .managementGroupBody .closurePanel{
+ color:#edf7f0!important;
+}
+html[data-theme="dark"] .closurePanel :is(h3,p,summary,#closureStatus,#closureArchive,#closureArchive p,#closureArchive span,#closureArchive small){
+ color:#d1e7da!important;opacity:1!important;
+}
+html[data-theme="dark"] .closurePanel h3{color:#f2fff7!important}
+html[data-theme="dark"] .closurePanel #closureStatus{
+ line-height:1.6!important;font-weight:500;
+}
+html[data-theme="dark"] .closurePanel details{color:#edf7f0!important}
+html[data-theme="dark"] .closurePanel summary{
+ cursor:pointer;padding:10px 4px;font-weight:650;line-height:1.5;
+}
+html[data-theme="dark"] .closurePanel #closureArchive{
+ padding-top:12px;max-height:260px;
+}
+html[data-theme="dark"] .closurePanel #closureArchive p{
+ padding:12px 4px!important;border-bottom:1px solid #547461!important;line-height:1.6!important;
+}
+html[data-theme="dark"] .closurePanel #closureManual{
+ background:#14795b!important;color:#fff!important;border:1px solid #27916e!important;
+}
+html[data-theme="dark"] .closurePanel #closureManual:hover{background:#198969!important}
+html[data-theme="dark"] .closurePanel #closureManual:focus-visible,
+html[data-theme="dark"] .closurePanel summary:focus-visible{
+ outline:2px solid #92dfba!important;outline-offset:2px!important;
+}
+
+
+/* Native-select replacement: V3 branded modal */
+.v3-picker-backdrop[hidden]{display:none!important}
+.v3-picker-backdrop{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.65)}
+.v3-picker-panel{box-sizing:border-box;width:min(480px,100%);max-height:80dvh;display:flex;flex-direction:column;gap:14px;padding:20px;border-radius:20px;background:#fff;color:#173d31;border:1px solid #bdd9cb;box-shadow:0 20px 70px #0005}
+.v3-picker-panel header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.v3-picker-panel header strong{font-size:1.1rem}
+.v3-picker-panel header button{font-size:26px;width:42px;height:42px}
+.v3-picker-items{overflow:auto;display:grid;gap:8px;overscroll-behavior:contain}
+.v3-picker-panel button{font:inherit;border:1px solid #a7c8b6;border-radius:12px;padding:12px;cursor:pointer;background:#eff8f2;color:#173d31}
+.v3-picker-items button{text-align:left;min-height:48px}
+.v3-picker-items button.selected{background:#bcebd3;border:2px solid #087f60;font-weight:700}
+.v3-picker-panel footer{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.v3-picker-panel footer [data-confirm]{background:#087f60;color:#fff}
+.v3-picker-panel button:focus-visible{outline:3px solid #58cda1;outline-offset:2px}
+html[data-theme="dark"] .v3-picker-panel,body[data-theme="dark"] .v3-picker-panel{background:#192f29;color:#f1fff7;border-color:#426e5c}
+html[data-theme="dark"] .v3-picker-panel button,body[data-theme="dark"] .v3-picker-panel button{background:#27473a;color:#f1fff7;border-color:#426e5c}
+html[data-theme="dark"] .v3-picker-items button.selected,body[data-theme="dark"] .v3-picker-items button.selected{background:#087f60;color:#fff;border-color:#72d8aa}
+html[data-theme="dark"] .v3-picker-panel footer [data-confirm],body[data-theme="dark"] .v3-picker-panel footer [data-confirm]{background:#087f60;color:#fff}
+@media(max-width:600px){.v3-picker-backdrop{align-items:flex-end;padding:10px}.v3-picker-panel{width:100%;max-height:78dvh}}
+
+
+/* Picker header: prevent global header/button rules from displacing close icon */
+.v3-picker-panel > header{position:relative!important;display:grid!important;grid-template-columns:minmax(0,1fr) 44px!important;align-items:start!important;gap:12px!important;width:100%!important;min-height:44px!important;padding:0!important;margin:0!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.v3-picker-panel > header > strong{display:block!important;min-width:0!important;overflow-wrap:break-word!important;line-height:1.35!important;padding:6px 0!important;margin:0!important;font-size:1.05rem!important}
+.v3-picker-panel > header > button[data-close]{position:static!important;display:grid!important;place-items:center!important;justify-self:end!important;align-self:start!important;flex:none!important;min-width:44px!important;width:44px!important;max-width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;margin:0!important;line-height:1!important;font-size:26px!important;transform:none!important;float:none!important}
+
+
+/* Keep the close glyph perfectly centered regardless of global button rules */
+.v3-picker-panel > header > button[data-close]{display:flex!important;align-items:center!important;justify-content:center!important;text-align:center!important;vertical-align:middle!important;line-height:1!important;letter-spacing:0!important;text-indent:0!important}
+.v3-picker-panel > header > button[data-close] svg{display:block!important;margin:auto!important;flex:none!important;width:22px!important;height:22px!important}
+
+
+/* Branded touch and keyboard focus for picker options */
+.v3-picker-panel,.v3-picker-panel *{-webkit-tap-highlight-color:transparent}
+.v3-picker-items button:focus,.v3-picker-items button:focus-visible{outline:2px solid #087f60!important;outline-offset:-2px!important;box-shadow:0 0 0 2px rgba(8,127,96,.16)!important}
+.v3-picker-items button.selected:focus,.v3-picker-items button.selected:focus-visible{background:#bcebd3!important;color:#173d31!important;outline:2px solid #087f60!important;outline-offset:-2px!important}
+html[data-theme="dark"] .v3-picker-items button:focus-visible{outline-color:#72d8aa!important;box-shadow:0 0 0 2px rgba(114,216,170,.24)!important}
+html[data-theme="dark"] .v3-picker-items button.selected:focus-visible{background:#087f60!important;color:#fff!important}
+
+
+/* Picker close control: draw a centered cross independent of Android font baselines */
+.v3-picker-panel > header > button[data-close]{
+ position:relative!important;display:flex!important;align-items:center!important;justify-content:center!important;
+ width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;
+ font-size:0!important;line-height:0!important;overflow:hidden!important;
+}
+.v3-picker-panel > header > button[data-close]::before,
+.v3-picker-panel > header > button[data-close]::after{
+ content:""!important;position:absolute!important;left:50%!important;top:50%!important;
+ width:20px!important;height:2px!important;border-radius:2px!important;
+ background:currentColor!important;transform-origin:center!important;pointer-events:none!important;
+}
+.v3-picker-panel > header > button[data-close]::before{transform:translate(-50%,-50%) rotate(45deg)!important}
+.v3-picker-panel > header > button[data-close]::after{transform:translate(-50%,-50%) rotate(-45deg)!important}
+.v3-picker-panel > header > button[data-close] svg{display:none!important}
+
+
+/* V3 Android touch feedback: remove Chromium's blue tap flash globally.
+   Keep native focus-visible outlines for keyboard accessibility. */
+html,body,button,a,input,select,textarea,summary,label,
+[role="button"],[role="option"],[role="tab"],[tabindex],
+.v3-picker-panel,.v3-picker-panel *{
+ -webkit-tap-highlight-color:transparent;
+}
+
+
+/* Management accordion: prevent Android text selection and blue pressed/focus fill. */
+.managementGroup > .managementGroupHead{
+ -webkit-user-select:none;user-select:none;
+ -webkit-touch-callout:none;
+ -webkit-tap-highlight-color:transparent!important;
+ background:transparent!important;
+}
+.managementGroup > .managementGroupHead :is(strong,small,span,svg){
+ -webkit-user-select:none;user-select:none;
+ -webkit-tap-highlight-color:transparent!important;
+}
+.managementGroup > .managementGroupHead:is(:hover,:active,:focus,:focus-visible){
+ background:transparent!important;
+}
+.managementGroup > .managementGroupHead:focus-visible{
+ outline:2px solid #087f60!important;outline-offset:-3px!important;
+}
+html[data-theme="dark"] .managementGroup > .managementGroupHead:focus-visible{
+ outline-color:#72d8aa!important;
+}
+
+/* V3 reservation list: readable dark-theme surfaces and action hierarchy.
+   Scoped to the reservation panel so other screens retain their palette. */
+html[data-theme="dark"] .reservationPanel .reservationItem{
+ background:#1b3028!important;color:#edf7f0!important;
+ border:1px solid #456654!important;border-radius:16px;
+ padding:15px;margin:12px 0;
+}
+html[data-theme="dark"] .reservationPanel .reservationHead strong{color:#f4fff7!important}
+html[data-theme="dark"] .reservationPanel .reservationStatus{
+ background:#315744!important;color:#e9fff1!important;
+ border:1px solid #628f73!important;opacity:1!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem > p{
+ color:#c5ddcf!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationOpenDetail{
+ display:block;width:100%;background:#285c49!important;color:#f2fff7!important;
+ border:1px solid #548f73!important;border-radius:11px;font-weight:750;
+}
+html[data-theme="dark"] .reservationPanel .reservationOpenDetail:is(:hover,:focus-visible){
+ background:#34745b!important;color:#fff!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationActions{
+ background:#233c31!important;border:1px solid #405f4d!important;
+ border-radius:12px;padding:10px;
+}
+html[data-theme="dark"] .reservationPanel .reservationActions button{
+ background:#315846!important;color:#f3fff7!important;
+ border:1px solid #648e74!important;opacity:1!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationActions button:is(:hover,:focus-visible){
+ background:#3c7258!important;color:#fff!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationMoreActions{
+ background:#20382e!important;border:1px solid #54715f!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationMoreActions summary{
+ color:#e3f7e9!important;background:transparent!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationMoreActions summary:is(:hover,:focus-visible){
+ color:#fff!important;background:#315542!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem :is(.reservationAllergy,.reservationNote,.reservationNotes,.reservationDetail,.reservationDetails){
+ color:#e5f5e9!important;background:#284338!important;border-color:#587663!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem :is(input,textarea,select){
+ color:#edf7f0!important;background:#203a2f!important;border-color:#64846f!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem :is(button,summary):focus-visible{
+ outline:2px solid #a0e7bc!important;outline-offset:2px;
+}
+@media(max-width:600px){
+ html[data-theme="dark"] .reservationPanel .reservationItem{padding:12px;margin:10px 0}
+}
+
+/* Expanded reservation details: dark mode must not inherit the light card surface. */
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded{
+ background:#233d32!important;color:#edf7f0!important;
+ border:1px solid #567b64!important;border-radius:14px;
+ box-shadow:none!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded :is(h3,p,span,strong,small,label,div){
+ color:#edf7f0!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded p{
+ background:transparent!important;opacity:1!important;
+}
+html[data-theme="dark"] .reservationPanel .reservationItem .reservationExpanded progress{
+ accent-color:#72d8aa;
+}
+
+/* Header refresh control — compact on mobile, labelled on larger screens. */
+.top .refreshAppBtn{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ flex:0 0 auto;min-height:42px;padding:9px 13px;border-radius:12px;
+ background:#245b49!important;color:#f4fff7!important;border:1px solid #5b997b!important;
+ font:inherit;font-size:13px;font-weight:750;cursor:pointer;
+ -webkit-tap-highlight-color:transparent;
+}
+.top .refreshAppBtn :is(svg,i){width:18px;height:18px;flex:none;color:inherit}
+.top .refreshAppBtn:focus-visible{outline:3px solid #a0e7bc;outline-offset:2px}
+.top .refreshAppBtn:active{background:#31765b!important}
+.top .refreshAppBtn.is-refreshing svg{animation:restoRefreshSpin .7s linear infinite}
+@keyframes restoRefreshSpin{to{transform:rotate(360deg)}}
+@media(max-width:700px){
+ .top .refreshAppBtn{width:42px;min-width:42px;padding:0}
+ .top .refreshAppBtn span{display:none}
+}
+
+/* Header actions share a single right-hand grid cell: refresh next to bell. */
+body>header.top>.headerQuickActions{
+ display:flex;align-items:center;justify-content:flex-end;gap:9px;
+ margin-left:auto;min-width:0;
+}
+body>header.top>.headerQuickActions .serviceBell{margin-left:0!important}
+body>header.top>.headerQuickActions .refreshAppBtn{
+ width:46px;height:46px;min-width:46px;padding:0!important;
+ border-radius:15px;background:#245b49!important;color:#f4fff7!important;
+ border:1px solid #5b997b!important;
+}
+body>header.top>.headerQuickActions .refreshAppBtn span{display:none!important}
+body>header.top>.headerQuickActions .refreshAppBtn svg{width:21px;height:21px}
+@media(min-width:901px){
+ body>header.top>.headerQuickActions{grid-column:3;justify-self:end}
+}
+@media(max-width:650px){
+ body>header.top>.headerQuickActions{gap:7px}
+ body>header.top>.headerQuickActions :is(.refreshAppBtn,.serviceBell){width:42px;height:42px;min-width:42px}
+}
+
+/* Fast walk-in client origin selector, accessible on POS, tablet and phone. */
+.walkinTypeField{border:0;padding:0;margin:0 0 12px;min-width:0}
+.walkinTypeField legend{font-size:13px;font-weight:750;margin-bottom:8px}
+.walkinTypeChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.walkinTypeChoices label{display:flex;align-items:center;justify-content:center;gap:8px;
+ min-height:44px;padding:9px 12px;border:1px solid var(--border,#a4b5a9);
+ border-radius:12px;cursor:pointer;font-weight:650}
+.walkinTypeChoices input{accent-color:#087f5b;width:17px;height:17px;flex:none}
+.walkinTypeChoices label:has(input:checked){background:#d8f3e4;color:#11583e;border-color:#087f5b}
+html[data-theme="dark"] .walkinTypeChoices label:has(input:checked){background:#245843;color:#f4fff7;border-color:#75b994}
+@media(max-width:380px){.walkinTypeChoices{grid-template-columns:1fr}}
+
+/* Shared dark visual language for the custom time picker (phone/tablet/desktop). */
+html[data-theme="dark"] .rmTimeDialog{background:#132b25!important;color:#f2faf5!important;border:1px solid #3c6253!important;color-scheme:dark}
+html[data-theme="dark"] .rmTimeDialog h2{color:#f2faf5!important}
+html[data-theme="dark"] .rmTimeEyebrow{color:#80d9ad!important}
+html[data-theme="dark"] .rmTimeClose{background:#294b3d!important;color:#f2faf5!important}
+html[data-theme="dark"] .rmTimePreview{background:#1e3b31!important;color:#a0edc0!important}
+html[data-theme="dark"] .rmTimePreview button{color:#f2faf5!important}
+html[data-theme="dark"] .rmTimePreview button.isActive{background:#087f5b!important;color:#fff!important}
+html[data-theme="dark"] .rmTimeFields label{color:#f2faf5!important}
+html[data-theme="dark"] .rmTimeFields select{background:#254438!important;color:#f2faf5!important;border-color:#527564!important}
+html[data-theme="dark"] .rmTimePrecision{color:#c2d5c9!important}
+html[data-theme="dark"] .rmTimeSwitch{background:#1e3b31!important}
+html[data-theme="dark"] .rmTimeSwitch button{color:#c2d5c9!important}
+html[data-theme="dark"] .rmTimeSwitch button.isActive{background:#087f5b!important;color:#fff!important}
+html[data-theme="dark"] .rmTimeNumber{background:#254438!important;color:#f2faf5!important;border-color:#3d6352!important}
+html[data-theme="dark"] .rmTimeNumber.isSelected{background:#079568!important;color:#fff!important;border-color:#9bf2c0!important}
+html[data-theme="dark"] .rmTimeActions button{background:#294b3d!important;color:#f2faf5!important;border-color:#527564!important}
+html[data-theme="dark"] .rmTimeActions .rmTimeSave{background:#078b62!important;color:#fff!important;border-color:#078b62!important}
+html[data-theme="dark"] .rmTimeDialog button:focus-visible{outline:3px solid #a0edc0!important;outline-offset:2px}
+@media(max-width:600px){.rmTimeDialog{width:min(100%,420px);max-height:calc(100dvh - 24px)}}
+
+.walkinInstallNotice{position:fixed;z-index:100050;left:50%;bottom:90px;transform:translateX(-50%);width:min(94%,460px);display:none;align-items:center;gap:12px;padding:15px;border-radius:15px;background:#086444;color:white;box-shadow:0 12px 36px #071b15aa;font-weight:700}.walkinInstallNotice.isVisible{display:flex}.walkinInstallNotice.isError{background:#942d35}.walkinInstallNoticeIcon{border:2px solid currentColor;border-radius:50%;width:30px;height:30px;display:grid;place-items:center;flex:none}.walkinInstallNotice>span:nth-child(2){flex:1}.walkinInstallNotice button{background:transparent;border:0;color:inherit;font-size:24px;min-width:40px;min-height:40px}@media(min-width:901px){.walkinInstallNotice{bottom:28px}}
+
+/* Dark-mode legibility: table picker and quick release. */
+html[data-theme="dark"] .tablePickerCard.selected{background:#245943!important;border:2px solid #8fe3b4!important;color:#f6fff9!important}
+html[data-theme="dark"] .tablePickerCard.selected :is(strong,small,.tablePickerIndicator,.tablePickerBest){color:#f6fff9!important}
+html[data-theme="dark"] .tablePickerCard.selected .tablePickerBest{background:#146b4d!important;border:1px solid #8fe3b4!important}
+html[data-theme="dark"] .tablePickerCard:not(.selected) :is(strong,small,.tablePickerIndicator){color:#eaf8ef!important}
+html[data-theme="dark"] .tablePickerHeader :is(h2,p,.tablePickerEyebrow),html[data-theme="dark"] .tablePickerFooter{color:#eaf8ef!important}
+html[data-theme="dark"] .quickReleasePanel :is(.quickReleaseHeader p,.quickReleaseTools label){color:#c8ddd1!important}
+html[data-theme="dark"] .quickReleasePanel :is(.quickReleaseHeader h2,.quickReleaseInfo strong){color:#f2faf5!important}
+html[data-theme="dark"] .quickReleasePanel :is(.quickReleaseTools input,.quickReleaseTools select){background:#254438!important;color:#f2faf5!important;border-color:#527564!important}
+
+.quickReleaseActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.quickReleaseEdit{min-height:44px;border:1px solid #43846b;background:#e6f5ec;color:#12563e;border-radius:12px;padding:10px 12px;font-weight:750}
+.quickEditOverlay{position:fixed;inset:0;z-index:100060;background:#071b16b8;display:flex;align-items:center;justify-content:center;padding:16px}
+.quickEditPanel{width:min(100%,440px);max-height:calc(100dvh - 32px);overflow:auto;background:#fff;color:#173e33;border-radius:20px;padding:22px;display:grid;gap:15px;box-shadow:0 20px 60px #071b165c}
+.quickEditPanel h2{margin:0;font-size:23px}.quickEditPanel p{margin:0}.quickEditPanel label{display:grid;gap:8px;font-weight:700}.quickEditPanel select{min-height:50px;width:100%;border:1px solid #b7cfc0;border-radius:11px;background:#f5faf7;color:#173e33;padding:10px;font-size:16px}
+.quickEditHint{color:#426755;font-size:14px}.quickEditError{color:#b12c35;font-weight:700}.quickEditControls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quickEditControls button{min-height:48px;border-radius:12px;border:1px solid #b7cfc0;background:#f2f8f4;color:#173e33;font-weight:750}.quickEditControls .quickEditSave{background:#087f5b;color:white;border-color:#087f5b}
+html[data-theme="dark"] .quickEditPanel{background:#19352b;color:#f1faf4;border:1px solid #507361}html[data-theme="dark"] .quickEditPanel select{background:#254438;color:#f1faf4;border-color:#648473}html[data-theme="dark"] .quickEditHint{color:#c6dfcf}html[data-theme="dark"] .quickEditError{color:#ffb6bd}html[data-theme="dark"] .quickEditControls button{background:#294b3d;color:#f1faf4;border-color:#648473}html[data-theme="dark"] .quickEditControls .quickEditSave{background:#078b62;color:#fff}html[data-theme="dark"] .quickReleaseEdit{background:#254d3d;color:#eafff2;border-color:#56846d}
+@media(max-width:600px){.quickReleaseActions{width:100%;justify-content:flex-end}.quickEditPanel{padding:18px}}
+
+.restaurantDurationSetting{margin:0 0 18px;padding:16px;border:1px solid #9dbdaa;border-radius:14px;background:#edf7f0}.restaurantDurationSetting label{display:grid;gap:10px;font-weight:750;color:#174c37}.restaurantDurationSetting select{width:100%;min-height:50px;border:1px solid #a5c6b2;border-radius:11px;background:#fff;color:#174c37;padding:10px;font-size:16px}.restaurantDurationSetting p{margin:9px 0 0;font-size:13px}html[data-theme="dark"] .restaurantDurationSetting{background:#1c3b2f;border-color:#507966}html[data-theme="dark"] .restaurantDurationSetting label{color:#f2faf5}html[data-theme="dark"] .restaurantDurationSetting select{background:#294b3d;color:#f2faf5;border-color:#648473}html[data-theme="dark"] .restaurantDurationSetting p{color:#c4dccc}
+
+.quickReleaseInfo .quickReleaseTiming{display:block;margin-top:5px;color:#557365;font-size:.88rem}.quickReleaseStatus{display:inline-flex;align-items:center;align-self:flex-start;width:max-content;margin-top:7px;padding:4px 10px;border-radius:999px;font-size:.78rem;font-weight:750}.quickReleaseStatusOccupied{background:#d9f4e5;color:#126143}.quickReleaseStatusOverdue{background:#fff0c7;color:#875000}html[data-theme="dark"] .quickReleaseInfo .quickReleaseTiming{color:#c2d9cc}html[data-theme="dark"] .quickReleaseStatusOccupied{background:#1f5941;color:#c7f8db}html[data-theme="dark"] .quickReleaseStatusOverdue{background:#634c21;color:#ffe7a1}
+
+/* Action unique de départ : bouton centré et lisible sur tous les écrans. */
+.tableStatusActions:has(> .tableStatusAction:only-child){display:flex;justify-content:center;align-items:center;width:100%}
+.tableStatusActions:has(> .tableStatusAction:only-child)>.tableStatusAction{width:min(100%,320px);min-height:48px;text-align:center;display:flex;align-items:center;justify-content:center;font-size:14px}
+@media(max-width:620px){.tableStatusActions:has(> .tableStatusAction:only-child){display:flex}.tableStatusActions:has(> .tableStatusAction:only-child)>.tableStatusAction{width:min(100%,320px);padding:12px 16px;font-size:14px}}
+
+/* Confirmation de départ : contraste garanti dans les deux thèmes. */
+.restoDepartureDialog{background:#fffdfb;color:#163e32}
+.restoDepartureDialog #restoDepartureTitle{color:#173f32!important}
+.restoDepartureDialog .restoDepartureEyebrow{color:#246a52}
+.restoDepartureDialog .restoDepartureCancel{background:#f3f7f5;color:#245747;border-color:#cbdcd2}
+.restoDepartureDialog .restoDepartureAccept{background:#176b50;color:#fff;border-color:#176b50}
+html[data-theme="dark"] .restoDepartureDialog{background:#19362c;color:#effaf3;border:1px solid #507763;box-shadow:0 22px 70px rgba(0,0,0,.45)}
+html[data-theme="dark"] .restoDepartureDialog #restoDepartureTitle{color:#f4fff7!important}
+html[data-theme="dark"] .restoDepartureDialog p{color:#d2e4d8}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureEyebrow{color:#9de2bf}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureCancel{background:#2a483b;color:#f4fff7;border-color:#739584}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureAccept{background:#12a473;color:#fff;border-color:#12a473}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureIcon{background:#285441;color:#a8f4c9}
+html[data-theme="dark"] .restoDepartureDialog :is(.restoDepartureClient,.restoDepartureSummary){background:#294b3c;color:#f4fff7}
+
+/* Exact info class used by departure dialog (not the unused Client/Summary aliases). */
+.restoDepartureDialog .restoDepartureInfo{background:#edf6f0;color:#173f32;border:1px solid #c9dfd1}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureInfo{background:#294b3c;color:#f4fff7;border:1px solid #628873}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureActions .restoDepartureCancel{background:#294638;color:#edf8f0;border:1px solid #739584}
+html[data-theme="dark"] .restoDepartureDialog .restoDepartureActions .restoDepartureAccept{background:#0b986a;color:#fff;border:1px solid #0b986a}
+
+/* Occupied tables: explicit card surfaces and readable text in dark mode. */
+html[data-theme="dark"] .quickReleasePanel .quickReleaseRow{background:#244236!important;border:1px solid #557a65!important;color:#f2faf5!important;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo strong{color:#f2faf5!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo>span:not(.quickReleaseStatus){color:#d2e5d9!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseTiming{color:#c4dfce!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseStatusOccupied{background:#145b40!important;color:#e3fff0!important}
+html[data-theme="dark"] .quickReleasePanel .quickReleaseInfo .quickReleaseStatusOverdue{background:#66501f!important;color:#fff0b7!important}
+html[data-theme="light"] .quickReleasePanel .quickReleaseRow{background:#f8fbf9;color:#173e33}
+
+/* Same dark navigation in portrait AND landscape; landscape width often exceeds 768px. */
+@media(max-width:900px){
+ html[data-theme="dark"] .mobileBottomNav{background:#152b24!important;border-top:1px solid #3a5b4b!important;box-shadow:0 -6px 24px rgba(0,0,0,.35)!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem{background:transparent;color:#b8d5c6!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavItem.active{background:#294a3d!important;color:#f0fff6!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd .mobileNavIcon{background:#168665!important;color:#fff!important}
+ html[data-theme="dark"] .mobileBottomNav .mobileNavAdd.active .mobileNavIcon{background:#21a37a!important}
+}
+#tables .tableToolbar #roomFilter{font-size:13px!important;font-weight:650!important;line-height:20px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+
+
+/* Tables command bar — unified responsive design (phone / tablet / desktop).
+   Avoid repeated overrides and oversized native selects. */
+#tables .panelHead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+#tables .panelHead>div{min-width:0}
+#tables .tableToolbar{display:flex;align-items:end;justify-content:flex-start;flex-wrap:wrap;gap:12px;margin:12px 0 14px;min-width:0;max-width:100%}
+#tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{
+ display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;
+ flex:0 1 220px;width:220px;max-width:100%;min-width:0;margin:0;gap:6px;
+ font-family:Arial,Helvetica,sans-serif!important;font-size:12px!important;
+ font-weight:600!important;line-height:17px!important;
+}
+#tables .tableToolbar .roomFilterLabel .srOnlyRoom,
+#tables .tableToolbar .tableSortLabel span{
+ display:block!important;position:static!important;clip:auto!important;clip-path:none!important;
+ width:auto!important;height:auto!important;overflow:visible!important;
+ margin:0!important;padding:0!important;font:600 12px/17px Arial,Helvetica,sans-serif!important;
+ white-space:nowrap!important;color:inherit;
+}
+#tables .tableToolbar :is(#roomFilter,#tableSort){
+ display:block!important;box-sizing:border-box!important;flex:none!important;
+ width:100%!important;min-width:0!important;max-width:100%!important;
+ height:44px!important;min-height:44px!important;max-height:44px!important;
+ margin:0!important;padding:0 32px 0 12px!important;
+ border-radius:12px!important;
+ font:600 13px/normal Arial,Helvetica,sans-serif!important;letter-spacing:0!important;
+ white-space:nowrap!important;text-overflow:ellipsis!important;overflow:hidden!important;
+ appearance:none!important;-webkit-appearance:none!important;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23b8d7c6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;
+ background-repeat:no-repeat!important;background-size:16px!important;background-position:right 10px center!important;
+}
+#tables #filters.tableFiltersToolbar{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:0 0 14px;padding:0;overflow:visible}
+#tables #filters.tableFiltersToolbar>button{flex:0 0 auto;min-height:40px;padding:8px 14px}
+@media(min-width:800px){
+ #tables .tableToolbar{gap:12px}
+ #tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{flex:0 1 190px;width:190px}
+}
+@media(max-width:600px){
+ #tables .tableToolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:end}
+ #tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{width:100%;min-width:0}
+ #tables .tableToolbar :is(#roomFilter,#tableSort){font-size:13px!important}
+ #tables #filters.tableFiltersToolbar{gap:7px}
+ #tables #filters.tableFiltersToolbar>button{min-height:40px;padding:8px 12px}
+}
+@media(max-width:370px){#tables .tableToolbar{gap:8px}#tables .tableToolbar :is(#roomFilter,#tableSort){font-size:12px!important;padding-left:9px!important}}
+
+/* Desktop: salle, tri et statuts sur une même ligne; mobile inchangé. */
+@media(min-width:1100px){
+ #tables .tableToolbar{float:left;display:flex;flex-wrap:nowrap;width:auto;max-width:calc(100% - 390px);margin:12px 18px 14px 0;gap:10px}
+ #tables .tableToolbar .roomFilterLabel,#tables .tableToolbar .tableSortLabel{flex:0 0 170px;width:170px}
+ #tables #filters.tableFiltersToolbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:7px;min-height:77px;padding:29px 0 14px;margin:0}
+ #tables #filters.tableFiltersToolbar>button{min-height:44px}
+ #tables .tableGrid{clear:both}
+}
+
+/* Harmonisation des filtres de statut avec les sélecteurs de tables. */
+#tables #filters.tableFiltersToolbar>button{
+ border-radius:12px!important;
+ min-height:44px;
+ padding:8px 15px;
+ font-weight:650;
+ transition:background-color .15s,border-color .15s;
+}
+#tables #filters.tableFiltersToolbar>button:focus-visible{
+ outline:2px solid #83c9ab;
+ outline-offset:2px;
+}
+
+/* Prevent tablet/desktop filter collision: use a single wrapping flex row. */
+@media(min-width:901px){
+ #tables .tableToolbar{
+  float:none!important;display:flex!important;flex-wrap:wrap!important;
+  width:100%!important;max-width:100%!important;
+  margin:12px 0 10px!important;gap:10px!important;
+ }
+ #tables #filters.tableFiltersToolbar{
+  display:flex!important;flex-wrap:wrap!important;align-items:center!important;
+  min-height:0!important;margin:0 0 14px!important;padding:0!important;
+  clear:both!important;
+ }
+}
+
+/* Wide desktops have enough room for a single row without collision. */
+@media(min-width:1500px){
+ #tables .tableToolbar{float:left!important;width:auto!important;max-width:calc(100% - 390px)!important;margin:12px 18px 14px 0!important;flex-wrap:nowrap!important}
+ #tables #filters.tableFiltersToolbar{clear:none!important;min-height:77px!important;padding:29px 0 14px!important;margin:0!important}
+ #tables .tableGrid{clear:both}
+}
+
+
+/* V3 — consistent Lucide chevron-down on native selects (18px, 2px stroke).
+   CSS background keeps the icon stable before/after dynamic re-renders. */
+:root{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%231b604b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}
+html[data-theme="dark"]{--v3-select-chevron:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23d3f3df' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")}
+:is(#roomFilter,.tableSortLabel select,#historyPeriod,#tableAdminRoom,#historyStats select,.themeModeControl select,#bookingTable,#editTable,#walkinTable){
+ appearance:none;-webkit-appearance:none;
+ background-image:var(--v3-select-chevron)!important;
+ background-repeat:no-repeat!important;
+ background-position:right 12px center!important;
+ background-size:18px 18px!important;
+ padding-right:38px!important;
+}
+:is(#roomFilter,.tableSortLabel select,#historyPeriod,#tableAdminRoom,#historyStats select,.themeModeControl select,#bookingTable,#editTable,#walkinTable):focus-visible{
+ outline:2px solid #28a37a;outline-offset:2px;
+}
+
+/* V3 Supabase: keep unavailable table cards legible in dark picker (mobile/tablet/desktop). */
+.tablePickerSheet .tablePickerCard:not(.selected):not(.unavailable){background:#f7fbf8!important;color:#183e32!important;border-color:#cddfd4!important}
+.tablePickerSheet .tablePickerCard:not(.selected):not(.unavailable) :is(strong,small,.tablePickerIndicator){color:#183e32!important}
+.tablePickerSheet .tablePickerCard.unavailable{background:#e8eeea!important;color:#43594d!important;border-color:#c0cec5!important;opacity:1!important}
+.tablePickerSheet .tablePickerCard.unavailable :is(strong,small){color:#43594d!important;opacity:1!important}
+.tablePickerSheet .tablePickerCard.unavailable .tablePickerIndicator{color:#8b3d26!important;opacity:1!important}
+
+/* Mission 2: preserve the editor while the current shared version is reviewed. */
+#editForm .editConflict{grid-column:1/-1;padding:16px;border:1px solid #b87922;border-radius:12px;background:#fff9ed;color:#51370d}
+#editForm .editConflict[hidden],#editHotelRoomField[hidden]{display:none}
+#editCurrentValues{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px}
+
+/* Reservation edits preserve historical information and keep conflict review readable. */
+#editForm label{min-width:0}
+#editForm textarea{max-width:100%;min-width:0;resize:vertical;overflow-wrap:anywhere}
+#editForm .editDetailLimit{font-size:12px;font-weight:400;line-height:1.5;overflow-wrap:anywhere}
+#editForm textarea[aria-invalid="true"]{border-color:#a13434;outline-color:#a13434}
+#editCurrentValues{max-height:45dvh;overflow:auto;padding:12px;border-radius:8px;background:rgba(255,255,255,.6)}
+#editCurrentValues:empty{display:none}
+#editCurrentValues:focus-visible{outline:3px solid #16815e;outline-offset:2px}
+#editConflict button{min-height:44px;white-space:normal;margin:4px 6px 4px 0}
+@media(max-width:620px){#editForm .editConflict{padding:12px}#editConflict button{width:100%;margin-right:0}#editForm label:has(#editNotes),#editForm label:has(#editAllergies){grid-column:1/-1}}
+.serviceDataStatus{margin:12px 0;padding:12px 14px;border:1px solid #c7ded5;border-radius:12px;background:#f0f7f3;color:#154b3b;font-size:14px;line-height:1.5}
+.serviceDataStatus p{margin:0}
+.serviceDataStatus button{margin-top:10px;min-height:44px;padding:8px 16px}
+.serviceDataStatus[data-state="error"]{background:#fff5e8;border-color:#ebcd9e;color:#68421a}
+.serviceDataStatus[hidden]{display:none}
+
+
+/* RestoManager 2026: compact, accessible service identity on phone/PWA. */
+.serviceIntroContent{min-width:0;flex:1 1 auto}
+.serviceContext{display:flex;align-items:center;flex-wrap:wrap;column-gap:12px;row-gap:4px}
+.serviceIntro .serviceRole,.serviceIntro .serviceVenue{
+ display:inline-flex;align-items:center;gap:7px;margin:0;
+ font-size:12px;font-weight:700;line-height:1.45;letter-spacing:0;color:#176c51;
+}
+.serviceIntro .serviceRole svg,.serviceIntro .serviceVenue svg,
+.serviceIntro .serviceIntroDate svg{width:17px;height:17px;flex:0 0 17px}
+.serviceIntro .serviceRole span,.serviceIntro .serviceVenue span{min-width:0}
+.serviceIntro .serviceVenue{min-width:0}
+.serviceIntro .serviceVenue span{overflow-wrap:anywhere}
+.serviceIntro .serviceIntroDate{display:none}
+.serviceIntro h1{max-width:100%}
+@media(max-width:700px){
+ .serviceIntro{
+  display:flex;flex-direction:column;align-items:stretch;gap:11px;
+  margin:5px 2px 15px;
+ }
+ .serviceIntroContent{width:100%}
+ .serviceContext{
+  display:flex;align-items:flex-start;flex-direction:column;gap:6px;
+  margin:0 0 12px;
+ }
+ .serviceIntro .serviceRole{
+  display:inline-flex;align-self:flex-start;background:#def4e7;
+  color:#175c45;border-radius:999px;padding:6px 11px;
+  font-size:12px;font-weight:800;letter-spacing:0;line-height:1.35;
+ }
+ .serviceIntro .serviceVenue{
+  display:flex;max-width:100%;font-size:13px;font-weight:750;
+  line-height:1.4;color:#14715d;letter-spacing:0;
+ }
+ .serviceIntro .serviceVenue span{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ }
+ .serviceIntro h1{
+  font-size:clamp(23px,6vw,28px);font-weight:800;
+  line-height:1.12;letter-spacing:-.7px;margin:2px 0 9px;
+ }
+ .serviceIntro h1{max-width:100%}
+ .serviceIntro .serviceIntroDate{
+  display:flex;align-items:center;gap:8px;font-size:12px;
+  font-weight:650;line-height:1.4;color:#50695d;margin:0;
+ }
+ .serviceIntro #teamGreeting{display:none}
+ .serviceIntro #syncBadge{align-self:flex-start;min-height:34px;padding:7px 12px;font-size:12px}
+}
+@media(max-width:350px){
+ .serviceIntro h1{font-size:22px}
+ .serviceIntro .serviceVenue{font-size:12px}
+}
+html[data-theme="dark"] .serviceIntro .serviceRole{
+ background:#244f3e;color:#d8f3e2;
+}
+html[data-theme="dark"] .serviceIntro .serviceVenue{
+ color:#a5e9cd;
+}
+html[data-theme="dark"] .serviceIntro .serviceIntroDate{
+ color:#c6d8cb;
+}
+
+
+/* Service overview polish: natural headline wrapping and readable Lucide KPIs. */
+.serviceIntro h1{
+ overflow-wrap:normal;
+ word-break:normal;
+ text-wrap:pretty;
+}
+.kpi .kpiHead{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ min-width:0;
+}
+.kpi .kpiHead .kpiLabel{
+ display:block;
+ min-width:0;
+ font-size:13px;
+ line-height:1.35;
+ color:#526176;
+}
+.kpi .kpiHead .kpiIcon{
+ display:block;
+ width:19px;
+ height:19px;
+ flex:0 0 19px;
+ color:#177354;
+ stroke-width:1.8;
+}
+.kpi strong{font-variant-numeric:tabular-nums}
+.occupancyHead .occupancyTitleText{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ min-width:0;
+}
+.occupancyHead .occupancyTitleIcon{
+ width:20px;
+ height:20px;
+ flex:0 0 20px;
+ color:#177354;
+ stroke-width:1.8;
+}
+@media(max-width:700px){
+ .serviceIntro h1{
+  font-size:clamp(22px,5.5vw,27px);
+  line-height:1.15;
+  letter-spacing:-.7px;
+  max-width:100%;
+ }
+ .kpi .kpiHead{gap:7px;align-items:flex-start}
+ .kpi .kpiHead .kpiIcon{width:18px;height:18px;flex-basis:18px}
+ .kpi .kpiHead .kpiLabel{font-size:12px}
+ .occupancyHead .occupancyTitleIcon{width:19px;height:19px;flex-basis:19px}
+}
+html[data-theme="dark"] .kpi .kpiHead .kpiLabel{
+ color:var(--dark-muted);
+}
+html[data-theme="dark"] .kpi .kpiHead .kpiIcon,
+html[data-theme="dark"] .occupancyHead .occupancyTitleIcon{
+ color:#80d8af;
+}
+
+
+/* Shared Lucide language for Restaurant and Reception service monitoring. */
+.serviceIconHeading{
+ display:flex;
+ align-items:center;
+ gap:9px;
+ min-width:0;
+}
+.serviceIconHeading > svg,
+.serviceIconHeading > i[data-lucide]{
+ flex:0 0 20px;
+ width:20px;
+ height:20px;
+ color:#167459;
+ stroke-width:1.8;
+}
+.serviceIconHeading > span{min-width:0}
+.rushLoadLabel,.rushBreakdownLabel{
+ display:flex!important;
+ flex-direction:row!important;
+ align-items:center;
+ gap:7px!important;
+ min-width:0;
+}
+.rushLoadLabel > span,.rushBreakdownLabel > span{
+ min-width:0;
+ overflow-wrap:break-word;
+}
+.rushLoadLabel > svg,.rushBreakdownLabel > svg,
+.rushLoadLabel > i[data-lucide],.rushBreakdownLabel > i[data-lucide]{
+ flex:0 0 16px;
+ width:16px;
+ height:16px;
+ color:#167459;
+ stroke-width:1.8;
+}
+.rushArrivalLate .rushBreakdownLabel > svg{color:#98661d}
+.receptionMetricLabel{
+ display:flex!important;
+ align-items:center;
+ gap:8px;
+ min-width:0;
+ font-size:13px;
+ line-height:1.4;
+ color:#547265;
+}
+.receptionMetricLabel > svg,
+.receptionMetricLabel > i[data-lucide]{
+ flex:0 0 17px;
+ width:17px;
+ height:17px;
+ color:#167459;
+ stroke-width:1.8;
+}
+.receptionMetricLabel > span{min-width:0}
+.receptionServiceMetric{gap:9px}
+.receptionServiceMetric > strong{font-variant-numeric:tabular-nums}
+.receptionServicePressure .serviceIconHeading,
+.receptionServiceArrivals .serviceIconHeading{margin:0}
+@media(max-width:700px){
+ .serviceIconHeading{gap:8px}
+ .serviceIconHeading > svg{flex-basis:19px;width:19px;height:19px}
+ .receptionMetricLabel{align-items:flex-start;font-size:12px}
+ .receptionMetricLabel > svg{flex-basis:16px;width:16px;height:16px}
+ .rushBreakdownLabel{align-items:flex-start}
+}
+html[data-theme="dark"] .serviceIconHeading > svg,
+html[data-theme="dark"] .rushLoadLabel > svg,
+html[data-theme="dark"] .rushBreakdownLabel > svg,
+html[data-theme="dark"] .receptionMetricLabel > svg{color:#80d8af}
+
+
+/* Desktop app shell: fixed-height navigation independent of long service pages. */
+@media(min-width:901px){
+ body > header.top{
+  position:sticky;
+  top:0;
+  z-index:150;
+ }
+ .shell > .sidebar{
+  position:sticky;
+  top:var(--resto-shell-top,64px);
+  align-self:start;
+  box-sizing:border-box;
+  height:calc(100vh - var(--resto-shell-top,64px));
+  height:calc(100dvh - var(--resto-shell-top,64px));
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  scrollbar-width:thin;
+  scrollbar-color:#5e9b85 transparent;
+  gap:4px;
+  padding:16px 10px 14px;
+ }
+ .shell > .sidebar > a{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:48px;
+  padding:12px 13px;
+  border-radius:12px;
+ }
+ .shell > .sidebar > a:hover:not(.selected){
+  background:#245e4e;
+ }
+ .shell > .sidebar > a:focus-visible{
+  outline:3px solid #aee7c9;
+  outline-offset:-3px;
+ }
+ .shell > .sidebar .sidebarFooter{
+  margin-top:auto;
+  padding:14px 8px 3px;
+  border-top:1px solid #4c7d6d;
+  color:#e4f3ea;
+  min-width:0;
+ }
+ .sidebarEstablishment{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+ }
+ .sidebarEstablishment > svg{
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  color:#b5e2ca;
+ }
+ .sidebarEstablishmentDetails{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+ }
+ .sidebarEstablishmentDetails strong{
+  font-size:12px;
+  font-weight:750;
+  line-height:1.35;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+ }
+ .sidebarEstablishmentDetails small{
+  color:#bbd8ca;
+  font-size:11px;
+  line-height:1.35;
+ }
+ .sidebarMeta{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding-top:13px;
+  font-size:10px;
+  color:#a7cdbd;
+ }
+}
+@media(min-width:901px) and (max-height:480px){
+ .shell > .sidebar{padding-top:8px;padding-bottom:8px}
+ .shell > .sidebar > a{min-height:42px;padding:8px 11px}
+ .shell > .sidebar .sidebarFooter{padding-top:9px}
+}
+@media(max-width:900px){
+ .shell > .sidebar{display:none}
+}
+
+
+/* Passage rapide 2026: explicit customer type and accessible guest-count stepper. */
+.walkinPanel #walkinForm .walkinTypeField{min-width:0;margin:0}
+.walkinPanel #walkinForm .walkinTypeChoices{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px
+}
+.walkinPanel #walkinForm .walkinTypeChoices label{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ position:relative;gap:5px;min-width:0;min-height:90px;
+ padding:11px 8px;border:1px solid #c9ded2;border-radius:13px;
+ text-align:center;font-size:13px;line-height:1.35;font-weight:700;
+ background:#fff;color:#285544;cursor:pointer;
+}
+.walkinPanel #walkinForm .walkinTypeChoices label:has(input:checked){
+ border-color:#087f5b;background:#e6f6ed;color:#145a40;
+ box-shadow:inset 0 0 0 1px #087f5b;
+}
+.walkinPanel #walkinForm .walkinTypeChoices label:focus-within{
+ outline:3px solid #78cfa8;outline-offset:2px;
+}
+.walkinPanel #walkinForm .walkinTypeChoices input{
+ position:absolute;inset:0;width:100%;height:100%;opacity:0;
+ margin:0;padding:0;border:0;cursor:pointer;z-index:2;
+}
+.walkinPanel #walkinForm .walkinTypeChoices label > svg,
+.walkinPanel #walkinForm .walkinTypeChoices label > span{pointer-events:none}
+.walkinPanel #walkinForm .walkinTypeChoices svg{
+ flex:0 0 auto;width:23px;height:23px;stroke-width:1.8;color:#187758;
+}
+.walkinPanel #walkinForm .walkinTypeChoices .walkinTypeCheck{
+ position:absolute;top:9px;right:9px;width:17px;height:17px;display:none
+}
+.walkinPanel #walkinForm .walkinTypeChoices label:has(input:checked) .walkinTypeCheck{
+ display:block
+}
+.walkinPanel #walkinForm .walkinGuestsField{
+ display:flex;flex-direction:column;gap:8px;min-width:0;
+}
+.walkinPanel #walkinForm .walkinGuestsField > label{
+ font-size:14px;font-weight:750;color:#335b48;
+}
+.walkinPanel #walkinForm .walkinGuestStepper{
+ display:flex;align-items:stretch;justify-content:center;gap:10px;
+ width:100%;max-width:430px;min-height:66px;margin:0 auto;
+}
+.walkinPanel #walkinForm .walkinGuestStepper > button{
+ display:grid;place-items:center;flex:0 0 60px;
+ border:1px solid #c9dfd1;border-radius:13px;
+ background:#f1f8f4;color:#126949;padding:0;min-height:58px;
+}
+.walkinPanel #walkinForm .walkinGuestStepper > button svg{
+ width:23px;height:23px;stroke-width:2;
+}
+.walkinPanel #walkinForm .walkinGuestStepper > button:disabled{
+ opacity:.4;cursor:not-allowed
+}
+.walkinPanel #walkinForm .walkinGuestStepper > button:focus-visible{
+ outline:3px solid #087f5b;outline-offset:2px
+}
+.walkinPanel #walkinForm .walkinGuestCount{
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ flex:1 1 130px;min-width:0;
+}
+.walkinPanel #walkinForm .walkinGuestCount #walkinGuests{
+ display:block;box-sizing:border-box;width:100%;max-width:160px;
+ padding:0 8px;height:37px;line-height:37px;border:0!important;
+ background:transparent!important;box-shadow:none!important;
+ text-align:center;font-size:29px;font-weight:800;color:#174b37;
+ appearance:textfield;-moz-appearance:textfield;
+}
+.walkinPanel #walkinForm .walkinGuestCount #walkinGuests::-webkit-inner-spin-button,
+.walkinPanel #walkinForm .walkinGuestCount #walkinGuests::-webkit-outer-spin-button{
+ appearance:none;margin:0
+}
+.walkinPanel #walkinForm .walkinGuestCount #walkinGuests:focus-visible{
+ outline:2px solid #087f5b;outline-offset:1px;border-radius:5px
+}
+.walkinPanel #walkinForm .walkinGuestCount #walkinGuestUnit{
+ font-size:12px;color:#607d6d;line-height:1.3
+}
+.walkinPanel #walkinForm .walkinPaxButtons button:focus-visible{
+ outline:3px solid #087f5b;outline-offset:2px
+}
+@media(max-width:380px){
+ .walkinPanel #walkinForm .walkinTypeChoices{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .walkinPanel #walkinForm .walkinTypeChoices label{font-size:12px;min-height:83px}
+ .walkinPanel #walkinForm .walkinGuestStepper > button{flex-basis:52px}
+}
+@media(max-width:320px){
+ .walkinPanel #walkinForm .walkinTypeChoices{grid-template-columns:1fr}
+}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinTypeChoices label{
+ background:#203e31;color:#e0f3e7;border-color:#4b7160
+}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinTypeChoices label:has(input:checked){
+ background:#205943;color:#f1fff5;border-color:#67d6a7
+}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinTypeChoices svg{color:#90e0b4}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinGuestsField > label,
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinGuestCount #walkinGuests{color:#ecfff3!important}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinGuestCount #walkinGuestUnit{color:#bbd7c9}
+html[data-theme="dark"] .walkinPanel #walkinForm .walkinGuestStepper > button{
+ background:#294d3c;color:#e4f8ec;border-color:#517763
+}
+
+
+/* NAV-01: contextual Back at the top of the active content, not in the app chrome. */
+.navBackToolbar{
+ display:flex;align-items:center;gap:12px;
+ width:100%;min-height:42px;margin:0 0 14px;
+}
+.navBackToolbar[hidden]{display:none!important}
+.navBackButton{
+ display:inline-flex;align-items:center;justify-content:center;gap:7px;
+ min-width:92px;min-height:43px;padding:8px 13px;
+ border:1px solid #c7dfd2;background:#eef8f2;color:#146147;
+ border-radius:11px;font:700 13px inherit;cursor:pointer;
+}
+.navBackButton:hover{background:#d9f3e5;border-color:#92c7a9}
+.navBackButton:focus-visible{outline:3px solid #087f5b;outline-offset:2px}
+.navBackButton svg{width:19px;height:19px;flex:0 0 19px}
+.navBackContext{font-size:13px;font-weight:650;color:#547265;min-width:0}
+@media(max-width:700px){
+ .navBackToolbar{margin:0 0 10px;gap:9px}
+ .navBackButton{min-width:43px;min-height:44px;padding:8px 10px}
+ .navBackButton span{display:none}
+ .navBackContext{font-size:12px}
+}
+html[data-theme="dark"] .navBackButton{
+ background:#204f3c;color:#e3f8eb;border-color:#537b63
+}
+html[data-theme="dark"] .navBackContext{color:#b5d6c3}
+
+
+/* BUG-01: compact private report form in Gestion, suitable for touch/PWA. */
+.reportIssueForm{display:grid;gap:9px;max-width:650px}
+.reportIssueForm label{font-size:13px;font-weight:750;color:#285843;margin-top:5px}
+.reportIssueForm input,.reportIssueForm select,.reportIssueForm textarea{
+ box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:11px 12px;
+ border:1px solid #bddec9;border-radius:11px;background:#fff;color:#183b2a;
+ font:inherit;font-size:14px;resize:vertical;
+}
+.reportIssueForm textarea{min-height:116px;line-height:1.55}
+.reportIssueForm input:focus-visible,.reportIssueForm select:focus-visible,
+.reportIssueForm textarea:focus-visible{outline:3px solid #8ed3ac;outline-offset:2px}
+.reportIssueForm button{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ min-height:46px;width:fit-content;padding:11px 17px;
+ border:0;border-radius:11px;background:#087f5b;color:white;
+ font:inherit;font-size:14px;font-weight:800;cursor:pointer;
+}
+.reportIssueForm button svg{width:18px;height:18px}
+.reportIssueForm button:disabled{opacity:.65;cursor:wait}
+.reportIssueForm [role="status"]{min-height:20px;margin:0;font-size:13px;color:#206748}
+@media(max-width:600px){.reportIssueForm button{width:100%}}
+html[data-theme="dark"] .reportIssueForm label{color:#cee9d8}
+html[data-theme="dark"] .reportIssueForm input,
+html[data-theme="dark"] .reportIssueForm select,
+html[data-theme="dark"] .reportIssueForm textarea{background:#1a3a2a;color:#ebfff3;border-color:#577b65}

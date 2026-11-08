@@ -1,0 +1,508 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RestoManager V3 — intégration</title><meta name="theme-color" content="#087f5b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="RestoManager"><link rel="manifest" href="manifest.json?v=connected-entry"><link rel="icon" type="image/svg+xml" href="pwa-icon.svg"><link rel="icon" href="asset/img/logo.png"><link rel="stylesheet" href="service-v3.css?v=20261108-bug01-1"><script defer src="lucide-local.js?v=20261108-bug01-1"></script><script defer src="service-v3-lucide.js?v=20261106-action-icons-fix1"></script><link rel="stylesheet" href="service-v3-calendar-picker.css?v=20261105-visual1"><style id="integrationGate">body{visibility:hidden}#integrationBanner{position:static;max-width:none;background:#103e31;color:white;padding:14px;border-radius:12px;font:600 13px system-ui;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#integrationBanner button{border:0;border-radius:8px;background:#d9f5e6;color:#103e31;padding:8px 12px}</style><style>
+.reception :is([data-choice="walkin"],.quickReleasePanel,#passages,#manageHours,#manageTables,#manageClosure,#manageReports,#fusionSuggestions,#editFusionNotice,.tableDetailActions,.tableStatusActions),
+.reception label:has(#bookingTable),.reception label:has(#editTable){display:none!important}
+/* The reception role has five navigation tabs, including a read-only service dashboard. */
+@media(max-width:900px){.reception .mobileBottomNav{grid-template-columns:repeat(5,minmax(0,1fr))}.reception .mobileBottomNav a[data-nav="passages"]{display:flex!important}}
+#syncBadge{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:7px 14px;border:0;border-radius:24px;font:650 13px system-ui;white-space:nowrap;cursor:pointer;color:#465751;background:#e9eeeb}
+#syncBadge::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+#syncBadge[data-state="ok"]{color:#14673e;background:#def4e7}
+#syncBadge[data-state="ok"]::before{animation:syncPulse 2s ease-in-out infinite}
+#syncBadge[data-state="error"]{color:#9a2231;background:#fbe7e9}
+#syncBadge:focus-visible{outline:3px solid currentColor;outline-offset:3px}
+@keyframes syncPulse{50%{opacity:.35}}
+@media(prefers-reduced-motion:reduce){#syncBadge[data-state="ok"]::before{animation:none}}
+@media(max-width:700px){.serviceIntro{flex-wrap:wrap;gap:8px}}
+#bookingDraft{grid-column:1/-1;background:#eaf5ef;color:#183d30;padding:12px;border-radius:12px}
+#bookingDraft[hidden]{display:none}#bookingDraft p{margin:0 0 8px}
+#bookingDraft button{padding:8px 12px;min-height:40px}
+
+/* Reception-only service monitor. No editing controls are mounted in this panel. */
+.receptionServiceOverview{display:none}
+.reception .receptionServiceOverview{display:flex;flex-direction:column;gap:17px;padding:18px;background:#fff;border:1px solid #dce8e0;border-radius:20px;max-width:960px;margin:0 auto}
+.receptionServiceIntro h2{color:#153d33;font-size:clamp(23px,4vw,30px);margin:4px 0 6px}
+.receptionServiceIntro p{line-height:1.5}
+.receptionServiceMetrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.receptionServiceMetric{background:#f0f8f3;border:1px solid #d6e8db;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:5px}
+.receptionServiceMetric strong{color:#153d33;font-size:27px;line-height:1.1}
+.receptionServiceMetric span{font-size:13px;color:#547265}
+.receptionServicePressure,.receptionServiceArrivals{border:1px solid #e3eae6;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.receptionServicePressure h3,.receptionServiceArrivals h3{font-size:17px;color:#153d33}
+.receptionServicePressure progress{width:100%;height:12px;accent-color:#087f5b}
+.receptionServiceWarning{background:#fff3dd;border-radius:10px;padding:12px;color:#76501a}
+.receptionServiceArrival{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid #e3eae6}
+.receptionServiceArrival:last-child{border-bottom:0}
+.receptionServiceTime{color:#176e55;min-width:48px}
+.receptionServiceDetails{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.receptionServiceDetails strong{overflow-wrap:anywhere}
+.receptionServiceDetails small,.receptionServiceFoot{color:#687f73;font-size:12px;line-height:1.5}
+.receptionServiceStatus{font-size:11px;font-weight:750;border-radius:30px;padding:6px 9px;background:#e5f3eb;color:#1b644c;white-space:nowrap}
+.receptionServiceEmpty{padding:15px;border-radius:12px;background:#fff3dd}
+@media(max-width:420px){.reception .receptionServiceOverview{padding:12px}.receptionServiceArrival{gap:7px}.receptionServiceStatus{padding:5px;font-size:10px}}
+html[data-theme="dark"] .receptionServiceOverview,html[data-theme="dark"] .receptionServicePressure,html[data-theme="dark"] .receptionServiceArrivals{background:#172c24;border-color:#355347;color:#effaf2}
+html[data-theme="dark"] .receptionServiceMetric{background:#244435;border-color:#355347}
+html[data-theme="dark"] .receptionServiceIntro h2,html[data-theme="dark"] .receptionServiceMetric strong,html[data-theme="dark"] .receptionServicePressure h3,html[data-theme="dark"] .receptionServiceArrivals h3{color:#effaf2}
+html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .receptionServiceFoot,html[data-theme="dark"] .receptionServiceMetric span{color:#bad1c1}
+
+/* Placement intelligent: read-only trial, with explicit no-save message. */
+.smartPlacementOverlay{position:fixed;inset:0;z-index:1200;background:rgba(5,25,17,.68);display:flex;align-items:center;justify-content:center;padding:16px}
+.smartPlacementDialog{width:min(560px,100%);max-height:calc(100vh - 32px);overflow:auto;background:#fff;color:#173e30;border-radius:18px;box-shadow:0 18px 70px #001a1370;padding:22px;display:flex;flex-direction:column;gap:14px}
+.smartPlacementDialog h2{margin:0;font-size:23px}
+.smartPlacementDialog select{width:100%;padding:13px;border:1px solid #a7b9af;border-radius:10px;background:#fff;color:#163b2e}
+.smartPlacementButtons{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px}
+.smartPlacementButtons button,.smartPlacementLaunch{padding:10px 14px;min-height:42px;border-radius:10px}
+.smartPlacementResult{padding:12px;background:#eff7f1;border-radius:10px;line-height:1.5}
+.smartPlacementResult:empty{display:none}
+.smartPlacementResult ul{margin:6px 0;padding-left:19px}
+
+.smartPlacementApply{background:#087f5b!important;color:#fff!important;border-color:#087f5b!important;font-weight:700}
+.smartPlacementApply[hidden]{display:none!important}
+.smartPlacementResult.smartPlacementError{background:#fff1df;color:#71390d;border:1px solid #f1c587}
+.smartPlacementButtons{justify-content:stretch}
+.smartPlacementButtons button{flex:1;min-width:min(100%,160px);font:600 14px system-ui;box-shadow:none;border:1px solid #aabbb2}
+.smartPlacementDialog{gap:10px}
+.smartPlacementDialog h2{font-size:21px}
+@media(max-width:520px){.smartPlacementDialog{padding:17px}.smartPlacementButtons button{min-width:100%}}
+
+/* Réservations : actions opérationnelles et menu Lucide. Intégration uniquement. */
+.reservationActionsModern{display:flex!important;flex-direction:column;gap:10px;margin-top:14px}
+.reservationActionsModern .reservationPrimaryActions{display:flex;flex-direction:column;gap:8px}
+.reservationActionsModern button{font-family:inherit;cursor:pointer;transition:background .2s,border-color .2s,transform .2s,box-shadow .2s}
+.reservationActionsModern button:active{transform:scale(.985)}
+.reservationActionsModern .reservationActionMain{width:100%;min-height:48px;padding:12px 16px;background:#10785a;color:white;border:1px solid #10785a;border-radius:14px;font-weight:750;font-size:15px;box-shadow:0 5px 14px rgba(6,97,68,.12)}
+.reservationActionsModern .reservationActionMain:hover{background:#096448}
+.reservationActionTools{display:flex;gap:9px;align-items:stretch}
+.reservationSecondaryActions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;flex:1;min-width:0}
+.reservationSecondaryActions:has(> :only-child){grid-template-columns:1fr}
+.reservationActionsModern .reservationActionSecondary{min-height:46px;padding:10px 12px;background:#f5faf7;border:1px solid #c7ddd2;border-radius:13px;font-weight:650;color:#225e49;font-size:14px;line-height:1.3;white-space:normal}
+.reservationActionsModern .reservationActionSecondary:hover{background:#e7f4ed;border-color:#86b8a1}
+.reservationActionsModern .reservationMoreTrigger{min-width:48px;width:48px;display:grid;place-items:center;padding:0;background:#f5faf7;border:1px solid #c7ddd2;border-radius:13px;color:#1e654d;flex:none}
+.reservationActionsModern .reservationMoreTrigger svg{width:23px;height:23px;stroke-width:2.5}
+.reservationActionsModern :is(button:focus-visible){outline:3px solid #47b88a;outline-offset:3px}
+.reservationMenuOverlay{position:fixed;inset:0;z-index:1205;background:rgba(7,30,23,.59);display:flex;align-items:flex-end;justify-content:center;padding:12px 12px max(12px,env(safe-area-inset-bottom));backdrop-filter:blur(5px);animation:restoMenuFade .23s ease both}
+.reservationMenuDialog{width:min(100%,480px);max-height:min(80dvh,670px);overflow:auto;background:#fff;color:#143d2f;border-radius:25px;padding:12px 18px 20px;box-shadow:0 20px 65px rgba(0,22,13,.26);animation:restoMenuSlide .3s cubic-bezier(.19,1,.22,1) both}
+.reservationMenuGrabber{width:41px;height:5px;background:#d7e2dc;border-radius:10px;margin:1px auto 17px}
+.reservationMenuHead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 0 16px}
+.reservationMenuEyebrow{display:block;color:#43846c;font-size:10px;font-weight:800;letter-spacing:.12em;margin-bottom:5px}
+.reservationMenuHead h2{margin:0;font-size:20px;line-height:1.35;color:#123e30}
+.reservationMenuClose{width:42px;height:42px;border:1px solid #dbe8e0;border-radius:13px;background:#f4f8f6;color:#285948;display:grid;place-items:center;flex:none}
+.reservationMenuClose svg{width:19px}
+.reservationMenuChoices{display:flex;flex-direction:column;gap:8px}
+.reservationMenuOption{border:1px solid #e1eae5;border-radius:14px;padding:15px 13px;min-height:55px;display:flex;align-items:center;gap:12px;background:#f8faf8;color:#184b38;text-align:left;font-size:15px;font-weight:650;font-family:inherit;cursor:pointer}
+.reservationMenuOption span{flex:1;font-weight:650;font-size:15px}
+.reservationMenuOption svg{width:20px;height:20px}
+.reservationMenuOption svg:last-child{width:16px;color:#7a9589}
+.reservationMenuOption:hover{background:#ebf6ef}
+.reservationMenuDanger{background:#fff6f4;color:#9c3932;border-color:#f1ddd9}
+.reservationMenuDanger:hover{background:#ffece8}
+.reservationMenuOverlay.isClosing{animation:restoMenuFadeOut .18s ease both}
+.reservationMenuOverlay.isClosing .reservationMenuDialog{animation:restoMenuSlideOut .18s ease both}
+@keyframes restoMenuFade{from{opacity:0}to{opacity:1}}
+@keyframes restoMenuSlide{from{transform:translateY(32px);opacity:.75}to{transform:translateY(0);opacity:1}}
+@keyframes restoMenuFadeOut{from{opacity:1}to{opacity:0}}
+@keyframes restoMenuSlideOut{from{transform:translateY(0);opacity:1}to{transform:translateY(20px);opacity:0}}
+@media(min-width:750px){.reservationMenuOverlay{align-items:center}.reservationMenuDialog{border-radius:24px;padding:16px 22px 24px}.reservationActionsModern .reservationActionMain{max-width:360px}}
+/* No more stretching the ellipsis button across two rows. */
+.reservationActionsModern .reservationActionTools{display:grid!important;grid-template-columns:minmax(0,1fr) 48px;align-items:start!important;gap:9px}
+.reservationActionsModern .reservationSecondaryActions{display:flex!important;flex-direction:column;gap:9px;min-width:0}
+.reservationActionsModern .reservationActionSecondary{width:100%;min-height:46px}
+.reservationActionsModern .reservationMoreTrigger{display:flex!important;justify-content:center;align-items:center;align-self:start!important;width:48px!important;height:48px!important;min-width:48px!important;min-height:48px!important;flex:none!important}
+.reservationActionsModern .reservationMoreTrigger svg{display:block;width:23px!important;height:23px!important;flex:none}
+.reservationActionsModern .reservationActionTools:not(:has(.reservationMoreTrigger)){grid-template-columns:minmax(0,1fr)}
+@media(max-width:410px){.reservationActionsModern .reservationActionTools{align-items:start!important}}
+@media(prefers-reduced-motion:reduce){.reservationMenuOverlay,.reservationMenuDialog,.reservationMenuOverlay.isClosing,.reservationMenuOverlay.isClosing .reservationMenuDialog{animation:none!important}.reservationActionsModern button{transition:none}}
+
+/* Reservation action bar: same row on tablets/desktops, compact stack on mobile. */
+@media(min-width:750px){
+ .reservationActionsModern{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap;
+  align-items:stretch;
+  gap:10px;
+ }
+ .reservationActionsModern .reservationPrimaryActions{
+  display:flex;
+  flex:1 1 30%;
+  min-width:0;
+ }
+ .reservationActionsModern .reservationActionMain{
+  max-width:none;
+  width:100%;
+  min-width:0;
+  height:100%;
+ }
+ .reservationActionsModern .reservationActionTools{
+  display:flex!important;
+  flex:2 1 70%;
+  min-width:0;
+  align-items:stretch!important;
+  gap:10px;
+ }
+ .reservationActionsModern .reservationActionTools:only-child{
+  flex:1 1 100%;
+ }
+ .reservationActionsModern .reservationSecondaryActions{
+  display:flex!important;
+  flex-direction:row!important;
+  flex:1 1 auto;
+  min-width:0;
+  align-items:stretch;
+  gap:10px;
+ }
+ .reservationActionsModern .reservationActionSecondary{
+  flex:1 1 0;
+  width:auto;
+  min-width:0;
+  height:100%;
+  overflow-wrap:anywhere;
+ }
+ .reservationActionsModern .reservationMoreTrigger{
+  align-self:stretch!important;
+  height:auto!important;
+  min-height:48px!important;
+ }
+}
+
+/* Notifications: separated by staff role. */
+.serviceBell[hidden],.serviceReminderPanel[hidden]{display:none!important}
+.serviceReminderPanel .serviceReceptionBookingAlert{background:#eff9f3;border:1px solid #cde8d7;border-radius:14px;padding:14px;margin:10px 0}
+.serviceReceptionBookingAlert>strong{color:#16563c}
+.serviceBell[hidden]{display:none!important}
+.rushTablePressure{margin:10px 0 0;padding:11px 13px;background:#edf8f1;color:#18533d;border-radius:12px;font-size:13px;line-height:1.5;border:1px solid #d0ead9}
+.rushTablePressureCritical{background:#fff2df;color:#8a4412;border-color:#f2ce9f}
+.serviceCapacityWarning{background:#fff5e6;border:1px solid #f0c88c;border-radius:14px;padding:14px;margin:10px 0}
+.serviceCapacityWarning strong{color:#93500c}
+
+
+/* Emphasise actual remaining tables when a slot approaches capacity. */
+.rushTablePressure{display:flex;flex-direction:column;gap:8px;margin-top:15px!important;padding:14px 17px!important;border-radius:16px!important;line-height:1.45}
+.rushTablePressure p{margin:0!important;font-size:14px}
+.rushTablePressureCritical{background:#fff1dc!important;border:2px solid #eab66e!important;color:#7a410b!important;box-shadow:0 7px 21px rgba(164,89,14,.09)}
+.rushTablePressureHead{display:flex;align-items:center;gap:10px;font-weight:750;font-size:16px;line-height:1.3}
+.rushTablePressureSymbol{display:grid;place-items:center;flex:none;width:27px;height:27px;border-radius:50%;background:#b96b18;color:white;font-weight:850}
+@media(max-width:480px){.rushTablePressure{padding:13px!important}.rushTablePressureHead{font-size:15px}}
+
+/* Reception change and cancellation notifications, Restaurant only. */
+.serviceReceptionChangeAlert{padding:14px;margin:10px 0;background:#f0f7fa;border:1px solid #c5dfe7;border-radius:14px}
+.serviceReceptionChangeAlert>strong{color:#20546c}
+.serviceReceptionChangeAlert.isCancellation{background:#fff3ec;border-color:#eebc9c}
+.serviceReceptionChangeAlert.isCancellation>strong{color:#98502e}
+.serviceChangeDetails{margin:3px 0 14px;padding:9px 12px 9px 28px;border-radius:10px;background:rgba(255,255,255,.75);font-size:13px;color:#3b5950;line-height:1.6}
+
+/* Shared server-backed service closeout. */
+.sharedClosureControls{display:flex;flex-wrap:wrap;gap:12px;margin:12px 0 14px}
+.sharedClosureControls label{display:flex;flex-direction:column;gap:6px;font-weight:650;font-size:14px;color:#315d4c}
+.sharedClosureControls input{min-height:42px;border:1px solid #c8dcd0;border-radius:10px;padding:7px 10px;background:white;color:#164c38;font:inherit}
+#serviceClosure #closureManual:disabled{opacity:.55;cursor:not-allowed}
+
+/* Connected booking actions: one clear primary action and two compact secondary controls. */
+#bookingForm #bookingDraft{display:flex;flex-direction:column;gap:10px;grid-column:1/-1;background:#edf5f1;border:1px solid #d4e7db;border-radius:16px;padding:14px;margin:10px 0 0}
+#bookingForm #bookingDraft[hidden]{display:none!important}
+#bookingForm #bookingDraft #draftMessage{margin:0;line-height:1.45;font-size:14px;color:#285647}
+#bookingForm .bookingDraftActions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;width:100%}
+#bookingForm .bookingDraftActions button{width:100%;min-width:0;min-height:43px!important;padding:9px 10px!important;margin:0!important;border-radius:11px!important;font-size:14px!important;font-weight:650!important;line-height:1.3;box-shadow:none!important}
+#bookingForm #draftExtend{background:#fff!important;color:#116247!important;border:1px solid #b4d4c3!important}
+#bookingForm #draftAbandon{background:transparent!important;color:#746456!important;border:1px solid #d5cfc6!important}
+#bookingForm .bookingSubmitPrimary{grid-column:1/-1;width:100%;margin-top:14px!important;min-height:49px!important;font-weight:750!important}
+@media(max-width:390px){#bookingForm .bookingDraftActions{grid-template-columns:1fr}#bookingForm .bookingDraftActions button{min-height:40px!important}}
+
+/* Compact 2027-style service table sheet (integration only). */
+.tableDetailModal .tableDetailSheet{padding:16px 16px calc(18px + env(safe-area-inset-bottom));max-height:min(87dvh,760px);border-radius:22px 22px 0 0}
+.tableDetailModal .tableDetailSheetHeader{align-items:center;padding-bottom:10px}
+.tableDetailModal .tableDetailSheetHeader h2{font-size:23px;line-height:1.1;margin:3px 0}
+.tableDetailModal .tableDetailSheetBody{padding-top:7px}
+.tableDetailModal .tableDetailSheetBody #detail{display:grid;gap:6px}
+.tableDetailModal .tableCompactMeta{margin:0 0 5px!important;font-size:13px!important;color:#65796f}
+.tableDetailModal .tableCompactHint{margin:0 0 5px!important;font-size:12px!important;color:#537466;line-height:1.35}
+.tableDetailModal .detailLine{margin:0!important;padding:10px 0!important;border-top:1px solid #e8efea;min-width:0}
+.tableDetailModal .tableCompactGuest{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;min-width:0}
+.tableDetailModal .tableCompactIdentity{display:grid;gap:3px;min-width:0;flex:1}
+.tableDetailModal .tableCompactIdentity strong{font-size:15px;line-height:1.35;color:#183f32;margin:0}
+.tableDetailModal .tableCompactIdentity span{font-size:14px;color:#52685d;overflow-wrap:anywhere}
+.tableDetailModal .tableCompactBadge{flex:none;max-width:42%;border-radius:999px;padding:5px 9px;background:#e8f2ed;color:#22694c;font-size:11px;font-weight:750;text-align:center}
+.tableDetailModal .tableCompactActions{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;gap:9px!important;margin-top:12px!important;min-height:46px;width:100%}
+.tableDetailModal .tableCompactActions>.tableCompactPrimary{flex:1 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important;height:46px!important;min-height:46px!important;max-height:46px!important;align-self:stretch!important;padding:0 14px!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;border-radius:12px!important;background:#087f5b!important;border:1px solid #087f5b!important;color:#fff!important;font-size:14px!important;font-weight:750!important;line-height:1.1!important}
+.tableDetailModal .tableCompactActions>.tableCompactMore{flex:none;width:48px;min-width:48px;margin:0;padding:0;border:0;background:transparent}
+.tableDetailModal .tableCompactMoreTrigger{display:flex!important;align-items:center;justify-content:center;width:48px;height:46px;min-height:46px;max-height:46px;box-sizing:border-box;border-radius:12px;border:1px solid #ccdcd2;background:#f5f8f6;color:#265843;font-size:27px;line-height:1;letter-spacing:1px;cursor:pointer;padding:0 0 10px!important;list-style:none}
+.tableDetailModal .tableCompactMoreTrigger::after{display:none!important}
+.tableDetailModal .tableCompactMoreTrigger::-webkit-details-marker{display:none}
+.tableDetailModal .tableCompactMoreOverlay[hidden]{display:none!important}
+.tableDetailModal .tableCompactMoreOverlay{position:fixed;inset:0;z-index:40;display:flex;align-items:flex-end;justify-content:center}
+.tableDetailModal .tableCompactMoreBackdrop{position:absolute;inset:0;border:0;border-radius:0;background:rgba(8,28,22,.58);width:100%;height:100%;padding:0;cursor:default}
+.tableDetailModal .tableCompactMoreSheet{position:relative;z-index:1;width:min(100%,540px);max-height:min(75dvh,580px);overflow:auto;display:grid;gap:8px;background:#fff;border-radius:22px 22px 0 0;padding:16px 17px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -16px 45px #071d1740;animation:restoSheetIn .2s ease both}
+.tableDetailModal .tableCompactMoreHeader{display:flex;justify-content:space-between;align-items:center;gap:10px;padding-bottom:9px;margin-bottom:4px;border-bottom:1px solid #e5eee8}
+.tableDetailModal .tableCompactMoreHeader strong{font-size:15px;color:#214c3a}
+.tableDetailModal .tableCompactMoreClose{border:0;background:#edf5ef;color:#255840;border-radius:11px;width:40px;height:40px;min-height:40px;padding:0;font-size:18px}
+.tableDetailModal .tableCompactMoreSheet>.tableCompactSecondary{display:flex;align-items:center;justify-content:flex-start;text-align:left;width:100%;min-height:46px!important;max-height:initial!important;border:1px solid #e0ebe4;border-radius:12px;background:#f7faf8;color:#295d45;padding:11px 14px!important;margin:0!important;font-size:14px!important;font-weight:650!important}
+.tableDetailModal :is(.tableCompactPrimary,.tableCompactMoreTrigger,.tableCompactSecondary,.tableCompactMoreClose):focus-visible{outline:3px solid #37a984;outline-offset:2px}
+@media(min-width:901px){.tableDetailModal .tableDetailSheet{border-radius:22px;padding:20px}.tableDetailModal .tableCompactMoreSheet{border-radius:20px;margin-bottom:16px}}
+@media(prefers-reduced-motion:reduce){.tableDetailModal .tableCompactMoreSheet{animation:none}}
+
+/* Sorting trigger stays compact in the toolbar. The choices overlay is portalled to body. */
+#tables .tableToolbar{align-items:end;gap:12px}
+#tables .tableSortMenu{position:relative;flex:none;margin-left:auto;align-self:end}
+#tables .tableSortTrigger{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:0 15px;min-height:44px;min-width:106px;cursor:pointer;list-style:none;border:1px solid #ccddd3;border-radius:13px;background:#f5faf7;color:#225e45;font-size:14px;font-weight:750;line-height:1.2;white-space:nowrap}
+#tables .tableSortTrigger::-webkit-details-marker{display:none}
+#tables .tableSortTrigger::after{display:none}
+#tables .tableSortTrigger svg{width:17px;height:17px;display:block;flex:none;stroke-width:2}
+#tables .tableSortMenu[open]>.tableSortTrigger{background:#e7f5ed;border-color:#8fbda4}
+.restoSortOpen{overscroll-behavior:none}
+.tableSortPopover[hidden]{display:none!important}
+.tableSortPopover{position:fixed;inset:0;z-index:30000;display:flex;align-items:flex-start;justify-content:flex-end;pointer-events:none}
+.tableSortBackdrop{position:absolute;inset:0;display:block;width:100%;height:100%;padding:0;margin:0;border:0;border-radius:0;background:transparent;pointer-events:auto;cursor:default}
+.tableSortOptions{position:absolute;top:var(--sort-anchor-top,80px);right:var(--sort-anchor-right,20px);z-index:1;display:grid;gap:4px;width:min(260px,calc(100vw - 24px));max-height:min(70dvh,500px);overflow:auto;box-sizing:border-box;background:#fff;border:1px solid #dce8df;border-radius:16px;padding:10px;box-shadow:0 16px 46px #102d2035;pointer-events:auto}
+.tableSortOptionsHeader{display:flex;align-items:center;justify-content:space-between;padding:5px 8px 7px;color:#264d3b;font-size:14px}
+.tableSortClose{display:none}
+.tableSortOption{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;min-height:42px;padding:10px 12px;border:0!important;border-radius:10px;background:transparent!important;color:#315948!important;font-size:13px;font-weight:600;text-align:left;cursor:pointer}
+.tableSortOption.selected{background:#e5f4ea!important;color:#126a48!important;font-weight:750}
+.tableSortOption.selected::after{content:"✓";font-size:16px;font-weight:800}
+#tables .tableSortTrigger:focus-visible,.tableSortOption:focus-visible,.tableSortClose:focus-visible{outline:3px solid #4eb088;outline-offset:2px}
+@media(max-width:720px){
+ body.restoSortOpen{overflow:hidden!important}
+ #tables .tableToolbar{display:flex;align-items:end;flex-wrap:nowrap;gap:10px}
+ #tables .tableSortMenu{margin-left:auto;flex:0 0 auto}
+ .tableSortPopover{inset:0;align-items:flex-end;justify-content:center}
+ .tableSortBackdrop{background:rgba(8,28,22,.54)}
+ .tableSortOptions{position:relative;top:auto;right:auto;width:min(100%,540px);max-height:min(76dvh,640px);overflow:auto;border-radius:22px 22px 0 0;padding:18px 16px calc(20px + env(safe-area-inset-bottom));box-shadow:0 -12px 40px #102d2033;gap:7px}
+ .tableSortOptionsHeader{padding:0 2px 9px;margin-bottom:4px}
+ .tableSortClose{display:flex;align-items:center;justify-content:center;width:40px;height:40px;min-height:40px;padding:0;border:0;border-radius:10px;background:#eef5f0;color:#295943}
+ .tableSortOption{min-height:48px;font-size:15px;padding:12px 14px}
+}
+.tableDetailModal .tableCompactMoreTrigger{padding:0!important;display:flex!important;align-items:center!important;justify-content:center!important;line-height:1!important}
+.tableDetailModal .tableCompactMoreTrigger svg{width:22px;height:22px;display:block;flex:none;stroke-width:2}
+
+/* Affluence period picker: compact touch-first sheet with single-tap selection. */
+body.v3-picker-open{overflow:hidden}
+.v3-picker-backdrop.v3-rush-period-picker{align-items:flex-end!important;justify-content:center!important;padding:0!important;background:rgba(8,30,23,.52)!important}
+.v3-rush-period-picker .v3-picker-panel{box-sizing:border-box;width:min(100%,520px)!important;max-height:min(76dvh,640px)!important;min-height:0!important;padding:16px 16px calc(18px + env(safe-area-inset-bottom))!important;margin:0!important;gap:8px!important;border:0!important;border-radius:22px 22px 0 0!important;background:#fff!important;box-shadow:0 -15px 48px #102d2033!important}
+.v3-rush-period-picker .v3-picker-panel>header{grid-template-columns:minmax(0,1fr) 42px!important;min-height:42px!important;align-items:center!important;padding:0 0 6px!important}
+.v3-rush-period-picker .v3-picker-panel>header strong{font-size:16px!important;font-weight:800!important;color:#183f32!important;padding:0!important;line-height:1.3!important}
+.v3-rush-period-picker .v3-picker-panel>header button[data-close]{width:42px!important;min-width:42px!important;height:42px!important;min-height:42px!important;border:0!important;border-radius:12px!important;background:#edf5ef!important;color:#245542!important}
+.v3-rush-period-picker .v3-picker-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px!important;overflow:auto;overscroll-behavior:contain;padding:4px 0 2px}
+.v3-rush-period-picker .v3-rush-period-group{grid-column:1/-1;margin:8px 0 0;padding:0 2px;font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#789184}
+.v3-rush-period-picker .v3-picker-items button{position:relative;display:flex;justify-content:center;align-items:center;min-width:0;min-height:51px!important;padding:12px 5px!important;border:1px solid #d5e5da!important;border-radius:13px!important;background:#f8fbf9!important;color:#214e3c!important;font-size:13px!important;font-weight:700!important;text-align:center!important;line-height:1.3!important;box-shadow:none!important}
+.v3-rush-period-picker .v3-picker-items button.selected{border:1.5px solid #09855f!important;background:#e5f6eb!important;color:#086746!important;font-weight:800!important}
+.v3-rush-period-picker .v3-picker-items button.selected::after{content:"✓";position:absolute;right:8px;top:5px;font-size:11px}
+.v3-rush-period-picker .v3-picker-items button:focus,.v3-rush-period-picker .v3-picker-items button:focus-visible{outline:2px solid #17845c!important;outline-offset:-2px!important;box-shadow:none!important}
+.v3-rush-period-picker .v3-picker-panel>footer{display:none!important}
+html[data-theme="dark"] .v3-rush-period-picker .v3-picker-panel{background:#1c352b!important}
+html[data-theme="dark"] .v3-rush-period-picker .v3-picker-panel>header strong{color:#edf8ef!important}
+html[data-theme="dark"] .v3-rush-period-picker .v3-rush-period-group{color:#a7c7b6}
+html[data-theme="dark"] .v3-rush-period-picker .v3-picker-items button{background:#28463a!important;border-color:#496f58!important;color:#edf7f0!important}
+html[data-theme="dark"] .v3-rush-period-picker .v3-picker-items button.selected{background:#125f47!important;border-color:#72d8aa!important;color:#fff!important}
+@media(max-width:370px){.v3-rush-period-picker .v3-picker-items{gap:6px!important}.v3-rush-period-picker .v3-picker-items button{font-size:12px!important;min-height:47px!important}}
+
+/* Gestion — rooms and analytics / compact professional layout, integration only */
+#administration .roomManager{padding:16px!important;margin:12px 0 18px!important;background:#f6faf7!important;border:1px solid #dce9df!important;border-radius:17px!important;min-width:0}
+#administration .roomManagerHeader{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#administration .roomManager h3{margin:0 0 4px!important;font-size:18px!important;line-height:1.25!important;color:#183e30!important}
+#administration .roomManagerHeader .muted{margin:0 0 12px!important;font-size:13px!important;line-height:1.4;color:#698074!important}
+#administration #roomManagerList{display:grid;gap:7px;min-width:0}
+#administration .roomManagerItem{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:10px 12px!important;min-height:48px;border:1px solid #dce9e1!important;border-radius:12px!important;background:#fff!important}
+#administration .roomManagerItem span{min-width:0;flex:1;color:#29523d;font-size:13px;font-weight:650;line-height:1.4;overflow-wrap:anywhere}
+#administration .roomManagerItem button{width:auto!important;min-height:38px!important;border:1px solid #e6cfc8!important;background:#fff8f5!important;color:#9b4934!important;border-radius:10px!important;padding:8px 11px!important;white-space:nowrap;font-size:12px!important}
+#administration #roomManagerForm{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:end!important;gap:10px!important;margin-top:14px!important}
+#administration #roomManagerForm label{display:grid!important;gap:6px!important;min-width:0!important;font-size:12px!important;font-weight:700!important;color:#355c49!important}
+#administration #roomManagerName{display:block;width:100%!important;min-width:0;min-height:46px!important;border:1px solid #ccdcd2!important;border-radius:12px!important;background:#fff!important;color:#173d30!important;padding:10px 12px!important;font-size:14px!important;box-sizing:border-box}
+#administration #roomManagerForm button{width:auto!important;min-width:145px!important;min-height:46px!important;margin:0!important;padding:10px 13px!important;border-radius:12px!important;border:1px solid #087f5b!important;background:#087f5b!important;color:#fff!important;font-size:13px!important;font-weight:750!important;line-height:1.3!important;white-space:nowrap}
+#administration #roomManagerFeedback:empty{display:none}
+#administration #roomManagerFeedback{font-size:13px;line-height:1.4;color:#235d45}
+#administration #tableAdminNew{width:auto!important;min-height:40px!important;padding:9px 14px!important;border:1px solid #c8e0d3!important;border-radius:11px!important;background:#eaf5ee!important;color:#246b4a!important;font-weight:700!important;font-size:13px!important}
+#administration .tableAdminItem{min-width:0}
+#historyStats.historyPanel{gap:16px!important;min-width:0}
+#historyStats .historyHeading{margin:0}
+#historyStats .historyHeading .eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;color:#358364}
+#historyStats .historyHeading h2{font-size:clamp(21px,3.3vw,26px)!important;line-height:1.2;margin:4px 0 7px!important;color:#153f30!important}
+#historyStats .historyHeading .muted{margin:0!important;font-size:13px!important;line-height:1.5;color:#667d70!important}
+#historyStats .historyControls{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;align-items:end!important;padding:13px!important;background:#f5f9f6;border:1px solid #e0ece3;border-radius:16px}
+#historyStats .historyControls label{min-width:0!important;display:grid!important;gap:6px!important;font-size:12px!important;font-weight:750!important;color:#355b48!important}
+#historyStats .historyControls :is(input,select){width:100%!important;min-width:0;box-sizing:border-box;min-height:45px!important;border:1px solid #cbded2!important;border-radius:11px!important;padding:9px 12px!important;background:#fff!important;color:#1c4e39!important;font-size:14px!important;font-weight:650!important}
+#historyStats .historyControls #historyPdf{grid-column:1/-1;display:flex!important;gap:9px;justify-content:center;align-items:center;min-width:0!important;width:100%!important;min-height:45px!important;padding:10px 14px!important;margin:0!important;border:1px solid #c8e2d2!important;border-radius:11px!important;background:#e6f4eb!important;color:#146846!important;font-size:14px!important;font-weight:750!important;line-height:1.3!important;box-shadow:none!important}
+#historyStats #historyPdf svg{display:block;width:19px;height:19px;flex:none}
+#historyStats .historySummary{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+#historyStats .historyMetric{min-width:0;border-radius:14px!important;padding:14px!important;box-sizing:border-box}
+#historyStats .historyMetric span{font-size:12px!important;line-height:1.35}
+#historyStats .historyMetric strong{font-size:clamp(22px,4vw,29px)!important;font-variant-numeric:tabular-nums}
+#historyStats .historyEntry{border-radius:12px!important;background:#fff;min-width:0}
+@media(min-width:850px){
+ #historyStats .historyControls{grid-template-columns:minmax(130px,1fr) minmax(170px,1fr) auto!important}
+ #historyStats .historyControls #historyPdf{grid-column:auto;min-width:190px!important;width:auto!important}
+ #historyStats .historySummary{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(max-width:370px){
+ #administration #roomManagerForm{grid-template-columns:minmax(0,1fr)!important}
+ #administration #roomManagerForm button{width:100%!important}
+ #historyStats .historyControls{grid-template-columns:minmax(0,1fr)!important}
+ #historyStats .historyControls #historyPdf{grid-column:1}
+}
+html[data-theme="dark"] #administration .roomManager,html[data-theme="dark"] #historyStats .historyControls{background:#203b30!important;border-color:#3c654f!important}
+html[data-theme="dark"] #administration .roomManager :is(h3,label),html[data-theme="dark"] #historyStats :is(.historyHeading h2,.historyControls label){color:#e5f5e9!important}
+html[data-theme="dark"] #administration .roomManagerItem,html[data-theme="dark"] #administration #roomManagerName,html[data-theme="dark"] #historyStats .historyControls :is(input,select){background:#183329!important;color:#eff7f0!important;border-color:#527460!important}
+html[data-theme="dark"] #administration .roomManagerItem span{color:#e5f5e9}
+
+/* Compact capacity-threshold choices. The actual setting is saved on selection. */
+.v3-picker-backdrop.v3-percent-picker{align-items:flex-end!important;padding:0!important;background:rgba(8,30,23,.53)!important}
+.v3-percent-picker .v3-picker-panel{width:min(100%,520px)!important;max-height:min(70dvh,550px)!important;min-height:0!important;margin:0!important;padding:17px 16px calc(18px + env(safe-area-inset-bottom))!important;gap:9px!important;border:0!important;border-radius:22px 22px 0 0!important;background:#fff!important}
+.v3-percent-picker .v3-picker-panel>header{padding:0 0 8px!important;align-items:center!important}
+.v3-percent-picker .v3-picker-panel>header strong{font-size:16px!important;line-height:1.35!important;color:#153d2f!important}
+.v3-percent-picker .v3-picker-items{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow-y:auto;overscroll-behavior:contain}
+.v3-percent-picker .v3-picker-items button{min-width:0;min-height:52px!important;padding:11px 6px!important;border:1px solid #d5e6db!important;border-radius:12px!important;background:#f5faf7!important;color:#245c43!important;font-size:15px!important;font-weight:750!important;text-align:center!important}
+.v3-percent-picker .v3-picker-items button.selected{background:#dff3e6!important;color:#096947!important;border:2px solid #16845f!important}
+.v3-percent-picker .v3-picker-panel>footer{display:none!important}
+html[data-theme="dark"] .v3-percent-picker .v3-picker-panel{background:#1c352b!important}
+html[data-theme="dark"] .v3-percent-picker .v3-picker-panel>header strong{color:#e8f6ec!important}
+html[data-theme="dark"] .v3-percent-picker .v3-picker-items button{background:#294a3b!important;color:#f0f8f1!important;border-color:#4d775f!important}
+@media(max-width:370px){.v3-percent-picker .v3-picker-items{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* Management refinements: room, table duration, theme — integration only */
+#administration .restaurantDurationSetting{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 14px;align-items:center;margin:0 0 18px!important;padding:15px!important;border:1px solid #d6e8dc!important;border-radius:16px!important;background:#f2f8f4!important}
+#administration .restaurantDurationSetting label{display:contents!important}
+#administration .restaurantDurationSetting label{font-weight:750!important}
+#administration .restaurantDurationSetting select{grid-column:2;grid-row:1;min-width:116px!important;width:auto!important;min-height:44px!important;padding:8px 12px!important;border:1px solid #bcd9c7!important;border-radius:12px!important;background:#fff!important;color:#165c3e!important;font-size:15px!important;font-weight:750!important}
+#administration .restaurantDurationSetting .muted{grid-column:1/-1;margin:0!important;font-size:12px!important;line-height:1.45!important;color:#6d8174!important}
+#administration .restaurantDurationSetting .durationSettingFeedback{grid-column:1/-1;margin:0!important;font-size:12px!important;line-height:1.35;color:#176847!important}
+#administration .restaurantDurationSetting .durationSettingFeedback:empty{display:none}
+#administration .themeSettingsGroup{padding:16px!important;gap:12px!important;align-items:center!important;border:1px solid #dfeae2!important;border-radius:17px!important;background:#fff!important}
+#administration .themeSettingsHead{min-width:0}
+#administration .themeSettingsHead strong{font-size:16px!important;line-height:1.3}
+#administration .themeSettingsHead p{font-size:12px!important;line-height:1.4!important;margin-top:4px!important}
+#administration .themeModeControl{min-width:0;gap:8px;font-size:12px!important}
+#administration .themeModeControl select{min-width:134px!important;min-height:44px!important;border:1px solid #cbded2!important;border-radius:12px!important;background:#f8fbf9!important;font-size:14px!important;font-weight:700!important;padding:9px 12px!important}
+.v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker){align-items:flex-end!important;justify-content:center!important;padding:0!important;background:rgba(8,30,23,.54)!important}
+.v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-panel{width:min(100%,520px)!important;min-height:0!important;max-height:min(70dvh,570px)!important;margin:0!important;padding:17px 16px calc(20px + env(safe-area-inset-bottom))!important;gap:11px!important;border:0!important;border-radius:22px 22px 0 0!important;background:#fff!important;box-shadow:0 -15px 48px #102d2033!important}
+.v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-panel>header{padding:0 0 7px!important;align-items:center!important}
+.v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-panel>header strong{font-size:16px!important;line-height:1.3!important;color:#153d2f!important}
+.v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-panel>footer{display:none!important}
+.v3-theme-picker .v3-picker-items{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important;overflow:auto}
+.v3-theme-picker .v3-picker-items button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-width:0;min-height:98px!important;padding:12px 4px!important;border:1px solid #d8e7dd!important;border-radius:15px!important;background:#f8fbf9!important;color:#214c39!important;font-size:12px!important;font-weight:700!important;line-height:1.3!important;text-align:center!important}
+.v3-theme-picker .v3-picker-items button svg{width:25px;height:25px;display:block;stroke-width:1.8}
+.v3-theme-picker .v3-picker-items button.selected{border:2px solid #098360!important;background:#e5f5eb!important;color:#0f6245!important}
+.v3-duration-picker .v3-picker-items{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;overflow:auto;overscroll-behavior:contain}
+.v3-duration-picker .v3-picker-items button{display:flex;align-items:center;justify-content:center;min-height:48px!important;min-width:0;padding:9px 5px!important;border:1px solid #d6e6db!important;border-radius:12px!important;background:#f7fbf8!important;color:#214e3a!important;font-size:14px!important;font-weight:700!important;text-align:center!important}
+.v3-duration-picker .v3-picker-items button.selected{border:2px solid #13845e!important;background:#e2f5e9!important;color:#0c6746!important}
+html[data-theme="dark"] #administration .restaurantDurationSetting{background:#1d382d!important;border-color:#42624e!important}
+html[data-theme="dark"] #administration .restaurantDurationSetting select,html[data-theme="dark"] #administration .themeModeControl select{background:#1e3d2e!important;color:#e9f7ef!important;border-color:#507c63!important}
+html[data-theme="dark"] #administration .themeSettingsGroup{background:#1e352c!important;border-color:#42624e!important}
+html[data-theme="dark"] .v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-panel{background:#1c342a!important}
+html[data-theme="dark"] .v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-panel>header strong{color:#ebf6ef!important}
+html[data-theme="dark"] .v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-items button{background:#274c39!important;border-color:#52755f!important;color:#e9f7ef!important}
+html[data-theme="dark"] .v3-picker-backdrop:is(.v3-theme-picker,.v3-duration-picker) .v3-picker-items button.selected{background:#155e47!important;color:#fff!important;border-color:#7ed8a9!important}
+@media(max-width:390px){#administration .restaurantDurationSetting{grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important}#administration .themeSettingsGroup{align-items:stretch!important}#administration .themeModeControl{justify-content:space-between!important}.v3-theme-picker .v3-picker-items button{min-height:88px!important;font-size:11px!important}.v3-duration-picker .v3-picker-items{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* Real-time occupation: show seat usage and table availability separately. */
+.currentOccupancy{display:grid;gap:14px;margin:12px 0 20px;padding:18px;border:1px solid #dce9e0;border-radius:19px;background:#fff;min-width:0}
+.occupancyHead{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.occupancyHead h2{margin:0!important;font-size:20px!important;line-height:1.25;color:#173f30}
+.occupancyState{display:inline-flex;align-items:center;padding:6px 10px;border-radius:999px;background:#e4f4e9;color:#16734d;font-weight:750;font-size:12px}
+.occupancyState.isBusy{background:#fff1d9;color:#975c13}
+.occupancyState.isFull{background:#fde8de;color:#a53b20}
+.occupancyProgressGroup{display:grid;gap:7px}
+.occupancyProgressLine{display:flex;justify-content:space-between;align-items:baseline;gap:10px;line-height:1.4;font-size:13px;color:#496857}
+.occupancyProgressLine strong{color:#194d37;font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.occupancyProgressRail{height:10px;border-radius:999px;background:#e3ece5;overflow:hidden}
+.occupancyProgressBar{height:100%;width:0;border-radius:999px;background:linear-gradient(90deg,#138a62,#38ab83);transition:width .28s ease}
+.currentOccupancy:has(.occupancyState.isFull) .occupancyProgressGroup:first-of-type .occupancyProgressBar{background:#cd6231}
+.occupancyHelp{margin:0!important;color:#687e71;font-size:12px;line-height:1.5}
+.managementSelectTrigger{display:inline-flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;width:auto!important;min-width:116px;min-height:44px!important;margin:0!important;padding:8px 13px!important;border:1px solid #bcd9c7!important;border-radius:12px!important;background:#fff!important;color:#165c3e!important;font-size:14px!important;font-weight:750!important;line-height:1.2!important;cursor:pointer;white-space:nowrap;box-shadow:none!important}
+.managementSelectTrigger::after{content:"⌄";font-size:17px;color:#648674;line-height:1}
+#administration .restaurantDurationSetting .durationSelectTrigger{grid-column:2;grid-row:1}
+#administration .themeModeControl .managementSelectTrigger{min-width:135px}
+.managementSelectTrigger:focus-visible{outline:3px solid #73caa3;outline-offset:2px}
+html[data-theme="dark"] .currentOccupancy{background:#1c352a;border-color:#466c56}
+html[data-theme="dark"] .occupancyHead h2,html[data-theme="dark"] .occupancyProgressLine strong{color:#eef8ef}
+html[data-theme="dark"] .occupancyProgressLine,html[data-theme="dark"] .occupancyHelp{color:#bbd3c3}
+html[data-theme="dark"] .occupancyProgressRail{background:#355447}
+html[data-theme="dark"] .managementSelectTrigger{background:#244a38!important;color:#e8f9ee!important;border-color:#557865!important}
+@media(max-width:390px){.currentOccupancy{padding:14px}.occupancyHead h2{font-size:18px!important}.occupancyProgressLine{font-size:12px}.occupancyProgressLine strong{font-size:12px}}
+
+/* Automatic rush-hour window — informational, not a dropdown. */
+.rushAutomaticSlot{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;padding:12px 14px;margin:12px 0 15px;border:1px solid #d9e9df;border-radius:13px;background:#f5faf7;color:#21563f;font-size:15px;font-weight:750;line-height:1.35;font-variant-numeric:tabular-nums;cursor:default}
+.rushAutomaticTag{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;padding:5px 9px;border-radius:999px;background:#e3f3e8;color:#18704d;font-size:11px;font-weight:750;letter-spacing:.01em}
+.rushAutomaticTag::before{content:"";width:6px;height:6px;border-radius:50%;background:#24986b}
+html[data-theme="dark"] .rushAutomaticSlot{background:#213c30;border-color:#41684e;color:#edf7ee}
+html[data-theme="dark"] .rushAutomaticTag{background:#18553d;color:#dcf4e4}
+@media(max-width:380px){.rushAutomaticSlot{font-size:13px;padding:10px 12px}.rushAutomaticTag{font-size:10px;padding:4px 7px}}
+
+/* Distinct service operations (now) vs reservation arrivals (future). */
+.occupancyHeadingBlock{display:grid;gap:5px}
+.occupancySectionEyebrow,.rushSectionEyebrow{display:block;font-size:10px;line-height:1.3;font-weight:850;letter-spacing:.105em;text-transform:uppercase;color:#348164}
+.rushSectionEyebrow{margin-bottom:7px;color:#536d91}
+.rushDashboard{border-top:3px solid #d7e2f1!important}
+.rushLoadSummary{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:4px 0 12px}
+.rushLoadNumbers{display:grid;gap:4px;min-width:0}
+.rushLoadNumbers strong{font-size:clamp(26px,5vw,36px);line-height:1.2;color:#193d35;font-variant-numeric:tabular-nums}
+.rushLoadNumbers span{font-size:12px;line-height:1.4;color:#647a6d}
+.rushLoadStatus{display:inline-flex;align-items:center;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;line-height:1.2;background:#e8f4eb;color:#187b53}
+.rushLoadStatus.busy{background:#fff0d7;color:#905810}
+.rushLoadStatus.full{background:#fce3dd;color:#a8362a}
+.rushDashboard .rushProgress{margin:0;height:12px}
+.rushArrivalsHint{margin-top:13px!important;font-size:13px!important;line-height:1.5!important}
+.rushTablePressure{margin-top:14px}
+.rushTablePressure.rushLimitReached:not(.rushTablePressureCritical){background:#fff9ec!important;border-color:#ead4a7!important;color:#87591e!important}
+.rushTablePressure.rushLimitReached:not(.rushTablePressureCritical) p{color:#80551a!important}
+html[data-theme="dark"] .rushLoadNumbers strong{color:#eaf8ed}
+html[data-theme="dark"] .rushLoadNumbers span{color:#b2d0be}
+html[data-theme="dark"] .rushDashboard{border-top-color:#426e86!important}
+@media(max-width:410px){.rushLoadSummary{gap:7px}.rushLoadNumbers strong{font-size:27px}.rushLoadStatus{font-size:11px;padding:6px 8px}}
+
+/* Arrival workload shows planned arrivals separately from people still waiting. */
+.rushArrivalBreakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 15px}
+.rushArrivalBreakdownItem{display:grid;gap:5px;padding:12px 13px;border:1px solid #e2eaf0;background:#f6f9fc;border-radius:13px;min-width:0}
+.rushArrivalBreakdownItem strong{font-size:24px;line-height:1.1;color:#184337;font-variant-numeric:tabular-nums}
+.rushArrivalBreakdownItem span{font-size:12px;line-height:1.4;color:#56716a}
+.rushArrivalBreakdownItem:first-child{border-color:#d4e5f4;background:#eef5fc}
+.rushArrivalBreakdownItem:first-child strong{color:#215b80}
+html[data-theme="dark"] .rushArrivalBreakdownItem{background:#203a36;border-color:#426156}
+html[data-theme="dark"] .rushArrivalBreakdownItem:first-child{background:#233d53;border-color:#45647a}
+html[data-theme="dark"] .rushArrivalBreakdownItem strong{color:#edf9f2}
+html[data-theme="dark"] .rushArrivalBreakdownItem span{color:#b4cfc1}
+@media(max-width:380px){.rushArrivalBreakdownItem{padding:11px}.rushArrivalBreakdownItem strong{font-size:22px}.rushArrivalBreakdownItem span{font-size:11px}}
+
+/* Selectable alternate-time cards in the busy-period confirmation. */
+.rushAlternatives .rushAlternativeChoice{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:12px;row-gap:3px;width:100%;min-height:58px;margin:8px 0!important;padding:10px 13px!important;background:#f3faf6!important;border:1px solid #cce4d7!important;border-radius:13px!important;color:#18563d!important;text-align:left!important;cursor:pointer;box-sizing:border-box}
+.rushAlternativeChoice strong{grid-column:1;grid-row:1/3;font-size:19px;font-variant-numeric:tabular-nums;color:#096844}
+.rushAlternativeChoice span{grid-column:2;display:block;font-size:12px;line-height:1.35;overflow-wrap:anywhere}
+.rushAlternativeChoice .rushAlternativeArrow{font-weight:750;color:#0a7752}
+.rushAlternativeChoice:focus-visible{outline:3px solid #27a679;outline-offset:2px}
+@media(hover:hover){.rushAlternativeChoice:hover{background:#e5f6ed!important;border-color:#87c9a6!important}}
+html[data-theme="dark"] .rushAlternatives .rushAlternativeChoice{background:#233e30!important;border-color:#547760!important;color:#e2f7e9!important}
+html[data-theme="dark"] .rushAlternativeChoice strong,html[data-theme="dark"] .rushAlternativeChoice .rushAlternativeArrow{color:#a8f0c9!important}
+
+/* Service rush: distinguish upcoming, overdue and already-arrived guests. */
+.rushArrivalBreakdown{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important}
+.rushArrivalBreakdownItem{padding:11px 9px!important;min-width:0}
+.rushArrivalBreakdownItem strong{font-size:23px!important}
+.rushArrivalBreakdownItem span{font-size:11px!important;line-height:1.35!important}
+.rushArrivalBreakdownItem.rushArrivalLate{background:#f8f9f7;border-color:#e3e9e2}
+.rushArrivalBreakdownItem.rushArrivalLate.isLate{background:#fff2e3!important;border-color:#ebc89f!important}
+.rushArrivalBreakdownItem.rushArrivalLate.isLate strong{color:#a35b1d!important}
+html[data-theme="dark"] .rushArrivalBreakdownItem.rushArrivalLate.isLate{background:#513823!important;border-color:#94643a!important}
+html[data-theme="dark"] .rushArrivalBreakdownItem.rushArrivalLate.isLate strong{color:#ffd6a3!important}
+@media(max-width:400px){.rushArrivalBreakdownItem{padding:10px 7px!important}.rushArrivalBreakdownItem strong{font-size:20px!important}.rushArrivalBreakdownItem span{font-size:10px!important}}
+
+/* Optional close on success — does not alter the saved booking. */
+.bookingSuccessCard{position:relative!important}
+.bookingSuccessDismiss{position:absolute;top:14px;right:14px;display:flex;align-items:center;justify-content:center;width:43px;min-width:43px;height:43px;min-height:43px;padding:0!important;margin:0!important;border:1px solid #d6e7dd!important;border-radius:13px!important;background:#f1f8f3!important;color:#215945!important;font-size:30px!important;line-height:1!important;font-weight:400!important;cursor:pointer;box-shadow:none!important}
+.bookingSuccessDismiss:focus-visible{outline:3px solid #37a87c;outline-offset:2px}
+html[data-theme="dark"] .bookingSuccessDismiss{background:#244636!important;color:#e9f6ec!important;border-color:#47725a!important}
+</style></head>
+<body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button></div></header>
+
+<div class="shell"><nav class="sidebar" aria-label="Navigation principale"><a class="selected" href="#tables"><i data-lucide="layout-grid" class="navSvgIcon" aria-hidden="true"></i><span>Tables</span></a><a href="#reservations"><i data-lucide="calendar-days" class="navSvgIcon" aria-hidden="true"></i><span>Réservations</span></a><a href="#reservationForm"><i data-lucide="user-plus" class="navSvgIcon" aria-hidden="true"></i><span>Ajouter un client</span></a><a href="#passages"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i><span>Passages</span></a><a href="#administration"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i><span>Gestion</span></a><div class="sidebarFooter" aria-label="Établissement connecté"><div class="sidebarEstablishment"><i data-lucide="building-2" aria-hidden="true"></i><div class="sidebarEstablishmentDetails"><strong id="sidebarVenue">Mon établissement</strong><small id="sidebarRole">Espace Restaurant</small></div></div><div class="sidebarMeta"><span>RestoManager</span><span>V3</span></div></div></nav>
+<main><section class="panel shiftSettings" id="restaurantShifts"><h2>Horaires du restaurant</h2><p class="muted">Définissez les services ouverts et l'heure de dernière prise de commande. Les clients installés peuvent rester après cette heure.</p><form id="restaurantShiftForm"><div class="shiftSettingsGrid"><fieldset><legend>Service du midi</legend><label><input type="checkbox" id="shift-lunch-enabled"> Service ouvert</label><label>Début <input type="time" id="shift-lunch-start" required></label><label>Dernière commande <input type="time" id="shift-lunch-end" required></label></fieldset><fieldset><legend>Service du soir</legend><label><input type="checkbox" id="shift-dinner-enabled"> Service ouvert</label><label>Début <input type="time" id="shift-dinner-start" required></label><label>Dernière commande <input type="time" id="shift-dinner-end" required></label></fieldset></div><button type="submit">Enregistrer les horaires</button><p id="shiftFeedback" role="status"></p></form></section><section class="panel historyPanel" id="historyStats"><div class="historyHeading"><div><p class="eyebrow">SUIVI D'ACTIVITÉ</p><h2>Historique &amp; Statistiques</h2><p class="muted">Les couverts servis correspondent aux réservations terminées ou libérées. Les clients encore installés ne sont pas comptés.</p></div></div><div class="historyControls"><label>Période <select id="historyPeriod"><option value="day">Jour</option><option value="week">Semaine</option><option value="month">Mois</option></select></label><label>Date de référence <input id="historyDate" type="date"></label><button type="button" id="historyPdf"><i data-lucide="file-down" aria-hidden="true"></i><span>Exporter le rapport PDF</span></button></div><section id="serviceClosure" class="closurePanel"><h3>Clôture du service · 23 h 30</h3><p id="closureStatus" role="status"></p><button type="button" id="closureManual">Clôturer manuellement</button><details><summary>Services clôturés</summary><div id="closureArchive"></div></details></section><div id="historySummary" class="historySummary" aria-live="polite"></div><h3>Détail des réservations</h3><div id="historyRows" class="historyRows"></div><p id="historyFeedback" role="status"></p><p class="muted">Historique synchronisé depuis Supabase. Les rapports sont calculés à partir des réservations de votre établissement.</p></section><div class="serviceIntro"><div class="serviceIntroContent"><div class="serviceContext"><p class="serviceRole" id="teamSpace"><i data-lucide="utensils-crossed" aria-hidden="true"></i><span>Espace Restaurant</span></p><p class="serviceVenue"><i data-lucide="building-2" aria-hidden="true"></i><span id="teamVenue">Identification de l’établissement…</span></p></div><h1>Votre service, en un coup d’œil</h1><p class="serviceIntroDate" id="introServiceDate"><i data-lucide="calendar-days" aria-hidden="true"></i><span id="introDateText"></span></p><p id="teamGreeting"></p></div><button type="button" id="syncBadge" aria-controls="manageNetwork" title="Ouvrir Réseau et synchronisation">Connexion en cours</button></div><nav class="quickActions" aria-label="Actions rapides"><a href="#tables" class="quickAction primary"><i data-lucide="layout-grid" class="navSvgIcon" aria-hidden="true"></i><span>Voir les tables</span></a><a href="#reservationForm" class="quickAction"><i data-lucide="user-plus" class="navSvgIcon" aria-hidden="true"></i><span>Ajouter un client</span></a><a href="#passages" class="quickAction"><i data-lucide="clock-3" class="navSvgIcon" aria-hidden="true"></i><span>Passage</span></a><a href="#reservations" class="quickAction"><i data-lucide="calendar-days" class="navSvgIcon" aria-hidden="true"></i><span>Rechercher</span></a></nav>
+<div class="kpis" id="kpis" aria-live="polite"></div><section class="currentOccupancy" id="currentOccupancy" aria-label="Occupation actuelle du restaurant" aria-live="polite"></section><details class="panel actionPanel walkinPanel" id="passages"><summary>Client de passage <span>Installer un client sans réservation</span></summary><div class="actionPanelBody"><h2>Client de passage</h2><p class="muted">Sélectionnez le nombre de personnes : une table disponible vous sera proposée automatiquement pour une installation immédiate de 1 h 30.</p><form id="walkinForm"><fieldset class="walkinTypeField"><legend>Type de client</legend><div class="walkinTypeChoices"><label><input type="radio" name="walkinType" value="hotel" checked><i data-lucide="building-2" aria-hidden="true"></i><span>Client de l’hôtel</span><i data-lucide="check-circle-2" class="walkinTypeCheck" aria-hidden="true"></i></label><label><input type="radio" name="walkinType" value="exterieur"><i data-lucide="users" aria-hidden="true"></i><span>Client extérieur</span><i data-lucide="check-circle-2" class="walkinTypeCheck" aria-hidden="true"></i></label></div></fieldset><label><span id="walkinRoomLabel">Chambre ou nom du client (facultatif)</span><input id="walkinRoom" type="text" maxlength="100" placeholder="Ex. 755 ou Dupont"></label><div class="walkinGuestsField"><label for="walkinGuests">Nombre de personnes</label><div class="walkinGuestStepper"><button type="button" id="walkinMinus" aria-label="Retirer une personne" title="Retirer une personne"><i data-lucide="minus" aria-hidden="true"></i></button><div class="walkinGuestCount"><input id="walkinGuests" type="number" min="1" value="2" required inputmode="numeric" aria-describedby="walkinGuestUnit"><span id="walkinGuestUnit">personnes</span></div><button type="button" id="walkinPlus" aria-label="Ajouter une personne" title="Ajouter une personne"><i data-lucide="plus" aria-hidden="true"></i></button></div></div><div class="walkinPaxButtons"><button type="button" data-walkin-pax="1">1</button><button type="button" data-walkin-pax="2">2</button><button type="button" data-walkin-pax="3">3</button><button type="button" data-walkin-pax="4">4</button><button type="button" data-walkin-pax="5">5</button><button type="button" data-walkin-pax="6">6</button></div><p id="walkinRecommendation" class="walkinRecommendation" role="status"></p><select id="walkinTable" hidden aria-label="Table recommandée"></select><button type="submit" class="walkinInstall">✓ Installer directement</button></form><p id="walkinFeedback" role="status" aria-live="polite"></p></div></details><details class="panel actionPanel bookingTools" id="reservationForm"><summary>Nouvelle réservation <span>Choisir une date, un créneau et une table</span></summary><div class="actionPanelBody"><h2>Réservations et disponibilités</h2><form id="bookingForm"><label>Client ou chambre <input id="bookingClient" required maxlength="100" placeholder="Nom du client / n° chambre"></label><fieldset class="bookingTypeField"><legend>Type de client</legend><div class="bookingTypeChoices"><label class="bookingTypeOption"><input type="radio" name="bookingTypeVisual" value="exterieur" checked><span><strong>Client extérieur</strong><small>Réservation classique</small></span></label><label class="bookingTypeOption"><input type="radio" name="bookingTypeVisual" value="hotel"><span><strong>Client hôtel</strong><small>Avec numéro de chambre</small></span></label></div><select id="bookingType" class="visuallyHiddenSelect" tabindex="-1" aria-label="Type de client"><option value="exterieur">Client extérieur</option><option value="hotel">Client hôtel</option></select></fieldset><label>Date <input id="bookingDate" type="date" required></label><label>Heure <input id="bookingTime" type="time" required></label><label>Couverts <input id="bookingGuests" type="number" min="1" value="1" required></label><label>Table disponible <select id="bookingTable" required></select></label><div class="bookingExtraFields"><h3>Informations pour le service</h3><label>Allergies signalées <textarea id="bookingAllergies" maxlength="500" rows="2" placeholder="Ex. : allergie aux fruits à coque — à confirmer avec le client"></textarea></label><label>Demandes du client, notes et consignes <textarea id="bookingNotes" maxlength="1000" rows="3" placeholder="Ex. : anniversaire, près de la fenêtre, chaise bébé…"></textarea></label><p class="bookingExtraHint">Ces informations seront visibles dans la fiche de réservation. Vérifiez toujours les allergies avec le client et la cuisine.</p></div><section id="bookingDraft" hidden><p id="draftMessage"></p><div class="bookingDraftActions"><button id="draftExtend" type="button">Prolonger le maintien</button><button id="draftAbandon" type="button">Abandonner</button></div></section><button type="submit" class="bookingSubmitPrimary">Ajouter la réservation</button></form><div id="fusionSuggestions" class="fusionSuggestions"></div><div id="availabilityInsight" class="availabilityInsight" aria-live="polite"></div><p id="bookingFeedback" role="status" aria-live="polite"></p></div></details><div class="content"><section class="panel" id="tables"><div class="panelHead"><div><h1 class="serviceIconHeading"><i data-lucide="layout-grid" aria-hidden="true"></i><span>Tables du service</span></h1><p>Statuts explicites et capacité réelle par table</p></div><label class="roomFilterLabel"><span class="srOnlyRoom">Choisir une salle</span><select id="roomFilter" aria-label="Choisir une salle"></select></label></div><div class="filters" id="filters"><button class="active" data-filter="all">Toutes</button><button data-filter="free">Libres</button><button data-filter="expected">Attendus</button><button data-filter="present">Présents</button></div><div class="tableGrid" id="tableGrid"></div></section><aside class="panel"><h2 class="serviceIconHeading"><i data-lucide="calendar-days" aria-hidden="true"></i><span>Prochaines arrivées</span></h2><div id="upcoming"></div><div id="detail">Sélectionnez une table pour voir ses réservations.</div></aside></div><section class="panel reservationPanel" id="reservations"><div class="panelHead"><div><h2>Réservations du service</h2><p>Retrouvez, modifiez et suivez chaque réservation</p></div></div><div class="reservationSearch"><label>Date <input id="reservationDate" type="date"></label><label>Recherche <input id="reservationQuery" type="search" placeholder="Client, chambre ou table"></label><button id="reservationShowAll" type="button">Toutes les dates</button></div><p id="reservationMessage" role="status" aria-live="polite"></p><form id="editForm" hidden><h2>Modifier la réservation</h2><section id="editConflict" class="editConflict" role="status" aria-live="polite" hidden><strong>La réservation a changé</strong><p id="editConflictMessage">Votre saisie est conservée. Consultez la fiche actuelle avant de reprendre.</p><button id="editReviewCurrent" type="button">Consulter la version actuelle</button><button id="editReloadCurrent" type="button" hidden>Recharger la fiche</button><div id="editCurrentValues" role="region" aria-label="Informations actuellement enregistrées" tabindex="-1"></div></section><label>Nom du client / référence <input id="editClient" maxlength="160" required></label><label id="editHotelRoomField" hidden>Numéro de chambre <input id="editHotelRoom" maxlength="40" autocomplete="off"></label><label>Date <input id="editDate" type="date" required></label><label>Heure <input id="editTime" type="time" required></label><label>Couverts <input id="editGuests" type="number" min="1" required></label><label>Table <select id="editTable" required></select></label><label>Allergies signalées (à vérifier avec le client) <textarea id="editAllergies" aria-describedby="editAllergiesLimit" rows="2" placeholder="Ex. : fruits à coque — à confirmer"></textarea><span id="editAllergiesLimit" class="editDetailLimit"></span></label><label>Notes et consignes de service <textarea id="editNotes" aria-describedby="editNotesLimit" rows="3" placeholder="Ex. : anniversaire, table près de la fenêtre…"></textarea><span id="editNotesLimit" class="editDetailLimit"></span></label><p id="editFusionNotice" class="fusionDetailNote" hidden></p><button type="submit">Enregistrer les modifications</button><button type="button" id="editCancel">Fermer</button></form><div id="reservationList"></div></section><details class="panel actionPanel tableAdminPanel" id="administration"><summary>Gestion des tables <span>Ajouter, modifier ou supprimer une table</span></summary><div class="actionPanelBody"><button id="tableAdminNew" type="button">＋ Nouvelle table</button><form id="tableAdminForm"><label>Numéro <input id="tableAdminNumber" type="number" min="1" required></label><label>Capacité minimum <input id="tableAdminMin" type="number" min="1" value="1" required></label><label>Capacité maximum <input id="tableAdminMax" type="number" min="1" value="2" required></label><label>Salle <select id="tableAdminRoom" required></select></label><button id="tableAdminSubmit" type="submit">Ajouter la table</button></form><p id="tableAdminFeedback" role="status" aria-live="polite"></p><div id="tableAdminList"></div><section class="fusionAdmin"><h3>Tables fusionnables</h3><p>Associez deux tables voisines. Pour réunir trois tables en chaîne, enregistrez les deux associations qui les relient.</p><form id="fusionForm"><p id="fusionSelected" class="fusionSelected"></p><div id="fusionPicker" class="fusionPicker" role="group" aria-label="Sélectionner les numéros des tables fusionnables"></div><button id="fusionSubmit" type="submit">Autoriser cette fusion</button><button id="fusionCancel" type="button" hidden>Annuler la modification</button></form><p id="fusionMessage" role="status" aria-live="polite"></p><div id="fusionList"></div></section></div></details></main></div><nav class="mobileBottomNav" aria-label="Navigation principale mobile">
+<a href="#tables" class="mobileNavItem active" data-nav="tables"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="layout-grid" class="navSvgIcon" aria-hidden="true"></i></span><span>Tables</span></a>
+<a href="#reservations" class="mobileNavItem" data-nav="reservations"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="calendar-days" class="navSvgIcon" aria-hidden="true"></i></span><span>Réservations</span></a>
+<a href="#reservationForm" class="mobileNavItem mobileNavAdd" data-nav="reservationForm" aria-label="Ajouter un client"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="user-plus" class="navSvgIcon" aria-hidden="true"></i></span><span>Ajouter</span></a>
+<a href="#passages" class="mobileNavItem" data-nav="passages" aria-label="Passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Passage</span></a>
+<a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
+</nav>
+<script src="resto-errors.js?v=20261108-tables-display"></script><script src="reservation-engine.js?v=20261107-mission2"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261108-tables-display"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="booking-availability.js?v=20261108-tables-display"></script><script src="service-v3.js?v=20261108-service-icons1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="reservation-edit.js?v=20261108-tables-display"></script><script src="service-v3-reservations.js?v=20261108-nav01-back1"></script><script src="service-v3-walkin-fast.js?v=20261108-stepper1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261108-tables-display"></script><script>
+document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
+ link.addEventListener('click',function(){
+  const target=document.querySelector(link.getAttribute('href'));
+  if(target&&target.tagName==='DETAILS')target.open=true;
+ });
+});
+</script><script>(function(){const select=document.getElementById('bookingType');const radios=document.querySelectorAll('input[name="bookingTypeVisual"]');radios.forEach(r=>r.addEventListener('change',()=>{if(r.checked){select.value=r.value;select.dispatchEvent(new Event('change',{bubbles:true}))}}));})();</script><script src="service-v3-table-admin.js?v=20261108-tables-display"></script><script src="service-v3-room-choices.js?v=20261103-room1"></script><script src="service-v3-screens.js?v=20261108-nav01-back1"></script><script src="service-v3-fusions.js?v=20261108-tables-display"></script><script src="service-v3-report-metrics.js?v=20261106-metrics-audit1"></script><script src="service-v3-history.js?v=20261106-metrics-audit1"></script><script src="service-v3-shifts.js?v=20261108-tables-display"></script><script src="service-v3-closure.js?v=20261106-shared-closure-guard1"></script><script src="service-v3-shared-closure.js?v=20261108-tables-display"></script><script src="service-v3-report-download.js?v=20261106-metrics-audit1"></script><script src="service-v3-reminders.js?v=20261108-tables-display"></script><script src="service-v3-fb-alerts.js?v=20261108-tables-display"></script><script src="service-v3-add-choice.js?v=20261108-nav01-back1"></script><script src="service-v3-time-picker.js?v=20261107-minute-default1"></script><script src="service-v3-calendar-picker.js?v=20261104-cal2"></script><script src="service-v3-theme.js?v=20261107-custom-trigger1"></script><script src="service-v3-refresh.js?v=20261106-release2"></script><script src="service-v3-select-picker.js?v=20261107-custom-trigger1"></script><script src="reception-service-overview.js?v=20261108-service-icons1"></script><script type="module" src="v3-connected-auth.js?v=20261108-bug01-1"></script><script type="module" src="v3-supabase-booking.js?v=20261108-tables-display"></script></body></html>

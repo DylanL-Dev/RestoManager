@@ -1,0 +1,41 @@
+name: V3 cleanup regression
+on:
+  push:
+    branches: [chore/remove-legacy-2d-3d]
+  workflow_dispatch:
+jobs:
+  node-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: JavaScript syntax validation
+        run: |
+          for file in reservation-engine.js service-v3*.js smart-placement-engine.js; do
+            node --check "$file"
+          done
+          for file in v3-connected-auth.js v3-supabase-booking.js; do
+            node --input-type=module --check < "$file"
+          done
+      - name: All Node regressions
+        run: npm test
+      - name: Verify active shell does not load the retired editor
+        run: |
+          node - <<'NODE'
+          const fs=require('fs');
+          const html=fs.readFileSync('v3-connected.html','utf8');
+          const sw=fs.readFileSync('sw.js','utf8');
+          for(const filename of ['floor-3d.mjs','floor-art.js','floor-editor.js','floor-plan.js','floor-properties.js','floor-zoom.js','app.js','service-ui.js','style.css']) {
+            if(fs.existsSync(filename))throw Error('Legacy file remains: '+filename);
+            if(html.includes(filename))throw Error('V3 still loads '+filename);
+            if(sw.includes("'"+filename+"'"))throw Error('PWA still caches '+filename);
+          }
+          for(const filename of ['service-v3-table-store.js','service-v3-table-admin.js','reservation-engine.js']) {
+            if(!fs.existsSync(filename)||!html.includes(filename))throw Error('Missing current table function '+filename);
+          }
+          NODE
