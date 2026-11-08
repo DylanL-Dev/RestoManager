@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.resolve(__dirname,'..','..');
+const js=fs.readFileSync(path.join(root,'service-v3.js'),'utf8');
+const css=fs.readFileSync(path.join(root,'service-v3.css'),'utf8');
+const html=fs.readFileSync(path.join(root,'v3-connected.html'),'utf8');
+assert.match(js,/rushSettingsShortcut/,'Arrival panel must expose settings shortcut');
+assert.match(js,/RestoScreens\?\.request\?\.\('administration'\)/,'Shortcut must use guarded screen navigation');
+assert.match(js,/if\(!window\.RestoReception\)/,'Reception must not show Restaurant setting shortcut');
+assert.match(js,/slider\.type='range'/,'Threshold uses a native accessible range control');
+assert.match(js,/slider\.min='40';slider\.max='90';slider\.step='5'/,'Slider preserves configured 40–90% bounds');
+assert.match(js,/localStorage\.setItem\(KEY,JSON\.stringify\(\{percent:Number\(slider\.value\)\}\)\)/,'Threshold value must persist');
+assert.match(css,/rushPercentSlider::-webkit-slider-thumb/,'Touch slider has a visible thumb');
+assert.match(html,/service-v3\.js\?v=20261108-rush-slider1/,'JS cache key must change');
+assert.match(html,/service-v3\.css\?v=20261108-rush-slider1/,'CSS cache key must change');
+console.log('Rush slider navigation, permissions and asset-version smoke checks passed');
