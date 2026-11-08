@@ -380,8 +380,15 @@ $('editForm').addEventListener('submit',async e=>{
    if(!availability.available)throw business(availability.reason||'Table indisponible');
    if(availability.caution&&!await window.RestoDialog.confirm('Attention : '+availability.reason+'. Confirmer la modification ?', {title:'Disponibilité à confirmer',acceptLabel:'Confirmer'}))return;
    notify('Enregistrement en cours…');
+   const previousTables=editingBase.tables.slice();
    await window.RestoUpdateSharedBooking(updated);
-   editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;notify('Réservation modifiée.');
+   // Reception delegates table selection to the SQL ranking algorithm.
+   // Announce server-assigned table changes rather than silently retaining an
+   // oversized former assignment after a guest-count decrease.
+   const automaticallyReassigned=Boolean(window.RestoReception&&!sameTables(previousTables,updated.tables));
+   const assignedLabel=updated.tables.length===1?'table '+updated.tables[0]:'tables '+updated.tables.join(' + ');
+   editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;
+   notify(automaticallyReassigned?'Réservation modifiée. Attribution réajustée automatiquement : '+assignedLabel+'.':'Réservation modifiée.');
    try{await window.RestoRefreshSharedService?.()}
    catch(_error){notify('Réservation modifiée. La mise à jour de l’affichage attend le retour de la connexion.');}
   }catch(err){
