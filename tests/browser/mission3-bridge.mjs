@@ -1,5 +1,5 @@
 // UI regression adapter only: this is deliberately not an Auth/RLS/Realtime test.
-export async function requireStaff(){return {user:{id:'fictional-'+window.__mission3Role},profile:{active:true,role:window.__mission3Role,display_name:'Équipe fictive'}}}
+export async function requireStaff(){return {user:{id:'fictional-'+window.__mission3Role},profile:{active:true,role:window.__mission3Role,display_name:'Équipe fictive',restaurant_id:'fictional-restaurant'}}}
 export async function loadSharedService(){return window.__mission3Snapshot()}
 export async function subscribeSharedService(onSnapshot,onError,onConnection){
  const apply=async()=>{try{onConnection(true);onSnapshot(await loadSharedService())}catch(error){onError(error)}};
@@ -8,8 +8,9 @@ export async function subscribeSharedService(onSnapshot,onError,onConnection){
  setTimeout(apply,0);
  return ()=>{window.removeEventListener('online',apply);window.removeEventListener('offline',offline);window.removeEventListener('mission3:push',apply)};
 }
-function query(){
- const result={then:(yes,no)=>Promise.resolve({data:[],error:null}).then(yes,no)};
+function query(table){
+ const data=table==='restaurants'?{name:'À l’Épicerie — Mercure Rouen Centre Champ-de-Mars'}:[];
+ const result={then:(yes,no)=>Promise.resolve({data,error:null}).then(yes,no)};
  for(const name of ['select','eq','order','limit','range','in','is','single','maybeSingle','update','insert','delete','gte','lte','neq'])result[name]=()=>result;
  return result;
 }
