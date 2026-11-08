@@ -66,6 +66,42 @@ try{
  window.RestoSharedDataLoaded=false;
  const management=document.querySelector('[data-screen="administration"]')||document.getElementById('administration');
  if(!management)throw new Error('Espace Gestion introuvable');
+ // Establishment identity is read from the RLS-protected restaurants table.
+ // Never accept a restaurant identifier chosen by the browser's user.
+ const establishment=document.createElement('details');
+ establishment.className='managementGroup';
+ establishment.id='manageEstablishment';
+ establishment.open=true;
+ const establishmentHead=document.createElement('summary');
+ establishmentHead.className='managementGroupHead';
+ establishmentHead.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="building-2"></i></span><span class="managementGroupWords"><strong>Mon établissement</strong><small>Restaurant ou hôtel associé à ce compte</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
+ const establishmentBody=document.createElement('div');
+ establishmentBody.className='managementGroupBody';
+ const establishmentName=document.createElement('p');
+ establishmentName.id='currentEstablishmentName';
+ establishmentName.setAttribute('role','status');
+ establishmentName.setAttribute('aria-live','polite');
+ establishmentName.textContent='Identification de l’établissement…';
+ const establishmentHint=document.createElement('p');
+ establishmentHint.className='muted';
+ establishmentHint.textContent='Ce nom permettra d’identifier votre établissement dans les futurs signalements de problèmes. Seul un administrateur autorisé pourra le modifier.';
+ establishmentBody.append(establishmentName,establishmentHint);
+ establishment.append(establishmentHead,establishmentBody);
+ management.prepend(establishment);
+ if(profile.restaurant_id){
+  try{
+   const {data:restaurant,error:restaurantError}=await supabase.from('restaurants')
+    .select('name').eq('id',profile.restaurant_id).single();
+   if(restaurantError)throw restaurantError;
+   const name=String(restaurant?.name||'').trim();
+   if(!name)throw new Error('Nom non renseigné');
+   establishmentName.textContent=name;
+   window.RestoEstablishment={id:profile.restaurant_id,name};
+   document.getElementById('teamSpace').textContent+=' · '+name;
+  }catch(_error){
+   establishmentName.textContent='Nom de l’établissement indisponible';
+  }
+ }else establishmentName.textContent='Établissement non identifié';
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
  const summary=document.createElement('summary');summary.className='managementGroupHead';summary.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="wifi"></i></span><span class="managementGroupWords"><strong>Réseau et synchronisation</strong><small>Connexion, compte et données partagées</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
  const content=document.createElement('div');content.className='managementGroupBody';
