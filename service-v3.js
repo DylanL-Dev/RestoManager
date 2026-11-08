@@ -27,7 +27,7 @@ function rushArrivalBreakdown(date,start,end,all,nowMinutes=currentMinutes(),tod
 }
 const mins=s=>Number(String(s).slice(0,2))*60+Number(String(s).slice(3,5));
 const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
-function settings(){try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return {percent:[40,50,55,60,65,70,75,80,85,90].includes(Number(v.percent))?Number(v.percent):60,window:60,step:15}}catch(_){return {...DEFAULT}}}
+function settings(){try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return {percent:Number.isInteger(Number(v.percent))&&Number(v.percent)>=40&&Number(v.percent)<=90&&Number(v.percent)%5===0?Number(v.percent):60,window:60,step:15}}catch(_){return {...DEFAULT}}}
 function capacity(){return TableStore.get().tables.reduce((sum,t)=>sum+Number(t.capacity||0),0)}
 function service(time){const m=mins(time);return Object.values(ReservationEngine.getShifts()).find(s=>s.enabled&&m>=mins(s.start)&&m<=mins(s.end))||null}
 function relevant(r,date){return r.date===date&&ReservationEngine.isBlocking(r)&&!r.walkIn&&typeof r.time==='string'}
@@ -84,7 +84,24 @@ function dashboard(date,all){
  const shifts=Object.entries(ReservationEngine.getShifts()).filter(([,s])=>s.enabled);
  const heading=document.createElement('div');heading.className='rushDashHead';
  heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2 class="serviceIconHeading"><i data-lucide="activity" aria-hidden="true"></i><span>Charge des arrivées</span></h2><p>Suivi du créneau : clients encore à venir, arrivées en retard et clients déjà installés.</p></div>';
+ if(!window.RestoReception){
+  const gear=rushNode('button','rushSettingsShortcut');gear.type='button';
+  gear.setAttribute('aria-label','Régler la limite des arrivées');
+  gear.title='Régler la limite des arrivées';
+  const icon=rushNode('i');icon.dataset.lucide='settings-2';icon.setAttribute('aria-hidden','true');
+  gear.append(icon,rushNode('span','','Réglages'));
+  gear.addEventListener('click',async()=>{
+   await window.RestoScreens?.request?.('administration');
+   if(window.RestoScreens?.current?.()!=='administration')return;
+   const group=$('manageHours');if(group)group.open=true;
+   const target=$('rushArrivalSettings');if(!target)return;
+   target.scrollIntoView({behavior:'smooth',block:'center'});
+   const slider=$('rushArrivalPercent');if(slider)slider.focus({preventScroll:true});
+  });
+  heading.append(gear);
+ }
  target.append(heading);
+ if(window.lucide?.createIcons)window.lucide.createIcons({nodes:[heading]});
  const windows=[];
  for(const [name,s] of shifts){
   for(let at=mins(s.start);at<=mins(s.end);at+=60){
@@ -173,7 +190,34 @@ function confirm(candidate,all,ignoreId){const data=evaluate(candidate,all,ignor
  button.addEventListener('click',()=>done({suggestedTime:item.at}));
  alternatives.append(button);
 }}else{const p=document.createElement('p');p.textContent='Aucun horaire moins chargé disponible à proximité pour cette table.';alternatives.append(p)}const question=document.createElement('p');question.textContent='Voulez-vous vraiment conserver '+candidate.time+' malgré cette forte affluence ?';const actions=document.createElement('div');actions.className='rushActions';const cancel=document.createElement('button'),accept=document.createElement('button');cancel.type=accept.type='button';cancel.textContent='Retour';accept.textContent='Confirmer exceptionnellement';accept.className='rushAccept';actions.append(cancel,accept);card.append(title,intro,figures,progress(data),next,alternatives,question,actions);overlay.append(card);document.body.append(overlay);const prior=document.activeElement;function done(value){document.removeEventListener('keydown',key,true);overlay.remove();prior?.focus?.();resolve(value)}function key(e){if(e.key==='Escape'){e.preventDefault();done(false)}else if(e.key==='Tab'){if(e.shiftKey&&document.activeElement===cancel){e.preventDefault();accept.focus()}else if(!e.shiftKey&&document.activeElement===accept){e.preventDefault();cancel.focus()}}}document.addEventListener('keydown',key,true);cancel.addEventListener('click',()=>done(false));accept.addEventListener('click',()=>done(true));cancel.focus()})}
-function setup(){const section=$('restaurantShifts');if(!section)return;const box=document.createElement('div');box.className='rushSettings';const h=document.createElement('h3');h.textContent='Répartition des arrivées';const p=document.createElement('p');p.textContent='Quand trop de clients sont attendus sur une heure, RestoManager demande une confirmation manuelle et propose des horaires moins chargés.';const label=document.createElement('label');label.textContent='Limite conseillée de clients arrivant sur une heure';const select=document.createElement('select');for(const value of [40,50,55,60,65,70,75,80,85,90]){const o=document.createElement('option');o.value=value;o.textContent=value+' % de la capacité';select.append(o)}select.value=String(settings().percent);label.append(select);const hint=document.createElement('p');hint.className='rushHint';function show(){hint.textContent='Seuil configuré : '+Math.ceil(capacity()*Number(select.value)/100)+' arrivées prévues sur une heure ('+select.value+' % de '+capacity()+' places). Si une nouvelle réservation dépasse ce seuil, une confirmation sera demandée et des horaires moins chargés seront proposés.'}select.addEventListener('change',()=>{localStorage.setItem(KEY,JSON.stringify({percent:Number(select.value)}));show();window.dispatchEvent(new Event('restomanager:v3-change'))});show();box.append(h,p,label,hint);section.append(box)}
+function setup(){
+ const section=$('restaurantShifts');if(!section)return;
+ const box=rushNode('div','rushSettings');box.id='rushArrivalSettings';
+ const header=rushNode('div','rushSettingsHeader');
+ const h=rushNode('h3','','Répartition des arrivées');
+ const current=rushNode('output','rushSettingsValue');current.id='rushArrivalValue';current.htmlFor='rushArrivalPercent';
+ header.append(h,current);
+ const p=rushNode('p','','Définissez le nombre d’arrivées conseillé sur une heure. Au-delà, RestoManager demande une confirmation et suggère des horaires moins chargés.');
+ const label=rushNode('label','rushSettingsLabel','Limite conseillée par heure');label.htmlFor='rushArrivalPercent';
+ const slider=rushNode('input','rushPercentSlider');slider.id='rushArrivalPercent';slider.type='range';
+ slider.min='40';slider.max='90';slider.step='5';slider.value=String(settings().percent);
+ slider.setAttribute('aria-describedby','rushArrivalHint');
+ const markers=rushNode('div','rushSliderMarkers');
+ markers.append(rushNode('span','','40 %'),rushNode('span','','90 %'));
+ const hint=rushNode('p','rushHint rushSettingsHint');hint.id='rushArrivalHint';
+ function show(){
+  const percent=Number(slider.value),max=capacity(),limit=Math.max(1,Math.ceil(max*percent/100));
+  current.value=percent+' %';current.textContent=percent+' %';
+  slider.style.setProperty('--rush-slider-progress',((percent-40)/50*100)+'%');
+  hint.textContent='Jusqu’à '+limit+' arrivées conseillées sur une heure, pour '+max+' places. Au-delà, confirmation manuelle et suggestions de créneaux.';
+ }
+ slider.addEventListener('input',show);
+ slider.addEventListener('change',()=>{
+  localStorage.setItem(KEY,JSON.stringify({percent:Number(slider.value)}));
+  show();window.dispatchEvent(new Event('restomanager:v3-change'));
+ });
+ show();box.append(header,p,label,slider,markers,hint);section.append(box);
+}
 window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count,windowFor};setup();
 })();
 (function(){const k=document.getElementById('kpis');if(k&&!document.getElementById('rushDashboard')){const section=document.createElement('section');section.id='rushDashboard';section.className='rushDashboard';section.setAttribute('aria-label','Affluence des réservations');k.after(section)}})();
