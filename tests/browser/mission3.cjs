@@ -195,6 +195,21 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await view.page.waitForFunction(()=>document.getElementById('editForm').hidden);
    assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservations');
    pass(role+' '+viewport.width+'px protected edit form Back and cancellation');
+   if(role==='fb_admin'&&viewport.width===390){
+    // Simulate Android/system Back while an unsaved reservation is open.
+    await view.page.evaluate(()=>window.RestoScreens.show('reservationForm'));
+    await view.page.locator('#bookingClient').fill('Brouillon du bouton Retour Android');
+    await view.page.goBack({waitUntil:'domcontentloaded'});
+    await leaveWarning.waitFor({state:'visible'});
+    await leaveWarning.getByRole('button',{name:'Annuler'}).click();
+    assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservationForm');
+    assert.equal(await view.page.locator('#bookingClient').inputValue(),'Brouillon du bouton Retour Android');
+    await view.page.goBack({waitUntil:'domcontentloaded'});
+    await leaveWarning.waitFor({state:'visible'});
+    await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
+    await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
+    pass('Android/browser Back native navigation protects dirty draft');
+   }
    // The existing sidebar regression needs a long service screen to scroll.
    await view.page.evaluate(()=>window.RestoScreens.show('tables'));
 
