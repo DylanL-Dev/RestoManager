@@ -32,6 +32,9 @@ const shapes={
 'bell':'<path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/>',
 'utensils-crossed':'<path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v19"/><path d="M20 3c-4 3-5 7-5 11h5V3Zm0 11v8"/>',
 'user-plus':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6m3-3h-6"/>',
+'calendar-clock':'<path d="M8 2v4M16 2v4M3 10h18"/><path d="M21 12V6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6"/><circle cx="17" cy="17" r="5"/><path d="M17 14v3l2 1"/>',
+'armchair':'<path d="M5 11V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v5"/><path d="M5 17h14a2 2 0 0 0 2-2v-2a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0v2a2 2 0 0 0 2 2Z"/><path d="M5 17v3M19 17v3"/>',
+'activity':'<path d="M22 12h-4l-3 9L9 3l-3 9H2"/>',
 'users':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>'
 };
 function createIcons(){
