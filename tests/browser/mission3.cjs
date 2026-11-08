@@ -143,6 +143,37 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.ok(mobileNav.every(item=>item.svg),'Mobile navigation icons must render offline');
    assert.equal(await view.page.locator('.quickAction[href="#reservationForm"] span').innerText(),'Ajouter un client');
    pass(role+' '+viewport.width+'px coherent five-tab hierarchy and accessible Lucide icons');
+   // NAV-01: functional Back on the actual browser history (and Android PWA).
+   const appLink=async id=>{
+    const selector=viewport.width<=900?'.mobileNavItem[data-nav="'+id+'"]':'.sidebar a[href="#'+id+'"]';
+    await view.page.locator(selector).click();
+   };
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false,'No back control on the initial screen');
+   await appLink('reservations');
+   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservations');
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),true);
+   assert.ok(await view.page.locator('#navBackBtn svg').count(),'Back control must render offline Lucide arrow-left');
+   await view.page.locator('#navBackBtn').click();
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false);
+   await appLink('reservations');
+   await view.page.goBack({waitUntil:'domcontentloaded'});
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
+   await appLink('reservationForm');
+   await view.page.locator('#bookingClient').fill('Brouillon non enregistré');
+   await appLink('reservations');
+   const leaveWarning=view.page.locator('.rmNoticeOverlay');
+   await leaveWarning.waitFor({state:'visible'});
+   assert.match(await leaveWarning.innerText(),/modifications non enregistrées/i);
+   await leaveWarning.getByRole('button',{name:'Annuler'}).click();
+   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservationForm');
+   assert.equal(await view.page.locator('#bookingClient').inputValue(),'Brouillon non enregistré');
+   await appLink('reservations');
+   await leaveWarning.waitFor({state:'visible'});
+   await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
+   pass(role+' '+viewport.width+'px navigation browser/toolbar Back and protected booking draft');
+
    const sidebarInfo=await view.page.evaluate(()=>{
     const sidebar=document.querySelector('.shell > .sidebar');
     const footer=sidebar.querySelector('.sidebarFooter');
