@@ -104,11 +104,89 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   assert.equal(await management.page.locator('#shift-lunch-start').inputValue(),'11:45');pass('atomic snapshot refreshes hours, tables and fusions without resetting an unrelated unsaved hours draft');await clean(management);
   for(const role of ['fb_admin','reception'])for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
    reset();const view=await open(browser,origin,role,viewport);
+   // Navigation is identical in order and destination on both profiles;
+   // role-specific wording and icons must communicate distinct permissions.
+   const expectedIds=['tables','reservations','reservationForm','passages','administration'];
+   const expectedLabels=['Tables','Réservations','Ajouter un client',
+    role==='reception'?'Suivi du service':'Passages','Gestion'];
+   const sideNav=await view.page.locator('.sidebar a[href^="#"]').evaluateAll(items=>items.map(a=>({
+    id:a.getAttribute('href').slice(1),label:a.textContent.trim(),
+    svg:a.querySelector('svg')!==null
+   })));
+   assert.deepEqual(sideNav.map(item=>item.id),expectedIds);
+   assert.deepEqual(sideNav.map(item=>item.label),expectedLabels);
+   assert.ok(sideNav.every(item=>item.svg),'All navigation icons must render offline using Lucide');
+   const mobileNav=await view.page.locator('.mobileNavItem').evaluateAll(items=>items.map(a=>({
+    id:a.dataset.nav,label:a.textContent.trim(),aria:a.getAttribute('aria-label'),
+    svg:a.querySelector('svg')!==null
+   })));
+   assert.deepEqual(mobileNav.map(item=>item.id),expectedIds);
+   assert.equal(mobileNav[2].label,'Ajouter');
+   assert.equal(mobileNav[2].aria,'Ajouter un client');
+   assert.equal(mobileNav[3].label,role==='reception'?'Suivi':'Passage');
+   assert.equal(mobileNav[3].aria,role==='reception'?'Suivi du service':'Passages');
+   assert.ok(mobileNav.every(item=>item.svg),'Mobile navigation icons must render offline');
+   assert.equal(await view.page.locator('.quickAction[href="#reservationForm"] span').innerText(),'Ajouter un client');
+   pass(role+' '+viewport.width+'px coherent five-tab hierarchy and accessible Lucide icons');
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
     await view.page.evaluate(screen=>window.RestoScreens.show(screen),screen);await view.page.clock.runFor(32);
     const layout=await view.page.evaluate(()=>({viewport:innerWidth,body:document.body.scrollWidth,document:document.documentElement.scrollWidth,visible:[...document.querySelectorAll('.appScreen')].filter(screen=>!screen.hidden).length}));
     assert.equal(layout.visible,1);assert.ok(layout.body<=layout.viewport+1&&layout.document<=layout.viewport+1,JSON.stringify({role,viewport,screen,layout}));
    }
+   // Responsive reservation action bar: preserve every role permission while
+   // placing install/edit/change-table/options together on wide viewports.
+   await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
+   await view.page.locator('#reservationShowAll').click();
+   // Wait for the 230ms appScreenActive translateY entrance animation to finish.
+   // Otherwise sequential boundingBox() calls capture different animation frames.
+   await view.page.clock.runFor(330);
+   const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
+   const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
+   const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
+   // Inspect all rectangles in the SAME browser frame. Sequential Playwright
+   // boundingBox() calls can observe a moving parent during screen animation.
+   const {editBox,moreBox,installBox,changeBox,cardBox}=await toolbar.evaluate(root=>{
+    const bounds=element=>{
+     if(!element)return null;
+     const r=element.getBoundingClientRect();
+     return {x:r.x,y:r.y,width:r.width,height:r.height};
+    };
+    return {
+     editBox:bounds(root.querySelector('[data-reservation-action="edit"]')),
+     moreBox:bounds(root.querySelector('.reservationMoreTrigger')),
+     installBox:bounds(root.querySelector('.reservationActionMain')),
+     changeBox:bounds(root.querySelector('.reservationChangeTable')),
+     cardBox:bounds(root.closest('.reservationItem'))
+    };
+   });
+   assert.ok(editBox&&moreBox&&cardBox,'Edit and extra actions must remain visible');
+   for(const rect of [editBox,moreBox]){
+    assert.ok(rect.x>=cardBox.x-1&&rect.x+rect.width<=cardBox.x+cardBox.width+1,
+     'Action must fit inside the reservation card');
+   }
+   if(role==='fb_admin'){
+    assert.ok(installBox&&changeBox,'Restaurant install/change actions must be present');
+    if(viewport.width>=750){
+     for(const rect of [editBox,changeBox,moreBox])
+      assert.ok(Math.abs(rect.y-installBox.y)<=2,JSON.stringify({message:'Tablet/desktop action misalignment',role,viewport,installBox,editBox,changeBox,moreBox}));
+     assert.ok(installBox.x<editBox.x&&editBox.x<changeBox.x&&changeBox.x<moreBox.x,
+      'Actions must follow install, edit, change table, extra order');
+    }else{
+     assert.ok(installBox.y+installBox.height<=editBox.y+2,
+      'Mobile keeps main action above secondary actions');
+    }
+   }else{
+    assert.equal(installBox,null,'Reception must not show install button');
+    assert.equal(changeBox,null,'Reception must not show table-change button');
+    assert.ok(await toolbar.locator('.reservationPrimaryActions').count()===0,
+     'Reception must not keep an empty primary column');
+   }
+   await more.click();
+   await view.page.getByRole('dialog',{name:'Actions de la réservation'}).waitFor();
+   await view.page.getByRole('button',{name:'Fermer les actions'}).click();
+   await view.page.clock.runFor(240);
+   await view.page.waitForFunction(()=>!document.querySelector('.reservationMenuOverlay'));
+   pass(role+' '+viewport.width+'px reservation actions aligned without overflow and menu accessible');
    await edit(view.page);await view.page.locator('#editClient').fill('Fictif accessible');await view.page.locator('#editNotes').fill('Note fictive '.repeat(60));
    assert.ok((await view.page.locator('#editForm button[type=submit]').boundingBox()).height>=44);
    if(artifacts){fs.mkdirSync(artifacts,{recursive:true});await view.page.screenshot({path:path.join(artifacts,'mission3-'+role+'-'+viewport.width+'.png'),fullPage:true})}
