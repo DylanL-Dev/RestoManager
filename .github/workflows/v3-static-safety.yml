@@ -1,0 +1,37 @@
+name: V3 static publication safety
+
+on:
+  push:
+    branches:
+      - fix/render-static-publication-20261108
+  pull_request:
+    branches:
+      - feature/v3-supabase-full-clone
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-artifact:
+    name: Validate public-only Render artifact
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Generate static dist and check exact allowlist, HTML references and forbidden files
+        run: npm run test:static
+      - name: JavaScript syntax
+        run: npm run test:syntax
+      - name: Preserve reviewable public build
+        uses: actions/upload-artifact@v4
+        with:
+          name: restomanager-v3-public-dist
+          path: dist/
+          if-no-files-found: error
+          retention-days: 5
