@@ -178,6 +178,26 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
    await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
    pass(role+' '+viewport.width+'px navigation browser/toolbar Back and protected booking draft');
+   // Returning from an unsaved reservation editor must protect the local draft.
+   await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
+   await view.page.locator('#reservationShowAll').click();
+   await view.page.locator('[data-reservation-action="edit"]').first().click();
+   await view.page.locator('#editForm').waitFor({state:'visible'});
+   await view.page.locator('#editClient').fill('Nom provisoire non enregistré');
+   await view.page.locator('#navBackBtn').click();
+   await leaveWarning.waitFor({state:'visible'});
+   await leaveWarning.getByRole('button',{name:'Annuler'}).click();
+   assert.equal(await view.page.locator('#editForm').isVisible(),true,'Cancel must preserve editor');
+   assert.equal(await view.page.locator('#editClient').inputValue(),'Nom provisoire non enregistré');
+   await view.page.locator('#navBackBtn').click();
+   await leaveWarning.waitFor({state:'visible'});
+   await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
+   await view.page.waitForFunction(()=>document.getElementById('editForm').hidden);
+   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'reservations');
+   pass(role+' '+viewport.width+'px protected edit form Back and cancellation');
+   // The existing sidebar regression needs a long service screen to scroll.
+   await view.page.evaluate(()=>window.RestoScreens.show('tables'));
+
 
    const sidebarInfo=await view.page.evaluate(()=>{
     const sidebar=document.querySelector('.shell > .sidebar');
