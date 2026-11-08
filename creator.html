@@ -28,6 +28,28 @@ a{display:inline-block;margin-top:20px;color:#157356;font-weight:650}
 .panel strong{display:block;margin-bottom:6px}
 .panel p{margin:0;font-size:14px}
 [hidden]{display:none!important}
+
+.ownerInboxHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ownerInboxHead h2{margin:0;font-size:19px}
+.ownerInboxHead button{margin:0;width:auto}
+.ownerReportFilters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.ownerReportFilter{width:auto;min-height:38px;margin:0;padding:7px 12px;border:1px solid #c7dfd2;border-radius:10px;background:white;color:#20634b;font-size:13px}
+.ownerReportFilter[aria-pressed="true"]{background:#087f5b;color:white}
+.ownerReportList{display:grid;gap:11px}
+.ownerReport{padding:15px;border:1px solid #d4e3db;border-radius:13px;background:#fff}
+.ownerReportTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ownerReportTop time{font-size:12px;color:#6d7f73}
+.ownerReportTag,.ownerReportUrgent{border-radius:99px;padding:5px 9px;background:#e5f4ed;color:#19674b;font-size:11px;font-weight:800}
+.ownerReportUrgent{background:#fff0d8;color:#9f501a}
+.ownerReport h3{margin:12px 0 5px;font-size:16px}
+.ownerReportLocation{font-size:12px;margin:0;color:#5b786c}
+.ownerReportDescription{white-space:pre-wrap;overflow-wrap:anywhere;color:#274538;font-size:14px}
+.ownerReportStatus{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.ownerReportStatus label{margin:0}
+.ownerReportStatus select{font:inherit;padding:9px;border-radius:8px;border:1px solid #b7d2c2}
+.ownerStatusFeedback{font-size:12px;color:#4f795e}
+.ownerReportEmpty{font-size:14px}
+#ownerPanel #ownerInbox{background:#f2f7f4;padding:14px}
 </style>
 </head>
 <body>
@@ -36,10 +58,10 @@ a{display:inline-block;margin-top:20px;color:#157356;font-weight:650}
  <span class="tag">Accès réservé au Créateur</span>
  <section id="loginPanel">
   <h1>Votre espace Créateur</h1>
-  <p>Connectez-vous avec votre compte administrateur personnel. Les comptes Restaurant et Réception n'ont pas accès à cet espace.</p>
+  <p>Connexion réservée au créateur. Identifiant temporaire <strong>root</strong> et mot de passe personnel défini dans Supabase. Aucun mot de passe n’est enregistré dans l’application.</p>
   <form id="creatorLogin">
-   <label for="ownerEmail">Adresse e-mail</label>
-   <input id="ownerEmail" type="email" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+   <label for="ownerUsername">Identifiant Créateur</label>
+   <input id="ownerUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="root" required>
    <label for="ownerPassword">Mot de passe</label>
    <input id="ownerPassword" type="password" autocomplete="current-password" required>
    <button id="ownerSubmit" type="submit">Accéder à mon espace</button>
@@ -48,12 +70,12 @@ a{display:inline-block;margin-top:20px;color:#157356;font-weight:650}
  <section id="ownerPanel" hidden>
   <h1>Espace Créateur</h1>
   <p>Votre compte administrateur est reconnu et actif.</p>
-  <div class="panel"><strong>Signalements des établissements</strong><p>Le tableau de bord des problèmes sera ajouté lors de l'étape BUG-01. Aucun signalement n'est accessible à ce stade.</p></div>
+  <div class="panel" id="ownerInbox" aria-label="Signalements privés"><p>Chargement des signalements…</p></div>
   <button id="ownerLogout" class="secondary" type="button">Se déconnecter</button>
  </section>
  <p id="message" role="status" aria-live="polite"></p>
  <a href="login.html">Retour à la connexion de l'équipe</a>
 </main>
-<script type="module" src="creator-auth.js?v=20261108-owner1"></script>
+<script type="module" src="creator-auth.js?v=20261108-bug01-1"></script>
 </body>
 </html>

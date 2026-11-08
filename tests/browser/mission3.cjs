@@ -260,6 +260,28 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.equal(await view.page.locator('#headerEstablishment').count(),0,
     'No establishment label should compete with the refresh and bell controls');
    assert.equal(await view.page.locator('#currentEstablishmentName').innerText(),establishmentFull);
+
+   // BUG-01 — the private report form exists for both roles, without a public inbox.
+   await view.page.evaluate(()=>window.RestoScreens.show('administration'));
+   const feedbackGroup=view.page.locator('#manageFeedback');
+   await feedbackGroup.waitFor({state:'attached'});
+   await feedbackGroup.locator('summary').click();
+   await feedbackGroup.locator('#reportIssueForm').waitFor({state:'visible'});
+   assert.match(await feedbackGroup.innerText(),/Signaler un problème/);
+   assert.equal(await feedbackGroup.locator('#reportIssueKind option').count(),3);
+   assert.equal(await feedbackGroup.locator('#reportIssueSeverity option').count(),2);
+   assert.equal(await feedbackGroup.locator('#reportIssueContact').getAttribute('maxlength'),'160');
+   assert.ok(await feedbackGroup.locator('summary svg').count(),'Lucide bug icon available offline');
+   assert.ok(await feedbackGroup.locator('#reportIssueSubmit svg').count(),'Lucide send icon available offline');
+   assert.equal(await view.page.locator('#ownerInbox').count(),0,'Employees cannot access creator inbox');
+   const formOverflow=await feedbackGroup.locator('#reportIssueForm').evaluate(el=>({
+    scroll:el.scrollWidth,width:el.clientWidth,
+    sendHeight:el.querySelector('button').getBoundingClientRect().height
+   }));
+   assert.ok(formOverflow.scroll<=formOverflow.width+2,'Report form must fit viewport');
+   assert.ok(formOverflow.sendHeight>=44,'Report submit must remain touch-friendly');
+   await view.page.evaluate(()=>window.RestoScreens.show('tables'));
+   pass(role+' '+viewport.width+'px staff private report form without owner data access');
    assert.equal(await view.page.locator('#teamSpace span').innerText(),role==='reception'?'Espace Réception':'Espace Restaurant');
    assert.equal(await view.page.locator('#teamVenue').innerText(),'À l’Épicerie');
    assert.equal(await view.page.locator('#teamVenue').getAttribute('title'),establishmentFull);

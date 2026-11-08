@@ -1,4 +1,5 @@
 // Creator authentication shell. Never grants admin rights; Supabase RLS does.
+import {installOwnerInbox} from './creator-admin.js?v=20261108-bug01-1';
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const client=createClient(
  'https://tnsrkargogckgtsxipwd.supabase.co',
@@ -6,11 +7,15 @@ const client=createClient(
  {auth:{persistSession:true,autoRefreshToken:true}}
 );
 const $=id=>document.getElementById(id);
+// Temporary username alias. Auth still requires a pre-provisioned user and an
+// independently set secret, NEVER a plaintext password in the repository.
+const ROOT_AUTH_EMAIL='root@accounts.restomanager.example.com';
 let verifying=false;
 function showOwner(){
  $('loginPanel').hidden=true;
  $('ownerPanel').hidden=false;
  $('message').textContent='';
+ installOwnerInbox({client});
 }
 function showLogin(message=''){
  $('loginPanel').hidden=false;
@@ -37,7 +42,8 @@ $('creatorLogin').addEventListener('submit',async event=>{
  const button=$('ownerSubmit');button.disabled=true;
  $('message').textContent='Vérification de votre accès…';
  try{
-  const email=$('ownerEmail').value.trim();
+  if($('ownerUsername').value.trim().toLowerCase()!=='root')throw new Error('Compte non autorisé');
+  const email=ROOT_AUTH_EMAIL;
   const password=$('ownerPassword').value;
   const {error}=await client.auth.signInWithPassword({email,password});
   if(error||!await verifyOwner())throw new Error('Accès refusé');

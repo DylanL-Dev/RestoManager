@@ -1,4 +1,5 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261108-establishment1';
+import {installFeedback} from './service-v3-feedback.js?v=20261108-bug01-1';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
@@ -148,6 +149,7 @@ try{
  const content=document.createElement('div');content.className='managementGroupBody';
  const description=document.createElement('p');description.setAttribute('role','status');description.textContent='Connexion au service en cours…';
  const lastSync=document.createElement('p');lastSync.className='muted';lastSync.textContent='Dernière synchronisation : en attente';content.append(description,banner,lastSync);network.append(summary,content);management.append(network);
+ installFeedback({supabase,profile,management});
  const badge=document.getElementById('syncBadge');
  badge.addEventListener('click',()=>{
   window.RestoScreens.show('administration');
@@ -160,14 +162,14 @@ try{
  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
  // legacy localStorage-backed UI until they are replaced by server-side RPC calls.
- const allowedForms=window.RestoReception?['bookingForm','editForm']:['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm','fusionForm'];
+ const allowedForms=window.RestoReception?['bookingForm','editForm','reportIssueForm']:['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm','fusionForm','reportIssueForm'];
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (!allowedForms.includes(form.id)||!window.RestoSupabaseReady)){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
+  if(e.type==='submit' && form && (!allowedForms.includes(form.id)||(!window.RestoSupabaseReady&&form.id!=='reportIssueForm'))){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
-   if(!btn||btn===logout)return;
+   if(!btn||btn===logout||btn.id==='reportIssueSubmit')return;
    const id=btn.id||'';
    if(['tableAdminSubmit','fusionSubmit'].includes(id)&&!window.RestoReception&&window.RestoSupabaseReady)return;
    // Let view navigation, date selection, search and tabs work; block mutation buttons.
