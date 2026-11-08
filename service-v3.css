@@ -1505,11 +1505,11 @@ html[data-theme="dark"] .receptionMetricLabel > svg{color:#80d8af}
  }
  .shell > .sidebar{
   position:sticky;
-  top:82px;
+  top:var(--resto-shell-top,64px);
   align-self:start;
   box-sizing:border-box;
-  height:calc(100vh - 82px);
-  height:calc(100dvh - 82px);
+  height:calc(100vh - var(--resto-shell-top,64px));
+  height:calc(100dvh - var(--resto-shell-top,64px));
   min-height:0;
   overflow-x:hidden;
   overflow-y:auto;
