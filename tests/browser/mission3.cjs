@@ -193,7 +193,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    })));
    assert.deepEqual(iconChecks.map(card=>card.title),kpiTitles);
    assert.ok(iconChecks.every(card=>card.svg&&card.compact),'Each KPI must have a visible local Lucide icon without clipping');
-   assert.ok(iconChecks.every(card=>/^\\d+$/.test(card.value)),'KPI values must remain numeric');
+   assert.ok(iconChecks.every(card=>/^[0-9]+$/.test(card.value)),'KPI values must remain numeric');
    const current=await view.page.locator('#currentOccupancy').evaluate(block=>({
     title:block.querySelector('.occupancyTitleText')?.textContent,
     icon:!!block.querySelector('.occupancyTitleText svg'),
