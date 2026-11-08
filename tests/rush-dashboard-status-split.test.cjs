@@ -35,7 +35,7 @@ test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 s
  assert.equal(expectedCards.length,3);
  const iconNodes=nodes.filter(n=>n.tag==='i'&&n.dataset?.lucide);
  assert.deepEqual(iconNodes.map(n=>n.dataset.lucide),[
-  'activity','activity','calendar-clock','alert-triangle','users'
+  'activity','calendar-clock','alert-triangle','users'
  ]);
 
  assert.equal(Number(expectedCards[0].children[0].textContent)+Number(expectedCards[1].children[0].textContent),20);
