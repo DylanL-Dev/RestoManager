@@ -52,13 +52,15 @@ main.prepend(toolbar);
 if(window.lucide?.createIcons)window.lucide.createIcons();
 function editForm(){const form=document.getElementById('editForm');return form&&!form.hidden?form:null}
 function captureForm(form){return JSON.stringify([...form.querySelectorAll('input,select,textarea')].filter(el=>!el.disabled&&el.type!=='submit'&&el.type!=='button'&&el.type!=='hidden').map(el=>[el.id||el.name,el.type==='checkbox'||el.type==='radio'?el.checked:el.value]))}
-let bookingBaseline=null;
+let bookingBaseline=null,walkinBaseline=null;
 function resetBookingBaseline(){const form=document.getElementById('bookingForm');bookingBaseline=form?captureForm(form):null}
+function resetWalkinBaseline(){const form=document.getElementById('walkinForm');walkinBaseline=form?captureForm(form):null}
 function editDirty(){
  const edit=window.RestoEditNavigation;
  return !!(edit?.isDirty?.());
 }
 function bookingDirty(){const form=document.getElementById('bookingForm');return current==='reservationForm'&&bookingBaseline!==null&&form&&bookingBaseline!==captureForm(form)}
+function walkinDirty(){const form=document.getElementById('walkinForm');return current==='passages'&&walkinBaseline!==null&&form&&!window.RestoReception&&walkinBaseline!==captureForm(form)}
 function updateBack(){
  const editor=editForm();
  const visible=!!editor||depth>0;
@@ -75,6 +77,7 @@ function show(id,options={}){
  sidebar.forEach(a=>{const active=a.getAttribute('href')==='#'+id;a.classList.toggle('selected',active);if(active)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
  window.dispatchEvent(new CustomEvent('restomanager:screen',{detail:id}));
  if(id==='reservationForm')resetBookingBaseline();
+ if(id==='passages')resetWalkinBaseline();
  updateBack();
  if(!options.keepScroll)window.scrollTo({top:0,behavior:'instant'});
 }
@@ -88,7 +91,7 @@ function commit(id,mode='push'){
  show(id);
 }
 async function mayLeave(){
- if(editDirty()||bookingDirty()){
+ if(editDirty()||bookingDirty()||walkinDirty()){
   if(!window.RestoDialog?.confirm)return false;
   const approved=await window.RestoDialog.confirm(
    'Vous avez des modifications non enregistrées. Voulez-vous quitter cette page ?',
@@ -139,7 +142,7 @@ window.addEventListener('popstate',async event=>{
  if(!state?.[navKey]||!screens.has(state.screen))return;
  if(allowPop){allowPop=false;depth=state.depth;show(state.screen);return}
  if(state.screen===current){depth=state.depth;updateBack();return}
- if(!editDirty()&&!bookingDirty()){
+ if(!editDirty()&&!bookingDirty()&&!walkinDirty()){
   if(editForm())window.RestoEditNavigation?.close?.();
   depth=state.depth;show(state.screen);return;
  }
