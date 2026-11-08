@@ -17,7 +17,9 @@
     "test:mission3:browser": "node tests/browser/mission3.cjs",
     "test:mission3:supabase": "node tests/supabase/mission3.cjs",
     "test:syntax": "node tests/check-syntax.cjs",
-    "test:display": "node tests/browser/table-display.cjs"
+    "test:display": "node tests/browser/table-display.cjs",
+    "build:static": "node scripts/build-public.cjs",
+    "test:static": "npm run build:static && node scripts/verify-public.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.57.0",
