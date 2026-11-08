@@ -1494,3 +1494,99 @@ html[data-theme="dark"] .serviceIconHeading > svg,
 html[data-theme="dark"] .rushLoadLabel > svg,
 html[data-theme="dark"] .rushBreakdownLabel > svg,
 html[data-theme="dark"] .receptionMetricLabel > svg{color:#80d8af}
+
+
+/* Desktop app shell: fixed-height navigation independent of long service pages. */
+@media(min-width:901px){
+ body > header.top{
+  position:sticky;
+  top:0;
+  z-index:150;
+ }
+ .shell > .sidebar{
+  position:sticky;
+  top:var(--resto-shell-top,64px);
+  align-self:start;
+  box-sizing:border-box;
+  height:calc(100vh - var(--resto-shell-top,64px));
+  height:calc(100dvh - var(--resto-shell-top,64px));
+  min-height:0;
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior-y:contain;
+  scrollbar-width:thin;
+  scrollbar-color:#5e9b85 transparent;
+  gap:4px;
+  padding:16px 10px 14px;
+ }
+ .shell > .sidebar > a{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-height:48px;
+  padding:12px 13px;
+  border-radius:12px;
+ }
+ .shell > .sidebar > a:hover:not(.selected){
+  background:#245e4e;
+ }
+ .shell > .sidebar > a:focus-visible{
+  outline:3px solid #aee7c9;
+  outline-offset:-3px;
+ }
+ .shell > .sidebar .sidebarFooter{
+  margin-top:auto;
+  padding:14px 8px 3px;
+  border-top:1px solid #4c7d6d;
+  color:#e4f3ea;
+  min-width:0;
+ }
+ .sidebarEstablishment{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+ }
+ .sidebarEstablishment > svg{
+  width:20px;
+  height:20px;
+  flex:0 0 20px;
+  color:#b5e2ca;
+ }
+ .sidebarEstablishmentDetails{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+ }
+ .sidebarEstablishmentDetails strong{
+  font-size:12px;
+  font-weight:750;
+  line-height:1.35;
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+ }
+ .sidebarEstablishmentDetails small{
+  color:#bbd8ca;
+  font-size:11px;
+  line-height:1.35;
+ }
+ .sidebarMeta{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding-top:13px;
+  font-size:10px;
+  color:#a7cdbd;
+ }
+}
+@media(min-width:901px) and (max-height:480px){
+ .shell > .sidebar{padding-top:8px;padding-bottom:8px}
+ .shell > .sidebar > a{min-height:42px;padding:8px 11px}
+ .shell > .sidebar .sidebarFooter{padding-top:9px}
+}
+@media(max-width:900px){
+ .shell > .sidebar{display:none}
+}

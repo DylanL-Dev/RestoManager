@@ -22,8 +22,19 @@ banner.append(label,logout);
 try{
  const {profile}=await requireStaff();
  window.RestoReception=profile.role==='reception';
+ // Keep the desktop rail aligned with the real responsive header height.
+ // No polling or scroll handlers: ResizeObserver reacts only to actual header resizes.
+ const appHeader=document.querySelector('body > header.top');
+ if(appHeader&&typeof ResizeObserver!=='undefined'){
+  const syncHeaderHeight=()=>document.documentElement.style.setProperty(
+   '--resto-shell-top',Math.ceil(appHeader.getBoundingClientRect().height)+'px');
+  syncHeaderHeight();
+  new ResizeObserver(syncHeaderHeight).observe(appHeader);
+ }
  const roleLabel=document.querySelector('#teamSpace span');
  if(roleLabel)roleLabel.textContent=window.RestoReception?'Espace Réception':'Espace Restaurant';
+ const sidebarRole=document.getElementById('sidebarRole');
+ if(sidebarRole)sidebarRole.textContent=window.RestoReception?'Espace Réception':'Espace Restaurant';
  const roleIcon=document.querySelector('#teamSpace i[data-lucide]');
  if(roleIcon)roleIcon.dataset.lucide=window.RestoReception?'clock-3':'utensils-crossed';
  const introDate=document.getElementById('introDateText');
@@ -116,15 +127,21 @@ try{
     venue.title=name;
     venue.setAttribute('aria-label',name);
    }
+   const sidebarVenue=document.getElementById('sidebarVenue');
+   if(sidebarVenue){sidebarVenue.textContent=name.split(/\s+[—–]\s+/)[0].trim()||name;sidebarVenue.title=name;}
   }catch(_error){
    establishmentName.textContent='Nom de l’établissement indisponible';
    const venue=document.getElementById('teamVenue');
    if(venue)venue.textContent='Établissement indisponible';
+   const sidebarVenue=document.getElementById('sidebarVenue');
+   if(sidebarVenue)sidebarVenue.textContent='Établissement indisponible';
   }
  }else{
   establishmentName.textContent='Établissement non identifié';
   const venue=document.getElementById('teamVenue');
   if(venue)venue.textContent='Établissement non identifié';
+  const sidebarVenue=document.getElementById('sidebarVenue');
+  if(sidebarVenue)sidebarVenue.textContent='Établissement non identifié';
  }
  const network=document.createElement('details');network.className='managementGroup';network.id='manageNetwork';
  const summary=document.createElement('summary');summary.className='managementGroupHead';summary.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="wifi"></i></span><span class="managementGroupWords"><strong>Réseau et synchronisation</strong><small>Connexion, compte et données partagées</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
