@@ -63,7 +63,7 @@ function bookingDirty(){const form=document.getElementById('bookingForm');return
 function walkinDirty(){const form=document.getElementById('walkinForm');return current==='passages'&&walkinBaseline!==null&&form&&!window.RestoReception&&walkinBaseline!==captureForm(form)}
 function updateBack(){
  const editor=editForm();
- const visible=!!editor||depth>0;
+ const visible=!!editor||depth>0||current!=='tables';
  toolbar.hidden=!visible;
  context.textContent=editor?'Modifier une réservation':titles[current]||'RestoManager';
  back.disabled=!visible;
@@ -123,7 +123,12 @@ async function goBack(){
   finally{navigationBusy=false}
   return;
  }
- if(depth<=0)return;
+ if(depth<=0){
+  navigationBusy=true;
+  try{if(await mayLeave())commit('tables','replace')}
+  finally{navigationBusy=false}
+  return;
+ }
  navigationBusy=true;
  try{
   if(!await mayLeave())return;
