@@ -42,7 +42,7 @@ if(management){
 const links=[...document.querySelectorAll('.mobileNavItem')],sidebar=[...document.querySelectorAll('.sidebar a[href^="#"]')];
 const titles={tables:'Votre service',reservations:'Réservations',reservationForm:'Ajouter un client',passages:'Suivi du service',administration:'Gestion'};
 const navKey='restomanager-navigation-v1';
-let current=null,depth=0,navigationBusy=false,restoreFromPop=false;
+let current=null,depth=0,navigationBusy=false,allowPop=false;
 const toolbar=document.createElement('div');toolbar.className='navBackToolbar';toolbar.hidden=true;
 const back=document.createElement('button');back.type='button';back.id='navBackBtn';back.className='navBackButton';
 back.setAttribute('aria-label','Retour à l’étape précédente');back.title='Retour à l’étape précédente';
@@ -124,6 +124,7 @@ async function goBack(){
  navigationBusy=true;
  try{
   if(!await mayLeave())return;
+  allowPop=true;
   history.back();
  }finally{navigationBusy=false}
 }
@@ -136,15 +137,25 @@ document.addEventListener('click',e=>{
 window.addEventListener('popstate',async event=>{
  const state=event.state;
  if(!state?.[navKey]||!screens.has(state.screen))return;
- if(restoreFromPop){restoreFromPop=false;depth=state.depth;show(state.screen);return}
+ if(allowPop){allowPop=false;depth=state.depth;show(state.screen);return}
  if(state.screen===current){depth=state.depth;updateBack();return}
- // Browser / Android back already changed history. Restore current state
- // before prompting so cancellation cannot leave the form on another screen.
- const previous={id:current,depth};
+ if(!editDirty()&&!bookingDirty()){
+  if(editForm())window.RestoEditNavigation?.close?.();
+  depth=state.depth;show(state.screen);return;
+ }
+ // Native Android/browser Back has already moved one history entry.
+ // Return to the current entry first, ask permission, and only then go back.
+ const destination=state;
+ const restored=new Promise(resolve=>{
+  const listen=e=>{window.removeEventListener('popstate',listen);resolve(e.state)};
+  window.addEventListener('popstate',listen,{once:true});
+ });
  history.forward();
- const shouldLeave=await mayLeave();
- if(!shouldLeave){depth=previous.depth;updateBack();return}
- restoreFromPop=true;
+ const restoredState=await restored;
+ if(!restoredState?.[navKey])return;
+ const canLeave=await mayLeave();
+ if(!canLeave){updateBack();return}
+ allowPop=true;
  history.back();
 });
 window.addEventListener('hashchange',()=>{
