@@ -88,8 +88,8 @@ function dashboard(date,all){
   const gear=rushNode('button','rushSettingsShortcut');gear.type='button';
   gear.setAttribute('aria-label','Régler la limite des arrivées');
   gear.title='Régler la limite des arrivées';
-  const icon=rushNode('i');icon.dataset.lucide='settings-2';icon.setAttribute('aria-hidden','true');
-  gear.append(icon,rushNode('span','','Réglages'));
+  const icon=rushNode('i');icon.dataset.lucide='settings';icon.setAttribute('aria-hidden','true');
+  gear.append(icon);
   gear.addEventListener('click',async()=>{
    await window.RestoScreens?.request?.('administration');
    if(window.RestoScreens?.current?.()!=='administration')return;
