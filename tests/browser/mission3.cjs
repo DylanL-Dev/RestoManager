@@ -109,6 +109,45 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     const layout=await view.page.evaluate(()=>({viewport:innerWidth,body:document.body.scrollWidth,document:document.documentElement.scrollWidth,visible:[...document.querySelectorAll('.appScreen')].filter(screen=>!screen.hidden).length}));
     assert.equal(layout.visible,1);assert.ok(layout.body<=layout.viewport+1&&layout.document<=layout.viewport+1,JSON.stringify({role,viewport,screen,layout}));
    }
+   // Responsive reservation action bar: preserve every role permission while
+   // placing install/edit/change-table/options together on wide viewports.
+   await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
+   await view.page.locator('#reservationShowAll').click();
+   const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
+   const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
+   const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
+   const editBox=await modify.boundingBox(),moreBox=await more.boundingBox();
+   assert.ok(editBox&&moreBox,'Edit and extra actions must remain visible');
+   const cardBox=await view.page.locator('.reservationItem').first().boundingBox();
+   for(const rect of [editBox,moreBox]){
+    assert.ok(rect.x>=cardBox.x-1&&rect.x+rect.width<=cardBox.x+cardBox.width+1,
+     'Action must fit inside the reservation card');
+   }
+   if(role==='fb_admin'){
+    const install=toolbar.getByRole('button',{name:'Installer à table',exact:true});
+    const change=toolbar.getByRole('button',{name:'Changer la table',exact:true});
+    const installBox=await install.boundingBox(),changeBox=await change.boundingBox();
+    assert.ok(installBox&&changeBox);
+    if(viewport.width>=750){
+     for(const rect of [editBox,changeBox,moreBox])
+      assert.ok(Math.abs(rect.y-installBox.y)<=2,'Tablet/desktop actions must align on one horizontal row');
+     assert.ok(installBox.x<editBox.x&&editBox.x<changeBox.x&&changeBox.x<moreBox.x,
+      'Actions must follow install, edit, change table, extra order');
+    }else{
+     assert.ok(installBox.y+installBox.height<=editBox.y+2,
+      'Mobile keeps main action above secondary actions');
+    }
+   }else{
+    assert.equal(await toolbar.getByRole('button',{name:'Installer à table',exact:true}).count(),0);
+    assert.equal(await toolbar.getByRole('button',{name:'Changer la table',exact:true}).count(),0);
+    assert.ok(await toolbar.locator('.reservationPrimaryActions').count()===0,
+     'Reception must not keep an empty primary column');
+   }
+   await more.click();
+   await view.page.getByRole('dialog',{name:'Actions de la réservation'}).waitFor();
+   await view.page.getByRole('button',{name:'Fermer les actions'}).click();
+   await view.page.waitForFunction(()=>!document.querySelector('.reservationMenuOverlay'));
+   pass(role+' '+viewport.width+'px reservation actions aligned without overflow and menu accessible');
    await edit(view.page);await view.page.locator('#editClient').fill('Fictif accessible');await view.page.locator('#editNotes').fill('Note fictive '.repeat(60));
    assert.ok((await view.page.locator('#editForm button[type=submit]').boundingBox()).height>=44);
    if(artifacts){fs.mkdirSync(artifacts,{recursive:true});await view.page.screenshot({path:path.join(artifacts,'mission3-'+role+'-'+viewport.width+'.png'),fullPage:true})}
