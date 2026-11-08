@@ -2,7 +2,7 @@
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const root=path.resolve(__dirname,'..','..');
+const root=path.resolve(__dirname,'..');
 const js=fs.readFileSync(path.join(root,'service-v3.js'),'utf8');
 const css=fs.readFileSync(path.join(root,'service-v3.css'),'utf8');
 const html=fs.readFileSync(path.join(root,'v3-connected.html'),'utf8');
