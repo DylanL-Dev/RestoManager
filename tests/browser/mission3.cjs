@@ -143,18 +143,29 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
    const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
    const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
-   const editBox=await modify.boundingBox(),moreBox=await more.boundingBox();
-   assert.ok(editBox&&moreBox,'Edit and extra actions must remain visible');
-   const cardBox=await view.page.locator('.reservationItem').first().boundingBox();
+   // Inspect all rectangles in the SAME browser frame. Sequential Playwright
+   // boundingBox() calls can observe a moving parent during screen animation.
+   const {editBox,moreBox,installBox,changeBox,cardBox}=await toolbar.evaluate(root=>{
+    const bounds=element=>{
+     if(!element)return null;
+     const r=element.getBoundingClientRect();
+     return {x:r.x,y:r.y,width:r.width,height:r.height};
+    };
+    return {
+     editBox:bounds(root.querySelector('[data-reservation-action="edit"]')),
+     moreBox:bounds(root.querySelector('.reservationMoreTrigger')),
+     installBox:bounds(root.querySelector('.reservationActionMain')),
+     changeBox:bounds(root.querySelector('.reservationChangeTable')),
+     cardBox:bounds(root.closest('.reservationItem'))
+    };
+   });
+   assert.ok(editBox&&moreBox&&cardBox,'Edit and extra actions must remain visible');
    for(const rect of [editBox,moreBox]){
     assert.ok(rect.x>=cardBox.x-1&&rect.x+rect.width<=cardBox.x+cardBox.width+1,
      'Action must fit inside the reservation card');
    }
    if(role==='fb_admin'){
-    const install=toolbar.getByRole('button',{name:'Installer à table',exact:true});
-    const change=toolbar.getByRole('button',{name:'Changer la table',exact:true});
-    const installBox=await install.boundingBox(),changeBox=await change.boundingBox();
-    assert.ok(installBox&&changeBox);
+    assert.ok(installBox&&changeBox,'Restaurant install/change actions must be present');
     if(viewport.width>=750){
      for(const rect of [editBox,changeBox,moreBox])
       assert.ok(Math.abs(rect.y-installBox.y)<=2,JSON.stringify({message:'Tablet/desktop action misalignment',role,viewport,installBox,editBox,changeBox,moreBox}));
@@ -165,8 +176,8 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
       'Mobile keeps main action above secondary actions');
     }
    }else{
-    assert.equal(await toolbar.getByRole('button',{name:'Installer à table',exact:true}).count(),0);
-    assert.equal(await toolbar.getByRole('button',{name:'Changer la table',exact:true}).count(),0);
+    assert.equal(installBox,null,'Reception must not show install button');
+    assert.equal(changeBox,null,'Reception must not show table-change button');
     assert.ok(await toolbar.locator('.reservationPrimaryActions').count()===0,
      'Reception must not keep an empty primary column');
    }
