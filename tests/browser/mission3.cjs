@@ -5,10 +5,10 @@ const fs=require('node:fs'),path=require('node:path'),http=require('node:http'),
 const assert=require('node:assert/strict'),{chromium}=require('playwright');
 const root=path.resolve(__dirname,'../..'),artifacts=process.env.BROWSER_ARTIFACTS;
 const day='2032-11-08',clock='2032-11-07T10:59:00Z';
-let records,calls,sequence=0,forcedError=null,lostResponse=false,passed=0,sharedChanges={};
+let records,calls,sequence=0,forcedError=null,lostResponse=false,passed=0,sharedChanges={},autoRightSize=false;
 const uuid=()=>crypto.randomUUID();
 function reset({historical=false,overdue=false}={}){
- forcedError=null;lostResponse=false;calls=[];sharedChanges={};
+ forcedError=null;lostResponse=false;calls=[];sharedChanges={};autoRightSize=false;
  records=[{id:'fictional-hotel',guest_name:'101',hotel_room:'101',party_size:2,starts_at:day+'T11:00:00Z',ends_at:day+'T12:30:00Z',status:'reserved',
   notes:(historical?'Note fictive '.repeat(140).trim():'Note fictive')+'\nALLERGIES À VÉRIFIER : '+(historical?'Allergie fictive '.repeat(40).trim():'Noix')+'\n[RESTOMANAGER:HOTEL]',edit_version:uuid()},
  {id:'fictional-exterior',guest_name:'755',hotel_room:null,party_size:2,starts_at:day+'T11:00:00Z',ends_at:day+'T12:30:00Z',status:'reserved',notes:'Note extérieure\nALLERGIES À VÉRIFIER : Lait\n[RESTOMANAGER:EXTERIEUR]',edit_version:uuid()}];
@@ -18,7 +18,7 @@ function snapshot(){return {syncSequence:++sequence,revision:String(sequence),se
  hours:{lunch_enabled:true,lunch_start:sharedChanges.lunchStart||'11:00:00',lunch_end:'15:00:00',dinner_enabled:true,dinner_start:'18:00:00',dinner_end:'23:00:00',duration:sharedChanges.duration||90},
  rooms:[{id:'fictional-room',name:'Salle fictive',active:true,sort_order:0}],
  tables:Array.from({length:8},(_,i)=>({id:'table-'+(i+1),label:String(i+1),seats:i===0?(sharedChanges.firstTableSeats||6):i===7?12:6,active:true,room_id:'fictional-room'})),
- reservations:structuredClone(records),assignments:records.map((r,i)=>({reservation_id:r.id,table_id:'table-'+(i+1)})),holds:[],fusionLinks:sharedChanges.fusionLinks||[{table_a:'table-3',table_b:'table-4'},{table_a:'table-4',table_b:'table-5'}]}}
+ reservations:structuredClone(records),assignments:records.map((r,i)=>({reservation_id:r.id,table_id:r.assignedTableId||'table-'+(i+1)})),holds:[],fusionLinks:sharedChanges.fusionLinks||[{table_a:'table-3',table_b:'table-4'},{table_a:'table-4',table_b:'table-5'}]}}
 async function rpc(role,name,args){
  calls.push({role,name,args:structuredClone(args)});
  if(forcedError)return {data:null,error:forcedError};
@@ -28,9 +28,13 @@ async function rpc(role,name,args){
  if(name==='cancel_reservation_v3'){record.status='cancelled';record.edit_version=uuid();return {data:null,error:null}}
  assert.equal(name,role==='reception'?'reception_update_reservation_v4':'update_reservation_v4');
  if(record.edit_version!==args.p_expected_version)return {data:null,error:{code:'RM001',message:'update_reservation_v4 PostgreSQL stale internal'}};
+ const previousCovers=record.party_size;
  Object.assign(record,{guest_name:args.p_guest_name,hotel_room:args.p_hotel_room,party_size:args.p_party_size,starts_at:args.p_starts_at,ends_at:args.p_ends_at,notes:args.p_notes,edit_version:uuid()});
+ if(role==='reception'&&autoRightSize&&record.id==='fictional-hotel'&&args.p_party_size!==previousCovers){
+  record.assignedTableId=args.p_party_size>=10?'table-8':'table-3';
+ }
  if(lostResponse){lostResponse=false;return {data:null,error:{code:'NETWORK',message:'database response lost'}}}
- return {data:role==='reception'?{tables:['table-'+(records.indexOf(record)+1)],edit_version:record.edit_version}:record.edit_version,error:null};
+ return {data:role==='reception'?{tables:[record.assignedTableId||'table-'+(records.indexOf(record)+1)],edit_version:record.edit_version}:record.edit_version,error:null};
 }
 const server=http.createServer((req,res)=>{
  const file=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));
@@ -72,6 +76,17 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.equal(calls.length,count);assert.equal((await view.page.locator('#editNotes').inputValue()).length,1001);assert.equal(await view.page.locator('#editNotes').getAttribute('aria-invalid'),'true');
    assert.equal(records[0].notes,before);await view.page.locator('#editNotes').fill('Note raccourcie');await view.page.locator('#editAllergies').fill('Noix');await submit(view.page);await saved(view.page);pass(role+' explicit changed text limits preserve draft');await clean(view);
   }
+  // Simulated server reallocation; real selection logic is tested in isolated PostgreSQL.
+  reset();autoRightSize=true;const resized=await open(browser,origin,'reception');await edit(resized.page);
+  await resized.page.locator('#editGuests').fill('10');await submit(resized.page);await saved(resized.page);
+  await message(resized.page,'table 8');
+  assert.equal(records[0].assignedTableId,'table-8');
+  await resized.page.waitForFunction(()=>window.RestoSharedReservations?.find(r=>r.id==='fictional-hotel')?.tables?.includes(8));
+  await edit(resized.page);await resized.page.locator('#editGuests').fill('2');
+  await submit(resized.page);await saved(resized.page);await message(resized.page,'table 3');
+  assert.equal(records[0].assignedTableId,'table-3');
+  pass('Reception 2→10→2 automatically reassigned table is shown in confirmation');await clean(resized);
+
   for(const pair of [['fb_admin','reception'],['reception','fb_admin']]){
    reset();const a=await open(browser,origin,pair[0]),b=await open(browser,origin,pair[1]);await edit(a.page);await edit(b.page);const opened=records[0].edit_version;
    await b.page.locator('#editClient').fill('Brouillon B');await a.page.locator('#editAllergies').fill('Arachide ajoutée par A');await submit(a.page);await saved(a.page);await push(b.page);
