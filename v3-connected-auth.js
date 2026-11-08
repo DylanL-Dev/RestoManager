@@ -1,5 +1,6 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261108-establishment1';
 import {installFeedback} from './service-v3-feedback.js?v=20261108-bug01-1';
+import {installTutorial} from './service-v3-tutorial.js?v=20261108-onboarding1';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
@@ -21,7 +22,7 @@ logout.addEventListener('click',async()=>{
 });
 banner.append(label,logout);
 try{
- const {profile}=await requireStaff();
+ const {user:authUser,profile}=await requireStaff();
  window.RestoReception=profile.role==='reception';
  // Keep the desktop rail aligned with the real responsive header height.
  // No polling or scroll handlers: ResizeObserver reacts only to actual header resizes.
@@ -150,6 +151,7 @@ try{
  const description=document.createElement('p');description.setAttribute('role','status');description.textContent='Connexion au service en cours…';
  const lastSync=document.createElement('p');lastSync.className='muted';lastSync.textContent='Dernière synchronisation : en attente';content.append(description,banner,lastSync);network.append(summary,content);management.append(network);
  installFeedback({supabase,profile,management});
+ installTutorial({user:authUser,profile,management});
  const badge=document.getElementById('syncBadge');
  badge.addEventListener('click',()=>{
   window.RestoScreens.show('administration');
