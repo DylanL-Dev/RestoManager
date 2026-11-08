@@ -22,6 +22,15 @@ banner.append(label,logout);
 try{
  const {profile}=await requireStaff();
  window.RestoReception=profile.role==='reception';
+ // Keep the desktop rail aligned with the real responsive header height.
+ // No polling or scroll handlers: ResizeObserver reacts only to actual header resizes.
+ const appHeader=document.querySelector('body > header.top');
+ if(appHeader&&typeof ResizeObserver!=='undefined'){
+  const syncHeaderHeight=()=>document.documentElement.style.setProperty(
+   '--resto-shell-top',Math.ceil(appHeader.getBoundingClientRect().height)+'px');
+  syncHeaderHeight();
+  new ResizeObserver(syncHeaderHeight).observe(appHeader);
+ }
  const roleLabel=document.querySelector('#teamSpace span');
  if(roleLabel)roleLabel.textContent=window.RestoReception?'Espace Réception':'Espace Restaurant';
  const sidebarRole=document.getElementById('sidebarRole');
