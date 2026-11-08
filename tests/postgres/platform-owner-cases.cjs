@@ -9,7 +9,7 @@ module.exports=async({ok,sql,ctx,fails,test,user,lit})=>{
   assert.equal(await ok("select has_table_privilege('authenticated','public.platform_admins','select')"),'t');
   for(const verb of ['insert','update','delete'])
    assert.equal(await ok("select has_table_privilege('authenticated','public.platform_admins',"+lit(verb)+")"),'f');
-  assert.equal((await ok(ctx(1,'select count(*) from public.platform_admins'))).split('\\n').at(-1),'0');
+  assert.equal((await ok(ctx(1,'select count(*) from public.platform_admins'))).split('\n').at(-1),'0');
  });
  await test('Platform admin membership: only verified signed-in owner sees own active row',async()=>{
   await ok('insert into public.platform_admins(user_id,active) values('+lit(user(6))+',true)');
