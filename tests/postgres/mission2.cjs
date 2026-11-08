@@ -66,6 +66,8 @@ async function concurrent(firstWho,firstQuery,secondWho,secondQuery,expected){
   if(mission3){
    const validation=fs.readFileSync(path.join(root,'supabase/scripts/mission3_validation_integration.sql'),'utf8');
    await ok(validation);await ok(validation);
+   const rightSize=fs.readFileSync(path.join(root,'supabase/scripts/reception_right_size_recommendations.sql'),'utf8');
+   await ok(rightSize);await ok(rightSize);
   }
   console.log('PASS script applies atomically and can be reapplied locally');
   await test('Restaurant: room persisted, previous room gone, notes/allergies preserved',async()=>{
