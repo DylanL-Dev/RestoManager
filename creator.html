@@ -3,79 +3,84 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#123f35">
+<meta name="theme-color" content="#103e33">
 <meta name="robots" content="noindex,nofollow">
-<title>Espace Créateur · RestoManager</title>
+<title>Console Root · RestoManager</title>
 <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
-<style>
-:root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#153e30;background:#f3f7f5}
-*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:20px}
-main{width:min(100%,470px);padding:30px;background:#fff;border:1px solid #d5e6dc;border-radius:22px;box-shadow:0 18px 60px #123f3517}
-.brand{display:flex;align-items:center;gap:12px;margin-bottom:24px}
-.brand img{width:40px;height:40px}.brand strong{font-size:18px}.brand small{display:block;color:#678075}
-.tag{display:inline-flex;gap:7px;align-items:center;padding:7px 11px;border-radius:999px;background:#e3f3e9;color:#136a4c;font-size:12px;font-weight:800}
-h1{margin:15px 0 6px;font-size:clamp(24px,6vw,31px);line-height:1.16;letter-spacing:-.6px}
-p{color:#61796c;line-height:1.5;margin:10px 0 20px}
-label{display:block;margin:15px 0 0;font-weight:700;font-size:14px}
-input{display:block;width:100%;margin-top:7px;border:1px solid #b7d2c2;background:#fff;border-radius:11px;padding:14px;font:inherit;color:inherit}
-input:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid #37ad7d;outline-offset:3px}
-button{min-height:48px;width:100%;padding:11px 15px;border:0;border-radius:11px;background:#087f5b;color:white;font:inherit;font-weight:800;cursor:pointer;margin-top:20px}
-button:disabled{opacity:.65;cursor:wait}
-button.secondary{background:#eef6f1;color:#176347;margin-top:12px}
-a{display:inline-block;margin-top:20px;color:#157356;font-weight:650}
-#message{min-height:1.5rem;font-size:14px}
-.panel{background:#f1f7f3;padding:17px;border-radius:13px;margin:18px 0}
-.panel strong{display:block;margin-bottom:6px}
-.panel p{margin:0;font-size:14px}
-[hidden]{display:none!important}
-
-.ownerInboxHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.ownerInboxHead h2{margin:0;font-size:19px}
-.ownerInboxHead button{margin:0;width:auto}
-.ownerReportFilters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.ownerReportFilter{width:auto;min-height:38px;margin:0;padding:7px 12px;border:1px solid #c7dfd2;border-radius:10px;background:white;color:#20634b;font-size:13px}
-.ownerReportFilter[aria-pressed="true"]{background:#087f5b;color:white}
-.ownerReportList{display:grid;gap:11px}
-.ownerReport{padding:15px;border:1px solid #d4e3db;border-radius:13px;background:#fff}
-.ownerReportTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.ownerReportTop time{font-size:12px;color:#6d7f73}
-.ownerReportTag,.ownerReportUrgent{border-radius:99px;padding:5px 9px;background:#e5f4ed;color:#19674b;font-size:11px;font-weight:800}
-.ownerReportUrgent{background:#fff0d8;color:#9f501a}
-.ownerReport h3{margin:12px 0 5px;font-size:16px}
-.ownerReportLocation{font-size:12px;margin:0;color:#5b786c}
-.ownerReportDescription{white-space:pre-wrap;overflow-wrap:anywhere;color:#274538;font-size:14px}
-.ownerReportStatus{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.ownerReportStatus label{margin:0}
-.ownerReportStatus select{font:inherit;padding:9px;border-radius:8px;border:1px solid #b7d2c2}
-.ownerStatusFeedback{font-size:12px;color:#4f795e}
-.ownerReportEmpty{font-size:14px}
-#ownerPanel #ownerInbox{background:#f2f7f4;padding:14px}
-</style>
+<link rel="stylesheet" href="creator-console.css?v=20261108-rootconsole1">
 </head>
 <body>
-<main>
- <div class="brand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Administration de la plateforme</small></div></div>
- <span class="tag">Accès réservé au Créateur</span>
- <section id="loginPanel">
-  <h1>Votre espace Créateur</h1>
-  <p>Connexion réservée au créateur. Identifiant temporaire <strong>root</strong> et mot de passe personnel défini dans Supabase. Aucun mot de passe n’est enregistré dans l’application.</p>
+<section id="loginPanel" class="loginSurface">
+ <main class="loginCard">
+  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Console d'administration</small></div></div>
+  <span class="ownerBadge">ACCÈS CRÉATEUR</span>
+  <h1>Bienvenue sur votre console</h1>
+  <p class="ownerIntro">Connexion privée à l'administration RestoManager. Identifiant temporaire <strong>root</strong>, protégé par votre mot de passe Supabase.</p>
   <form id="creatorLogin">
-   <label for="ownerUsername">Identifiant Créateur</label>
+   <label for="ownerUsername">Identifiant Root</label>
    <input id="ownerUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="root" required>
    <label for="ownerPassword">Mot de passe</label>
    <input id="ownerPassword" type="password" autocomplete="current-password" required>
-   <button id="ownerSubmit" type="submit">Accéder à mon espace</button>
+   <button id="ownerSubmit" type="submit">Accéder à la console</button>
   </form>
- </section>
- <section id="ownerPanel" hidden>
-  <h1>Espace Créateur</h1>
-  <p>Votre compte administrateur est reconnu et actif.</p>
-  <div class="panel" id="ownerInbox" aria-label="Signalements privés"><p>Chargement des signalements…</p></div>
-  <button id="ownerLogout" class="secondary" type="button">Se déconnecter</button>
- </section>
- <p id="message" role="status" aria-live="polite"></p>
- <a href="login.html">Retour à la connexion de l'équipe</a>
-</main>
-<script type="module" src="creator-auth.js?v=20261108-bug01-1"></script>
+  <a class="loginBack" href="login.html">Retour à la connexion des équipes</a>
+ </main>
+</section>
+<div id="ownerPanel" class="ownerShell" hidden>
+ <aside class="ownerSidebar" id="ownerSidebar">
+  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Control Center</small></div></div>
+  <span class="ownerSidebarCaption">PLATEFORME</span>
+  <nav class="ownerNavigation" aria-label="Navigation Root">
+   <button type="button" data-owner-nav="dashboard" class="active">▦ <span>Vue générale</span></button>
+   <button type="button" data-owner-nav="restaurants">⌂ <span>Établissements</span></button>
+   <button type="button" data-owner-nav="reports">✉ <span>Assistance & bugs</span></button>
+   <button type="button" data-owner-nav="monitoring">◉ <span>Supervision</span></button>
+   <button type="button" data-owner-nav="settings">⚙ <span>Paramètres</span></button>
+  </nav>
+  <div class="ownerSidebarBottom"><span class="ownerBadge">ROOT · ACTIF</span><small>Administration séparée du service restaurant.</small><button id="ownerLogout" class="ownerLogout" type="button">Se déconnecter</button></div>
+ </aside>
+ <div class="ownerWorkspace">
+  <header class="ownerTopbar">
+   <div class="ownerTopbarLeft"><button id="ownerNavToggle" class="ownerNavToggle" type="button" aria-label="Ouvrir la navigation" aria-expanded="false">☰</button><div><small>RestoManager / Administration</small><strong id="ownerPageTitle">Vue générale</strong></div></div>
+   <span class="ownerAccount">● Administrateur Root</span>
+  </header>
+  <main class="ownerContent">
+   <section data-owner-section="dashboard">
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">CONSOLE DE CONTRÔLE</span><h1>Vue générale</h1><p>Une vue claire sur ta plateforme, sans accès direct aux réservations des restaurants.</p></div><button id="ownerRefreshOverview" class="secondary" type="button">↻ Actualiser</button></div>
+    <div class="ownerMetrics">
+     <article class="ownerMetric"><small>Établissements</small><strong id="ownerTotalRestaurants">—</strong><span>Enregistrés sur la plateforme</span></article>
+     <article class="ownerMetric"><small>Signalements reçus</small><strong id="ownerTotalReports">—</strong><span>1000 derniers au maximum</span></article>
+     <article class="ownerMetric"><small>À traiter</small><strong id="ownerOpenReports">—</strong><span>Nouveaux et en cours</span></article>
+     <article class="ownerMetric"><small>Urgences ouvertes</small><strong id="ownerUrgentReports">—</strong><span>Signalements urgents non résolus</span></article>
+    </div>
+    <div class="ownerDashboardGrid">
+     <section class="ownerSurface"><h2>Centre d'assistance</h2><p>Les signalements Restaurant et Réception sont regroupés dans une boîte privée.</p><button type="button" data-owner-nav="reports" class="ownerAction">Consulter les signalements →</button></section>
+     <section class="ownerSurface"><h2>Établissements</h2><p>Consulte les établissements enregistrés. Aucune entrée dans les comptes des équipes n'est autorisée depuis cette version.</p><button type="button" data-owner-nav="restaurants" class="ownerAction">Afficher les établissements →</button></section>
+    </div>
+    <p class="ownerStatusLine" id="ownerLoadState" role="status">Chargement des données…</p>
+   </section>
+   <section data-owner-section="restaurants" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">ANNUAIRE</span><h1>Établissements</h1><p>Liste des restaurants associés à RestoManager, en lecture seule.</p></div></div>
+    <div id="ownerRestaurantList" class="ownerRestaurantList"></div>
+    <p class="ownerHint">Le mode assistance et l'administration des comptes seront ajoutés séparément, avec permissions et journal d'audit.</p>
+   </section>
+   <section data-owner-section="reports" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">SUPPORT PRIVÉ</span><h1>Assistance & signalements</h1><p>Traite les remontées transmises depuis Gestion. Accès réservé au compte Root actif.</p></div></div>
+    <div class="ownerSurface" id="ownerInbox" aria-label="Signalements privés"><p>Chargement des signalements…</p></div>
+   </section>
+   <section data-owner-section="monitoring" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">PROCHAIN MODULE</span><h1>Supervision</h1><p>Monitoring technique à venir.</p></div></div>
+    <div class="ownerSurface"><h2>En préparation</h2><p>À terme : disponibilité de l'application, incidents Supabase, erreurs de synchronisation et état des déploiements.</p><p class="ownerHint">Aucune mesure de disponibilité en temps réel n'est affichée actuellement.</p></div>
+   </section>
+   <section data-owner-section="settings" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">SÉCURITÉ</span><h1>Paramètres Root</h1><p>Votre identité Root est vérifiée par Supabase Auth et la table platform_admins.</p></div></div>
+    <div class="ownerSurface"><h2>Accès administrateur</h2><p>Rôle : <strong>platform_admin</strong></p><p>Les identifiants et le mot de passe sont gérés exclusivement dans Supabase. Aucun mot de passe n'est enregistré ici.</p><p class="ownerHint">À prévoir avant ouverture à d'autres établissements : adresse de récupération réelle, MFA, comptes administrateurs nominatifs et journal d'audit.</p></div>
+   </section>
+  </main>
+  <footer class="ownerFooter">RestoManager · Administration de la plateforme <span id="ownerToday"></span></footer>
+ </div>
+</div>
+<p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
+<script type="module" src="creator-auth.js?v=20261108-rootconsole1"></script>
 </body>
 </html>
