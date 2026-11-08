@@ -147,14 +147,37 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.equal(await view.page.locator('#headerEstablishment').count(),0,
     'No establishment label should compete with the refresh and bell controls');
    assert.equal(await view.page.locator('#currentEstablishmentName').innerText(),establishmentFull);
-   assert.match(await view.page.locator('#teamSpace').innerText(),/À l’Épicerie — Mercure Rouen Centre Champ-de-Mars/);
+   assert.equal(await view.page.locator('#teamSpace span').innerText(),role==='reception'?'Espace Réception':'Espace Restaurant');
+   assert.equal(await view.page.locator('#teamVenue').innerText(),'À l’Épicerie');
+   assert.equal(await view.page.locator('#teamVenue').getAttribute('title'),establishmentFull);
+   assert.ok(await view.page.locator('#teamSpace svg').count(),'Role identity must have a Lucide icon');
+   assert.ok(await view.page.locator('.serviceVenue svg').count(),'Establishment must have a Lucide icon');
+   const dateExpected=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(new Date(clock));
+   const displayedDate=await view.page.locator('#introDateText').innerText();
+   assert.equal(displayedDate.toLocaleLowerCase('fr-FR'),dateExpected);
+   assert.ok(await view.page.locator('.serviceIntroDate svg').count(),'Date must have a Lucide calendar icon');
+   const presentation=await view.page.locator('.serviceIntro').evaluate(intro=>{
+    const spans=[...intro.querySelectorAll('h1 span')];
+    const bounds=spans.map(x=>x.getBoundingClientRect());
+    const date=intro.querySelector('.serviceIntroDate');
+    const hello=intro.querySelector('#teamGreeting');
+    return {title:spans.map(x=>x.textContent),lineSeparated:bounds[1].top>bounds[0].top+5,
+     dateVisible:getComputedStyle(date).display!=='none',
+     greetingHidden:getComputedStyle(hello).display==='none',
+     width:document.documentElement.scrollWidth,viewport:innerWidth};
+   });
+   assert.deepEqual(presentation.title,['Votre service,','en un coup d’œil']);
+   assert.equal(presentation.lineSeparated,viewport.width<=700,'Title must split only on mobile');
+   assert.equal(presentation.dateVisible,viewport.width<=700,'Date should stay with mobile intro; desktop header keeps its date');
+   assert.equal(presentation.greetingHidden,viewport.width<=700,'Mobile avoids redundant greeting');
+   assert.ok(presentation.width<=presentation.viewport+1,'Intro must not create horizontal overflow');
    const headerLayout=await view.page.evaluate(()=>({
     viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
     refresh:document.getElementById('refreshAppBtn').getBoundingClientRect().toJSON()
    }));
    assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Header must not overflow viewport');
    assert.ok(headerLayout.refresh.width>=42,'Refresh button must keep its touch target');
-   pass(role+' '+viewport.width+'px establishment named only in section and Gestion, header clean');
+   pass(role+' '+viewport.width+'px service role, venue, calendar and two-line mobile title');
 
    for(const screen of ['tables','reservations','reservationForm','passages','administration']){
     await view.page.evaluate(screen=>window.RestoScreens.show(screen),screen);await view.page.clock.runFor(32);
