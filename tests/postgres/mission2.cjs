@@ -70,6 +70,8 @@ async function concurrent(firstWho,firstQuery,secondWho,secondQuery,expected){
    await ok(rightSize);await ok(rightSize);
    const platformOwner=fs.readFileSync(path.join(root,'supabase/scripts/platform_owner_foundation.sql'),'utf8');
    await ok(platformOwner);await ok(platformOwner);
+   const reports=fs.readFileSync(path.join(root,'supabase/scripts/bug01_private_reports.sql'),'utf8');
+   await ok(reports);await ok(reports);
   }
   console.log('PASS script applies atomically and can be reapplied locally');
   await test('Restaurant: room persisted, previous room gone, notes/allergies preserved',async()=>{
@@ -156,6 +158,7 @@ async function concurrent(firstWho,firstQuery,secondWho,secondQuery,expected){
   });
   if(mission3)await require('./mission3-cases.cjs')({sql,ok,record,edit,ctx,fails,test,concurrent,lit,user,res,table,docker,container});
   if(mission3)await require('./platform-owner-cases.cjs')({sql,ok,ctx,fails,test,user,lit});
+  if(mission3)await require('./bug01-cases.cjs')({ok,ctx,fails,test,user,lit});
   const hostedResults=await require('./hosted-migrations.cjs')({docker,container,mission3});
   tests+=hostedResults.length;results.push(...hostedResults);
   console.log(JSON.stringify({mission:mission3?3:2,passed:tests,failed:0,containerNetwork:'none',tests:results}));
