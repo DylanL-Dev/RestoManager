@@ -26,7 +26,7 @@ async function saveReceptionBooking(candidate,id){
  requireWrite();
  const {supabase}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  const start=parisDateTime(candidate.date,candidate.time);
- const name=candidate.client.trim();
+ const name=String(candidate.client||'').trim()||(candidate.type==='hotel'?'Chambre '+String(candidate.hotelRoom||'').trim():'Client extérieur');
  const notes=encodeBookingDetails(candidate);
  const {data,error}=await supabase.rpc('reception_update_reservation_v4',{
   p_reservation_id:id,p_expected_version:window.ReservationEdit.requireVersion(candidate.editVersion),
