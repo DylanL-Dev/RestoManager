@@ -6,24 +6,28 @@ const overlay=document.createElement('div');overlay.className='tablePickerOverla
 overlay.innerHTML='<div class="tablePickerBackdrop"></div><section class="tablePickerSheet" role="dialog" aria-modal="true" aria-labelledby="tablePickerTitle" tabindex="-1"><header class="tablePickerHeader"><div><span class="tablePickerEyebrow">DISPONIBILITÉS</span><h2 id="tablePickerTitle">Choisir une table</h2><p id="tablePickerSubtitle">Sélectionnez la meilleure option</p></div><button class="tablePickerClose" type="button" aria-label="Fermer">✕</button></header><div class="tablePickerGrid"></div><footer class="tablePickerFooter">Les tables proposées respectent le créneau et la capacité indiqués.</footer></section>';
 document.body.append(overlay);
 const grid=overlay.querySelector('.tablePickerGrid'),sheet=overlay.querySelector('.tablePickerSheet');
-let previousFocus=null;
-function close(){overlay.hidden=true;document.body.classList.remove('tablePickerOpen');active=null;if(previousFocus)previousFocus.focus()}
-overlay.querySelector('.tablePickerClose').addEventListener('click',close);
-overlay.querySelector('.tablePickerBackdrop').addEventListener('click',close);
+let previousFocus=null,pickerCallbacks=null;
+function close(selected=false){overlay.hidden=true;document.body.classList.remove('tablePickerOpen');active=null;const callbacks=pickerCallbacks;pickerCallbacks=null;if(previousFocus&&previousFocus.isConnected&&!selected)previousFocus.focus({preventScroll:true});if(!selected)callbacks?.onCancel?.();}
+overlay.querySelector('.tablePickerClose').addEventListener('click',()=>close());
+overlay.querySelector('.tablePickerBackdrop').addEventListener('click',()=>close());
 document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')close();if(e.key==='Tab'){const controls=Array.from(sheet.querySelectorAll('button:not([disabled])'));const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
-const refreshers={};
+const refreshers={},openers={};
 configs.forEach(id=>{
  const select=document.getElementById(id);if(!select)return;
  const box=document.createElement('div');box.className='tableChoice';
  const trigger=document.createElement('button');trigger.type='button';trigger.className='tableChoiceTrigger';
  select.parentNode.append(box);box.append(trigger);select.classList.add('visuallyHiddenSelect');select.tabIndex=-1;
  function refresh(){
+ const receptionLocked=window.RestoReception===true&&(id==='bookingTable'||id==='editTable');
+ box.hidden=receptionLocked;
+ trigger.disabled=receptionLocked;
+ if(receptionLocked&&active===id)close();
  const options=Array.from(select.options).filter(o=>o.value);
  const chosen=options.find(o=>o.value===select.value);
  trigger.replaceChildren();
  const label=document.createElement('span');label.textContent=chosen?(chosen.textContent):(select.dataset.availabilityMessage||'Choisissez les informations de réservation');
  const action=document.createElement('span');action.className='tableChoiceAction';action.textContent=chosen?'Changer':'Choisir';
- trigger.append(label,action);trigger.disabled=!options.length||['checking','syncing','offline','error'].includes(select.dataset.availabilityState);
+ trigger.append(label,action);trigger.disabled=receptionLocked||select.disabled||!options.length||['checking','syncing','offline','error'].includes(select.dataset.availabilityState);
  if(active===id)render();
  }
  function render(){
@@ -41,12 +45,14 @@ configs.forEach(id=>{
  const desc=document.createElement('small');desc.textContent=o.textContent.split('·').slice(1).join('·').replace('Recommandée','').trim();
  const indicator=document.createElement('span');indicator.className='tablePickerIndicator';indicator.textContent=id==='editTable'?(o.disabled?(o.dataset.reason||'Indisponible'):(o.dataset.availability==='caution'?(o.dataset.reason||'À confirmer'):(o.value===select.value?'✓ Sélectionnée':'✓ Disponible'))):(o.value===select.value?'✓ Sélectionnée':'Choisir cette table');
  card.append(top,desc,indicator);
- card.addEventListener('click',()=>{select.value=o.value;select.dispatchEvent(new Event('change',{bubbles:true}));close();refresh()});
+ card.addEventListener('click',()=>{const was=select.value;select.value=o.value;select.dispatchEvent(new Event('change',{bubbles:true}));const callback=pickerCallbacks?.onSelect;close(true);refresh();callback?.({changed:was!==o.value,value:o.value,label:o.textContent})});
  grid.append(card);
  });
  }
- trigger.addEventListener('click',()=>{previousFocus=trigger;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus()});
+ const openPicker=(callbacks=null)=>{if((window.RestoReception===true&&(id==='bookingTable'||id==='editTable'))||select.disabled||trigger.disabled)return false;previousFocus=trigger;pickerCallbacks=callbacks;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus();return true};
+ trigger.addEventListener('click',()=>openPicker());openers[id]=openPicker;
  select.addEventListener('change',refresh);refresh();refreshers[id]=refresh;
 });
-window.RestoTableChoices={refresh(id){refreshers[id]?.()}};
+window.RestoTableChoices={refresh(id){refreshers[id]?.()},refreshAll(){Object.values(refreshers).forEach(fn=>fn())},open(id,callbacks){return openers[id]?.(callbacks)===true}};
+window.addEventListener('restomanager:supabase-snapshot',()=>window.RestoTableChoices.refreshAll());
 })();

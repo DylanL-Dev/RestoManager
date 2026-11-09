@@ -224,8 +224,8 @@ window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count
 'use strict';
 (function(){
 const $=id=>document.getElementById(id);
-// Restaurant-local service date. Match the booking calendar from 00:00 Paris.
-// Keeping yesterday until 01:00 concealed today's reservations on the table grid.
+// Restaurant-local service date. Until 01:00 the previous service day remains
+// active; new bookings always use the current Paris calendar date.
 const bookingToday=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
 const today=()=>bookingToday();
 const bookingNowTime=()=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(/\s/g,'');
@@ -531,7 +531,7 @@ list.forEach(r=>{
  });
  // Detailed editing and smart table changes already live in the reservation card.
  // Link there rather than duplicating business logic in this quick-service sheet.
- if(r.status!=='seated'){
+ if(!isReception&&r.status!=='seated'){
   const manage=node('button','tableStatusAction tableCompactSecondary','Modifier / changer de table');
   manage.type='button';
   manage.addEventListener('click',()=>{
@@ -545,7 +545,25 @@ list.forEach(r=>{
   sheet.append(manage);
  }
  if(sheet.querySelector('.tableCompactSecondary'))controls.append(secondary);
- row.append(controls);box.append(row);
+ row.append(controls);
+ // Immediate access from the table popup, under "Installer à table".
+ // Reuse the existing editor and its availability/concurrency checks.
+ if(!isReception&&r.status!=='seated'){
+  const changeTable=node('button','tableQuickChange');
+  const changeIcon=document.createElement('i');changeIcon.setAttribute('data-lucide','arrow-left-right');changeIcon.setAttribute('aria-hidden','true');
+  changeTable.append(changeIcon,document.createTextNode('Changer de table'));
+  changeTable.type='button';
+  changeTable.setAttribute('aria-label','Changer la table de '+r.client);
+  changeTable.addEventListener('click',()=>{
+   closeTable();
+   const dateField=$('reservationDate');if(dateField){dateField.value=r.date;dateField.dispatchEvent(new Event('change',{bubbles:true}))}
+   const query=$('reservationQuery');if(query){query.value='';query.dispatchEvent(new Event('input',{bubbles:true}))}
+   window.RestoScreens?.show('reservations');
+   window.dispatchEvent(new CustomEvent('restomanager:quick-change-table',{detail:{reservationId:r.id}}));
+  });
+  row.append(changeTable);
+ }
+ box.append(row);
  });
 }
 function confirmTableDeparture(kind,r){
@@ -604,7 +622,7 @@ function refreshAvailability(){
  }
  const reservationsAll=readReservations(),duration=ReservationEngine.getDefaultDuration();
  const choices=ReservationEngine.rankedTableChoices(plan.tables,window.RestoFusion?.pairs()||[],guests);
- function candidate(at,tables){return {id:'availability-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||'Simulation',date:dateValue,time:at,guests,duration,tables,status:'reserved'};}
+ function candidate(at,tables){return {id:'availability-preview',type:$('bookingType').value,client:$('bookingClient').value.trim()||($('bookingType').value==='hotel'?('Chambre '+($('bookingHotelRoom').value.trim()||'à préciser')):'Client extérieur'),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:dateValue,time:at,guests,duration,tables,status:'reserved'};}
  function availability(at){
   const interval=window.RestoBookingInterval?.(dateValue,at,duration);
   return window.RestoAvailability.evaluate({choices,assess:c=>{
@@ -723,7 +741,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw (window.RestoErrors?.business||Error)('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<bookingToday())throw (window.RestoErrors?.business||Error)('Impossible de créer une réservation à une date passée.');
- const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
+ const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim()||($('bookingType').value==='hotel'?('Chambre '+$('bookingHotelRoom').value.trim()):'Client extérieur'),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
  if(candidate.notes.length>1000||candidate.allergies.length>500)throw (window.RestoErrors?.business||Error)('Les notes ou allergies dépassent la longueur autorisée. Raccourcissez votre saisie.');
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw (window.RestoErrors?.business||Error)('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);

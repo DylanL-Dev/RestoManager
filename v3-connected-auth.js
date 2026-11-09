@@ -70,6 +70,15 @@ try{
    bookingSelect.dispatchEvent(new Event('change',{bubbles:true}));
   }
   document.querySelector('#editTable').required=false;
+  window.RestoTableChoices?.refreshAll?.();
+  // Only Reception: hide the full table field, including its caption and generated picker.
+  for(const id of ['bookingTable','editTable']){
+   const select=document.getElementById(id);
+   const label=select?.closest('label');
+   if(label){label.hidden=true;label.style.setProperty('display','none','important');}
+   const custom=select?.parentElement?.querySelector('.tableChoice');
+   if(custom){custom.hidden=true;custom.style.setProperty('display','none','important');}
+  }
   const text=document.createElement('p');
   text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
   document.querySelector('#bookingTable').closest('label').after(text);
