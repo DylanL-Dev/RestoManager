@@ -386,6 +386,7 @@ function render(){
 $('reservationDate').value=new Date().toLocaleDateString('en-CA');
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',()=>{if($('reservationQuery').value.trim()){$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))}else render()});
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))});
+$('editSuccessClose')?.addEventListener('click',()=>{$('editSuccessToast').hidden=true});
 $('editCancel').addEventListener('click',async()=>{if(savingEdit)return;if(window.RestoEditNavigation.isDirty()&&!(await window.RestoDialog.confirm('Vous avez des modifications non enregistrées. Voulez-vous fermer la modification ?',{title:'Modifications non enregistrées',acceptLabel:'Quitter sans enregistrer',danger:true})))return;closeNavigationEditor()});
 $('editReviewCurrent')?.addEventListener('click',async()=>{try{await reviewCurrentEdit()}catch(error){notify(errorMessage(error))}});
 $('editReloadCurrent')?.addEventListener('click',async()=>{
