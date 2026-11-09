@@ -362,7 +362,7 @@ function render(){
   else if(kind==='edit')secondary.append(makeAction(kind,label,'reservationActionSecondary'));
   else extra.push({label,run:()=>action(r.id,kind),danger:kind==='cancel'});
  }
- if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){
+ if(window.RestoSharedReservations&&['reserved','confirmed','late','arrived'].includes(r.status)){
   // Keep the reservation card compact: table reassignment is available in
   // the ellipsis menu and via the dedicated shortcut on the table itself.
   extra.push({label:'Changer la table',run:()=>openChangeTablePicker(r.id)});
@@ -420,7 +420,9 @@ $('editForm').addEventListener('submit',async e=>{
    if(availability.caution&&!await window.RestoDialog.confirm('Attention : '+availability.reason+'. Confirmer la modification ?', {title:'Disponibilité à confirmer',acceptLabel:'Confirmer'}))return;
    notify('Enregistrement en cours…');
    const previousTables=editingBase.tables.slice();
-   await window.RestoUpdateSharedBooking(updated);
+   await window.RestoUpdateSharedBooking(updated,{
+    explicitTableChoice:Boolean(window.RestoReception&&!sameTables(editingBase.tables,updated.tables))
+   });
    // Reception delegates table selection to the SQL ranking algorithm.
    // Announce server-assigned table changes rather than silently retaining an
    // oversized former assignment after a guest-count decrease.
@@ -479,7 +481,6 @@ $('editForm').addEventListener('submit',async e=>{
 // Reuses the existing edit workflow and server-side concurrency safeguards;
 // a card choice only updates the draft, never silently writes a reservation.
 function openChangeTablePicker(id){
- if(window.RestoReception)return;
  if(!window.RestoSupabaseReady){notify('Synchronisation requise avant de changer de table.');return;}
  const record=load().find(item=>item.id===id);
  if(!record||departedStatuses.has(record.status)||!['reserved','confirmed','late','arrived'].includes(record.status)){
