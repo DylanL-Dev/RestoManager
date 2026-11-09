@@ -31,7 +31,7 @@ function editAvailability(tables){
  if(!Number.isInteger(guests)||guests<1)return {available:false,reason:'Nombre de couverts invalide'};
  if(total<guests)return {available:false,reason:'Capacité insuffisante'};
  if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0])?.capacityMin||1))return {available:false,reason:'Capacité minimale non respectée'};
- const candidate={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
+ const candidate={...previous,client:$('editClient').value.trim()||(previous.type==='hotel'?'Chambre '+($('editHotelRoom').value.trim()||'non renseignée'):'Client extérieur'),date:$('editDate').value,time:$('editTime').value,guests,tables};
  if(window.RestoSharedReservations)candidate.hotelRoom=previous.type==='hotel'?$('editHotelRoom').value.trim():'';
  const result=E.validate(candidate,load(),editing);
  if(!result.valid)return {available:false,reason:result.conflict?'Occupée à '+result.conflict.time+' · '+result.conflict.client:result.errors[0]};
@@ -394,7 +394,7 @@ $('editForm').addEventListener('submit',async e=>{
     date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:chosenTables,
     notes:$('editNotes').value,allergies:$('editAllergies').value});
    if(!window.RestoReception&&!updated.tables.length)throw business('Choisissez une table');
-   if(!updated.client)throw business('Le nom du client est obligatoire.');
+   // A nameless booking uses a descriptive label; the name field is optional.
    if(!Number.isInteger(updated.guests)||updated.guests<1||updated.guests>50)throw business('Nombre de couverts invalide.');
    const availability=window.RestoReception?{available:true}:editAvailability(updated.tables);
    if(!availability.available)throw business(availability.reason||'Table indisponible');
