@@ -328,3 +328,26 @@ html[data-theme="dark"] #bookingForm .bookingTypeOption strong svg{color:#a2e3bc
  display:inline-flex!important;align-items:center;justify-content:center;gap:9px;
 }
 .walkinPanel #walkinForm .walkinInstall svg{width:18px;height:18px;flex:none}
+
+/* Keep the booking CTA proportional like the shared editor: one compact
+   action on wide displays, full-width for easy thumb access on phones. */
+#bookingForm > .bookingSubmitPrimary{
+ grid-column:1/-1!important;
+ width:auto!important;
+ min-width:210px!important;
+ max-width:100%!important;
+ min-height:44px!important;
+ height:auto!important;
+ justify-self:end!important;
+ padding:11px 19px!important;
+ margin-top:8px!important;
+ border-radius:11px!important;
+}
+@media(max-width:640px){
+ #bookingForm > .bookingSubmitPrimary{
+  justify-self:stretch!important;
+  width:100%!important;
+  min-width:0!important;
+  min-height:48px!important;
+ }
+}
