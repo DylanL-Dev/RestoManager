@@ -27,6 +27,7 @@ export function installCreatorConsole({client,installOwnerInbox}){
   setText('ownerPageTitle',names[chosen]||'Vue générale');
   if(chosen==='reports'&&!reportsLoaded){installOwnerInbox({client});reportsLoaded=true;}
   if(chosen==='restaurants')renderEstablishments();
+  if(chosen==='dashboard'&&loaded)void load();
   setMenuOpen(false);
  }
  function renderEstablishments(){
@@ -56,18 +57,19 @@ export function installCreatorConsole({client,installOwnerInbox}){
    establishments=restaurantsResponse.data||[];
    const reports=reportsResponse.data||[];
    setText('ownerTotalRestaurants',establishments.length);
-   setText('ownerTotalReports',reports.length===1000?'1000+':reports.length);
-   setText('ownerOpenReports',reports.filter(x=>x.status!=='resolved').length);
+   setText('ownerNewReports',reports.filter(x=>x.status==='new').length);
+   setText('ownerReviewingReports',reports.filter(x=>x.status==='reviewing').length);
    setText('ownerUrgentReports',reports.filter(x=>x.severity==='urgent'&&x.status!=='resolved').length);
    setText('ownerLoadState','Mis à jour le '+new Intl.DateTimeFormat('fr-FR',{timeStyle:'short',timeZone:'Europe/Paris'}).format(new Date()));
    loaded=true;renderEstablishments();
   }catch(error){
    setText('ownerLoadState','Chargement impossible : vérifiez les autorisations et la connexion.');
-   if(!loaded){['ownerTotalRestaurants','ownerTotalReports','ownerOpenReports','ownerUrgentReports'].forEach(id=>setText(id,'—'));}
+   if(!loaded){['ownerTotalRestaurants','ownerNewReports','ownerReviewingReports','ownerUrgentReports'].forEach(id=>setText(id,'—'));}
   }finally{loading=false;}
  }
  navigation.forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.ownerNav)));
  byId('ownerRefreshOverview')?.addEventListener('click',()=>void load());
+ window.addEventListener('restomanager:root-reports-updated',()=>void load());
  navToggle?.addEventListener('click',()=>setMenuOpen(!sidebar?.classList.contains('open')));
  navClose?.addEventListener('click',()=>{setMenuOpen(false);navToggle?.focus();});
  navBackdrop?.addEventListener('click',()=>{setMenuOpen(false);navToggle?.focus();});
