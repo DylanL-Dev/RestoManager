@@ -1,0 +1,38 @@
+name: RestoManager - validation avant publication
+on:
+  pull_request:
+    branches:
+      - RestoManager-V3
+      - main
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  release-guard:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Vérifier la cible Supabase production
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          for (const file of ['supabase-service-bridge.js', 'supabase-login.js']) {
+            const source = fs.readFileSync(file, 'utf8');
+            if (!source.includes('tnsrkargogckgtsxipwd')) throw Error(file + ' : cible production absente');
+            if (source.includes('lykoybacslvmhtzftqsf') || source.includes('restomanager-env.js')) {
+              throw Error(file + ' : routage de développement interdit dans la publication');
+            }
+          }
+          console.log('Cible Supabase production préservée; aucune connexion DB effectuée.');
+          NODE
+      - name: Vérifier la syntaxe JavaScript
+        run: |
+          npm ci --ignore-scripts
+          npm run test:syntax
+      - name: Tests unitaires sans base de production
+        run: npm test
