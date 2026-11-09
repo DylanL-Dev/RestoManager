@@ -346,9 +346,9 @@ function render(){
   else extra.push({label,run:()=>action(r.id,kind),danger:kind==='cancel'});
  }
  if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){
-  const change=el('button','Changer la table','reservationActionSecondary reservationChangeTable');
-  change.type='button';change.addEventListener('click',()=>showSmartPlacement(r.id));
-  secondary.append(change);
+  // Keep the reservation card compact: table reassignment is available in
+  // the ellipsis menu and via the dedicated shortcut on the table itself.
+  extra.push({label:'Changer la table',run:()=>showSmartPlacement(r.id)});
  }
  if(mainActions.children.length)actions.append(mainActions);
  const tools=el('div',undefined,'reservationActionTools');
