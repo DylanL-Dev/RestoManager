@@ -34,6 +34,7 @@
   // Old hotel bookings use the room as guest_name. Follow that alias when the
   // room alone changes, but never replace an actual guest name.
   if(base.type==='hotel'&&hotelRoom&&base.client===base.hotelRoom&&client===base.client)client=hotelRoom;
+  if(!client)client=base.type==='hotel'?'Chambre '+(hotelRoom||'non renseignée'):'Client extérieur';
   return {...base,client,hotelRoom,date:values.date,time:values.time,guests:Number(values.guests),
    tables:(values.tables||[]).slice(),notes:detail(base,'notes',values.notes),
    allergies:detail(base,'allergies',values.allergies)};
