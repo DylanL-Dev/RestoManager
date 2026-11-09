@@ -53,6 +53,7 @@ function updateEditChoiceAvailability(){
 }
 function editChoices(){
  const selector=$('editTable'),current=chosenTables.slice(),plan=TableStore.get();
+ selector.disabled=window.RestoReception===true;
  const options=plan.tables.map(t=>({tables:[t.number],label:'Table '+t.number+' · '+t.capacity+' places'}));
  for(const pair of window.RestoFusion?.pairs()||[]){
   options.push({tables:pair,label:'Fusion '+pair.join(' + ')+' · '+pair.reduce((sum,n)=>sum+(plan.tables.find(t=>t.number===n)?.capacity||0),0)+' places'});
@@ -391,7 +392,7 @@ $('editForm').addEventListener('submit',async e=>{
   try{
    if(!editingBase||editingBase.id!==editing)throw business('Rouvrez la fiche avant de la modifier.');
    const updated=window.ReservationEdit.candidate(editingBase,{client:$('editClient').value,hotelRoom:$('editHotelRoom').value,
-    date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:chosenTables,
+    date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:window.RestoReception?editingBase.tables.slice():chosenTables,
     notes:$('editNotes').value,allergies:$('editAllergies').value});
    if(!window.RestoReception&&!updated.tables.length)throw business('Choisissez une table');
    if(!updated.client)throw business('Le nom du client est obligatoire.');
