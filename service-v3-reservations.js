@@ -3,7 +3,21 @@
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
 const statuses={reserved:'À confirmer · Attendu',confirmed:'Confirmé · Attendu',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='active';
-let navEditBaseline=null;
+let navEditBaseline=null,quickTableChange=null;
+function showEditSuccess(message){
+ const toast=$('editSuccessToast'),label=$('editSuccessText');
+ if(!toast||!label)return;
+ label.textContent=message;toast.hidden=false;window.lucide?.createIcons?.();
+}
+function updateEditSummary(r){
+ const set=(id,value)=>{const node=$(id);if(node)node.textContent=value};
+ set('editSummaryClient',r.client||'Client extérieur');
+ set('editSummaryDate',new Date(r.date+'T12:00:00').toLocaleDateString('fr-FR'));
+ set('editSummaryTime',r.time);
+ set('editSummaryGuests',r.guests+' couvert'+(r.guests>1?'s':''));
+ set('editSummaryTable',r.tables.length===1?'Table '+r.tables[0]:'Tables '+r.tables.join(' + '));
+}
+
 function navigationEditSnapshot(){
  const form=$('editForm');
  return JSON.stringify([...form.querySelectorAll('input,select,textarea')]
@@ -13,6 +27,7 @@ function navigationEditSnapshot(){
 function notifyNavigationEditorOpen(){navEditBaseline=navigationEditSnapshot();window.dispatchEvent(new Event('restomanager:editor-open'));}
 function closeNavigationEditor(){
  if(savingEdit)return;
+ quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
  editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];navEditBaseline=null;
  $('editForm').hidden=true;
  window.dispatchEvent(new Event('restomanager:editor-close'));
@@ -31,7 +46,7 @@ function editAvailability(tables){
  if(!Number.isInteger(guests)||guests<1)return {available:false,reason:'Nombre de couverts invalide'};
  if(total<guests)return {available:false,reason:'Capacité insuffisante'};
  if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0])?.capacityMin||1))return {available:false,reason:'Capacité minimale non respectée'};
- const candidate={...previous,client:$('editClient').value.trim(),date:$('editDate').value,time:$('editTime').value,guests,tables};
+ const candidate={...previous,client:$('editClient').value.trim()||(previous.type==='hotel'?'Chambre '+($('editHotelRoom').value.trim()||'non renseignée'):'Client extérieur'),date:$('editDate').value,time:$('editTime').value,guests,tables};
  if(window.RestoSharedReservations)candidate.hotelRoom=previous.type==='hotel'?$('editHotelRoom').value.trim():'';
  const result=E.validate(candidate,load(),editing);
  if(!result.valid)return {available:false,reason:result.conflict?'Occupée à '+result.conflict.time+' · '+result.conflict.client:result.errors[0]};
@@ -53,6 +68,8 @@ function updateEditChoiceAvailability(){
 }
 function editChoices(){
  const selector=$('editTable'),current=chosenTables.slice(),plan=TableStore.get();
+ // Reception may view the assigned table, but only Restaurant can select or change it.
+ selector.disabled=Boolean(window.RestoReception);
  const options=plan.tables.map(t=>({tables:[t.number],label:'Table '+t.number+' · '+t.capacity+' places'}));
  for(const pair of window.RestoFusion?.pairs()||[]){
   options.push({tables:pair,label:'Fusion '+pair.join(' + ')+' · '+pair.reduce((sum,n)=>sum+(plan.tables.find(t=>t.number===n)?.capacity||0),0)+' places'});
@@ -62,7 +79,7 @@ function editChoices(){
  options.forEach((option,i)=>{const elOption=el('option',option.label);elOption.value=String(i);elOption._tables=option.tables.slice();selector.append(elOption)});
  selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,current))));
  updateEditChoiceAvailability();
- selector.onchange=()=>{chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
+ selector.onchange=()=>{if(window.RestoReception){selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,editingBase?.tables||current))));return;}chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const summary=$('editSummaryTable');if(summary)summary.textContent=chosenTables.length===1?'Table '+chosenTables[0]:'Tables '+chosenTables.join(' + ');const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
  const notice=$('editFusionNotice');if(notice){notice.hidden=current.length<2;notice.textContent=current.length>1?'Fusion sélectionnée : '+current.join(' + '):''}
 }
 
@@ -72,6 +89,7 @@ function notify(msg){$('reservationMessage').textContent=msg}
 const business=message=>window.RestoErrors?.business(message)||Error(message);
 function errorMessage(error,fallback='Cette action ne peut pas être confirmée. Votre saisie est conservée ; réessayez après synchronisation.'){
  window.RestoErrors?.diagnostic('reservation-action',error);
+ if(window.RestoReception&&(error?.details==='FORBIDDEN'||error?.code==='42501'))return 'La Réception peut modifier les réservations avant installation. Si le client est installé, demandez à l’équipe Restaurant de gérer son déplacement.';
  return window.RestoErrors?.message(error,fallback)||fallback;
 }
 function updateEditDetailLimits(){
@@ -84,7 +102,9 @@ function updateEditDetailLimits(){
   if(hint)hint.textContent=input.value.length+' / '+limit+' caractères'+(unchanged&&input.value.length>limit?' · Texte historique conservé tant qu’il reste inchangé.':message?' · Raccourcissez le texte avant d’enregistrer.':'.');
  }
 }
-function openSharedEditor(r){
+function openSharedEditor(r,{directTablePicker=false}={}){
+ quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
+ $('editSuccessToast')?.setAttribute('hidden','');updateEditSummary(r);
  editing=r.id;editingBase=window.ReservationEdit.capture(r);reviewedVersion=null;chosenTables=r.tables.slice();
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
  $('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
@@ -93,8 +113,8 @@ function openSharedEditor(r){
  $('editConflict').hidden=true;$('editCurrentValues').textContent='';$('editReloadCurrent').hidden=true;
  editChoices();
  ['editDate','editTime'].forEach(id=>$(id).dispatchEvent(new Event('change',{bubbles:true})));
- $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
- $('editClient').focus({preventScroll:true});
+ $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();window.lucide?.createIcons?.();
+ if(!directTablePicker){$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});$('editClient').focus({preventScroll:true});}
 }
 function showEditConflict(uncertain=false){
  $('editConflict').hidden=false;
@@ -206,7 +226,7 @@ function showReservationActions(reservation,items,trigger){
  for(const item of items){
   const btn=el('button',undefined,'reservationMenuOption'+(item.danger?' reservationMenuDanger':''));
   btn.type='button';
-  const ico=document.createElement('i');ico.dataset.lucide=item.danger?'trash-2':item.label==='Confirmer'?'check-circle-2':item.label==='Retard'?'clock-3':'user-x';ico.setAttribute('aria-hidden','true');
+  const ico=document.createElement('i');ico.dataset.lucide=item.danger?'trash-2':item.label==='Installer à table'?'armchair':item.label==='Confirmer'?'check-circle-2':item.label==='Retard'?'clock-3':item.label==='Changer la table'?'arrow-left-right':'user-x';ico.setAttribute('aria-hidden','true');
   const words=el('span',item.label);
   const arrow=document.createElement('i');arrow.dataset.lucide='chevron-right';arrow.setAttribute('aria-hidden','true');
   btn.append(ico,words,arrow);btn.addEventListener('click',()=>dismiss(item.run));choices.append(btn);
@@ -340,14 +360,15 @@ function render(){
  const extra=[];
  const makeAction=(kind,label,cls)=>{const btn=el('button',label,cls);btn.type='button';btn.dataset.reservationAction=kind;btn.addEventListener('click',()=>action(r.id,kind));return btn};
  for(const [kind,label] of available){
-  if(kind==='seated'||kind==='completed'||kind==='confirm')mainActions.append(makeAction(kind,label,'reservationActionMain'+(kind==='confirm'?' reservationActionConfirm':'')));
+  if(kind==='seated'&&!window.RestoReception)extra.push({label,run:()=>action(r.id,kind)});
+  else if(kind==='completed'||kind==='confirm')mainActions.append(makeAction(kind,label,'reservationActionMain'+(kind==='confirm'?' reservationActionConfirm':'')));
   else if(kind==='edit')secondary.append(makeAction(kind,label,'reservationActionSecondary'));
   else extra.push({label,run:()=>action(r.id,kind),danger:kind==='cancel'});
  }
  if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){
-  const change=el('button','Changer la table','reservationActionSecondary reservationChangeTable');
-  change.type='button';change.addEventListener('click',()=>showSmartPlacement(r.id));
-  secondary.append(change);
+  // Keep the reservation card compact: table reassignment is available in
+  // the ellipsis menu and via the dedicated shortcut on the table itself.
+  extra.push({label:'Changer la table',run:()=>openChangeTablePicker(r.id)});
  }
  if(mainActions.children.length)actions.append(mainActions);
  const tools=el('div',undefined,'reservationActionTools');
@@ -368,6 +389,7 @@ function render(){
 $('reservationDate').value=new Date().toLocaleDateString('en-CA');
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',()=>{if($('reservationQuery').value.trim()){$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))}else render()});
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))});
+$('editSuccessClose')?.addEventListener('click',()=>{$('editSuccessToast').hidden=true});
 $('editCancel').addEventListener('click',async()=>{if(savingEdit)return;if(window.RestoEditNavigation.isDirty()&&!(await window.RestoDialog.confirm('Vous avez des modifications non enregistrées. Voulez-vous fermer la modification ?',{title:'Modifications non enregistrées',acceptLabel:'Quitter sans enregistrer',danger:true})))return;closeNavigationEditor()});
 $('editReviewCurrent')?.addEventListener('click',async()=>{try{await reviewCurrentEdit()}catch(error){notify(errorMessage(error))}});
 $('editReloadCurrent')?.addEventListener('click',async()=>{
@@ -391,27 +413,33 @@ $('editForm').addEventListener('submit',async e=>{
   try{
    if(!editingBase||editingBase.id!==editing)throw business('Rouvrez la fiche avant de la modifier.');
    const updated=window.ReservationEdit.candidate(editingBase,{client:$('editClient').value,hotelRoom:$('editHotelRoom').value,
-    date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:chosenTables,
+    date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:window.RestoReception?editingBase.tables.slice():chosenTables,
     notes:$('editNotes').value,allergies:$('editAllergies').value});
    if(!window.RestoReception&&!updated.tables.length)throw business('Choisissez une table');
-   if(!updated.client)throw business('Le nom du client est obligatoire.');
+   // A nameless booking uses a descriptive label; the name field is optional.
    if(!Number.isInteger(updated.guests)||updated.guests<1||updated.guests>50)throw business('Nombre de couverts invalide.');
    const availability=window.RestoReception?{available:true}:editAvailability(updated.tables);
    if(!availability.available)throw business(availability.reason||'Table indisponible');
    if(availability.caution&&!await window.RestoDialog.confirm('Attention : '+availability.reason+'. Confirmer la modification ?', {title:'Disponibilité à confirmer',acceptLabel:'Confirmer'}))return;
    notify('Enregistrement en cours…');
    const previousTables=editingBase.tables.slice();
-   await window.RestoUpdateSharedBooking(updated);
+   await window.RestoUpdateSharedBooking(updated,{
+    explicitTableChoice:false
+   });
    // Reception delegates table selection to the SQL ranking algorithm.
    // Announce server-assigned table changes rather than silently retaining an
    // oversized former assignment after a guest-count decrease.
    const automaticallyReassigned=Boolean(window.RestoReception&&!sameTables(previousTables,updated.tables));
    const assignedLabel=updated.tables.length===1?'table '+updated.tables[0]:'tables '+updated.tables.join(' + ');
+   const quick=quickTableChange;quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
    editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;navEditBaseline=null;window.dispatchEvent(new Event('restomanager:editor-close'));
-   notify(automaticallyReassigned?'Réservation modifiée. Attribution réajustée automatiquement : '+assignedLabel+'.':'Réservation modifiée.');
+   const successText=quick?'Table changée avec succès — '+quick.client+' déplacée vers '+assignedLabel+'.':automaticallyReassigned?'Réservation modifiée. Attribution réajustée automatiquement : '+assignedLabel+'.':'Réservation modifiée.';
+   notify(successText);showEditSuccess(successText);
    try{await window.RestoRefreshSharedService?.()}
    catch(_error){notify('Réservation modifiée. La mise à jour de l’affichage attend le retour de la connexion.');}
   }catch(err){
+   quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
+   $('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
    if(window.ReservationEdit.isConflict(err))showEditConflict();
    else if(err instanceof TypeError||err.code==='NETWORK'||err.code===''||navigator.onLine===false)showEditConflict(true);
    else notify(errorMessage(err));
@@ -450,6 +478,54 @@ $('editForm').addEventListener('submit',async e=>{
 });
 ['editNotes','editAllergies'].forEach(id=>$(id).addEventListener('input',updateEditDetailLimits));
 ['editGuests','editDate','editTime','editClient','editHotelRoom'].forEach(id=>$(id)?.addEventListener('input',updateEditChoiceAvailability));
+// One consistent availability-aware table selector for both entry points:
+//  - reservation ellipsis menu
+//  - direct shortcut from the table details.
+// Reuses the existing edit workflow and server-side concurrency safeguards;
+// a card choice only updates the draft, never silently writes a reservation.
+function openChangeTablePicker(id){
+ if(window.RestoReception){notify('L’attribution des tables est réservée à l’équipe Restaurant.');return;}
+ if(!window.RestoSupabaseReady){notify('Synchronisation requise avant de changer de table.');return;}
+ const record=load().find(item=>item.id===id);
+ if(!record||departedStatuses.has(record.status)||!['reserved','confirmed','late','arrived'].includes(record.status)){
+  notify(window.RestoReception?'La Réception peut changer la table uniquement avant l’installation du client.':'Réservation indisponible pour un changement de table.');return;
+ }
+ reservationView='active';
+ expanded=record.id;
+ render();
+ // Avoid the editor scroll and the delayed requestAnimationFrame: this
+ // shortcut must display the shared card picker immediately on click.
+ openSharedEditor(record,{directTablePicker:true});
+ $('editForm').classList.add('editQuickTablePending');
+ const opened=window.RestoTableChoices?.open('editTable',{
+  onCancel:()=>{quickTableChange=null;closeNavigationEditor()},
+  onSelect:({changed,value,label})=>{
+   if(!changed){quickTableChange=null;closeNavigationEditor();notify('Table inchangée.');return;}
+   quickTableChange={id,client:record.client,from:record.tables.slice(),to:label};
+   // Save the selected assignment through the same version/availability
+   // guarded reservation edit flow. Never treat a card tap as a DB write.
+   if(!$('editForm').requestSubmit){
+    $('editForm').classList.remove('editQuickTablePending');
+    notify('Veuillez enregistrer la nouvelle table dans la fiche.');
+    return;
+   }
+   if(!$('editForm').checkValidity()){
+    quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
+    $('editForm').reportValidity();notify('Vérifiez les informations de la réservation avant enregistrement.');return;
+   }
+   $('editForm').requestSubmit();
+  }
+ });
+ if(!opened){
+  $('editForm').classList.remove('editQuickTablePending');
+  $('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+  $('editTable')?.focus({preventScroll:true});
+  notify('La sélection directe est momentanément indisponible. Choisissez une table dans la fiche.');
+ }
+}
+window.addEventListener('restomanager:quick-change-table',event=>{
+ openChangeTablePicker(event.detail?.reservationId);
+});
 // Notifications navigate to the appropriate status tab and expand the exact booking.
 window.addEventListener('restomanager:open-reservation',event=>{
  const data=event.detail||{};
