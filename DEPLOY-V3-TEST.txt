@@ -1,2 +1,4 @@
 RestoManager V3 test deployment marker.
 Supabase integration branch only; official V3 unchanged.
+
+2026-11-10: restore reference 8099e6698b7200a125ee44d3e984d7cb10613c51; frontend rollback only, production Supabase data untouched.
