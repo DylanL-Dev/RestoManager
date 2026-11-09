@@ -322,3 +322,9 @@ html[data-theme="dark"] :is(#bookingForm,#editForm.editFormModern,#walkinForm) .
  color:#9be1b9!important;
 }
 html[data-theme="dark"] #bookingForm .bookingTypeOption strong svg{color:#a2e3bc!important}
+
+/* Same purposeful Lucide CTA treatment for one-touch passages. */
+.walkinPanel #walkinForm .walkinInstall{
+ display:inline-flex!important;align-items:center;justify-content:center;gap:9px;
+}
+.walkinPanel #walkinForm .walkinInstall svg{width:18px;height:18px;flex:none}
