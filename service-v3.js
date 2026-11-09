@@ -234,6 +234,27 @@ const today=()=>{
  const d=new Date(paris+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10);
 };
 const bookingNowTime=()=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(/\s/g,'');
+const bookingMinuteOf=time=>{const match=/^(\\d{2}):(\\d{2})$/.exec(String(time||''));return match?Number(match[1])*60+Number(match[2]):NaN};
+const bookingClock=minute=>String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');
+const nextBookingDate=date=>{const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10)};
+// Booking forms may be opened at ANY time; the selected time is the guest's arrival,
+// never the clock time at which staff are entering the reservation.
+function bookingArrivalDefault(date=bookingToday()){
+ const nowDate=bookingToday(),nowMinute=bookingMinuteOf(bookingNowTime());
+ const shifts=Object.values(ReservationEngine.getShifts())
+  .filter(shift=>shift.enabled&&Number.isFinite(bookingMinuteOf(shift.start))&&Number.isFinite(bookingMinuteOf(shift.end)))
+  .map(shift=>({start:bookingMinuteOf(shift.start),end:bookingMinuteOf(shift.end)}))
+  .filter(shift=>shift.end>=shift.start).sort((a,b)=>a.start-b.start);
+ if(!shifts.length)return {date,time:'19:00'};
+ // Advance to the next quarter hour to avoid suggesting a time in the past.
+ const earliest=date>nowDate?0:(Math.ceil(nowMinute/15)*15);
+ for(const shift of shifts){
+  const candidate=Math.max(shift.start,earliest);
+  if(candidate<=shift.end&&candidate<24*60)return {date,time:bookingClock(candidate)};
+ }
+ return {date:date>nowDate?date:nextBookingDate(nowDate),time:bookingClock(shifts[0].start)};
+}
+
 let date=today();
 function refreshHeaderDate(){
  const heading=$('serviceDate');
@@ -581,7 +602,7 @@ function refreshAvailability(){
  const allowedShifts=Object.values(ReservationEngine.getShifts()).filter(shift=>shift.enabled);
  const inBookingHours=allowedShifts.some(shift=>bookingMinutes(time)>=bookingMinutes(shift.start)&&bookingMinutes(time)<=bookingMinutes(shift.end));
  if(!inBookingHours){
-  if(insight)insight.append(node('p','availabilityWarning','Horaire hors service : aucune réservation ne peut être prise à '+time+'. Horaires autorisés : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
+  if(insight)insight.append(node('p','availabilityWarning','L’heure d’arrivée choisie ('+time+') est hors service. Vous pouvez saisir une réservation à toute heure ; choisissez une heure d’arrivée pendant le service : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
   select.dataset.availabilityState='out_of_service';select.dataset.availabilityMessage='Horaire hors service';
   window.RestoTableChoices?.refresh('bookingTable');
   return;
@@ -670,8 +691,9 @@ function prepareNewReservation(){
  // Roll an expired booking date forward, while preserving future dates chosen by staff.
  const bookingDateField=$('bookingDate');
  if(bookingDateField&&(!bookingDateField.value||bookingDateField.value<bookingToday()))bookingDateField.value=bookingToday();
- // Start each new booking at the current restaurant-local clock time, keeping table shortcuts.
- const bookingTimeField=$('bookingTime');if(bookingTimeField)bookingTimeField.value=bookingNowTime();
+ // The form can be used outside service hours; default to the next valid guest arrival.
+ const bookingTimeField=$('bookingTime');
+ if(bookingDateField&&bookingTimeField){const arrival=bookingArrivalDefault(bookingDateField.value);bookingDateField.value=arrival.date;bookingTimeField.value=arrival.time;}
  // Only clear fields belonging to the previous guest.
  for(const id of ['bookingClient','bookingHotelRoom','bookingAllergies','bookingNotes']){
   const field=$(id);if(field)field.value='';
@@ -686,8 +708,7 @@ window.addEventListener('restomanager:screen',e=>{
  if(e.detail==='reservationForm')prepareNewReservation();
 });
 function readReservations(){const raw=window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
-$('bookingDate').value=bookingToday();
-$('bookingTime').value=bookingNowTime();
+{const arrival=bookingArrivalDefault();$('bookingDate').value=arrival.date;$('bookingTime').value=arrival.time;}
 function syncHotelRoomField(){
  const isHotel=$('bookingType').value==='hotel';
  const label=$('bookingHotelRoomField'),input=$('bookingHotelRoom');
