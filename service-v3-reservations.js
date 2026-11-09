@@ -131,7 +131,7 @@ async function reviewCurrentEdit(){
 }
 function save(all){if(window.RestoSharedReservations)throw business('La modification sur cet appareil est désactivée.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
 async function action(id,kind){
- if(kind==='confirm'&&!window.RestoReception&&window.RestoSharedReservations){notify('La confirmation est réservée à la Réception. Vous pouvez installer le client directement.');return;}
+ if(kind==='confirm'&&!window.RestoReception){notify('La confirmation est réservée à la Réception. Vous pouvez installer le client directement.');return;}
  if(window.RestoSharedReservations){
   if(kind==='edit'){
    const r=load().find(item=>item.id===id);
@@ -334,7 +334,7 @@ function render(){
  }
  const actions=el('div',undefined,'reservationActions reservationActionsModern');
  const opts=[['edit','Modifier'],['confirm','Confirmer'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler']];
- const available=opts.filter(([k])=>k!=='confirm'||window.RestoReception||!window.RestoSharedReservations).filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status)));
+ const available=opts.filter(([k])=>k!=='confirm'||window.RestoReception).filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status)));
  const mainActions=el('div',undefined,'reservationPrimaryActions');
  const secondary=el('div',undefined,'reservationSecondaryActions');
  const extra=[];
