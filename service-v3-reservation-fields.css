@@ -9,7 +9,9 @@
  --rm-field-radius:11px;
 }
 
-/* Uniform 3 → 2 → 1 grid; no special full-width Name / Table exceptions. */
+/* Uniform 3 → 2 → 1 grid; no special full-width Name / Table exceptions.
+   Do not resize visuallyHiddenSelect: the native select stays offscreen when
+   the branded table card picker replaces it. */
 #bookingForm,
 #editForm.editFormModern{
  grid-template-columns:repeat(3,minmax(0,1fr))!important;
@@ -68,8 +70,8 @@
  line-height:inherit;
  white-space:nowrap;
 }
-#bookingForm > .reservationField :is(input:not([type="radio"]), select),
-#editForm.editFormModern > .reservationField :is(input:not([type="radio"]), select),
+#bookingForm > .reservationField :is(input:not([type="radio"]), select:not(.visuallyHiddenSelect)),
+#editForm.editFormModern > .reservationField :is(input:not([type="radio"]), select:not(.visuallyHiddenSelect)),
 #walkinForm > .reservationField input{
  box-sizing:border-box!important;
  width:100%!important;
