@@ -10,7 +10,7 @@ function elem(tag){
  return {tag,className:'',children:[],attrs:{},dataset:{},style:{},textContent:'',innerHTML:'',
   append(...x){this.children.push(...x)},
   replaceChildren(...x){this.children=x},
-  setAttribute(k,v){this.attrs[k]=v}};
+  setAttribute(k,v){this.attrs[k]=v},addEventListener(){}};
 }
 const flatten=e=>[e,...(e.children||[]).flatMap(flatten)];
 test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 seated',()=>{
