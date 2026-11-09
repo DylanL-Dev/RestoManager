@@ -18,12 +18,15 @@ configs.forEach(id=>{
  const trigger=document.createElement('button');trigger.type='button';trigger.className='tableChoiceTrigger';
  select.parentNode.append(box);box.append(trigger);select.classList.add('visuallyHiddenSelect');select.tabIndex=-1;
  function refresh(){
+ const locked=window.RestoReception===true&&(id==='bookingTable'||id==='editTable');
+ box.hidden=locked;
+ trigger.disabled=locked;
  const options=Array.from(select.options).filter(o=>o.value);
  const chosen=options.find(o=>o.value===select.value);
  trigger.replaceChildren();
  const label=document.createElement('span');label.textContent=chosen?(chosen.textContent):(select.dataset.availabilityMessage||'Choisissez les informations de réservation');
  const action=document.createElement('span');action.className='tableChoiceAction';action.textContent=chosen?'Changer':'Choisir';
- trigger.append(label,action);trigger.disabled=!options.length||['checking','syncing','offline','error'].includes(select.dataset.availabilityState);
+ trigger.append(label,action);trigger.disabled=locked||select.disabled||!options.length||['checking','syncing','offline','error'].includes(select.dataset.availabilityState);
  if(active===id)render();
  }
  function render(){
@@ -45,8 +48,8 @@ configs.forEach(id=>{
  grid.append(card);
  });
  }
- trigger.addEventListener('click',()=>{previousFocus=trigger;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus()});
+ trigger.addEventListener('click',()=>{if(window.RestoReception===true&&(id==='bookingTable'||id==='editTable'))return;if(select.disabled||trigger.disabled)return;previousFocus=trigger;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus()});
  select.addEventListener('change',refresh);refresh();refreshers[id]=refresh;
 });
-window.RestoTableChoices={refresh(id){refreshers[id]?.()}};
+window.RestoTableChoices={refresh(id){refreshers[id]?.()},refreshAll(){Object.values(refreshers).forEach(fn=>fn())}};
 })();
