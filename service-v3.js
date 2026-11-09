@@ -536,7 +536,7 @@ list.forEach(r=>{
  });
  // Detailed editing and smart table changes already live in the reservation card.
  // Link there rather than duplicating business logic in this quick-service sheet.
- if(r.status!=='seated'){
+ if(!isReception&&r.status!=='seated'){
   const manage=node('button','tableStatusAction tableCompactSecondary','Modifier / changer de table');
   manage.type='button';
   manage.addEventListener('click',()=>{
@@ -553,7 +553,7 @@ list.forEach(r=>{
  row.append(controls);
  // Immediate access from the table popup, under "Installer à table".
  // Reuse the existing editor and its availability/concurrency checks.
- if(r.status!=='seated'){
+ if(!isReception&&r.status!=='seated'){
   const changeTable=node('button','tableQuickChange');
   const changeIcon=document.createElement('i');changeIcon.setAttribute('data-lucide','arrow-left-right');changeIcon.setAttribute('aria-hidden','true');
   changeTable.append(changeIcon,document.createTextNode('Changer de table'));
