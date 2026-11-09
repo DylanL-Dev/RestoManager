@@ -185,11 +185,30 @@ try{
  });
  document.querySelectorAll('.mobileBottomNav a').forEach(link=>link.addEventListener('click',closeAccountMenu));
  document.getElementById('mobileAccountRefresh')?.addEventListener('click',()=>{closeAccountMenu();document.getElementById('refreshAppBtn')?.click();});
- accountLogout?.addEventListener('click',()=>{
-  if(!window.confirm('Voulez-vous vraiment vous déconnecter de RestoManager ?'))return;
+ // Accessible, branded confirmation instead of browser-native window.confirm.
+ let logoutDialog=document.getElementById('restoLogoutDialog');
+ if(!logoutDialog){
+  logoutDialog=document.createElement('dialog');
+  logoutDialog.id='restoLogoutDialog';
+  logoutDialog.className='restoLogoutDialog';
+  logoutDialog.setAttribute('aria-labelledby','restoLogoutTitle');
+  logoutDialog.setAttribute('aria-describedby','restoLogoutDescription');
+  logoutDialog.innerHTML='<div class="restoLogoutIcon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></div><h2 id="restoLogoutTitle">Se déconnecter ?</h2><p id="restoLogoutDescription">Vous allez quitter votre espace RestoManager. Vous pourrez vous reconnecter à tout moment.</p><div class="restoLogoutActions"><button type="button" class="restoLogoutCancel">Rester connecté</button><button type="button" class="restoLogoutConfirm">Se déconnecter</button></div>';
+  document.body.append(logoutDialog);
+  logoutDialog.querySelector('.restoLogoutCancel').addEventListener('click',()=>logoutDialog.close());
+  logoutDialog.querySelector('.restoLogoutConfirm').addEventListener('click',()=>{
+   logoutDialog.close();
+   logout.click();
+  });
+  logoutDialog.addEventListener('click',event=>{if(event.target===logoutDialog)logoutDialog.close();});
+ }
+ const requestLogout=()=>{
+  if(logout.disabled||logoutDialog.open)return;
   closeAccountMenu();
-  logout.click();
- });
+  logoutDialog.showModal();
+  logoutDialog.querySelector('.restoLogoutCancel').focus();
+ };
+ accountLogout?.addEventListener('click',requestLogout);
  if(accountLogout)new MutationObserver(()=>{accountLogout.disabled=logout.disabled;}).observe(logout,{attributes:true,attributeFilter:['disabled']});
 
  const badge=document.getElementById('syncBadge');
@@ -198,7 +217,7 @@ try{
  const sidebarConnectionLabel=document.getElementById('sidebarConnectionLabel');
  const sidebarLogout=document.getElementById('sidebarLogout');
  if(sidebarLogout){
-  sidebarLogout.addEventListener('click',()=>logout.click());
+  sidebarLogout.addEventListener('click',requestLogout);
   new MutationObserver(()=>{sidebarLogout.disabled=logout.disabled;}).observe(logout,{attributes:true,attributeFilter:['disabled']});
  }
  const refreshSidebarConnection=()=>{
