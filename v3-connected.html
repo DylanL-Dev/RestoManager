@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RestoManager V3 — intégration</title><meta name="theme-color" content="#087f5b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="RestoManager"><link rel="manifest" href="manifest.json?v=20261109-pwa-path1"><link rel="icon" type="image/svg+xml" href="pwa-icon.svg"><link rel="icon" href="asset/img/logo.png"><link rel="stylesheet" href="service-v3.css?v=20261108-rush-subtle1"><link rel="stylesheet" href="service-v3-tutorial.css?v=20261108-onboarding1"><script defer src="lucide-local.js?v=20261109-profile-icons4"></script><script defer src="service-v3-lucide.js?v=20261106-action-icons-fix1"></script><link rel="stylesheet" href="service-v3-calendar-picker.css?v=20261105-visual1"><style id="integrationGate">body{visibility:hidden}#integrationBanner{position:static;max-width:none;background:#103e31;color:white;padding:14px;border-radius:12px;font:600 13px system-ui;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#integrationBanner button{border:0;border-radius:8px;background:#d9f5e6;color:#103e31;padding:8px 12px}</style><style>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RestoManager V3 — intégration</title><meta name="theme-color" content="#087f5b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="RestoManager"><link rel="manifest" href="manifest.json?v=20261109-pwa-path1"><link rel="icon" type="image/svg+xml" href="pwa-icon.svg"><link rel="icon" href="asset/img/logo.png"><link rel="stylesheet" href="service-v3.css?v=20261108-rush-subtle1"><link rel="stylesheet" href="service-v3-tutorial.css?v=20261108-onboarding1"><script defer src="lucide-local.js?v=20261110-clone-midnight2"></script><script defer src="service-v3-lucide.js?v=20261106-action-icons-fix1"></script><link rel="stylesheet" href="service-v3-calendar-picker.css?v=20261105-visual1"><style id="integrationGate">body{visibility:hidden}#integrationBanner{position:static;max-width:none;background:#103e31;color:white;padding:14px;border-radius:12px;font:600 13px system-ui;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#integrationBanner button{border:0;border-radius:8px;background:#d9f5e6;color:#103e31;padding:8px 12px}</style><style>
 .reception :is([data-choice="walkin"],.quickReleasePanel,#passages,#manageHours,#manageTables,#manageClosure,#manageReports,#fusionSuggestions,#editFusionNotice,.tableDetailActions,.tableStatusActions),
-.reception label:has(#bookingTable),.reception label:has(#editTable){display:none!important}
+html.reception label:has(#bookingTable),html.reception label:has(#editTable),html.reception #bookingTable+.tableChoice,html.reception #editTable+.tableChoice{display:none!important}
 /* The reception role has five navigation tabs, including a read-only service dashboard. */
 @media(max-width:900px){.reception .mobileBottomNav{grid-template-columns:repeat(5,minmax(0,1fr))}.reception .mobileBottomNav a[data-nav="passages"]{display:flex!important}}
 #syncBadge{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:7px 14px;border:0;border-radius:24px;font:650 13px system-ui;white-space:nowrap;cursor:pointer;color:#465751;background:#e9eeeb}
@@ -164,6 +164,172 @@ html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .
  }
 }
 
+/* DEV UI polish: Reception reservation actions stay compact on wide screens.
+   Mobile retains 44px touch targets; Restaurant actions are unaffected. */
+@media(min-width:750px){
+ .reception .reservationItem .reservationOpenDetail{
+  display:inline-flex!important;width:auto!important;max-width:100%;
+  align-items:center;min-height:42px;padding:10px 14px;margin:10px 0;
+ }
+ .reception .reservationItem .reservationActionsModern{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:flex-start!important;flex-wrap:wrap!important;
+  width:fit-content!important;max-width:100%;gap:8px;margin-top:12px;
+ }
+ .reception .reservationActionsModern .reservationPrimaryActions,
+ .reception .reservationActionsModern .reservationActionTools,
+ .reception .reservationActionsModern .reservationSecondaryActions{
+  flex:0 0 auto!important;width:auto!important;min-width:0!important;
+ }
+ .reception .reservationActionsModern .reservationActionMain,
+ .reception .reservationActionsModern .reservationActionSecondary{
+  width:auto!important;height:auto!important;min-height:44px;
+  min-width:122px;padding:9px 16px;font-size:14px;border-radius:11px;
+ }
+ .reception .reservationActionsModern .reservationMoreTrigger{
+  width:44px!important;min-width:44px!important;
+  height:44px!important;min-height:44px!important;
+  align-self:center!important;border-radius:11px;
+ }
+}
+@media(max-width:749px){
+ .reception .reservationItem .reservationActionsModern{
+  display:flex!important;flex-direction:row!important;align-items:stretch!important;
+  gap:8px;flex-wrap:nowrap;
+ }
+ .reception .reservationActionsModern .reservationPrimaryActions{
+  flex:1 1 0!important;min-width:0;
+ }
+ .reception .reservationActionsModern .reservationActionTools{
+  display:flex!important;flex:1 1 0!important;min-width:0;
+  align-items:stretch!important;gap:8px;
+ }
+ .reception .reservationActionsModern .reservationSecondaryActions{
+  display:flex!important;flex:1 1 0!important;min-width:0;
+ }
+ .reception .reservationActionsModern .reservationActionMain,
+ .reception .reservationActionsModern .reservationActionSecondary{
+  width:100%!important;min-width:0!important;min-height:44px;
+  padding:9px 10px;font-size:13px;
+ }
+ .reception .reservationActionsModern .reservationMoreTrigger{
+  flex:0 0 44px!important;width:44px!important;min-width:44px!important;
+  height:44px!important;min-height:44px!important;align-self:center!important;
+ }
+}
+
+/* Restaurant reservation actions, compact UI — DEV review.
+   Keep reception styling unchanged and retain the restaurant-only permissions. */
+@media(min-width:750px){
+ html:not(.reception) .reservationItem .reservationOpenDetail{
+  display:inline-flex!important;width:auto!important;max-width:100%;
+  align-items:center;min-height:42px;padding:10px 14px;margin:10px 0;
+ }
+ html:not(.reception) .reservationItem .reservationActionsModern{
+  display:flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:flex-start!important;flex-wrap:wrap!important;
+  width:fit-content!important;max-width:100%;gap:8px;margin-top:12px;
+ }
+ html:not(.reception) .reservationActionsModern .reservationPrimaryActions,
+ html:not(.reception) .reservationActionsModern .reservationActionTools,
+ html:not(.reception) .reservationActionsModern .reservationSecondaryActions{
+  display:flex!important;flex:0 0 auto!important;width:auto!important;min-width:0!important;
+  align-items:center!important;gap:8px!important;
+ }
+ html:not(.reception) .reservationActionsModern .reservationActionMain,
+ html:not(.reception) .reservationActionsModern .reservationActionSecondary{
+  width:auto!important;height:auto!important;min-width:122px;
+  min-height:44px!important;padding:9px 16px;font-size:14px;border-radius:11px;
+ }
+ html:not(.reception) .reservationActionsModern .reservationMoreTrigger{
+  flex:0 0 44px!important;width:44px!important;min-width:44px!important;
+  height:44px!important;min-height:44px!important;
+  align-self:center!important;border-radius:11px;
+ }
+}
+@media(max-width:749px){
+ html:not(.reception) .reservationItem .reservationActionsModern{
+  display:flex!important;flex-direction:column!important;align-items:stretch!important;
+  gap:8px!important;
+ }
+ html:not(.reception) .reservationActionsModern .reservationPrimaryActions{
+  display:flex!important;flex:0 0 auto!important;width:100%!important;
+ }
+ html:not(.reception) .reservationActionsModern .reservationActionTools{
+  display:flex!important;flex:0 0 auto!important;width:100%!important;
+  align-items:stretch!important;gap:8px!important;
+ }
+ html:not(.reception) .reservationActionsModern .reservationSecondaryActions{
+  display:flex!important;flex:1 1 auto!important;flex-direction:row!important;
+  width:auto!important;min-width:0!important;gap:8px!important;
+ }
+ html:not(.reception) .reservationActionsModern .reservationActionMain,
+ html:not(.reception) .reservationActionsModern .reservationActionSecondary{
+  flex:1 1 0!important;width:auto!important;min-width:0!important;
+  min-height:44px!important;padding:9px 8px;font-size:13px;
+ }
+ html:not(.reception) .reservationActionsModern .reservationMoreTrigger{
+  flex:0 0 44px!important;width:44px!important;min-width:44px!important;
+  height:44px!important;min-height:44px!important;
+  align-self:center!important;
+ }
+}
+
+/* Table reassignment: compact, touch-friendly 2-column choice grid.
+   Only the "Table réellement choisie" picker is affected. */
+.v3-picker-backdrop.v3-table-choice-picker .v3-picker-panel{
+ width:min(560px,100%)!important;
+ max-height:min(77dvh,700px)!important;
+ gap:10px!important;
+ padding:16px!important;
+}
+.v3-table-choice-picker .v3-picker-panel > header{
+ align-items:center!important;
+ min-height:44px!important;
+}
+.v3-table-choice-picker .v3-picker-panel > header strong{
+ font-size:16px!important;
+ line-height:1.3!important;
+}
+.v3-table-choice-picker .v3-picker-items{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:8px!important;
+ overflow-y:auto!important;
+ min-height:0!important;
+ padding:2px 3px 2px 0!important;
+}
+.v3-table-choice-picker .v3-picker-items button{
+ box-sizing:border-box!important;
+ min-width:0!important;
+ min-height:46px!important;
+ padding:10px 12px!important;
+ border-radius:11px!important;
+ font-size:13px!important;
+ line-height:1.35!important;
+ text-align:left!important;
+}
+.v3-table-choice-picker .v3-picker-items button.v3-picker-placeholder{
+ grid-column:1/-1;
+ text-align:center!important;
+ background:transparent!important;
+ border-style:dashed!important;
+}
+.v3-table-choice-picker .v3-picker-panel > footer{
+ gap:9px!important;
+ padding-top:6px!important;
+}
+.v3-table-choice-picker .v3-picker-panel > footer button{
+ min-height:44px!important;
+ padding:10px!important;
+}
+@media(max-width:420px){
+ .v3-picker-backdrop.v3-table-choice-picker{padding:10px!important;}
+ .v3-table-choice-picker .v3-picker-panel{padding:14px!important;max-height:82dvh!important;}
+ .v3-table-choice-picker .v3-picker-items{gap:7px!important;}
+ .v3-table-choice-picker .v3-picker-items button{min-height:44px!important;padding:9px 8px!important;font-size:12px!important;}
+}
+
 /* Notifications: separated by staff role. */
 .serviceBell[hidden],.serviceReminderPanel[hidden]{display:none!important}
 .serviceReminderPanel .serviceReceptionBookingAlert{background:#eff9f3;border:1px solid #cde8d7;border-radius:14px;padding:14px;margin:10px 0}
@@ -221,6 +387,12 @@ html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .
 .tableDetailModal .tableCompactIdentity strong{font-size:15px;line-height:1.35;color:#183f32;margin:0}
 .tableDetailModal .tableCompactIdentity span{font-size:14px;color:#52685d;overflow-wrap:anywhere}
 .tableDetailModal .tableCompactBadge{flex:none;max-width:42%;border-radius:999px;padding:5px 9px;background:#e8f2ed;color:#22694c;font-size:11px;font-weight:750;text-align:center}
+.tableDetailModal .tableQuickChange{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin:9px 0 0;padding:10px 14px;border:1px solid #9fcbbb;border-radius:12px;background:#f0f8f3;color:#17634b;font:700 14px system-ui;cursor:pointer}
+.tableDetailModal .tableQuickChange{gap:9px}
+.tableDetailModal .tableQuickChange svg{width:18px;height:18px;flex:none;stroke-width:2}
+.tableDetailModal .tableQuickChange:hover{background:#e1f2e8}
+.tableDetailModal .tableQuickChange:focus-visible{outline:3px solid #37a984;outline-offset:2px}
+html[data-theme="dark"] .tableDetailModal .tableQuickChange{background:#173b2f;color:#c7f3df;border-color:#46856e}
 .tableDetailModal .tableCompactActions{display:flex!important;flex-wrap:nowrap!important;align-items:stretch;gap:9px!important;margin-top:12px!important;min-height:46px;width:100%}
 .tableDetailModal .tableCompactActions>.tableCompactPrimary{flex:1 1 auto!important;width:auto!important;min-width:0!important;max-width:none!important;height:46px!important;min-height:46px!important;max-height:46px!important;align-self:stretch!important;padding:0 14px!important;margin:0!important;display:flex!important;align-items:center!important;justify-content:center!important;border-radius:12px!important;background:#087f5b!important;border:1px solid #087f5b!important;color:#fff!important;font-size:14px!important;font-weight:750!important;line-height:1.1!important}
 .tableDetailModal .tableCompactActions>.tableCompactMore{flex:none;width:48px;min-width:48px;margin:0;padding:0;border:0;background:transparent}
@@ -604,23 +776,134 @@ html[data-theme="dark"] .restoKpiRow{background:#254539;border-color:#4b735e}
 @media(max-width:900px){
   .serviceIntro #syncBadge{display:none!important}
 }
-</style></head>
+</style><style>
+/* DEV — shared compact reservation editor (Reception and Restaurant). */
+#editSuccessToast[hidden],#editForm[hidden]{display:none!important}
+.editSuccessToast{
+ display:flex;align-items:center;gap:11px;margin:12px 0;padding:12px 15px;
+ border:1px solid #b8e3c9;border-radius:13px;background:#e7f7ed;color:#135f3d;
+ font:650 14px system-ui;line-height:1.45;
+}
+.editSuccessToast>svg{width:21px;height:21px;flex:none}
+.editSuccessToast>span{flex:1}
+.editSuccessToast>button{min-height:34px;width:34px;flex:none;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:inherit;cursor:pointer}
+.editSuccessToast>button svg{width:17px;height:17px}
+#editForm.editFormModern{
+ display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ gap:12px 15px!important;margin:14px 0 20px!important;padding:19px!important;
+ border:1px solid #d1e1d7!important;border-radius:19px!important;
+ background:#f8fbf9!important;box-shadow:0 6px 24px rgba(13,62,40,.045);
+}
+#editForm.editFormModern[hidden],#editForm.editQuickTablePending{display:none!important}
+#editForm.editFormModern>h2{
+ grid-column:1/-1;margin:0!important;font-size:19px!important;line-height:1.35;
+ font-weight:800;color:#143f33;
+}
+#editForm.editFormModern .editReservationSummary{
+ grid-column:1/-1;display:flex;align-items:center;flex-wrap:wrap;gap:11px 22px;
+ padding:12px 15px;margin:0 0 4px;border:1px solid #dce9e0;border-radius:13px;background:#fff;
+ color:#1b4034;font:600 13px system-ui;
+}
+#editForm.editFormModern .editReservationSummary>span,
+#editForm.editFormModern .editReservationSummary .editSummaryLead{
+ display:inline-flex;align-items:center;gap:7px;min-height:28px;
+}
+#editForm.editFormModern .editReservationSummary svg{width:17px;height:17px;flex:none;color:#397862}
+#editForm.editFormModern .editReservationSummary .editSummaryLead{font-size:16px;margin-right:8px}
+#editForm.editFormModern .editReservationSummary .editSummaryTable{
+ background:#e6f5ed;border-radius:9px;color:#125f45;padding:5px 10px;font-weight:750;
+}
+#editForm.editFormModern>label{
+ display:grid!important;align-content:start;gap:6px!important;min-width:0!important;
+ font:650 12px system-ui;color:#244c3d;
+}
+#editForm.editFormModern>label input,
+#editForm.editFormModern>label .tableChoiceTrigger{
+ box-sizing:border-box;min-width:0;width:100%;min-height:42px!important;
+ padding:9px 11px!important;border-radius:10px!important;
+ border:1px solid #c9dbd0!important;background:#fff;
+}
+#editForm.editFormModern>label:has(#editAllergies),
+#editForm.editFormModern>label:has(#editNotes){
+ grid-column:span 1!important;
+}
+#editForm.editFormModern>label:has(#editAllergies){grid-column:1/span 2!important}
+#editForm.editFormModern>label:has(#editNotes){grid-column:3/span 1!important}
+#editForm.editFormModern textarea{
+ box-sizing:border-box;width:100%!important;min-height:76px!important;height:78px;
+ padding:10px 12px!important;font-size:13px!important;line-height:1.45;
+ background:#fff!important;border:1px solid #c9dbd0!important;border-radius:11px!important;
+ resize:vertical;
+}
+#editForm.editFormModern .editDetailLimit{font-size:11px;color:#667d70}
+#editForm.editFormModern .editFormFooter{
+ grid-column:1/-1;display:flex;justify-content:flex-end;align-items:center;gap:9px;
+ margin-top:3px;
+}
+#editForm.editFormModern .editFormFooter button{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;
+ width:auto!important;min-width:116px!important;min-height:44px!important;
+ padding:9px 17px!important;border-radius:11px!important;font:700 13px system-ui!important;
+}
+#editForm.editFormModern .editFormFooter #editCancel{
+ color:#1d5845!important;background:#fff!important;border:1px solid #c8dcd1!important;
+}
+#editForm.editFormModern .editFormFooter .editFormSave{
+ color:#fff!important;background:#0f8060!important;border:1px solid #0b7556!important;min-width:149px!important;
+}
+#editForm.editFormModern .editFormFooter .editFormSave svg{width:17px;height:17px}
+#editForm.editFormModern>#editConflict{grid-column:1/-1}
+#editForm.editFormModern>p{grid-column:1/-1}
+@media(max-width:980px){
+ #editForm.editFormModern{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ #editForm.editFormModern>label:has(#editAllergies),
+ #editForm.editFormModern>label:has(#editNotes){grid-column:span 1!important}
+}
+@media(max-width:600px){
+ #editForm.editFormModern{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;padding:14px!important;border-radius:15px!important}
+ #editForm.editFormModern .editReservationSummary{gap:8px 13px;padding:11px;font-size:12px}
+ #editForm.editFormModern .editReservationSummary .editSummaryLead{width:100%;font-size:15px}
+ #editForm.editFormModern>label:has(#editClient),#editForm.editFormModern>label:has(#editDate),
+ #editForm.editFormModern>label:has(#editTable),
+ #editForm.editFormModern>label:has(#editAllergies),
+ #editForm.editFormModern>label:has(#editNotes){grid-column:1/-1!important}
+ #editForm.editFormModern .editFormFooter{justify-content:stretch}
+ #editForm.editFormModern .editFormFooter button{flex:1 1 0;min-width:0!important;padding:9px 7px!important}
+}
+html[data-theme="dark"] #editForm.editFormModern{background:#213b30!important;border-color:#446451!important;color:#edf6ef!important}
+html[data-theme="dark"] #editForm.editFormModern>h2,
+html[data-theme="dark"] #editForm.editFormModern>label{color:#eef7ef!important}
+html[data-theme="dark"] #editForm.editFormModern .editReservationSummary{background:#294639!important;border-color:#486953!important;color:#e6f9ee!important}
+html[data-theme="dark"] #editForm.editFormModern .editReservationSummary .editSummaryTable{background:#285b45;color:#e6f9ee}
+html[data-theme="dark"] .editSuccessToast{background:#1d5039;border-color:#448e61;color:#eafff1}
+</style>
+<link rel="stylesheet" href="service-v3-reservation-fields.css?v=20261110-clone-midnight2">
+</head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button><button type="button" id="mobileAccountToggle" class="mobileAccountToggle" aria-label="Ouvrir le menu du compte" aria-haspopup="true" aria-controls="mobileAccountMenu" aria-expanded="false"><i data-lucide="circle-user-round" aria-hidden="true"></i><span class="mobileAccountStatusDot" aria-hidden="true"></span></button></div><div id="mobileAccountMenu" class="mobileAccountMenu" role="group" aria-label="Compte et connexion" hidden><div class="mobileAccountIdentity"><span class="mobileAccountAvatar" aria-hidden="true"><i data-lucide="utensils-crossed" id="mobileAccountRoleIcon"></i></span><div><strong id="mobileAccountRole">Espace Restaurant</strong><small id="mobileAccountName">Compte Restaurant</small><span class="mobileAccountSession">Session active</span></div></div><div class="mobileAccountSync" id="mobileAccountSync" data-state="pending" role="status" aria-live="polite"><i data-lucide="refresh-cw" aria-hidden="true"></i><span class="mobileAccountStatusDot" aria-hidden="true"></span><div><strong id="mobileAccountSyncLabel">Connexion en cours</strong><small id="mobileAccountSyncDetail">Vérification des données partagées…</small></div></div><button type="button" class="mobileAccountRefresh" id="mobileAccountRefresh"><i data-lucide="refresh-cw" aria-hidden="true"></i>Actualiser les données</button><button type="button" class="mobileAccountLogout" id="mobileAccountLogout"><i data-lucide="log-out" aria-hidden="true"></i>Se déconnecter</button></div></header>
 
 <div class="shell"><nav class="sidebar" aria-label="Navigation principale"><a class="selected" href="#tables"><i data-lucide="layout-grid" class="navSvgIcon" aria-hidden="true"></i><span>Tables</span></a><a href="#reservations"><i data-lucide="calendar-days" class="navSvgIcon" aria-hidden="true"></i><span>Réservations</span></a><a href="#reservationForm"><i data-lucide="user-plus" class="navSvgIcon" aria-hidden="true"></i><span>Ajouter un client</span></a><a href="#passages"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i><span>Passages</span></a><a href="#administration"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i><span>Gestion</span></a><div class="sidebarFooter" aria-label="Établissement connecté"><div class="sidebarEstablishment"><i data-lucide="building-2" aria-hidden="true"></i><div class="sidebarEstablishmentDetails"><strong id="sidebarVenue">Mon établissement</strong><small id="sidebarRole">Espace Restaurant</small></div></div><div class="sidebarSession" aria-label="État de la connexion et compte"><div class="sidebarConnection" id="sidebarConnection" role="status" aria-live="polite" data-state="pending"><span class="sidebarConnectionDot" aria-hidden="true"></span><span id="sidebarConnectionLabel">Connexion en cours</span></div><button type="button" class="sidebarLogout" id="sidebarLogout"><i data-lucide="log-out" aria-hidden="true"></i><span>Se déconnecter</span></button></div><div class="sidebarMeta"><span>RestoManager</span><span>V3</span></div></div></nav>
 <main><section class="panel shiftSettings" id="restaurantShifts"><h2>Horaires du restaurant</h2><p class="muted">Définissez les services ouverts et l'heure de dernière prise de commande. Les clients installés peuvent rester après cette heure.</p><form id="restaurantShiftForm"><div class="shiftSettingsGrid"><fieldset><legend>Service du midi</legend><label><input type="checkbox" id="shift-lunch-enabled"> Service ouvert</label><label>Début <input type="time" id="shift-lunch-start" required></label><label>Dernière commande <input type="time" id="shift-lunch-end" required></label></fieldset><fieldset><legend>Service du soir</legend><label><input type="checkbox" id="shift-dinner-enabled"> Service ouvert</label><label>Début <input type="time" id="shift-dinner-start" required></label><label>Dernière commande <input type="time" id="shift-dinner-end" required></label></fieldset></div><button type="submit">Enregistrer les horaires</button><p id="shiftFeedback" role="status"></p></form></section><section class="panel historyPanel" id="historyStats"><div class="historyHeading"><div><p class="eyebrow">SUIVI D'ACTIVITÉ</p><h2>Historique &amp; Statistiques</h2><p class="muted">Les couverts servis correspondent aux réservations terminées ou libérées. Les clients encore installés ne sont pas comptés.</p></div></div><div class="historyControls"><label>Période <select id="historyPeriod"><option value="day">Jour</option><option value="week">Semaine</option><option value="month">Mois</option></select></label><label>Date de référence <input id="historyDate" type="date"></label><button type="button" id="historyPdf"><i data-lucide="file-down" aria-hidden="true"></i><span>Exporter le rapport PDF</span></button></div><section id="serviceClosure" class="closurePanel"><h3>Clôture du service · 23 h 30</h3><p id="closureStatus" role="status"></p><button type="button" id="closureManual">Clôturer manuellement</button><details><summary>Services clôturés</summary><div id="closureArchive"></div></details></section><div id="historySummary" class="historySummary" aria-live="polite"></div><h3>Détail des réservations</h3><div id="historyRows" class="historyRows"></div><p id="historyFeedback" role="status"></p><p class="muted">Historique synchronisé depuis Supabase. Les rapports sont calculés à partir des réservations de votre établissement.</p></section><div class="serviceIntro"><div class="serviceIntroContent"><div class="serviceContext"><p class="serviceRole" id="teamSpace"><i data-lucide="utensils-crossed" aria-hidden="true"></i><span>Espace Restaurant</span></p><p class="serviceVenue"><i data-lucide="building-2" aria-hidden="true"></i><span id="teamVenue">Identification de l’établissement…</span></p></div><h1>Votre service, en un coup d’œil</h1><p class="serviceIntroDate" id="introServiceDate"><i data-lucide="calendar-days" aria-hidden="true"></i><span id="introDateText"></span></p><p id="teamGreeting"></p></div><button type="button" id="syncBadge" aria-controls="manageNetwork" title="Ouvrir Réseau et synchronisation">Connexion en cours</button></div><nav class="quickActions" aria-label="Actions rapides"><a href="#tables" class="quickAction primary"><i data-lucide="layout-grid" class="navSvgIcon" aria-hidden="true"></i><span>Voir les tables</span></a><a href="#reservationForm" class="quickAction"><i data-lucide="user-plus" class="navSvgIcon" aria-hidden="true"></i><span>Ajouter un client</span></a><a href="#passages" class="quickAction"><i data-lucide="clock-3" class="navSvgIcon" aria-hidden="true"></i><span>Passage</span></a><a href="#reservations" class="quickAction"><i data-lucide="calendar-days" class="navSvgIcon" aria-hidden="true"></i><span>Rechercher</span></a></nav>
-<div class="kpis" id="kpis" aria-live="polite"></div><section class="currentOccupancy" id="currentOccupancy" aria-label="Occupation actuelle du restaurant" aria-live="polite"></section><details class="panel actionPanel walkinPanel" id="passages"><summary>Client de passage <span>Installer un client sans réservation</span></summary><div class="actionPanelBody"><h2>Client de passage</h2><p class="muted">Sélectionnez le nombre de personnes : une table disponible vous sera proposée automatiquement pour une installation immédiate de 1 h 30.</p><form id="walkinForm"><fieldset class="walkinTypeField"><legend>Type de client</legend><div class="walkinTypeChoices"><label><input type="radio" name="walkinType" value="hotel" checked><i data-lucide="building-2" aria-hidden="true"></i><span>Client de l’hôtel</span><i data-lucide="check-circle-2" class="walkinTypeCheck" aria-hidden="true"></i></label><label><input type="radio" name="walkinType" value="exterieur"><i data-lucide="users" aria-hidden="true"></i><span>Client extérieur</span><i data-lucide="check-circle-2" class="walkinTypeCheck" aria-hidden="true"></i></label></div></fieldset><label><span id="walkinRoomLabel">Chambre ou nom du client (facultatif)</span><input id="walkinRoom" type="text" maxlength="100" placeholder="Ex. 755 ou Dupont"></label><div class="walkinGuestsField"><label for="walkinGuests">Nombre de personnes</label><div class="walkinGuestStepper"><button type="button" id="walkinMinus" aria-label="Retirer une personne" title="Retirer une personne"><i data-lucide="minus" aria-hidden="true"></i></button><div class="walkinGuestCount"><input id="walkinGuests" type="number" min="1" value="2" required inputmode="numeric" aria-describedby="walkinGuestUnit"><span id="walkinGuestUnit">personnes</span></div><button type="button" id="walkinPlus" aria-label="Ajouter une personne" title="Ajouter une personne"><i data-lucide="plus" aria-hidden="true"></i></button></div></div><div class="walkinPaxButtons"><button type="button" data-walkin-pax="1">1</button><button type="button" data-walkin-pax="2">2</button><button type="button" data-walkin-pax="3">3</button><button type="button" data-walkin-pax="4">4</button><button type="button" data-walkin-pax="5">5</button><button type="button" data-walkin-pax="6">6</button></div><p id="walkinRecommendation" class="walkinRecommendation" role="status"></p><select id="walkinTable" hidden aria-label="Table recommandée"></select><button type="submit" class="walkinInstall">✓ Installer directement</button></form><p id="walkinFeedback" role="status" aria-live="polite"></p></div></details><details class="panel actionPanel bookingTools" id="reservationForm"><summary>Nouvelle réservation <span>Choisir une date, un créneau et une table</span></summary><div class="actionPanelBody"><h2>Réservations et disponibilités</h2><form id="bookingForm"><fieldset class="bookingTypeField"><legend>Type de client</legend><div class="bookingTypeChoices"><label class="bookingTypeOption"><input type="radio" name="bookingTypeVisual" value="exterieur" checked><span><strong>Client extérieur</strong><small>Réservation classique</small></span></label><label class="bookingTypeOption"><input type="radio" name="bookingTypeVisual" value="hotel"><span><strong>Client hôtel</strong><small>Avec numéro de chambre</small></span></label></div><select id="bookingType" class="visuallyHiddenSelect" tabindex="-1" aria-label="Type de client"><option value="exterieur">Client extérieur</option><option value="hotel">Client hôtel</option></select></fieldset><label>Nom du client <input id="bookingClient" required maxlength="100" placeholder="Nom et prénom du client"></label><label id="bookingHotelRoomField" hidden>Numéro de chambre <input id="bookingHotelRoom" maxlength="7" inputmode="text" autocomplete="off" placeholder="Ex. : 225" disabled></label><label>Date <input id="bookingDate" type="date" required></label><label>Heure <input id="bookingTime" type="time" required></label><label>Couverts <input id="bookingGuests" type="number" min="1" value="1" required></label><label>Table disponible <select id="bookingTable" required></select></label><div class="bookingExtraFields"><h3>Informations pour le service</h3><label>Allergies signalées <textarea id="bookingAllergies" maxlength="500" rows="2" placeholder="Ex. : allergie aux fruits à coque — à confirmer avec le client"></textarea></label><label>Demandes du client, notes et consignes <textarea id="bookingNotes" maxlength="1000" rows="3" placeholder="Ex. : anniversaire, près de la fenêtre, chaise bébé…"></textarea></label><p class="bookingExtraHint">Ces informations seront visibles dans la fiche de réservation. Vérifiez toujours les allergies avec le client et la cuisine.</p></div><section id="bookingDraft" hidden><p id="draftMessage"></p><div class="bookingDraftActions"><button id="draftExtend" type="button">Prolonger le maintien</button><button id="draftAbandon" type="button">Abandonner</button></div></section><button type="submit" class="bookingSubmitPrimary">Ajouter la réservation</button></form><div id="fusionSuggestions" class="fusionSuggestions"></div><div id="availabilityInsight" class="availabilityInsight" aria-live="polite"></div><p id="bookingFeedback" role="status" aria-live="polite"></p></div></details><div class="content"><section class="panel" id="tables"><div class="panelHead"><div><h1 class="serviceIconHeading"><i data-lucide="layout-grid" aria-hidden="true"></i><span>Tables du service</span></h1><p>Statuts explicites et capacité réelle par table</p></div><label class="roomFilterLabel"><span class="srOnlyRoom">Choisir une salle</span><select id="roomFilter" aria-label="Choisir une salle"></select></label></div><div class="filters" id="filters"><button class="active" data-filter="all">Toutes</button><button data-filter="free">Libres</button><button data-filter="expected">Attendus</button><button data-filter="present">Présents</button></div><div class="tableGrid" id="tableGrid"></div></section><aside class="panel"><h2 class="serviceIconHeading"><i data-lucide="calendar-days" aria-hidden="true"></i><span>Prochaines arrivées</span></h2><div id="upcoming"></div><div id="detail">Sélectionnez une table pour voir ses réservations.</div></aside></div><section class="panel reservationPanel" id="reservations"><div class="panelHead"><div><h2>Réservations du service</h2><p>Retrouvez, modifiez et suivez chaque réservation</p></div></div><div class="reservationSearch"><label>Date <input id="reservationDate" type="date"></label><label>Recherche <input id="reservationQuery" type="search" placeholder="Client, chambre ou table"></label><button id="reservationShowAll" type="button">Toutes les dates</button></div><p id="reservationMessage" role="status" aria-live="polite"></p><form id="editForm" hidden><h2>Modifier la réservation</h2><section id="editConflict" class="editConflict" role="status" aria-live="polite" hidden><strong>La réservation a changé</strong><p id="editConflictMessage">Votre saisie est conservée. Consultez la fiche actuelle avant de reprendre.</p><button id="editReviewCurrent" type="button">Consulter la version actuelle</button><button id="editReloadCurrent" type="button" hidden>Recharger la fiche</button><div id="editCurrentValues" role="region" aria-label="Informations actuellement enregistrées" tabindex="-1"></div></section><label>Nom du client / référence <input id="editClient" maxlength="160" required></label><label id="editHotelRoomField" hidden>Numéro de chambre <input id="editHotelRoom" maxlength="40" autocomplete="off"></label><label>Date <input id="editDate" type="date" required></label><label>Heure <input id="editTime" type="time" required></label><label>Couverts <input id="editGuests" type="number" min="1" required></label><label>Table <select id="editTable" required></select></label><label>Allergies signalées (à vérifier avec le client) <textarea id="editAllergies" aria-describedby="editAllergiesLimit" rows="2" placeholder="Ex. : fruits à coque — à confirmer"></textarea><span id="editAllergiesLimit" class="editDetailLimit"></span></label><label>Notes et consignes de service <textarea id="editNotes" aria-describedby="editNotesLimit" rows="3" placeholder="Ex. : anniversaire, table près de la fenêtre…"></textarea><span id="editNotesLimit" class="editDetailLimit"></span></label><p id="editFusionNotice" class="fusionDetailNote" hidden></p><button type="submit">Enregistrer les modifications</button><button type="button" id="editCancel">Fermer</button></form><div id="reservationList"></div></section><details class="panel actionPanel tableAdminPanel" id="administration"><summary>Gestion des tables <span>Ajouter, modifier ou supprimer une table</span></summary><div class="actionPanelBody"><button id="tableAdminNew" type="button">＋ Nouvelle table</button><form id="tableAdminForm"><label>Numéro <input id="tableAdminNumber" type="number" min="1" required></label><label>Capacité minimum <input id="tableAdminMin" type="number" min="1" value="1" required></label><label>Capacité maximum <input id="tableAdminMax" type="number" min="1" value="2" required></label><label>Salle <select id="tableAdminRoom" required></select></label><button id="tableAdminSubmit" type="submit">Ajouter la table</button></form><p id="tableAdminFeedback" role="status" aria-live="polite"></p><div id="tableAdminList"></div><section class="fusionAdmin"><h3>Tables fusionnables</h3><p>Associez deux tables voisines. Pour réunir trois tables en chaîne, enregistrez les deux associations qui les relient.</p><form id="fusionForm"><p id="fusionSelected" class="fusionSelected"></p><div id="fusionPicker" class="fusionPicker" role="group" aria-label="Sélectionner les numéros des tables fusionnables"></div><button id="fusionSubmit" type="submit">Autoriser cette fusion</button><button id="fusionCancel" type="button" hidden>Annuler la modification</button></form><p id="fusionMessage" role="status" aria-live="polite"></p><div id="fusionList"></div></section></div></details></main></div><nav class="mobileBottomNav" aria-label="Navigation principale mobile">
+<div class="kpis" id="kpis" aria-live="polite"></div><section class="currentOccupancy" id="currentOccupancy" aria-label="Occupation actuelle du restaurant" aria-live="polite"></section><details class="panel actionPanel walkinPanel" id="passages"><summary>Client de passage <span>Installer un client sans réservation</span></summary><div class="actionPanelBody"><h2>Client de passage</h2><p class="muted">Sélectionnez le nombre de personnes : une table disponible vous sera proposée automatiquement pour une installation immédiate de 1 h 30.</p><form id="walkinForm"><fieldset class="walkinTypeField"><legend>Type de client</legend><div class="walkinTypeChoices"><label><input type="radio" name="walkinType" value="hotel" checked><i data-lucide="building-2" aria-hidden="true"></i><span>Client de l’hôtel</span><i data-lucide="check-circle-2" class="walkinTypeCheck" aria-hidden="true"></i></label><label><input type="radio" name="walkinType" value="exterieur"><i data-lucide="users" aria-hidden="true"></i><span>Client extérieur</span><i data-lucide="check-circle-2" class="walkinTypeCheck" aria-hidden="true"></i></label></div></fieldset><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="users" aria-hidden="true"></i><span id="walkinRoomLabel">Chambre ou nom du client (facultatif)</span></span><input id="walkinRoom" type="text" maxlength="100" placeholder="Ex. 755 ou Dupont"></label><div class="walkinGuestsField"><label class="reservationFieldCaption" for="walkinGuests"><i data-lucide="users" aria-hidden="true"></i>Nombre de personnes</label><div class="walkinGuestStepper"><button type="button" id="walkinMinus" aria-label="Retirer une personne" title="Retirer une personne"><i data-lucide="minus" aria-hidden="true"></i></button><div class="walkinGuestCount"><input id="walkinGuests" type="number" min="1" value="2" required inputmode="numeric" aria-describedby="walkinGuestUnit"><span id="walkinGuestUnit">personnes</span></div><button type="button" id="walkinPlus" aria-label="Ajouter une personne" title="Ajouter une personne"><i data-lucide="plus" aria-hidden="true"></i></button></div></div><div class="walkinPaxButtons"><button type="button" data-walkin-pax="1">1</button><button type="button" data-walkin-pax="2">2</button><button type="button" data-walkin-pax="3">3</button><button type="button" data-walkin-pax="4">4</button><button type="button" data-walkin-pax="5">5</button><button type="button" data-walkin-pax="6">6</button></div><p id="walkinRecommendation" class="walkinRecommendation" role="status"></p><select id="walkinTable" hidden aria-label="Table recommandée"></select><button type="submit" class="walkinInstall"><i data-lucide="check-circle-2" aria-hidden="true"></i><span>Installer directement</span></button></form><p id="walkinFeedback" role="status" aria-live="polite"></p></div></details><details class="panel actionPanel bookingTools" id="reservationForm"><summary>Nouvelle réservation <span>Choisir une date, un créneau et une table</span></summary><div class="actionPanelBody"><h2>Réservations et disponibilités</h2><form id="bookingForm"><fieldset class="bookingTypeField"><legend>Type de client</legend><div class="bookingTypeChoices"><label class="bookingTypeOption"><input type="radio" name="bookingTypeVisual" value="hotel"><span><strong><i data-lucide="building-2" aria-hidden="true"></i>Client hôtel</strong><small>Avec numéro de chambre</small></span></label><label class="bookingTypeOption"><input type="radio" name="bookingTypeVisual" value="exterieur" checked><span><strong><i data-lucide="users" aria-hidden="true"></i>Client extérieur</strong><small>Réservation classique</small></span></label></div><select id="bookingType" class="visuallyHiddenSelect" tabindex="-1" aria-label="Type de client"><option value="exterieur">Client extérieur</option><option value="hotel">Client hôtel</option></select></fieldset><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="users" aria-hidden="true"></i>Nom du client <small>(facultatif)</small></span><input id="bookingClient" maxlength="100" placeholder="Nom et prénom (facultatif)"></label><label id="bookingHotelRoomField" class="reservationField" hidden><span class="reservationFieldCaption"><i data-lucide="building-2" aria-hidden="true"></i>Numéro de chambre</span><input id="bookingHotelRoom" maxlength="7" inputmode="text" autocomplete="off" placeholder="Ex. : 225" disabled></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="calendar-days" aria-hidden="true"></i>Date</span><input id="bookingDate" type="date" required></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="clock-3" aria-hidden="true"></i>Heure</span><input id="bookingTime" type="time" required></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="users" aria-hidden="true"></i>Couverts</span><input id="bookingGuests" type="number" min="1" value="1" required></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="armchair" aria-hidden="true"></i>Table disponible</span><select id="bookingTable" required></select></label><div id="bookingAutoTableInfo" class="reservationField reservationAutoTable" role="status"><span class="reservationFieldCaption"><i data-lucide="armchair" aria-hidden="true"></i>Table disponible</span><div class="reservationAutoTableValue" title="RestoManager vérifie les disponibilités et attribue automatiquement une table adaptée"><i data-lucide="check-circle-2" aria-hidden="true"></i><span>Attribution automatique</span></div></div><div class="bookingExtraFields"><h3>Informations pour le service</h3><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="alert-triangle" aria-hidden="true"></i>Allergies signalées</span><textarea id="bookingAllergies" maxlength="500" rows="2" placeholder="Ex. : allergie aux fruits à coque — à confirmer avec le client"></textarea></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="clipboard-list" aria-hidden="true"></i>Demandes du client, notes et consignes</span><textarea id="bookingNotes" maxlength="1000" rows="3" placeholder="Ex. : anniversaire, près de la fenêtre, chaise bébé…"></textarea></label><p class="bookingExtraHint">Ces informations seront visibles dans la fiche de réservation. Vérifiez toujours les allergies avec le client et la cuisine.</p></div><section id="bookingDraft" hidden><p id="draftMessage"></p><div class="bookingDraftActions"><button id="draftExtend" type="button">Prolonger le maintien</button><button id="draftAbandon" type="button">Abandonner</button></div></section><button type="submit" class="bookingSubmitPrimary"><i data-lucide="calendar-plus" aria-hidden="true"></i><span>Ajouter la réservation</span></button></form><div id="fusionSuggestions" class="fusionSuggestions"></div><div id="availabilityInsight" class="availabilityInsight" aria-live="polite"></div><p id="bookingFeedback" role="status" aria-live="polite"></p></div></details><div class="content"><section class="panel" id="tables"><div class="panelHead"><div><h1 class="serviceIconHeading"><i data-lucide="layout-grid" aria-hidden="true"></i><span>Tables du service</span></h1><p>Statuts explicites et capacité réelle par table</p></div><label class="roomFilterLabel"><span class="srOnlyRoom">Choisir une salle</span><select id="roomFilter" aria-label="Choisir une salle"></select></label></div><div class="filters" id="filters"><button class="active" data-filter="all">Toutes</button><button data-filter="free">Libres</button><button data-filter="expected">Attendus</button><button data-filter="present">Présents</button></div><div class="tableGrid" id="tableGrid"></div></section><aside class="panel"><h2 class="serviceIconHeading"><i data-lucide="calendar-days" aria-hidden="true"></i><span>Prochaines arrivées</span></h2><div id="upcoming"></div><div id="detail">Sélectionnez une table pour voir ses réservations.</div></aside></div><section class="panel reservationPanel" id="reservations"><div class="panelHead"><div><h2>Réservations du service</h2><p>Retrouvez, modifiez et suivez chaque réservation</p></div></div><div class="reservationSearch"><label>Date <input id="reservationDate" type="date"></label><label>Recherche <input id="reservationQuery" type="search" placeholder="Client, chambre ou table"></label><button id="reservationShowAll" type="button">Toutes les dates</button></div><p id="reservationMessage" role="status" aria-live="polite"></p><div id="editSuccessToast" class="editSuccessToast" role="status" aria-live="polite" hidden><i data-lucide="check-circle-2" aria-hidden="true"></i><span id="editSuccessText"></span><button type="button" aria-label="Fermer la confirmation" id="editSuccessClose"><i data-lucide="x" aria-hidden="true"></i></button></div><form id="editForm" class="editFormModern" hidden><h2>Détails de la réservation</h2><div class="editReservationSummary" aria-label="Résumé de la réservation"><div class="editSummaryLead"><i data-lucide="calendar-days" aria-hidden="true"></i><strong id="editSummaryClient"></strong></div><span><i data-lucide="calendar-days" aria-hidden="true"></i><span id="editSummaryDate"></span></span><span><i data-lucide="clock-3" aria-hidden="true"></i><span id="editSummaryTime"></span></span><span><i data-lucide="users" aria-hidden="true"></i><span id="editSummaryGuests"></span></span><span class="editSummaryTable"><i data-lucide="armchair" aria-hidden="true"></i><span id="editSummaryTable"></span></span></div><section id="editConflict" class="editConflict" role="status" aria-live="polite" hidden><strong>La réservation a changé</strong><p id="editConflictMessage">Votre saisie est conservée. Consultez la fiche actuelle avant de reprendre.</p><button id="editReviewCurrent" type="button">Consulter la version actuelle</button><button id="editReloadCurrent" type="button" hidden>Recharger la fiche</button><div id="editCurrentValues" role="region" aria-label="Informations actuellement enregistrées" tabindex="-1"></div></section><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="users" aria-hidden="true"></i>Nom du client <small>(facultatif)</small></span><input id="editClient" maxlength="160" placeholder="Nom et prénom (facultatif)"></label><label id="editHotelRoomField" class="reservationField" hidden><span class="reservationFieldCaption"><i data-lucide="building-2" aria-hidden="true"></i>Numéro de chambre</span><input id="editHotelRoom" maxlength="40" autocomplete="off"></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="calendar-days" aria-hidden="true"></i>Date</span><input id="editDate" type="date" required></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="clock-3" aria-hidden="true"></i>Heure</span><input id="editTime" type="time" required></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="users" aria-hidden="true"></i>Couverts</span><input id="editGuests" type="number" min="1" required></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="armchair" aria-hidden="true"></i>Table</span><select id="editTable" required></select></label><div class="reservationExtraFields"><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="alert-triangle" aria-hidden="true"></i>Allergies signalées (à vérifier avec le client)</span><textarea id="editAllergies" aria-describedby="editAllergiesLimit" rows="2" placeholder="Ex. : fruits à coque — à confirmer"></textarea><span id="editAllergiesLimit" class="editDetailLimit"></span></label><label class="reservationField"><span class="reservationFieldCaption"><i data-lucide="clipboard-list" aria-hidden="true"></i>Notes et consignes de service</span><textarea id="editNotes" aria-describedby="editNotesLimit" rows="3" placeholder="Ex. : anniversaire, table près de la fenêtre…"></textarea><span id="editNotesLimit" class="editDetailLimit"></span></label></div><p id="editFusionNotice" class="fusionDetailNote" hidden></p><div class="editFormFooter"><button type="button" id="editCancel">Fermer</button><button type="submit" class="editFormSave"><i data-lucide="save" aria-hidden="true"></i>Enregistrer</button></div></form><div id="reservationList"></div></section><details class="panel actionPanel tableAdminPanel" id="administration"><summary>Gestion des tables <span>Ajouter, modifier ou supprimer une table</span></summary><div class="actionPanelBody"><button id="tableAdminNew" type="button">＋ Nouvelle table</button><form id="tableAdminForm"><label>Numéro <input id="tableAdminNumber" type="number" min="1" required></label><label>Capacité minimum <input id="tableAdminMin" type="number" min="1" value="1" required></label><label>Capacité maximum <input id="tableAdminMax" type="number" min="1" value="2" required></label><label>Salle <select id="tableAdminRoom" required></select></label><button id="tableAdminSubmit" type="submit">Ajouter la table</button></form><p id="tableAdminFeedback" role="status" aria-live="polite"></p><div id="tableAdminList"></div><section class="fusionAdmin"><h3>Tables fusionnables</h3><p>Associez deux tables voisines. Pour réunir trois tables en chaîne, enregistrez les deux associations qui les relient.</p><form id="fusionForm"><p id="fusionSelected" class="fusionSelected"></p><div id="fusionPicker" class="fusionPicker" role="group" aria-label="Sélectionner les numéros des tables fusionnables"></div><button id="fusionSubmit" type="submit">Autoriser cette fusion</button><button id="fusionCancel" type="button" hidden>Annuler la modification</button></form><p id="fusionMessage" role="status" aria-live="polite"></p><div id="fusionList"></div></section></div></details></main></div><nav class="mobileBottomNav" aria-label="Navigation principale mobile">
 <a href="#tables" class="mobileNavItem active" data-nav="tables"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="layout-grid" class="navSvgIcon" aria-hidden="true"></i></span><span>Tables</span></a>
 <a href="#reservations" class="mobileNavItem" data-nav="reservations"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="calendar-days" class="navSvgIcon" aria-hidden="true"></i></span><span>Réservations</span></a>
 <a href="#reservationForm" class="mobileNavItem mobileNavAdd" data-nav="reservationForm" aria-label="Ajouter un client"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="user-plus" class="navSvgIcon" aria-hidden="true"></i></span><span>Ajouter</span></a>
 <a href="#passages" class="mobileNavItem" data-nav="passages" aria-label="Passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Passage</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="resto-errors.js?v=20261108-tables-display"></script><script src="reservation-engine.js?v=20261107-mission2"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261108-tables-display"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="booking-availability.js?v=20261108-tables-display"></script><script src="service-v3-kpi-detail.js?v=20261109-director-feedback1"></script><script src="service-v3.js?v=20261110-midnight-service1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="reservation-edit.js?v=20261108-tables-display"></script><script src="service-v3-reservations.js?v=20261109-reception-confirm1"></script><script src="service-v3-walkin-fast.js?v=20261108-stepper1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261108-tables-display"></script><script>
+<script src="resto-errors.js?v=20261108-tables-display"></script><script src="reservation-engine.js?v=20261107-mission2"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261108-tables-display"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="booking-availability.js?v=20261108-tables-display"></script><script src="service-v3-kpi-detail.js?v=20261109-director-feedback1"></script><script src="service-v3.js?v=20261110-clone-midnight2"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="reservation-edit.js?v=20261110-clone-midnight2"></script><script src="service-v3-reservations.js?v=20261110-clone-midnight2"></script><script src="service-v3-walkin-fast.js?v=20261108-stepper1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261110-clone-midnight2"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
   const target=document.querySelector(link.getAttribute('href'));
   if(target&&target.tagName==='DETAILS')target.open=true;
  });
 });
-</script><script>(function(){const select=document.getElementById('bookingType');const radios=document.querySelectorAll('input[name="bookingTypeVisual"]');radios.forEach(r=>r.addEventListener('change',()=>{if(r.checked){select.value=r.value;select.dispatchEvent(new Event('change',{bubbles:true}))}}));})();</script><script src="service-v3-table-admin.js?v=20261108-tables-display"></script><script src="service-v3-room-choices.js?v=20261103-room1"></script><script src="service-v3-screens.js?v=20261108-nav02-home1"></script><script src="service-v3-fusions.js?v=20261108-tables-display"></script><script src="service-v3-report-metrics.js?v=20261106-metrics-audit1"></script><script src="service-v3-history.js?v=20261106-metrics-audit1"></script><script src="service-v3-shifts.js?v=20261108-tables-display"></script><script src="service-v3-closure.js?v=20261106-shared-closure-guard1"></script><script src="service-v3-shared-closure.js?v=20261108-tables-display"></script><script src="service-v3-report-download.js?v=20261106-metrics-audit1"></script><script src="service-v3-reminders.js?v=20261109-profile-bell3"></script><script src="service-v3-fb-alerts.js?v=20261108-tables-display"></script><script src="service-v3-add-choice.js?v=20261108-nav01-back1"></script><script src="service-v3-time-picker.js?v=20261107-minute-default1"></script><script src="service-v3-calendar-picker.js?v=20261104-cal2"></script><script src="service-v3-theme.js?v=20261107-custom-trigger1"></script><script src="service-v3-refresh.js?v=20261106-release2"></script><script src="service-v3-select-picker.js?v=20261107-custom-trigger1"></script><script src="reception-service-overview.js?v=20261109-reception-confirm1"></script><script type="module" src="v3-connected-auth.js?v=20261109-supabase119"></script><script type="module" src="v3-supabase-booking.js?v=20261109-supabase119"></script></body></html>
+</script><script>(function(){const select=document.getElementById('bookingType');const radios=document.querySelectorAll('input[name="bookingTypeVisual"]');radios.forEach(r=>r.addEventListener('change',()=>{if(r.checked){select.value=r.value;select.dispatchEvent(new Event('change',{bubbles:true}))}}));})();</script><script src="service-v3-table-admin.js?v=20261108-tables-display"></script><script src="service-v3-room-choices.js?v=20261103-room1"></script><script src="service-v3-screens.js?v=20261108-nav02-home1"></script><script src="service-v3-fusions.js?v=20261108-tables-display"></script><script src="service-v3-report-metrics.js?v=20261106-metrics-audit1"></script><script src="service-v3-history.js?v=20261106-metrics-audit1"></script><script src="service-v3-shifts.js?v=20261108-tables-display"></script><script src="service-v3-closure.js?v=20261106-shared-closure-guard1"></script><script src="service-v3-shared-closure.js?v=20261108-tables-display"></script><script src="service-v3-report-download.js?v=20261106-metrics-audit1"></script><script src="service-v3-reminders.js?v=20261109-profile-bell3"></script><script src="service-v3-fb-alerts.js?v=20261108-tables-display"></script><script src="service-v3-add-choice.js?v=20261108-nav01-back1"></script><script src="service-v3-time-picker.js?v=20261107-minute-default1"></script><script src="service-v3-calendar-picker.js?v=20261104-cal2"></script><script src="service-v3-theme.js?v=20261107-custom-trigger1"></script><script src="service-v3-refresh.js?v=20261106-release2"></script><script src="service-v3-select-picker.js?v=20261110-clone-midnight2"></script><script src="reception-service-overview.js?v=20261109-reception-confirm1"></script><script type="module" src="v3-connected-auth.js?v=20261110-clone-midnight2"></script><script type="module" src="v3-supabase-booking.js?v=20261110-clone-midnight2"></script><style id="receptionTableCaptionFix">
+/* Reception only: override the compact editor's display:grid!important label rules. */
+html.reception #editForm.editFormModern > label:has(#editTable),
+html.reception #bookingForm label:has(#bookingTable),
+html.reception #editForm.editFormModern > label:has(#editTable) .tableChoice,
+html.reception #bookingForm label:has(#bookingTable) .tableChoice {
+  display:none!important;
+  visibility:hidden!important;
+}
+</style></body></html>
