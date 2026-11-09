@@ -69,9 +69,9 @@ try{
    bookingSelect.value='hotel';
    bookingSelect.dispatchEvent(new Event('change',{bubbles:true}));
   }
-  // Reception may select a table explicitly while editing an expected
-  // reservation. New bookings remain automatically assigned by the server,
-  // as explained by the shared inline assignment card.
+  // Reception can view automatically assigned tables but must never choose or change one.
+  // Update the custom picker as soon as the authenticated role is known.
+  window.RestoTableChoices?.refreshAll?.();
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
   // The five menu destinations keep the same hierarchy on both staff roles.
   // Reception sees the read-only service overview, never restaurant passage actions.
