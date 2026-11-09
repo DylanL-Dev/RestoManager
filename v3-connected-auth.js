@@ -1,5 +1,6 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261108-establishment1';
 import {installFeedback} from './service-v3-feedback.js?v=20261108-bug01-1';
+import {installTutorial} from './service-v3-tutorial.js?v=20261108-onboarding1';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
@@ -21,7 +22,7 @@ logout.addEventListener('click',async()=>{
 });
 banner.append(label,logout);
 try{
- const {profile}=await requireStaff();
+ const {user:authUser,profile}=await requireStaff();
  window.RestoReception=profile.role==='reception';
  // Keep the desktop rail aligned with the real responsive header height.
  // No polling or scroll handlers: ResizeObserver reacts only to actual header resizes.
@@ -150,7 +151,78 @@ try{
  const description=document.createElement('p');description.setAttribute('role','status');description.textContent='Connexion au service en cours…';
  const lastSync=document.createElement('p');lastSync.className='muted';lastSync.textContent='Dernière synchronisation : en attente';content.append(description,banner,lastSync);network.append(summary,content);management.append(network);
  installFeedback({supabase,profile,management});
+ installTutorial({user:authUser,profile,management});
+
+ // Compact staff profile menu for touch devices. Uses the very same auth and realtime state.
+ const accountToggle=document.getElementById('mobileAccountToggle');
+ const accountMenu=document.getElementById('mobileAccountMenu');
+ const accountLogout=document.getElementById('mobileAccountLogout');
+ const accountRole=document.getElementById('mobileAccountRole');
+ const accountName=document.getElementById('mobileAccountName');
+ const accountRoleIcon=document.getElementById('mobileAccountRoleIcon');
+ const accountSync=document.getElementById('mobileAccountSync');
+ const accountSyncLabel=document.getElementById('mobileAccountSyncLabel');
+ const accountSyncDetail=document.getElementById('mobileAccountSyncDetail');
+ if(accountRole)accountRole.textContent=window.RestoReception?'Espace Réception':'Espace Restaurant';
+ if(accountName)accountName.textContent=profile.display_name||('Compte '+(window.RestoReception?'Réception':'Restaurant'));
+ if(accountRoleIcon)accountRoleIcon.dataset.lucide=window.RestoReception?'clipboard-list':'utensils-crossed';
+ const closeAccountMenu=()=>{
+  accountMenu.hidden=true;
+  accountToggle.setAttribute('aria-expanded','false');
+  accountToggle.setAttribute('aria-label','Ouvrir le menu du compte');
+ };
+ accountToggle?.addEventListener('click',()=>{
+  const opening=accountMenu.hidden;
+  accountMenu.hidden=!opening;
+  accountToggle.setAttribute('aria-expanded',String(opening));
+  accountToggle.setAttribute('aria-label',opening?'Fermer le menu du compte':'Ouvrir le menu du compte');
+ });
+ document.addEventListener('pointerdown',event=>{
+  if(!accountMenu.hidden&&!accountMenu.contains(event.target)&&!accountToggle.contains(event.target))closeAccountMenu();
+ });
+ document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&!accountMenu.hidden){closeAccountMenu();accountToggle.focus();}
+ });
+ document.querySelectorAll('.mobileBottomNav a').forEach(link=>link.addEventListener('click',closeAccountMenu));
+ document.getElementById('mobileAccountRefresh')?.addEventListener('click',()=>{closeAccountMenu();document.getElementById('refreshAppBtn')?.click();});
+ accountLogout?.addEventListener('click',()=>{
+  if(!window.confirm('Voulez-vous vraiment vous déconnecter de RestoManager ?'))return;
+  closeAccountMenu();
+  logout.click();
+ });
+ if(accountLogout)new MutationObserver(()=>{accountLogout.disabled=logout.disabled;}).observe(logout,{attributes:true,attributeFilter:['disabled']});
+
  const badge=document.getElementById('syncBadge');
+ // The sidebar reports the existing synchronization state; it does not guess from Wi-Fi alone.
+ const sidebarConnection=document.getElementById('sidebarConnection');
+ const sidebarConnectionLabel=document.getElementById('sidebarConnectionLabel');
+ const sidebarLogout=document.getElementById('sidebarLogout');
+ if(sidebarLogout){
+  sidebarLogout.addEventListener('click',()=>logout.click());
+  new MutationObserver(()=>{sidebarLogout.disabled=logout.disabled;}).observe(logout,{attributes:true,attributeFilter:['disabled']});
+ }
+ const refreshSidebarConnection=()=>{
+  if(!sidebarConnection||!badge)return;
+  const state=badge.dataset.state||'pending';
+  sidebarConnection.dataset.state=state;
+  const descriptions={ok:'Synchronisation active',pending:'Connexion en cours',error:'Connexion interrompue',readonly:'Consultation seule'};
+  sidebarConnectionLabel.textContent=descriptions[state]||badge.textContent.trim()||'État inconnu';
+  sidebarConnection.title=badge.textContent.trim();
+ };
+ refreshSidebarConnection();
+ const refreshMobileConnection=()=>{
+  if(!badge||!accountSync||!accountToggle)return;
+  const state=badge.dataset.state||'pending';
+  accountSync.dataset.state=state;
+  accountToggle.dataset.state=state;
+  const labels={ok:'Synchronisation active',pending:'Connexion en cours',error:'Synchronisation interrompue',readonly:'Consultation seule'};
+  const details={ok:'Données à jour',pending:'Vérification des données partagées…',error:'Connexion au service interrompue',readonly:'Données consultables uniquement'};
+  accountSyncLabel.textContent=labels[state]||badge.textContent.trim()||'État inconnu';
+  accountSyncDetail.textContent=details[state]||'';
+ };
+ refreshMobileConnection();
+ if(badge)new MutationObserver(refreshMobileConnection).observe(badge,{attributes:true,attributeFilter:['data-state'],childList:true,characterData:true,subtree:true});
+ if(badge)new MutationObserver(refreshSidebarConnection).observe(badge,{attributes:true,attributeFilter:['data-state'],childList:true,characterData:true,subtree:true});
  badge.addEventListener('click',()=>{
   window.RestoScreens.show('administration');
   network.open=true;
