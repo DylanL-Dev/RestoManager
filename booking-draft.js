@@ -328,8 +328,8 @@ export function setupBookingDraft(supabase, parisDateTime){
      if(!active||fields().signature!==current.signature)throw safe('La saisie a changé. Vérifiez la table avant de valider.');
      if(candidate.guests!==Number(el('bookingGuests').value)||candidate.date!==el('bookingDate').value||candidate.time!==el('bookingTime').value)throw safe('Le créneau a changé. Vérifiez la réservation.');
      const name=candidate.client.trim();
-     const room=candidate.type==='hotel'&&/^\d{1,6}[A-Za-z]?$/.test(name)?name:null;
-     if(candidate.type==='hotel'&&!room)throw safe('Indiquez le numéro de chambre du client hôtel.','ROOM_REQUIRED');
+     const room=candidate.type==='hotel'?String(candidate.hotelRoom||'').trim().toUpperCase():null;
+     if(candidate.type==='hotel'&&!/^\d{1,6}[A-Z]?$/.test(room||''))throw safe('Indiquez un numéro de chambre valide (ex. : 225).','ROOM_REQUIRED');
      if(String(candidate.notes||'').length>1000||String(candidate.allergies||'').length>500)throw safe('Les notes ou allergies dépassent la longueur autorisée. Raccourcissez votre saisie.');
      const notes=encodeBookingDetails(candidate);
      try{persistRecovery({key:current.key,phase:'confirming'})}catch{throw safe('La confirmation ne peut pas être sécurisée sur ce navigateur. Vérifiez le stockage de session.')}
