@@ -5,7 +5,7 @@
  const dateFormat=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'});
  const day=()=>{const p=Object.fromEntries(dateFormat.formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
  const clock=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
- const statusNames={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé'};
+ const statusNames={reserved:'À confirmer · Attendu',confirmed:'Confirmé · Attendu',late:'En retard',arrived:'Attendu',seated:'Installé'};
  const node=(tag,cls,value)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(value!==undefined)el.textContent=String(value);return el};
  const iconLabel=(tag,label,iconName,className)=>{const row=node(tag,className||'serviceIconHeading');const icon=node('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');row.append(icon,node('span',null,label));return row;};
  function render(){
@@ -30,7 +30,7 @@
   const occupied=new Set(seated.flatMap(r=>r.tables||[]).map(Number));
   const free=tables.filter(t=>!occupied.has(Number(t.number))).length;
   const cards=node('div','receptionServiceMetrics');
-  const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.hotelRoom?' · Chambre '+r.hotelRoom:'')+(r.status==='confirmed'?' · Confirmé, non installé':'');
+  const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.hotelRoom?' · Chambre '+r.hotelRoom:'')+(r.status==='confirmed'?' · Confirmé · Attendu':'');
   const detailLists=[pending.map(reservationLine),seated.map(reservationLine),pending.map(reservationLine),tables.filter(t=>!occupied.has(Number(t.number))).map(t=>'Table '+t.number+' · '+Number(t.capacity||0)+' place(s)')];
   for(const [index,[value,label,iconName]] of [[expected,'Couverts encore attendus','calendar-clock'],[inRoom,'Couverts installés','users'],[pending.length,'Réservations à venir','calendar-days'],[free,'Tables non occupées','armchair']].entries()){
    const c=node('button','receptionServiceMetric receptionMetricInteractive');c.type='button';c.setAttribute('aria-label','Voir le détail : '+label);c.append(iconLabel('span',label,iconName,'receptionMetricLabel'),node('strong',null,value));c.addEventListener('click',()=>window.RestoKpiDetails?.open(label,detailLists[index]));cards.append(c);
