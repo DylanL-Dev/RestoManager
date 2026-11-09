@@ -69,10 +69,9 @@ try{
    bookingSelect.value='hotel';
    bookingSelect.dispatchEvent(new Event('change',{bubbles:true}));
   }
-  document.querySelector('#editTable').required=false;
-  const text=document.createElement('p');
-  text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
-  document.querySelector('#bookingTable').closest('label').after(text);
+  // Reception may select a table explicitly while editing an expected
+  // reservation. New bookings remain automatically assigned by the server,
+  // as explained by the shared inline assignment card.
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
   // The five menu destinations keep the same hierarchy on both staff roles.
   // Reception sees the read-only service overview, never restaurant passage actions.
