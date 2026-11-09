@@ -22,17 +22,35 @@ function parisDateTime(date,time){
  if(actual!==date+'T'+time)throw Error('Horaire inexistant lors du changement d’heure');
  return utc.toISOString();
 }
-async function saveReceptionBooking(candidate,id){
+async function saveReceptionBooking(candidate,id,{explicitTableChoice=false}={}){
  requireWrite();
  const {supabase}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  const start=parisDateTime(candidate.date,candidate.time);
  const name=String(candidate.client||'').trim()||(candidate.type==='hotel'?'Chambre '+String(candidate.hotelRoom||'').trim():'Client extérieur');
  const notes=encodeBookingDetails(candidate);
- const {data,error}=await supabase.rpc('reception_update_reservation_v4',{
+ const args={
   p_reservation_id:id,p_expected_version:window.ReservationEdit.requireVersion(candidate.editVersion),
   p_guest_name:name,p_hotel_room:candidate.type==='hotel'?(candidate.hotelRoom?.trim()||null):null,
-  p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),p_notes:notes
- });
+  p_party_size:Number(candidate.guests),p_starts_at:start,
+  p_ends_at:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),
+  p_notes:notes
+ };
+ // Reception keeps automatic table assignment unless the user explicitly
+ // selected another table during an edit. This endpoint validates the same
+ // version, tenant, status, capacity and conflicts as the F&B editor.
+ if(explicitTableChoice){
+  const snapshot=await loadSharedService();
+  const byNumber=new Map(snapshot.tables.filter(t=>t.active)
+   .map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t.id]));
+  args.p_table_ids=candidate.tables.map(number=>{
+   const tableId=byNumber.get(Number(number));
+   if(!tableId)throw window.RestoErrors?.business('Table non disponible. Actualisez les propositions.')||Error('Table indisponible');
+   return tableId;
+  });
+ }
+ const {data,error}=await supabase.rpc(explicitTableChoice
+  ?'reception_update_reservation_with_table_v1'
+  :'reception_update_reservation_v4',args);
  if(error)throw editError(error);
  const tables=TableStore.get().tables;
  candidate.tables=data.tables.map(id=>tables.find(t=>t.id===id)?.number).filter(n=>n!=null);
@@ -70,11 +88,11 @@ export async function deleteCancelledSharedBooking(id){
 }
 window.RestoDeleteCancelledSharedBooking=deleteCancelledSharedBooking;
 
-export async function updateSharedBooking(candidate){
+export async function updateSharedBooking(candidate,{explicitTableChoice=false}={}){
  requireWrite();
  if(navigator.onLine===false||!window.RestoSupabaseReady)throw Error('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.');
  window.ReservationEdit.requireVersion(candidate.editVersion);
- if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id);
+ if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id,{explicitTableChoice});
  const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  await requireStaff();
  const snapshot=await loadSharedService();
