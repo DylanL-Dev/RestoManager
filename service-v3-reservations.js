@@ -450,6 +450,29 @@ $('editForm').addEventListener('submit',async e=>{
 });
 ['editNotes','editAllergies'].forEach(id=>$(id).addEventListener('input',updateEditDetailLimits));
 ['editGuests','editDate','editTime','editClient','editHotelRoom'].forEach(id=>$(id)?.addEventListener('input',updateEditChoiceAvailability));
+// Direct table-change shortcut from the table details. Full editor keeps all
+// capacity, availability, version and concurrent-update safeguards.
+window.addEventListener('restomanager:quick-change-table',event=>{
+ if(window.RestoReception)return;
+ const id=event.detail?.reservationId;
+ const record=load().find(item=>item.id===id);
+ if(!record||departedStatuses.has(record.status)){notify('Réservation indisponible pour une modification.');return;}
+ reservationView='active';
+ expanded=record.id;
+ render();
+ if(window.RestoSharedReservations){
+  openSharedEditor(record);
+ }else{
+  void action(record.id,'edit');
+ }
+ requestAnimationFrame(()=>{
+  const select=$('editTable');
+  if(select&&!$('editForm').hidden){
+   select.scrollIntoView({behavior:'smooth',block:'center'});
+   select.focus({preventScroll:true});
+  }
+ });
+});
 // Notifications navigate to the appropriate status tab and expand the exact booking.
 window.addEventListener('restomanager:open-reservation',event=>{
  const data=event.detail||{};
