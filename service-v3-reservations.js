@@ -348,7 +348,7 @@ function render(){
  if(window.RestoSharedReservations&&!window.RestoReception&&['reserved','confirmed','late','arrived'].includes(r.status)){
   // Keep the reservation card compact: table reassignment is available in
   // the ellipsis menu and via the dedicated shortcut on the table itself.
-  extra.push({label:'Changer la table',run:()=>showSmartPlacement(r.id)});
+  extra.push({label:'Changer la table',run:()=>openChangeTablePicker(r.id)});
  }
  if(mainActions.children.length)actions.append(mainActions);
  const tools=el('div',undefined,'reservationActionTools');
@@ -451,28 +451,30 @@ $('editForm').addEventListener('submit',async e=>{
 });
 ['editNotes','editAllergies'].forEach(id=>$(id).addEventListener('input',updateEditDetailLimits));
 ['editGuests','editDate','editTime','editClient','editHotelRoom'].forEach(id=>$(id)?.addEventListener('input',updateEditChoiceAvailability));
-// Direct table-change shortcut from the table details. Full editor keeps all
-// capacity, availability, version and concurrent-update safeguards.
-window.addEventListener('restomanager:quick-change-table',event=>{
+// One consistent availability-aware table selector for both entry points:
+//  - reservation ellipsis menu
+//  - direct shortcut from the table details.
+// Reuses the existing edit workflow and server-side concurrency safeguards;
+// a card choice only updates the draft, never silently writes a reservation.
+function openChangeTablePicker(id){
  if(window.RestoReception)return;
- const id=event.detail?.reservationId;
+ if(!window.RestoSupabaseReady){notify('Synchronisation requise avant de changer de table.');return;}
  const record=load().find(item=>item.id===id);
- if(!record||departedStatuses.has(record.status)){notify('Réservation indisponible pour une modification.');return;}
+ if(!record||departedStatuses.has(record.status)||!['reserved','confirmed','late','arrived'].includes(record.status)){
+  notify('Réservation indisponible pour un changement de table.');return;
+ }
  reservationView='active';
  expanded=record.id;
  render();
- if(window.RestoSharedReservations){
-  openSharedEditor(record);
- }else{
-  void action(record.id,'edit');
- }
+ openSharedEditor(record);
  requestAnimationFrame(()=>{
-  const select=$('editTable');
-  if(select&&!$('editForm').hidden){
-   select.scrollIntoView({behavior:'smooth',block:'center'});
-   select.focus({preventScroll:true});
-  }
+  if($('editForm').hidden)return;
+  const opened=window.RestoTableChoices?.open('editTable');
+  if(!opened){$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});notify('Choisissez une table dans le formulaire puis enregistrez.');}
  });
+}
+window.addEventListener('restomanager:quick-change-table',event=>{
+ openChangeTablePicker(event.detail?.reservationId);
 });
 // Notifications navigate to the appropriate status tab and expand the exact booking.
 window.addEventListener('restomanager:open-reservation',event=>{
