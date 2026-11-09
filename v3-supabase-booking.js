@@ -2,7 +2,7 @@ import {canWrite} from './service-sync.js?v=20261108-tables-display';
 // Native V3 -> Supabase reservation creation. No direct table inserts or local writes.
 import {setupBookingDraft} from './booking-draft.js?v=20261109-optional-guest1';
 import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
-import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-supabase119';
+import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
 
 function requireWrite(){
  if(navigator.onLine===false||!window.RestoSupabaseReady)throw window.RestoErrors?.business('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.')||Error('Connexion interrompue.');
