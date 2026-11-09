@@ -4,6 +4,21 @@
  const bell=document.createElement('button');bell.type='button';bell.className='serviceBell';bell.setAttribute('aria-label','Rappels de service');bell.innerHTML='<i data-lucide="bell"></i><span class="serviceBellCount" hidden>0</span>';
  const panel=document.createElement('section');panel.className='serviceReminderPanel';panel.hidden=true;panel.setAttribute('role','region');panel.setAttribute('aria-label','Notifications de service');
  (document.querySelector('.headerQuickActions')||document.querySelector('.top'))?.append(bell);document.body.append(panel);
+ // Notifications are mounted dynamically; preserve a dedicated account control after the bell.
+ const profileButton=document.getElementById('mobileAccountToggle');
+ if(profileButton && bell.parentElement){
+  bell.insertAdjacentElement('afterend',profileButton);
+  // The CSS menu is mobile/tablet-only. Ensure no older button styles hide this control.
+  const matchMobile=window.matchMedia('(max-width:900px)');
+  const syncProfileVisibility=()=>{
+   profileButton.style.setProperty('display',matchMobile.matches?'inline-flex':'none','important');
+   profileButton.style.setProperty('visibility',matchMobile.matches?'visible':'hidden','important');
+   profileButton.style.setProperty('flex','0 0 42px','important');
+  };
+  syncProfileVisibility();
+  matchMobile.addEventListener?.('change',syncProfileVisibility);
+ }
+
  const errorMessage=(error,fallback)=>{window.RestoErrors?.diagnostic('notification-action',error);return window.RestoErrors?.message(error,fallback)||fallback};
  const connected=()=>Boolean(window.RestoSharedReservations);
  const read=()=>{if(connected())return ReservationEngine.normalizeReservations(window.RestoSharedReservations);try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}};
