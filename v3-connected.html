@@ -275,6 +275,61 @@ html[data-theme="dark"] .receptionServiceDetails small,html[data-theme="dark"] .
  }
 }
 
+/* Table reassignment: compact, touch-friendly 2-column choice grid.
+   Only the "Table réellement choisie" picker is affected. */
+.v3-picker-backdrop.v3-table-choice-picker .v3-picker-panel{
+ width:min(560px,100%)!important;
+ max-height:min(77dvh,700px)!important;
+ gap:10px!important;
+ padding:16px!important;
+}
+.v3-table-choice-picker .v3-picker-panel > header{
+ align-items:center!important;
+ min-height:44px!important;
+}
+.v3-table-choice-picker .v3-picker-panel > header strong{
+ font-size:16px!important;
+ line-height:1.3!important;
+}
+.v3-table-choice-picker .v3-picker-items{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:8px!important;
+ overflow-y:auto!important;
+ min-height:0!important;
+ padding:2px 3px 2px 0!important;
+}
+.v3-table-choice-picker .v3-picker-items button{
+ box-sizing:border-box!important;
+ min-width:0!important;
+ min-height:46px!important;
+ padding:10px 12px!important;
+ border-radius:11px!important;
+ font-size:13px!important;
+ line-height:1.35!important;
+ text-align:left!important;
+}
+.v3-table-choice-picker .v3-picker-items button.v3-picker-placeholder{
+ grid-column:1/-1;
+ text-align:center!important;
+ background:transparent!important;
+ border-style:dashed!important;
+}
+.v3-table-choice-picker .v3-picker-panel > footer{
+ gap:9px!important;
+ padding-top:6px!important;
+}
+.v3-table-choice-picker .v3-picker-panel > footer button{
+ min-height:44px!important;
+ padding:10px!important;
+}
+@media(max-width:420px){
+ .v3-picker-backdrop.v3-table-choice-picker{padding:10px!important;}
+ .v3-table-choice-picker .v3-picker-panel{padding:14px!important;max-height:82dvh!important;}
+ .v3-table-choice-picker .v3-picker-items{gap:7px!important;}
+ .v3-table-choice-picker .v3-picker-items button{min-height:44px!important;padding:9px 8px!important;font-size:12px!important;}
+}
+
 /* Notifications: separated by staff role. */
 .serviceBell[hidden],.serviceReminderPanel[hidden]{display:none!important}
 .serviceReminderPanel .serviceReceptionBookingAlert{background:#eff9f3;border:1px solid #cde8d7;border-radius:14px;padding:14px;margin:10px 0}
@@ -740,4 +795,4 @@ document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
   if(target&&target.tagName==='DETAILS')target.open=true;
  });
 });
-</script><script>(function(){const select=document.getElementById('bookingType');const radios=document.querySelectorAll('input[name="bookingTypeVisual"]');radios.forEach(r=>r.addEventListener('change',()=>{if(r.checked){select.value=r.value;select.dispatchEvent(new Event('change',{bubbles:true}))}}));})();</script><script src="service-v3-table-admin.js?v=20261108-tables-display"></script><script src="service-v3-room-choices.js?v=20261103-room1"></script><script src="service-v3-screens.js?v=20261108-nav02-home1"></script><script src="service-v3-fusions.js?v=20261108-tables-display"></script><script src="service-v3-report-metrics.js?v=20261106-metrics-audit1"></script><script src="service-v3-history.js?v=20261106-metrics-audit1"></script><script src="service-v3-shifts.js?v=20261108-tables-display"></script><script src="service-v3-closure.js?v=20261106-shared-closure-guard1"></script><script src="service-v3-shared-closure.js?v=20261108-tables-display"></script><script src="service-v3-report-download.js?v=20261106-metrics-audit1"></script><script src="service-v3-reminders.js?v=20261109-profile-bell3"></script><script src="service-v3-fb-alerts.js?v=20261108-tables-display"></script><script src="service-v3-add-choice.js?v=20261108-nav01-back1"></script><script src="service-v3-time-picker.js?v=20261107-minute-default1"></script><script src="service-v3-calendar-picker.js?v=20261104-cal2"></script><script src="service-v3-theme.js?v=20261107-custom-trigger1"></script><script src="service-v3-refresh.js?v=20261106-release2"></script><script src="service-v3-select-picker.js?v=20261107-custom-trigger1"></script><script src="reception-service-overview.js?v=20261109-reception-confirm1"></script><script type="module" src="v3-connected-auth.js?v=20261109-twins1"></script><script type="module" src="v3-supabase-booking.js?v=20261109-twins1"></script></body></html>
+</script><script>(function(){const select=document.getElementById('bookingType');const radios=document.querySelectorAll('input[name="bookingTypeVisual"]');radios.forEach(r=>r.addEventListener('change',()=>{if(r.checked){select.value=r.value;select.dispatchEvent(new Event('change',{bubbles:true}))}}));})();</script><script src="service-v3-table-admin.js?v=20261108-tables-display"></script><script src="service-v3-room-choices.js?v=20261103-room1"></script><script src="service-v3-screens.js?v=20261108-nav02-home1"></script><script src="service-v3-fusions.js?v=20261108-tables-display"></script><script src="service-v3-report-metrics.js?v=20261106-metrics-audit1"></script><script src="service-v3-history.js?v=20261106-metrics-audit1"></script><script src="service-v3-shifts.js?v=20261108-tables-display"></script><script src="service-v3-closure.js?v=20261106-shared-closure-guard1"></script><script src="service-v3-shared-closure.js?v=20261108-tables-display"></script><script src="service-v3-report-download.js?v=20261106-metrics-audit1"></script><script src="service-v3-reminders.js?v=20261109-profile-bell3"></script><script src="service-v3-fb-alerts.js?v=20261108-tables-display"></script><script src="service-v3-add-choice.js?v=20261108-nav01-back1"></script><script src="service-v3-time-picker.js?v=20261107-minute-default1"></script><script src="service-v3-calendar-picker.js?v=20261104-cal2"></script><script src="service-v3-theme.js?v=20261107-custom-trigger1"></script><script src="service-v3-refresh.js?v=20261106-release2"></script><script src="service-v3-select-picker.js?v=20261109-table-grid1"></script><script src="reception-service-overview.js?v=20261109-reception-confirm1"></script><script type="module" src="v3-connected-auth.js?v=20261109-twins1"></script><script type="module" src="v3-supabase-booking.js?v=20261109-twins1"></script></body></html>
