@@ -35,10 +35,12 @@ form.addEventListener('submit',async event=>{
  const account=Object.hasOwn(accounts,usernameInput.value.trim().toLowerCase())?accounts[usernameInput.value.trim().toLowerCase()]:null;
  try{
   if(!account)throw new Error('Unknown username');
-  const {error}=await withTimeout(client.auth.signInWithPassword({email:account.email,password:passwordInput.value}));
+  // signInWithPassword already returns the authenticated user.
+  // Avoid a second /user request that can stall on browser session locks.
+  const {data:authData,error}=await withTimeout(client.auth.signInWithPassword({email:account.email,password:passwordInput.value}));
   if(error)throw error;
-  const {data:{user},error:userError}=await withTimeout(client.auth.getUser());
-  if(userError||!user)throw new Error('Invalid session');
+  const user=authData?.user;
+  if(!user||!authData?.session)throw new Error('Invalid session');
   const {data,error:profileError}=await withTimeout(client.from('staff_profiles').select('role,display_name,active').eq('user_id',user.id).single());
   if(profileError||!data?.active||data.role!==account.role){
    message.textContent='Compte non autorisé. Contactez votre administrateur.';
