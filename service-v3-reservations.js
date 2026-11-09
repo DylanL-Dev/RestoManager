@@ -400,7 +400,7 @@ $('editForm').addEventListener('submit',async e=>{
   savingEdit=true;controls.forEach(({control})=>{control.disabled=true});
   try{
    if(!editingBase||editingBase.id!==editing)throw business('Rouvrez la fiche avant de la modifier.');
-   const updated=window.ReservationEdit.candidate(editingBase,{client:$('editClient').value,hotelRoom:$('editHotelRoom').value,
+   const updated=window.ReservationEdit.candidate(editingBase,{client:$('editClient').value.trim()||(editingBase.type==='hotel'?'Chambre '+($('editHotelRoom').value.trim()||'à préciser'):'Client extérieur'),hotelRoom:$('editHotelRoom').value,
     date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:window.RestoReception?editingBase.tables.slice():chosenTables,
     notes:$('editNotes').value,allergies:$('editAllergies').value});
    if(!window.RestoReception&&!updated.tables.length)throw business('Choisissez une table');
