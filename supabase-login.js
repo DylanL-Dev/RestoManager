@@ -1,47 +1,71 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const client=createClient('https://tnsrkargogckgtsxipwd.supabase.co','sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7');
-// Public technical aliases only. No real employee emails or passwords are embedded.
-// Accounts must be created and confirmed by an admin in Supabase Auth.
+// Public aliases only; staff credentials are validated by Supabase Auth.
 const accounts=Object.freeze({
  'reception':{email:'reception@accounts.restomanager.example.com',role:'reception'},
  'admin-fb':{email:'admin-fb@accounts.restomanager.example.com',role:'fb_admin'}
 });
-const form=document.getElementById('login'),button=document.getElementById('submit'),message=document.getElementById('message');
-form.addEventListener('submit',async event=>{
- event.preventDefault();button.disabled=true;message.textContent='Connexion en cours…';
- const username=document.getElementById('username').value.trim().toLowerCase();
- const account=Object.hasOwn(accounts,username)?accounts[username]:null;
- try {
-  if(!account) throw new Error('Unknown username');
-  const {error}=await client.auth.signInWithPassword({email:account.email,password:document.getElementById('password').value});
-  if(error) throw error;
-  const {data:{user},error:userError}=await client.auth.getUser();
-  if(userError||!user) throw new Error('Invalid session');
-  const {data,error:profileError}=await client.from('staff_profiles').select('role,display_name,active').eq('user_id',user.id).single();
-  if(profileError||!data?.active||data.role!==account.role){
-   await client.auth.signOut();
-   message.textContent='Compte non autorisé. Contactez votre administrateur.';return;
-  }
-  // Navigate only after the server-authorized profile matches the login role.
-  window.location.assign('v3-connected.html');
-
- } catch(_error){
-  await client.auth.signOut();
+const form=document.getElementById('login');
+const button=document.getElementById('submit');
+const message=document.getElementById('message');
+const usernameInput=document.getElementById('username');
+const passwordInput=document.getElementById('password');
+let submitting=false;
+const timeoutError=()=>Object.assign(new Error('Le service de connexion ne répond pas.'),{code:'AUTH_TIMEOUT'});
+function withTimeout(promise,ms=15000){
+ let timer;
+ return Promise.race([
+  Promise.resolve(promise),
+  new Promise((_,reject)=>{timer=setTimeout(()=>reject(timeoutError()),ms);})
+ ]).finally(()=>clearTimeout(timer));
+}
+function showError(error){
+ if(error?.code==='AUTH_TIMEOUT'||error?.name==='AbortError'||error?.message?.includes('fetch')){
+  message.textContent='Le service de connexion ne répond pas. Vérifiez votre réseau et réessayez.';
+ }else{
   message.textContent='Connexion impossible. Vérifiez vos identifiants ou contactez votre administrateur.';
- } finally{button.disabled=false;}
+ }
+}
+form.addEventListener('submit',async event=>{
+ event.preventDefault();
+ if(submitting)return;
+ submitting=true;
+ button.disabled=true;
+ message.textContent='Connexion en cours…';
+ const account=Object.hasOwn(accounts,usernameInput.value.trim().toLowerCase())?accounts[usernameInput.value.trim().toLowerCase()]:null;
+ try{
+  if(!account)throw new Error('Unknown username');
+  const {error}=await withTimeout(client.auth.signInWithPassword({email:account.email,password:passwordInput.value}));
+  if(error)throw error;
+  const {data:{user},error:userError}=await withTimeout(client.auth.getUser());
+  if(userError||!user)throw new Error('Invalid session');
+  const {data,error:profileError}=await withTimeout(client.from('staff_profiles').select('role,display_name,active').eq('user_id',user.id).single());
+  if(profileError||!data?.active||data.role!==account.role){
+   message.textContent='Compte non autorisé. Contactez votre administrateur.';
+   // Only revoke a validated but unauthorized account, without hanging the UI.
+   void withTimeout(client.auth.signOut(),5000).catch(()=>{});
+   return;
+  }
+  window.location.assign('v3-connected.html');
+ }catch(error){
+  showError(error);
+ }finally{
+  submitting=false;
+  button.disabled=false;
+ }
 });
- // Skip the login form only when an existing session still has an active staff role.
+// Do not race an existing-session redirect against a manual login attempt.
 async function resumeExistingSession(){
  try{
-  const {data:{user},error}=await client.auth.getUser();
-  if(error||!user)return;
-  const {data:profile,error:profileError}=await client.from('staff_profiles')
-   .select('role,active').eq('user_id',user.id).single();
+  const {data:{session},error:sessionError}=await withTimeout(client.auth.getSession(),7000);
+  if(submitting||sessionError||!session?.user)return;
+  const {data:profile,error:profileError}=await withTimeout(client.from('staff_profiles').select('role,active').eq('user_id',session.user.id).single(),7000);
+  if(submitting)return;
   if(!profileError&&profile?.active&&['reception','fb_admin'].includes(profile.role)){
    window.location.replace('v3-connected.html');
   }
  }catch{
-  // Leave the login form available if session validation fails.
+  // Keep login available when stored session cannot be checked.
  }
 }
 void resumeExistingSession();

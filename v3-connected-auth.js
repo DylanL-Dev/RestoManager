@@ -59,6 +59,16 @@ try{
  setInterval(greet,60000);
  if(window.RestoReception){
   document.documentElement.classList.add('reception');
+  // Reception handles hotel guests first; keep Restaurant's default unchanged.
+  const bookingChoices=document.querySelector('#bookingForm .bookingTypeChoices');
+  const hotelChoice=bookingChoices?.querySelector('input[value="hotel"][name="bookingTypeVisual"]');
+  const bookingSelect=document.getElementById('bookingType');
+  if(bookingChoices&&hotelChoice&&bookingSelect){
+   bookingChoices.prepend(hotelChoice.closest('label'));
+   hotelChoice.checked=true;
+   bookingSelect.value='hotel';
+   bookingSelect.dispatchEvent(new Event('change',{bubbles:true}));
+  }
   document.querySelector('#editTable').required=false;
   const text=document.createElement('p');
   text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
