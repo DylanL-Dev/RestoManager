@@ -23,6 +23,7 @@ function parisDateTime(date,time){
  return utc.toISOString();
 }
 async function saveReceptionBooking(candidate,id,{explicitTableChoice=false}={}){
+ if(explicitTableChoice)throw Error('Seule l’équipe Restaurant peut choisir ou modifier une table.');
  requireWrite();
  const {supabase}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  const start=parisDateTime(candidate.date,candidate.time);
@@ -92,7 +93,7 @@ export async function updateSharedBooking(candidate,{explicitTableChoice=false}=
  requireWrite();
  if(navigator.onLine===false||!window.RestoSupabaseReady)throw Error('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.');
  window.ReservationEdit.requireVersion(candidate.editVersion);
- if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id,{explicitTableChoice});
+ if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id,{explicitTableChoice:false});
  const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  await requireStaff();
  const snapshot=await loadSharedService();
