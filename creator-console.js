@@ -6,6 +6,17 @@ export function installCreatorConsole({client,installOwnerInbox}){
  const setText=(id,value)=>{const node=byId(id);if(node)node.textContent=String(value);};
  const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
  let establishments=[],loaded=false,reportsLoaded=false,loading=false;
+ const sidebar=byId('ownerSidebar'),navToggle=byId('ownerNavToggle'),navClose=byId('ownerNavClose'),navBackdrop=byId('ownerNavBackdrop');
+ const mobileQuery=window.matchMedia('(max-width: 760px)');
+ function setMenuOpen(open){
+  const active=Boolean(open&&mobileQuery.matches);
+  sidebar?.classList.toggle('open',active);
+  if(navBackdrop)navBackdrop.hidden=!active;
+  navToggle?.setAttribute('aria-expanded',String(active));
+  navToggle?.setAttribute('aria-label',active?'Fermer la navigation':'Ouvrir la navigation');
+  document.body.classList.toggle('ownerDrawerOpen',active);
+ }
+
  const formatDate=date=>new Intl.DateTimeFormat('fr-FR',{dateStyle:'medium',timeZone:'Europe/Paris'}).format(date);
  setText('ownerToday',formatDate(new Date()));
  function navigate(view){
@@ -16,7 +27,7 @@ export function installCreatorConsole({client,installOwnerInbox}){
   setText('ownerPageTitle',names[chosen]||'Vue générale');
   if(chosen==='reports'&&!reportsLoaded){installOwnerInbox({client});reportsLoaded=true;}
   if(chosen==='restaurants')renderEstablishments();
-  if(window.matchMedia('(max-width: 760px)').matches)byId('ownerSidebar')?.classList.remove('open');
+  setMenuOpen(false);
  }
  function renderEstablishments(){
   const container=byId('ownerRestaurantList');if(!container)return;
@@ -57,7 +68,13 @@ export function installCreatorConsole({client,installOwnerInbox}){
  }
  navigation.forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.ownerNav)));
  byId('ownerRefreshOverview')?.addEventListener('click',()=>void load());
- byId('ownerNavToggle')?.addEventListener('click',()=>{const side=byId('ownerSidebar');const open=side.classList.toggle('open');byId('ownerNavToggle').setAttribute('aria-expanded',String(open));});
+ navToggle?.addEventListener('click',()=>setMenuOpen(!sidebar?.classList.contains('open')));
+ navClose?.addEventListener('click',()=>{setMenuOpen(false);navToggle?.focus();});
+ navBackdrop?.addEventListener('click',()=>{setMenuOpen(false);navToggle?.focus();});
+ document.addEventListener('keydown',event=>{
+  if(event.key==='Escape'&&sidebar?.classList.contains('open')){event.preventDefault();setMenuOpen(false);navToggle?.focus();}
+ });
+ mobileQuery.addEventListener?.('change',()=>setMenuOpen(false));
  navigate('dashboard');
  void load();
  return {refresh:load};
