@@ -10,7 +10,7 @@ function elem(tag){
  return {tag,className:'',children:[],attrs:{},dataset:{},style:{},textContent:'',innerHTML:'',
   append(...x){this.children.push(...x)},
   replaceChildren(...x){this.children=x},
-  setAttribute(k,v){this.attrs[k]=v}};
+  setAttribute(k,v){this.attrs[k]=v},addEventListener(){}};
 }
 const flatten=e=>[e,...(e.children||[]).flatMap(flatten)];
 test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 seated',()=>{
@@ -35,7 +35,7 @@ test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 s
  assert.equal(expectedCards.length,3);
  const iconNodes=nodes.filter(n=>n.tag==='i'&&n.dataset?.lucide);
  assert.deepEqual(iconNodes.map(n=>n.dataset.lucide),[
-  'activity','calendar-clock','alert-triangle','users'
+  'settings','activity','calendar-clock','alert-triangle','users'
  ]);
 
  assert.equal(Number(expectedCards[0].children[0].textContent)+Number(expectedCards[1].children[0].textContent),20);

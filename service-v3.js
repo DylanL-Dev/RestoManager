@@ -224,15 +224,10 @@ window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count
 'use strict';
 (function(){
 const $=id=>document.getElementById(id);
-// Restaurant-local service date. Until 01:00 the previous service day remains
-// active; new bookings always use the current Paris calendar date.
+// Restaurant-local service date. Match the booking calendar from 00:00 Paris.
+// Keeping yesterday until 01:00 concealed today's reservations on the table grid.
 const bookingToday=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
-const today=()=>{
- const paris=bookingToday(),parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
- const hour=Number(parts.find(p=>p.type==='hour')?.value||0);
- if(hour>=1)return paris;
- const d=new Date(paris+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10);
-};
+const today=()=>bookingToday();
 const bookingNowTime=()=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(/\s/g,'');
 const bookingMinuteOf=time=>{const match=/^(\d{2}):(\d{2})$/.exec(String(time||''));return match?Number(match[1])*60+Number(match[2]):NaN};
 const bookingClock=minute=>String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');
