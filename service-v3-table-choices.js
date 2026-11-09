@@ -11,7 +11,7 @@ function close(){overlay.hidden=true;document.body.classList.remove('tablePicker
 overlay.querySelector('.tablePickerClose').addEventListener('click',close);
 overlay.querySelector('.tablePickerBackdrop').addEventListener('click',close);
 document.addEventListener('keydown',e=>{if(overlay.hidden)return;if(e.key==='Escape')close();if(e.key==='Tab'){const controls=Array.from(sheet.querySelectorAll('button:not([disabled])'));const first=controls[0],last=controls[controls.length-1];if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}}});
-const refreshers={};
+const refreshers={},openers={};
 configs.forEach(id=>{
  const select=document.getElementById(id);if(!select)return;
  const box=document.createElement('div');box.className='tableChoice';
@@ -45,8 +45,9 @@ configs.forEach(id=>{
  grid.append(card);
  });
  }
- trigger.addEventListener('click',()=>{previousFocus=trigger;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus()});
+ const openPicker=()=>{if(trigger.disabled)return false;previousFocus=trigger;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus();return true};
+ trigger.addEventListener('click',openPicker);openers[id]=openPicker;
  select.addEventListener('change',refresh);refresh();refreshers[id]=refresh;
 });
-window.RestoTableChoices={refresh(id){refreshers[id]?.()}};
+window.RestoTableChoices={refresh(id){refreshers[id]?.()},open(id){return openers[id]?.()===true}};
 })();
