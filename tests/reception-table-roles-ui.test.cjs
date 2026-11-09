@@ -22,13 +22,16 @@ test('Reception displays a matching automatic-assignment field on new bookings',
  assert.match(fields,/html\.reception #bookingForm > \.reservationAutoTable/);
  assert.doesNotMatch(auth,/document\.createElement\('p'\)[\s\S]{0,160}attribue une table/);
 });
-test('Reception can select a table during pending reservation edits',()=>{
- assert.doesNotMatch(page,/\.reception label:has\(#editTable\)/);
- assert.doesNotMatch(auth,/#editTable'\)\.required=false/);
- assert.match(edit,/explicitTableChoice:Boolean\(window\.RestoReception&&!sameTables\(editingBase\.tables,updated\.tables\)\)/);
- assert.match(edit,/extra\.push\(\{label:'Changer la table',run:\(\)=>openChangeTablePicker\(r\.id\)\}\)/);
- assert.match(booking,/reception_update_reservation_with_table_v1/);
- assert.match(booking,/reception_update_reservation_v4/);
+test('Reception uses the modern forms but never selects or changes a table manually',()=>{
+ assert.match(page,/class="editFormModern"/);
+ assert.match(page,/id="bookingAutoTableInfo"/);
+ assert.match(page,/html\\.reception #editForm\\.editFormModern > label:has\\(#editTable\\)/);
+ assert.match(auth,/document\\.documentElement\\.classList\\.add\\('reception'\\)/);
+ assert.match(auth,/for\\(const id of \\['bookingTable','editTable'\\]\\)/);
+ assert.match(edit,/selector\\.disabled=Boolean\\(window\\.RestoReception\\)/);
+ assert.match(edit,/if\\(window\\.RestoReception\\)\\{notify\\('L’attribution des tables est réservée/);
+ assert.match(edit,/explicitTableChoice:false/);
+ assert.match(fields,/html\\.reception #bookingForm > \\.reservationAutoTable/);
 });
 test('Reception operations remain segregated from seated service',()=>{
  assert.match(migration,/private\.current_staff_role\(\) IS DISTINCT FROM 'reception'/);
