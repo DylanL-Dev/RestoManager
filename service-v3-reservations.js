@@ -87,6 +87,7 @@ function notify(msg){$('reservationMessage').textContent=msg}
 const business=message=>window.RestoErrors?.business(message)||Error(message);
 function errorMessage(error,fallback='Cette action ne peut pas être confirmée. Votre saisie est conservée ; réessayez après synchronisation.'){
  window.RestoErrors?.diagnostic('reservation-action',error);
+ if(window.RestoReception&&(error?.details==='FORBIDDEN'||error?.code==='42501'))return 'La Réception peut modifier les réservations avant installation. Si le client est installé, demandez à l’équipe Restaurant de gérer son déplacement.';
  return window.RestoErrors?.message(error,fallback)||fallback;
 }
 function updateEditDetailLimits(){
@@ -484,7 +485,7 @@ function openChangeTablePicker(id){
  if(!window.RestoSupabaseReady){notify('Synchronisation requise avant de changer de table.');return;}
  const record=load().find(item=>item.id===id);
  if(!record||departedStatuses.has(record.status)||!['reserved','confirmed','late','arrived'].includes(record.status)){
-  notify('Réservation indisponible pour un changement de table.');return;
+  notify(window.RestoReception?'La Réception peut changer la table uniquement avant l’installation du client.':'Réservation indisponible pour un changement de table.');return;
  }
  reservationView='active';
  expanded=record.id;
