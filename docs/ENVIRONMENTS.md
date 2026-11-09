@@ -17,7 +17,7 @@
 - Comptes Auth DEV à créer de façon indépendante et sécurisée. Ne pas réutiliser les mots de passe / comptes réels.
 
 ## État de la connexion Render
-**À FAIRE :** Render utilise encore le projet Supabase de PRODUCTION. Ne pas utiliser Render pour simuler des réservations tant que son frontend ne pointe pas vers `lykoybacslvmhtzftqsf` et que le compte de test n'a pas été validé. Les deux projets SQL sont séparés, mais les frontends ne le sont pas encore.
+**Connexion distincte mise en place :** la branche de développement utilise `restomanager-env.js` et sélectionne `lykoybacslvmhtzftqsf` pour le domaine Render (et localhost), alors que les fichiers de `main` utilisent toujours la production. Le déploiement Render `dep-dbp1sarm8hqs73dt1b9g` a été confirmé `live`. Ne pas considérer le parcours de réservation pleinement opérationnel tant que les deux utilisateurs Auth de DEV n'ont pas été créés et testés.
 
 ## Workflow de mise à jour
 1. Écrire des migrations SQL versionnées dans Git pour toute évolution de schéma ; ne jamais faire un copier/coller aveugle de la base ou de données réelles.
@@ -30,3 +30,14 @@
 PROD contient 34 migrations historiques Supabase. Le nouveau projet DEV a été reconstitué à partir d'un instantané structurel et dispose d'un historique distinct. **Ne pas effectuer un `supabase db push` automatique entre ces projets sans d'abord établir un historique de migrations cohérent et contrôler le diff.** Une correspondance du schéma ne signifie pas une correspondance de l'historique des migrations.
 
 Aucune clé secrète ni mot de passe ne doit être stocké ici ou dans les fichiers publics GitHub Pages.
+
+## Activer les comptes DEV (opération manuelle obligatoire)
+1. Ouvrir [Supabase Auth — Utilisateurs DEV](https://supabase.com/dashboard/project/lykoybacslvmhtzftqsf/auth/users) et créer, via **Add user**, deux utilisateurs avec des mots de passe nouveaux et uniques :
+   - `reception@accounts.restomanager.example.com`
+   - `admin-fb@accounts.restomanager.example.com`
+2. Les utilisateurs doivent être **confirmés** dans Auth. Ne pas réutiliser les mots de passe de PROD, et ne jamais les écrire dans GitHub ou ChatGPT.
+3. Exécuter seulement dans l'éditeur SQL du projet DEV : [`supabase/scripts/dev_staff_bootstrap.sql`](../supabase/scripts/dev_staff_bootstrap.sql). Le script refuse de s'exécuter sur une base comportant des réservations ou des profils du personnel.
+4. Vérifier que DEV contient 2 profils actifs (réception + F&B), que les réservations DEV sont toujours vides, puis se connecter sur la [page Render de test](https://restomanager-v3-supabase-integration.onrender.com/login.html) avec les identifiants `reception` et `admin-fb` et les **mots de passe DEV**.
+5. Tester un cycle complet : réservation fictive Réception → synchronisation Restaurant → installation → changement de table → libération → annulation/suppression de la réservation fictive, en comparant avant/après le nombre de réservations sur PROD.
+
+Ne jamais créer d'utilisateurs directement avec des insertions SQL dans `auth.users` : passer par Supabase Auth pour que ses validations, identités et secrets soient correctement initialisés.
