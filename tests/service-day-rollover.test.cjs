@@ -17,19 +17,19 @@ test('Paris date is authoritative even if browser timezone differs',()=>{
  assert.equal(p.today(),'2026-11-07');
  assert.equal(p.bookingToday(),'2026-11-07');
 });
-test('before 01:00 Paris, service still belongs to previous day',()=>{
+test('from midnight Paris, service and bookings show the same day',()=>{
  const p=getServiceDay('2026-11-06T23:30:00Z');
  assert.equal(p.bookingToday(),'2026-11-07');
- assert.equal(p.today(),'2026-11-06');
+ assert.equal(p.today(),'2026-11-07');
 });
-test('after 01:00 Paris, service switches to current calendar day',()=>{
+test('after 01:00 Paris, service remains on the current calendar day',()=>{
  const p=getServiceDay('2026-11-07T00:01:00Z');
  assert.equal(p.today(),'2026-11-07');
 });
-test('New Year previous-day service is handled',()=>{
+test('New Year rolls over at Paris midnight',()=>{
  const p=getServiceDay('2026-12-31T23:30:00Z');
  assert.equal(p.bookingToday(),'2027-01-01');
- assert.equal(p.today(),'2026-12-31');
+ assert.equal(p.today(),'2027-01-01');
 });
 test('background, minute timer and realtime refresh check service day',()=>{
  assert.match(source,/setInterval\(syncServiceDay,60000\)/);
