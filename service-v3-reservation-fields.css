@@ -249,3 +249,76 @@ html[data-theme="dark"] :is(#bookingForm,#editForm.editFormModern) .reservationF
  color-scheme:dark;
 }
 html[data-theme="dark"] #editForm.editFormModern .reservationExtraFields .editDetailLimit{color:#c1d5c9}
+
+
+/* Shared form icons and always-aligned booking/Reception table assignment. */
+#bookingForm .reservationFieldCaption svg,
+#editForm.editFormModern .reservationFieldCaption svg,
+#walkinForm .reservationFieldCaption svg{
+ flex:0 0 16px!important;
+ width:16px!important;
+ height:16px!important;
+ stroke-width:1.8;
+ color:#20795a;
+}
+#bookingForm .bookingTypeOption strong{
+ display:inline-flex!important;
+ align-items:center;
+ gap:7px;
+ min-width:0;
+}
+#bookingForm .bookingTypeOption strong svg{flex:none;width:17px;height:17px;color:#177c5c}
+#bookingForm > .reservationAutoTable{display:none!important;}
+html.reception #bookingForm > .reservationAutoTable{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr);
+ grid-template-rows:var(--rm-field-caption-height) var(--rm-field-height);
+ align-content:start;
+ gap:var(--rm-field-gap);
+ min-width:0;width:100%;
+ grid-column:auto!important;
+}
+#bookingForm .reservationAutoTableValue{
+ box-sizing:border-box;
+ display:flex;
+ align-items:center;
+ gap:8px;
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis;
+ width:100%;
+ min-width:0;
+ min-height:var(--rm-field-height);
+ height:var(--rm-field-height);
+ padding:9px 12px;
+ border-radius:var(--rm-field-radius);
+ background:#eef8f2;
+ border:1px solid var(--rm-field-border);
+ color:#16654b;
+ font-size:13px;
+ font-weight:700;
+}
+#bookingForm .reservationAutoTableValue svg{
+ width:17px;height:17px;flex:none;color:#16865d;
+}
+#bookingForm .reservationAutoTableValue span{
+ overflow:hidden;
+ text-overflow:ellipsis;
+}
+#bookingForm .bookingSubmitPrimary{
+ display:inline-flex!important;
+ align-items:center;
+ justify-content:center;
+ gap:9px;
+ min-height:48px!important;
+}
+#bookingForm .bookingSubmitPrimary svg{width:18px;height:18px;flex:none}
+html[data-theme="dark"] #bookingForm .reservationAutoTableValue{
+ background:#234639!important;
+ border-color:#50745f!important;
+ color:#e8f9ed!important;
+}
+html[data-theme="dark"] :is(#bookingForm,#editForm.editFormModern,#walkinForm) .reservationFieldCaption svg{
+ color:#9be1b9!important;
+}
+html[data-theme="dark"] #bookingForm .bookingTypeOption strong svg{color:#a2e3bc!important}
