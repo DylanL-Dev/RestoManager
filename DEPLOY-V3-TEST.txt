@@ -1,2 +1,4 @@
 RestoManager V3 test deployment marker.
 Supabase integration branch only; official V3 unchanged.
+
+2026-11-10: safety rollback after failed UI parity release; restore pre-PR63/64 frontend, Supabase production untouched.
