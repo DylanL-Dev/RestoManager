@@ -72,6 +72,14 @@ try{
   // Reception can view automatically assigned tables but must never choose or change one.
   // Update the custom picker as soon as the authenticated role is known.
   window.RestoTableChoices?.refreshAll?.();
+  // Remove the non-editable table input and its entire caption from Reception forms.
+  for(const id of ['bookingTable','editTable']){
+   const select=document.getElementById(id);
+   const field=select?.closest('label');
+   if(field){field.hidden=true;field.style.setProperty('display','none','important');}
+   const picker=select?.parentElement?.querySelector('.tableChoice');
+   if(picker){picker.hidden=true;picker.style.setProperty('display','none','important');}
+  }
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
   // The five menu destinations keep the same hierarchy on both staff roles.
   // Reception sees the read-only service overview, never restaurant passage actions.
