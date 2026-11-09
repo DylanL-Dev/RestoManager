@@ -15,6 +15,8 @@ const message=document.getElementById('message');
 const usernameInput=document.getElementById('username');
 const passwordInput=document.getElementById('password');
 let submitting=false;
+let stage='préparation';
+const setStage=(name,description)=>{stage=name;message.textContent=description;};
 const timeoutError=()=>Object.assign(new Error('Le service de connexion ne répond pas.'),{code:'AUTH_TIMEOUT'});
 function withTimeout(promise,ms=15000){
  let timer;
@@ -24,10 +26,13 @@ function withTimeout(promise,ms=15000){
  ]).finally(()=>clearTimeout(timer));
 }
 function showError(error){
+ const detail=' (étape : '+stage+')';
  if(error?.code==='AUTH_TIMEOUT'||error?.name==='AbortError'||error?.message?.includes('fetch')){
-  message.textContent='Le service de connexion ne répond pas. Vérifiez votre réseau et réessayez.';
+  message.textContent='Connexion interrompue'+detail+'. Vous pouvez réessayer. Si le problème revient, indiquez cette étape au support.';
+ }else if(error?.message==='Unknown username'){
+  message.textContent='Identifiant non reconnu.';
  }else{
-  message.textContent='Connexion impossible. Vérifiez vos identifiants ou contactez votre administrateur.';
+  message.textContent='Connexion impossible'+detail+'. Vérifiez vos identifiants ou contactez votre administrateur.';
  }
 }
 form.addEventListener('submit',async event=>{
@@ -35,7 +40,7 @@ form.addEventListener('submit',async event=>{
  if(submitting)return;
  submitting=true;
  button.disabled=true;
- message.textContent='Connexion en cours…';
+ setStage('authentification','Étape 1/2 · Vérification des identifiants…');
  const account=Object.hasOwn(accounts,usernameInput.value.trim().toLowerCase())?accounts[usernameInput.value.trim().toLowerCase()]:null;
  try{
   if(!account)throw new Error('Unknown username');
@@ -45,6 +50,7 @@ form.addEventListener('submit',async event=>{
   if(error)throw error;
   const user=authData?.user;
   if(!user||!authData?.session)throw new Error('Invalid session');
+  setStage('autorisation','Étape 2/2 · Vérification des droits d’accès…');
   const {data,error:profileError}=await withTimeout(client.from('staff_profiles').select('role,display_name,active').eq('user_id',user.id).single());
   if(profileError||!data?.active||data.role!==account.role){
    message.textContent='Compte non autorisé. Contactez votre administrateur.';
