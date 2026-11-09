@@ -184,6 +184,7 @@ try{
   if(event.key==='Escape'&&!accountMenu.hidden){closeAccountMenu();accountToggle.focus();}
  });
  document.querySelectorAll('.mobileBottomNav a').forEach(link=>link.addEventListener('click',closeAccountMenu));
+ document.getElementById('mobileAccountRefresh')?.addEventListener('click',()=>{closeAccountMenu();document.getElementById('refreshAppBtn')?.click();});
  accountLogout?.addEventListener('click',()=>{
   if(!window.confirm('Voulez-vous vraiment vous déconnecter de RestoManager ?'))return;
   closeAccountMenu();
