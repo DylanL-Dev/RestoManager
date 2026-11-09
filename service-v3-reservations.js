@@ -339,7 +339,7 @@ function render(){
  const extra=[];
  const makeAction=(kind,label,cls)=>{const btn=el('button',label,cls);btn.type='button';btn.dataset.reservationAction=kind;btn.addEventListener('click',()=>action(r.id,kind));return btn};
  for(const [kind,label] of available){
-  if(kind==='seated'||kind==='completed')mainActions.append(makeAction(kind,label,'reservationActionMain'));
+  if(kind==='seated'||kind==='completed'||kind==='confirm')mainActions.append(makeAction(kind,label,'reservationActionMain'+(kind==='confirm'?' reservationActionConfirm':'')));
   else if(kind==='edit')secondary.append(makeAction(kind,label,'reservationActionSecondary'));
   else extra.push({label,run:()=>action(r.id,kind),danger:kind==='cancel'});
  }
