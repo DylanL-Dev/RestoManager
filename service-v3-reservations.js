@@ -63,7 +63,7 @@ function editChoices(){
  options.forEach((option,i)=>{const elOption=el('option',option.label);elOption.value=String(i);elOption._tables=option.tables.slice();selector.append(elOption)});
  selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,current))));
  updateEditChoiceAvailability();
- selector.onchange=()=>{chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
+ selector.onchange=()=>{if(window.RestoReception)return;chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const summary=$('editSummaryTable');if(summary)summary.textContent=chosenTables.length===1?'Table '+chosenTables[0]:'Tables '+chosenTables.join(' + ');const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
  const notice=$('editFusionNotice');if(notice){notice.hidden=current.length<2;notice.textContent=current.length>1?'Fusion sélectionnée : '+current.join(' + '):''}
 }
 
@@ -85,7 +85,16 @@ function updateEditDetailLimits(){
   if(hint)hint.textContent=input.value.length+' / '+limit+' caractères'+(unchanged&&input.value.length>limit?' · Texte historique conservé tant qu’il reste inchangé.':message?' · Raccourcissez le texte avant d’enregistrer.':'.');
  }
 }
+function updateEditSummary(r){
+ const set=(id,value)=>{const node=$(id);if(node)node.textContent=value};
+ set('editSummaryClient',r.client||'Client extérieur');
+ set('editSummaryDate',new Date(r.date+'T12:00:00').toLocaleDateString('fr-FR'));
+ set('editSummaryTime',r.time);
+ set('editSummaryGuests',r.guests+' couvert'+(r.guests>1?'s':''));
+ set('editSummaryTable',r.tables.length===1?'Table '+r.tables[0]:'Tables '+r.tables.join(' + '));
+}
 function openSharedEditor(r){
+ updateEditSummary(r);
  editing=r.id;editingBase=window.ReservationEdit.capture(r);reviewedVersion=null;chosenTables=r.tables.slice();
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
  $('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
@@ -94,7 +103,7 @@ function openSharedEditor(r){
  $('editConflict').hidden=true;$('editCurrentValues').textContent='';$('editReloadCurrent').hidden=true;
  editChoices();
  ['editDate','editTime'].forEach(id=>$(id).dispatchEvent(new Event('change',{bubbles:true})));
- $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+ $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();window.lucide?.createIcons?.();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
  $('editClient').focus({preventScroll:true});
 }
 function showEditConflict(uncertain=false){
