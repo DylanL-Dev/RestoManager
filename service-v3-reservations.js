@@ -1,7 +1,7 @@
 'use strict';
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
-const statuses={reserved:'Attendu',confirmed:'Confirmé',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
+const statuses={reserved:'À confirmer · Attendu',confirmed:'Confirmé · Attendu',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='active';
 let navEditBaseline=null;
 function navigationEditSnapshot(){
@@ -131,6 +131,7 @@ async function reviewCurrentEdit(){
 }
 function save(all){if(window.RestoSharedReservations)throw business('La modification sur cet appareil est désactivée.');localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));render()}
 async function action(id,kind){
+ if(kind==='confirm'&&!window.RestoReception){notify('La confirmation est réservée à la Réception. Vous pouvez installer le client directement.');return;}
  if(window.RestoSharedReservations){
   if(kind==='edit'){
    const r=load().find(item=>item.id===id);
@@ -333,13 +334,13 @@ function render(){
  }
  const actions=el('div',undefined,'reservationActions reservationActionsModern');
  const opts=[['edit','Modifier'],['confirm','Confirmer'],['seated','Installer à table'],['completed','Terminer'],['late','Retard'],['no_show','Absent'],['cancel','Annuler']];
- const available=opts.filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status)));
+ const available=opts.filter(([k])=>k!=='confirm'||window.RestoReception).filter(([k])=>!window.RestoReception||(['reserved','confirmed','late','arrived'].includes(r.status)&&['edit','confirm','late','cancel'].includes(k))).filter(([k])=>k==='edit'||(k==='confirm'&&['reserved','late'].includes(r.status))||(k==='cancel'&&E.isBlocking(r))||(k==='seated'&&['reserved','confirmed','late','arrived'].includes(r.status))||(k==='completed'&&r.status==='seated')||(k==='late'&&['reserved','confirmed'].includes(r.status))||(k==='no_show'&&['reserved','confirmed','late'].includes(r.status)));
  const mainActions=el('div',undefined,'reservationPrimaryActions');
  const secondary=el('div',undefined,'reservationSecondaryActions');
  const extra=[];
  const makeAction=(kind,label,cls)=>{const btn=el('button',label,cls);btn.type='button';btn.dataset.reservationAction=kind;btn.addEventListener('click',()=>action(r.id,kind));return btn};
  for(const [kind,label] of available){
-  if(kind==='seated'||kind==='completed')mainActions.append(makeAction(kind,label,'reservationActionMain'));
+  if(kind==='seated'||kind==='completed'||kind==='confirm')mainActions.append(makeAction(kind,label,'reservationActionMain'+(kind==='confirm'?' reservationActionConfirm':'')));
   else if(kind==='edit')secondary.append(makeAction(kind,label,'reservationActionSecondary'));
   else extra.push({label,run:()=>action(r.id,kind),danger:kind==='cancel'});
  }
