@@ -1,9 +1,10 @@
+import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm';
 // GitHub Pages may retain a stale browser-wide Supabase auth lock from an old PWA.
 // Isolate its session from the legacy default key; Render keeps its working key.
 const githubPages=location.hostname.endsWith('.github.io');
 const authOptions=githubPages?{auth:{storageKey:'restomanager-ghpages-auth-v2',persistSession:true,autoRefreshToken:true}}:undefined;
-const client=createClient('https://tnsrkargogckgtsxipwd.supabase.co','sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7',authOptions);
+const client=createClient(supabaseEnvironment.url,supabaseEnvironment.publishableKey,authOptions);
 // Public aliases only; staff credentials are validated by Supabase Auth.
 const accounts=Object.freeze({
  'reception':{email:'reception@accounts.restomanager.example.com',role:'reception'},
