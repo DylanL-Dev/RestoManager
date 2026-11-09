@@ -1,4 +1,4 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261109-supabase119';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
 import {installFeedback} from './service-v3-feedback.js?v=20261108-bug01-1';
 import {installTutorial} from './service-v3-tutorial.js?v=20261108-onboarding1';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
