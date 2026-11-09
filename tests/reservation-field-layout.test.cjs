@@ -67,6 +67,6 @@ test('Reception and Restaurant use identical icon-marked reservation fields',()=
   ids.forEach((id,i)=>assert.match(field(html,id),new RegExp('data-lucide="'+icons[i]+'"'),id+' has its expected Lucide icon'));
  }
  assert.match(page,/id="bookingAutoTableInfo"/);
- assert.match(page,/html\.reception #bookingForm/);
+ assert.match(css,/html\.reception #bookingForm/);
  assert.doesNotMatch(page,/\.reception label:has\(#editTable\)\{display:none/);
 });
