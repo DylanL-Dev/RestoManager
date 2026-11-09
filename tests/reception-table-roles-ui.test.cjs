@@ -22,16 +22,16 @@ test('Reception displays a matching automatic-assignment field on new bookings',
  assert.match(fields,/html\.reception #bookingForm > \.reservationAutoTable/);
  assert.doesNotMatch(auth,/document\.createElement\('p'\)[\s\S]{0,160}attribue une table/);
 });
-test('Reception uses the modern forms but never selects or changes a table manually',()=>{
- assert.match(page,/class="editFormModern"/);
- assert.match(page,/id="bookingAutoTableInfo"/);
- assert.match(page,/html\\.reception #editForm\\.editFormModern > label:has\\(#editTable\\)/);
- assert.match(auth,/document\\.documentElement\\.classList\\.add\\('reception'\\)/);
- assert.match(auth,/for\\(const id of \\['bookingTable','editTable'\\]\\)/);
- assert.match(edit,/selector\\.disabled=Boolean\\(window\\.RestoReception\\)/);
- assert.match(edit,/if\\(window\\.RestoReception\\)\\{notify\\('L’attribution des tables est réservée/);
- assert.match(edit,/explicitTableChoice:false/);
- assert.match(fields,/html\\.reception #bookingForm > \\.reservationAutoTable/);
+test('Reception uses the same modern forms but never changes tables manually',()=>{
+ assert.ok(page.includes('class="editFormModern"'));
+ assert.ok(page.includes('id="bookingAutoTableInfo"'));
+ assert.ok(page.includes('html.reception #editForm.editFormModern > label:has(#editTable)'));
+ assert.ok(auth.includes("document.documentElement.classList.add('reception')"));
+ assert.ok(auth.includes("for(const id of ['bookingTable','editTable'])"));
+ assert.ok(edit.includes('selector.disabled=Boolean(window.RestoReception)'));
+ assert.ok(edit.includes("if(window.RestoReception){notify('L’attribution des tables est réservée"));
+ assert.ok(edit.includes('explicitTableChoice:false'));
+ assert.ok(fields.includes('html.reception #bookingForm > .reservationAutoTable'));
 });
 test('Reception operations remain segregated from seated service',()=>{
  assert.match(migration,/private\.current_staff_role\(\) IS DISTINCT FROM 'reception'/);
