@@ -206,7 +206,7 @@ function showReservationActions(reservation,items,trigger){
  for(const item of items){
   const btn=el('button',undefined,'reservationMenuOption'+(item.danger?' reservationMenuDanger':''));
   btn.type='button';
-  const ico=document.createElement('i');ico.dataset.lucide=item.danger?'trash-2':item.label==='Installer à table'?'armchair':item.label==='Confirmer'?'check-circle-2':item.label==='Retard'?'clock-3':'user-x';ico.setAttribute('aria-hidden','true');
+  const ico=document.createElement('i');ico.dataset.lucide=item.danger?'trash-2':item.label==='Installer à table'?'armchair':item.label==='Confirmer'?'check-circle-2':item.label==='Retard'?'clock-3':item.label==='Changer la table'?'arrow-left-right':'user-x';ico.setAttribute('aria-hidden','true');
   const words=el('span',item.label);
   const arrow=document.createElement('i');arrow.dataset.lucide='chevron-right';arrow.setAttribute('aria-hidden','true');
   btn.append(ico,words,arrow);btn.addEventListener('click',()=>dismiss(item.run));choices.append(btn);
