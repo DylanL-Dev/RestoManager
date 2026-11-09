@@ -7,7 +7,7 @@
   document.body.appendChild(dialog);
   const items=dialog.querySelector('.v3-picker-items');
   let source=null,choice=null,focusBefore=null;
-  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker','v3-percent-picker','v3-theme-picker','v3-duration-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
+  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker','v3-percent-picker','v3-theme-picker','v3-duration-picker','v3-table-choice-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
   function render(){items.querySelectorAll('button').forEach(b=>{const yes=b.dataset.value===choice;b.classList.toggle('selected',yes);b.setAttribute('aria-checked',String(yes));});}
   function open(select){
     source=select;focusBefore=document.activeElement;choice=select.value;
@@ -15,11 +15,13 @@
     const percentMode=select.closest('.rushSettings')!==null;
     const themeMode=select.id==='themeMode';
     const durationMode=select.id==='restaurantDefaultDuration';
+    const tableChoiceMode=select.getAttribute('aria-label')==='Table réellement choisie';
     const instantMode=rushMode||percentMode||themeMode||durationMode;
     dialog.classList.toggle('v3-rush-period-picker',rushMode);
     dialog.classList.toggle('v3-percent-picker',percentMode);
     dialog.classList.toggle('v3-theme-picker',themeMode);
     dialog.classList.toggle('v3-duration-picker',durationMode);
+    dialog.classList.toggle('v3-table-choice-picker',tableChoiceMode);
     const associated=select.labels?.[0];
     const explicit=select.getAttribute('aria-label')?.trim();
     const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\s+/g,' ').trim() : '';
@@ -42,6 +44,7 @@
       button.type='button';button.dataset.value=o.value;button.disabled=o.disabled;
       button.setAttribute('role','radio');
       button.textContent=rushMode?o.textContent.replace(/^(Midi|Soir) · /,''):percentMode?o.textContent.replace(/ de la capacité$/,''):o.textContent;
+      if(tableChoiceMode&&o.value==='')button.classList.add('v3-picker-placeholder');
       if(themeMode){
         const icon=document.createElement('i');
         icon.setAttribute('data-lucide',o.value==='auto'?'monitor':o.value==='light'?'sun':'moon');
