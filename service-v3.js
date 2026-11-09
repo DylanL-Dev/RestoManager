@@ -550,7 +550,23 @@ list.forEach(r=>{
   sheet.append(manage);
  }
  if(sheet.querySelector('.tableCompactSecondary'))controls.append(secondary);
- row.append(controls);box.append(row);
+ row.append(controls);
+ // Immediate access from the table popup, under "Installer à table".
+ // Reuse the existing editor and its availability/concurrency checks.
+ if(r.status!=='seated'){
+  const changeTable=node('button','tableQuickChange','Changer de table');
+  changeTable.type='button';
+  changeTable.setAttribute('aria-label','Changer la table de '+r.client);
+  changeTable.addEventListener('click',()=>{
+   closeTable();
+   const dateField=$('reservationDate');if(dateField){dateField.value=r.date;dateField.dispatchEvent(new Event('change',{bubbles:true}))}
+   const query=$('reservationQuery');if(query){query.value='';query.dispatchEvent(new Event('input',{bubbles:true}))}
+   window.RestoScreens?.show('reservations');
+   window.dispatchEvent(new CustomEvent('restomanager:quick-change-table',{detail:{reservationId:r.id}}));
+  });
+  row.append(changeTable);
+ }
+ box.append(row);
  });
 }
 function confirmTableDeparture(kind,r){
