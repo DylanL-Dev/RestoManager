@@ -1,4 +1,4 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm';
 // GitHub Pages may retain a stale browser-wide Supabase auth lock from an old PWA.
 // Isolate its session from the legacy default key; Render keeps its working key.
 const githubPages=location.hostname.endsWith('.github.io');
