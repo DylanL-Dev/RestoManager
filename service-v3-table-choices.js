@@ -18,12 +18,16 @@ configs.forEach(id=>{
  const trigger=document.createElement('button');trigger.type='button';trigger.className='tableChoiceTrigger';
  select.parentNode.append(box);box.append(trigger);select.classList.add('visuallyHiddenSelect');select.tabIndex=-1;
  function refresh(){
+ const receptionLocked=window.RestoReception===true&&(id==='bookingTable'||id==='editTable');
+ box.hidden=receptionLocked;
+ trigger.disabled=receptionLocked;
+ if(receptionLocked&&active===id)close();
  const options=Array.from(select.options).filter(o=>o.value);
  const chosen=options.find(o=>o.value===select.value);
  trigger.replaceChildren();
  const label=document.createElement('span');label.textContent=chosen?(chosen.textContent):(select.dataset.availabilityMessage||'Choisissez les informations de réservation');
  const action=document.createElement('span');action.className='tableChoiceAction';action.textContent=chosen?'Changer':'Choisir';
- trigger.append(label,action);trigger.disabled=!options.length||['checking','syncing','offline','error'].includes(select.dataset.availabilityState);
+ trigger.append(label,action);trigger.disabled=receptionLocked||select.disabled||!options.length||['checking','syncing','offline','error'].includes(select.dataset.availabilityState);
  if(active===id)render();
  }
  function render(){
@@ -45,9 +49,10 @@ configs.forEach(id=>{
  grid.append(card);
  });
  }
- const openPicker=(callbacks=null)=>{if(trigger.disabled)return false;previousFocus=trigger;pickerCallbacks=callbacks;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus();return true};
+ const openPicker=(callbacks=null)=>{if((window.RestoReception===true&&(id==='bookingTable'||id==='editTable'))||select.disabled||trigger.disabled)return false;previousFocus=trigger;pickerCallbacks=callbacks;active=id;render();overlay.hidden=false;document.body.classList.add('tablePickerOpen');overlay.querySelector('.tablePickerClose').focus();return true};
  trigger.addEventListener('click',()=>openPicker());openers[id]=openPicker;
  select.addEventListener('change',refresh);refresh();refreshers[id]=refresh;
 });
-window.RestoTableChoices={refresh(id){refreshers[id]?.()},open(id,callbacks){return openers[id]?.(callbacks)===true}};
+window.RestoTableChoices={refresh(id){refreshers[id]?.()},refreshAll(){Object.values(refreshers).forEach(fn=>fn())},open(id,callbacks){return openers[id]?.(callbacks)===true}};
+window.addEventListener('restomanager:supabase-snapshot',()=>window.RestoTableChoices.refreshAll());
 })();
