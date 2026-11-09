@@ -50,11 +50,23 @@ test('walk-in keeps dedicated one-tap control and shared captions',()=>{
  assert.match(html,/class="walkinGuestStepper"/);
 });
 test('booking and edit controls have the same geometry on all breakpoints',()=>{
- assert.match(page,/service-v3-reservation-fields\.css\?v=20261109-field-parity2/);
+ assert.match(page,/service-v3-reservation-fields\.css\?v=20261109-unified-roles5/);
  assert.match(css,/--rm-field-height:44px/);
  assert.match(css,/#bookingForm > \.reservationField/);
  assert.match(css,/#editForm\.editFormModern > \.reservationField/);
  assert.match(css,/@media\(max-width:960px\)/);
  assert.match(css,/@media\(max-width:640px\)/);
  assert.match(css,/html\[data-theme="dark"\]/);
+});
+
+test('Reception and Restaurant use identical icon-marked reservation fields',()=>{
+ const icons=['users','building-2','calendar-days','clock-3','users','armchair','alert-triangle','clipboard-list'];
+ for(const [kind,prefix] of [['booking','booking'],['edit','edit']]){
+  const html=form(kind==='booking'?'bookingForm':'editForm');
+  const ids=[prefix+'Client',prefix+'HotelRoom',prefix+'Date',prefix+'Time',prefix+'Guests',prefix+'Table',prefix+'Allergies',prefix+'Notes'];
+  ids.forEach((id,i)=>assert.match(field(html,id),new RegExp('data-lucide="'+icons[i]+'"'),id+' has its expected Lucide icon'));
+ }
+ assert.match(page,/id="bookingAutoTableInfo"/);
+ assert.match(page,/html\.reception #bookingForm/);
+ assert.doesNotMatch(page,/\.reception label:has\(#editTable\)\{display:none/);
 });
