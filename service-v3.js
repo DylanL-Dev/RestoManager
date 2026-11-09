@@ -234,7 +234,7 @@ const today=()=>{
  const d=new Date(paris+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-1);return d.toISOString().slice(0,10);
 };
 const bookingNowTime=()=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(/\s/g,'');
-const bookingMinuteOf=time=>{const match=/^(\\d{2}):(\\d{2})$/.exec(String(time||''));return match?Number(match[1])*60+Number(match[2]):NaN};
+const bookingMinuteOf=time=>{const match=/^(\d{2}):(\d{2})$/.exec(String(time||''));return match?Number(match[1])*60+Number(match[2]):NaN};
 const bookingClock=minute=>String(Math.floor(minute/60)).padStart(2,'0')+':'+String(minute%60).padStart(2,'0');
 const nextBookingDate=date=>{const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()+1);return d.toISOString().slice(0,10)};
 // Booking forms may be opened at ANY time; the selected time is the guest's arrival,
