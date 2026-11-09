@@ -2,7 +2,7 @@
 // Import only on the authenticated development preview; never on published V3.
 // No localStorage fallback and no direct reservation writes.
 import {readRevisionSnapshot} from './service-sync.js?v=20261108-tables-display';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm';
 export const supabase=createClient(
  'https://tnsrkargogckgtsxipwd.supabase.co',
  'sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7',
