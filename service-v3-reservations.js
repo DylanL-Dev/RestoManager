@@ -84,7 +84,7 @@ function updateEditDetailLimits(){
   if(hint)hint.textContent=input.value.length+' / '+limit+' caractères'+(unchanged&&input.value.length>limit?' · Texte historique conservé tant qu’il reste inchangé.':message?' · Raccourcissez le texte avant d’enregistrer.':'.');
  }
 }
-function openSharedEditor(r){
+function openSharedEditor(r,{directTablePicker=false}={}){
  editing=r.id;editingBase=window.ReservationEdit.capture(r);reviewedVersion=null;chosenTables=r.tables.slice();
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
  $('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
@@ -93,8 +93,8 @@ function openSharedEditor(r){
  $('editConflict').hidden=true;$('editCurrentValues').textContent='';$('editReloadCurrent').hidden=true;
  editChoices();
  ['editDate','editTime'].forEach(id=>$(id).dispatchEvent(new Event('change',{bubbles:true})));
- $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
- $('editClient').focus({preventScroll:true});
+ $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();
+ if(!directTablePicker){$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});$('editClient').focus({preventScroll:true});}
 }
 function showEditConflict(uncertain=false){
  $('editConflict').hidden=false;
@@ -466,12 +466,15 @@ function openChangeTablePicker(id){
  reservationView='active';
  expanded=record.id;
  render();
- openSharedEditor(record);
- requestAnimationFrame(()=>{
-  if($('editForm').hidden)return;
-  const opened=window.RestoTableChoices?.open('editTable');
-  if(!opened){$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});notify('Choisissez une table dans le formulaire puis enregistrez.');}
- });
+ // Avoid the editor scroll and the delayed requestAnimationFrame: this
+ // shortcut must display the shared card picker immediately on click.
+ openSharedEditor(record,{directTablePicker:true});
+ const opened=window.RestoTableChoices?.open('editTable');
+ if(!opened){
+  $('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});
+  $('editTable')?.focus({preventScroll:true});
+  notify('La sélection directe est momentanément indisponible. Choisissez une table dans la fiche.');
+ }
 }
 window.addEventListener('restomanager:quick-change-table',event=>{
  openChangeTablePicker(event.detail?.reservationId);
