@@ -77,7 +77,7 @@ function editChoices(){
  options.forEach((option,i)=>{const elOption=el('option',option.label);elOption.value=String(i);elOption._tables=option.tables.slice();selector.append(elOption)});
  selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,current))));
  updateEditChoiceAvailability();
- selector.onchange=()=>{chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
+ selector.onchange=()=>{chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const summary=$('editSummaryTable');if(summary)summary.textContent=chosenTables.length===1?'Table '+chosenTables[0]:'Tables '+chosenTables.join(' + ');const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
  const notice=$('editFusionNotice');if(notice){notice.hidden=current.length<2;notice.textContent=current.length>1?'Fusion sélectionnée : '+current.join(' + '):''}
 }
 
@@ -110,7 +110,7 @@ function openSharedEditor(r,{directTablePicker=false}={}){
  $('editConflict').hidden=true;$('editCurrentValues').textContent='';$('editReloadCurrent').hidden=true;
  editChoices();
  ['editDate','editTime'].forEach(id=>$(id).dispatchEvent(new Event('change',{bubbles:true})));
- $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();
+ $('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();window.lucide?.createIcons?.();
  if(!directTablePicker){$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});$('editClient').focus({preventScroll:true});}
 }
 function showEditConflict(uncertain=false){
@@ -502,6 +502,10 @@ function openChangeTablePicker(id){
     $('editForm').classList.remove('editQuickTablePending');
     notify('Veuillez enregistrer la nouvelle table dans la fiche.');
     return;
+   }
+   if(!$('editForm').checkValidity()){
+    quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
+    $('editForm').reportValidity();notify('Vérifiez les informations de la réservation avant enregistrement.');return;
    }
    $('editForm').requestSubmit();
   }
