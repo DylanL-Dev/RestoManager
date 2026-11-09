@@ -68,6 +68,8 @@ function updateEditChoiceAvailability(){
 }
 function editChoices(){
  const selector=$('editTable'),current=chosenTables.slice(),plan=TableStore.get();
+ // Reception may view the assigned table, but only Restaurant can select or change it.
+ selector.disabled=Boolean(window.RestoReception);
  const options=plan.tables.map(t=>({tables:[t.number],label:'Table '+t.number+' · '+t.capacity+' places'}));
  for(const pair of window.RestoFusion?.pairs()||[]){
   options.push({tables:pair,label:'Fusion '+pair.join(' + ')+' · '+pair.reduce((sum,n)=>sum+(plan.tables.find(t=>t.number===n)?.capacity||0),0)+' places'});
@@ -77,7 +79,7 @@ function editChoices(){
  options.forEach((option,i)=>{const elOption=el('option',option.label);elOption.value=String(i);elOption._tables=option.tables.slice();selector.append(elOption)});
  selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,current))));
  updateEditChoiceAvailability();
- selector.onchange=()=>{chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const summary=$('editSummaryTable');if(summary)summary.textContent=chosenTables.length===1?'Table '+chosenTables[0]:'Tables '+chosenTables.join(' + ');const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
+ selector.onchange=()=>{if(window.RestoReception){selector.value=String(Math.max(0,options.findIndex(o=>sameTables(o.tables,editingBase?.tables||current))));return;}chosenTables=(options[Number(selector.value)]?.tables||[]).slice();const summary=$('editSummaryTable');if(summary)summary.textContent=chosenTables.length===1?'Table '+chosenTables[0]:'Tables '+chosenTables.join(' + ');const notice=$('editFusionNotice');if(notice){notice.hidden=chosenTables.length<2;notice.textContent=chosenTables.length>1?'Fusion sélectionnée : '+chosenTables.join(' + '):''}};
  const notice=$('editFusionNotice');if(notice){notice.hidden=current.length<2;notice.textContent=current.length>1?'Fusion sélectionnée : '+current.join(' + '):''}
 }
 
@@ -411,7 +413,7 @@ $('editForm').addEventListener('submit',async e=>{
   try{
    if(!editingBase||editingBase.id!==editing)throw business('Rouvrez la fiche avant de la modifier.');
    const updated=window.ReservationEdit.candidate(editingBase,{client:$('editClient').value,hotelRoom:$('editHotelRoom').value,
-    date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:chosenTables,
+    date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:window.RestoReception?editingBase.tables.slice():chosenTables,
     notes:$('editNotes').value,allergies:$('editAllergies').value});
    if(!window.RestoReception&&!updated.tables.length)throw business('Choisissez une table');
    // A nameless booking uses a descriptive label; the name field is optional.
@@ -422,7 +424,7 @@ $('editForm').addEventListener('submit',async e=>{
    notify('Enregistrement en cours…');
    const previousTables=editingBase.tables.slice();
    await window.RestoUpdateSharedBooking(updated,{
-    explicitTableChoice:Boolean(window.RestoReception&&!sameTables(editingBase.tables,updated.tables))
+    explicitTableChoice:false
    });
    // Reception delegates table selection to the SQL ranking algorithm.
    // Announce server-assigned table changes rather than silently retaining an
@@ -482,6 +484,7 @@ $('editForm').addEventListener('submit',async e=>{
 // Reuses the existing edit workflow and server-side concurrency safeguards;
 // a card choice only updates the draft, never silently writes a reservation.
 function openChangeTablePicker(id){
+ if(window.RestoReception){notify('L’attribution des tables est réservée à l’équipe Restaurant.');return;}
  if(!window.RestoSupabaseReady){notify('Synchronisation requise avant de changer de table.');return;}
  const record=load().find(item=>item.id===id);
  if(!record||departedStatuses.has(record.status)||!['reserved','confirmed','late','arrived'].includes(record.status)){
