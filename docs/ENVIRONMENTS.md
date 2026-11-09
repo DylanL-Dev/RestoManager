@@ -41,3 +41,9 @@ Aucune clé secrète ni mot de passe ne doit être stocké ici ou dans les fichi
 5. Tester un cycle complet : réservation fictive Réception → synchronisation Restaurant → installation → changement de table → libération → annulation/suppression de la réservation fictive, en comparant avant/après le nombre de réservations sur PROD.
 
 Ne jamais créer d'utilisateurs directement avec des insertions SQL dans `auth.users` : passer par Supabase Auth pour que ses validations, identités et secrets soient correctement initialisés.
+
+## Activation des profils de test — 2026-11-09
+- Deux utilisateurs Auth DEV créés et confirmés, puis profils `reception` et `fb_admin` activés sur la même configuration du restaurant que la version de production.
+- Vérifications SQL : DEV = 2 profils, 23 tables, 0 réservation ; production = 2 profils, 86 réservations (instantané au moment du contrôle).
+- Connexion des deux comptes au navigateur et tests fonctionnels de bout en bout **non encore vérifiés** : nécessitent les mots de passe DEV détenus uniquement par l'utilisateur.
+- Ne pas utiliser les comptes PROD sur Render ; l'interface de la branche Render est routée vers le projet DEV via `restomanager-env.js`.
