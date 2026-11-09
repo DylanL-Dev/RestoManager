@@ -30,8 +30,10 @@
   const occupied=new Set(seated.flatMap(r=>r.tables||[]).map(Number));
   const free=tables.filter(t=>!occupied.has(Number(t.number))).length;
   const cards=node('div','receptionServiceMetrics');
-  for(const [value,label,iconName] of [[expected,'Couverts encore attendus','calendar-clock'],[inRoom,'Couverts installés','users'],[pending.length,'Réservations à venir','calendar-days'],[free,'Tables non occupées','armchair']]){
-   const c=node('div','receptionServiceMetric');c.append(iconLabel('span',label,iconName,'receptionMetricLabel'),node('strong',null,value));cards.append(c);
+  const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.hotelRoom?' · Chambre '+r.hotelRoom:'')+(r.status==='confirmed'?' · Confirmé, non installé':'');
+  const detailLists=[pending.map(reservationLine),seated.map(reservationLine),pending.map(reservationLine),tables.filter(t=>!occupied.has(Number(t.number))).map(t=>'Table '+t.number+' · '+Number(t.capacity||0)+' place(s)')];
+  for(const [index,[value,label,iconName]] of [[expected,'Couverts encore attendus','calendar-clock'],[inRoom,'Couverts installés','users'],[pending.length,'Réservations à venir','calendar-days'],[free,'Tables non occupées','armchair']].entries()){
+   const c=node('button','receptionServiceMetric receptionMetricInteractive');c.type='button';c.setAttribute('aria-label','Voir le détail : '+label);c.append(iconLabel('span',label,iconName,'receptionMetricLabel'),node('strong',null,value));c.addEventListener('click',()=>window.RestoKpiDetails?.open(label,detailLists[index]));cards.append(c);
   }
   root.append(cards);
   const totalSeats=tables.reduce((n,t)=>n+Number(t.capacity||0),0);
