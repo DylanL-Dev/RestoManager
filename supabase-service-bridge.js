@@ -6,7 +6,7 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 export const supabase=createClient(
  'https://tnsrkargogckgtsxipwd.supabase.co',
  'sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7',
- {auth:{persistSession:true,autoRefreshToken:true}}
+ {auth:{persistSession:true,autoRefreshToken:true,...(location.hostname.endsWith('.github.io')?{storageKey:'restomanager-ghpages-auth-v2'}:{})}}
 );
 const tables=['reservations','reservation_tables','restaurant_rooms','restaurant_tables','table_holds','table_fusion_links','restaurant_hours'];
 export async function requireStaff(){
