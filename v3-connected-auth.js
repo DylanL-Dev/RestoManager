@@ -153,6 +153,24 @@ try{
  installFeedback({supabase,profile,management});
  installTutorial({user:authUser,profile,management});
  const badge=document.getElementById('syncBadge');
+ // The sidebar reports the existing synchronization state; it does not guess from Wi-Fi alone.
+ const sidebarConnection=document.getElementById('sidebarConnection');
+ const sidebarConnectionLabel=document.getElementById('sidebarConnectionLabel');
+ const sidebarLogout=document.getElementById('sidebarLogout');
+ if(sidebarLogout){
+  sidebarLogout.addEventListener('click',()=>logout.click());
+  new MutationObserver(()=>{sidebarLogout.disabled=logout.disabled;}).observe(logout,{attributes:true,attributeFilter:['disabled']});
+ }
+ const refreshSidebarConnection=()=>{
+  if(!sidebarConnection||!badge)return;
+  const state=badge.dataset.state||'pending';
+  sidebarConnection.dataset.state=state;
+  const descriptions={ok:'Synchronisation active',pending:'Connexion en cours',error:'Connexion interrompue',readonly:'Consultation seule'};
+  sidebarConnectionLabel.textContent=descriptions[state]||badge.textContent.trim()||'État inconnu';
+  sidebarConnection.title=badge.textContent.trim();
+ };
+ refreshSidebarConnection();
+ if(badge)new MutationObserver(refreshSidebarConnection).observe(badge,{attributes:true,attributeFilter:['data-state'],childList:true,characterData:true,subtree:true});
  badge.addEventListener('click',()=>{
   window.RestoScreens.show('administration');
   network.open=true;
