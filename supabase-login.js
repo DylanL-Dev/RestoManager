@@ -1,5 +1,9 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
-const client=createClient('https://tnsrkargogckgtsxipwd.supabase.co','sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7');
+// GitHub Pages may retain a stale browser-wide Supabase auth lock from an old PWA.
+// Isolate its session from the legacy default key; Render keeps its working key.
+const githubPages=location.hostname.endsWith('.github.io');
+const authOptions=githubPages?{auth:{storageKey:'restomanager-ghpages-auth-v2',persistSession:true,autoRefreshToken:true}}:undefined;
+const client=createClient('https://tnsrkargogckgtsxipwd.supabase.co','sb_publishable_7OHPvnA-iJWZAvVsg6tNwg_6YwtX7i7',authOptions);
 // Public aliases only; staff credentials are validated by Supabase Auth.
 const accounts=Object.freeze({
  'reception':{email:'reception@accounts.restomanager.example.com',role:'reception'},
@@ -70,4 +74,5 @@ async function resumeExistingSession(){
   // Keep login available when stored session cannot be checked.
  }
 }
-void resumeExistingSession();
+// Avoid an automatic getSession lock competing with a manual sign-in on GitHub Pages.
+if(!githubPages)void resumeExistingSession();
