@@ -554,7 +554,9 @@ list.forEach(r=>{
  // Immediate access from the table popup, under "Installer à table".
  // Reuse the existing editor and its availability/concurrency checks.
  if(r.status!=='seated'){
-  const changeTable=node('button','tableQuickChange','Changer de table');
+  const changeTable=node('button','tableQuickChange');
+  const changeIcon=document.createElement('i');changeIcon.setAttribute('data-lucide','arrow-left-right');changeIcon.setAttribute('aria-hidden','true');
+  changeTable.append(changeIcon,document.createTextNode('Changer de table'));
   changeTable.type='button';
   changeTable.setAttribute('aria-label','Changer la table de '+r.client);
   changeTable.addEventListener('click',()=>{
