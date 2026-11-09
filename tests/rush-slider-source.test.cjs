@@ -16,6 +16,6 @@ assert.match(js,/slider\.type='range'/,'Threshold uses a native accessible range
 assert.match(js,/slider\.min='40';slider\.max='90';slider\.step='5'/,'Slider preserves configured 40–90% bounds');
 assert.match(js,/localStorage\.setItem\(KEY,JSON\.stringify\(\{percent:Number\(slider\.value\)\}\)\)/,'Threshold value must persist');
 assert.match(css,/rushPercentSlider::-webkit-slider-thumb/,'Touch slider has a visible thumb');
-assert.match(html,/service-v3\.js\?v=20261108-rush-icon1/,'JS cache key must change');
+assert.match(html,/service-v3\.js\?v=20261110-midnight-service1/,'JS cache key must match the midnight release');
 assert.match(html,/service-v3\.css\?v=20261108-rush-subtle1/,'CSS cache key must change');
 console.log('Rush slider navigation, permissions and asset-version smoke checks passed');
