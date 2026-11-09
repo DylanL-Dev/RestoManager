@@ -368,7 +368,14 @@ function serviceDisplayReady(){
  return false;
 }
 function render(){if(!serviceDisplayReady())return;const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted',visible.length?'Aucune table pour ce filtre.':'Aucune table active dans cette salle.'));
-const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0),'users'],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0),'calendar-clock'],['Tables occupées',occupiedNumbers.size,'armchair'],['Places sur tables libres',free,'layout-grid']];$('kpis').replaceChildren(...kpis.map(([label,value,iconName])=>{const c=node('div','kpi');const head=node('div','kpiHead');const icon=node('i','kpiIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');head.append(icon,node('span','kpiLabel',label));c.append(head,node('strong','',value));return c}));
+const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0),'users'],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0),'calendar-clock'],['Tables occupées',occupiedNumbers.size,'armchair'],['Places sur tables libres',free,'layout-grid']];const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.tables?.length?' · Table '+r.tables.join(' + '):'')+(r.status==='confirmed'?' · Confirmé, non installé':'');
+const kpiLists=[
+ seated.map(reservationLine),
+ waiting.map(reservationLine),
+ seated.flatMap(r=>(r.tables||[]).map(number=>'Table '+number+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)')),
+ all.filter(({t})=>!occupiedNumbers.has(t.number)).map(({t})=>'Table '+t.number+' · '+Number(t.capacity||0)+' place(s)')
+];
+$('kpis').replaceChildren(...kpis.map(([label,value,iconName],index)=>{const c=node('button','kpi kpiInteractive');c.type='button';c.setAttribute('aria-label','Voir le détail : '+label);const head=node('div','kpiHead');const icon=node('i','kpiIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');head.append(icon,node('span','kpiLabel',label));c.append(head,node('strong','',value));c.addEventListener('click',()=>window.RestoKpiDetails?.open(label,kpiLists[index]));return c}));
 const totalTables=plan.tables.length;
 const totalSeats=plan.tables.reduce((n,t)=>n+Math.max(0,Number(t.capacity)||0),0);
 const guestsPresent=seated.reduce((n,r)=>n+(Number(r.guests)||0),0);
@@ -666,7 +673,7 @@ function prepareNewReservation(){
  // Start each new booking at the current restaurant-local clock time, keeping table shortcuts.
  const bookingTimeField=$('bookingTime');if(bookingTimeField)bookingTimeField.value=bookingNowTime();
  // Only clear fields belonging to the previous guest.
- for(const id of ['bookingClient','bookingAllergies','bookingNotes']){
+ for(const id of ['bookingClient','bookingHotelRoom','bookingAllergies','bookingNotes']){
   const field=$(id);if(field)field.value='';
  }
  const guests=$('bookingGuests');if(guests)guests.value='1';
@@ -681,7 +688,18 @@ window.addEventListener('restomanager:screen',e=>{
 function readReservations(){const raw=window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
 $('bookingDate').value=bookingToday();
 $('bookingTime').value=bookingNowTime();
-['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient'].forEach(id=>{for(const type of ['input','change'])$(id).addEventListener(type,refreshAvailability)});
+function syncHotelRoomField(){
+ const isHotel=$('bookingType').value==='hotel';
+ const label=$('bookingHotelRoomField'),input=$('bookingHotelRoom');
+ if(!label||!input)return;
+ label.hidden=!isHotel;
+ input.disabled=!isHotel;
+ input.required=isHotel;
+ if(!isHotel)input.value='';
+}
+$('bookingType').addEventListener('change',syncHotelRoomField);
+syncHotelRoomField();
+['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient','bookingHotelRoom'].forEach(id=>{for(const type of ['input','change'])$(id).addEventListener(type,refreshAvailability)});
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
@@ -689,7 +707,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw (window.RestoErrors?.business||Error)('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<bookingToday())throw (window.RestoErrors?.business||Error)('Impossible de créer une réservation à une date passée.');
- const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
+ const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
  if(candidate.notes.length>1000||candidate.allergies.length>500)throw (window.RestoErrors?.business||Error)('Les notes ou allergies dépassent la longueur autorisée. Raccourcissez votre saisie.');
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw (window.RestoErrors?.business||Error)('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
