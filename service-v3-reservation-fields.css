@@ -1,0 +1,249 @@
+/* RestoManager — shared reservation form field system.
+   Scope intentionally limited to booking, reservation editing and quick walk-in.
+   Reception & Restaurant share the same components. DEV review 2026-11-09. */
+:root {
+ --rm-field-height:44px;
+ --rm-field-caption-height:36px;
+ --rm-field-gap:6px;
+ --rm-field-border:#cadbd1;
+ --rm-field-radius:11px;
+}
+
+/* Uniform 3 → 2 → 1 grid; no special full-width Name / Table exceptions. */
+#bookingForm,
+#editForm.editFormModern{
+ grid-template-columns:repeat(3,minmax(0,1fr))!important;
+ align-items:start!important;
+ column-gap:15px!important;
+ row-gap:12px!important;
+}
+#bookingForm > .reservationField,
+#editForm.editFormModern > .reservationField,
+#bookingForm .bookingExtraFields > .reservationField,
+#editForm.editFormModern .reservationExtraFields > .reservationField{
+ box-sizing:border-box;
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr);
+ grid-template-rows:var(--rm-field-caption-height) auto;
+ align-content:start!important;
+ align-self:stretch!important;
+ min-width:0!important;
+ width:100%!important;
+ gap:var(--rm-field-gap)!important;
+ margin:0!important;
+ grid-column:auto!important;
+ line-height:1.4;
+}
+#bookingForm > .reservationField[hidden],
+#editForm.editFormModern > .reservationField[hidden]{
+ display:none!important;
+}
+#bookingForm .reservationFieldCaption,
+#editForm.editFormModern .reservationFieldCaption,
+#walkinForm .reservationFieldCaption{
+ display:flex!important;
+ align-items:center;
+ align-content:center;
+ flex-wrap:wrap;
+ column-gap:5px;
+ min-width:0;
+ width:100%;
+ height:var(--rm-field-caption-height);
+ margin:0;
+ padding:0;
+ box-sizing:border-box;
+ color:#294d3e;
+ font-family:inherit;
+ font-size:12px;
+ font-weight:700;
+ line-height:1.32;
+}
+#bookingForm .reservationFieldCaption small,
+#editForm.editFormModern .reservationFieldCaption small,
+#walkinForm .reservationFieldCaption small{
+ display:inline!important;
+ font-size:12px;
+ font-weight:550;
+ color:#738579;
+ line-height:inherit;
+ white-space:nowrap;
+}
+#bookingForm > .reservationField :is(input:not([type="radio"]), select),
+#editForm.editFormModern > .reservationField :is(input:not([type="radio"]), select),
+#walkinForm > .reservationField input{
+ box-sizing:border-box!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ height:var(--rm-field-height)!important;
+ min-height:var(--rm-field-height)!important;
+ max-height:var(--rm-field-height)!important;
+ margin:0!important;
+ padding:9px 12px!important;
+ border:1px solid var(--rm-field-border)!important;
+ border-radius:var(--rm-field-radius)!important;
+ background:#fff!important;
+ color:#173e31!important;
+ font-size:14px!important;
+ line-height:1.4!important;
+}
+#bookingForm .reservationField .tableChoice,
+#editForm.editFormModern .reservationField .tableChoice{
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ margin:0!important;
+}
+#bookingForm .reservationField .tableChoiceTrigger,
+#editForm.editFormModern .reservationField .tableChoiceTrigger{
+ box-sizing:border-box!important;
+ display:flex!important;
+ align-items:center!important;
+ width:100%!important;
+ min-width:0!important;
+ max-width:100%!important;
+ height:var(--rm-field-height)!important;
+ min-height:var(--rm-field-height)!important;
+ max-height:var(--rm-field-height)!important;
+ padding:9px 12px!important;
+ margin:0!important;
+ border:1px solid var(--rm-field-border)!important;
+ border-radius:var(--rm-field-radius)!important;
+ background:#fff!important;
+ color:#173e31!important;
+ font-size:13px!important;
+ line-height:1.35!important;
+}
+#bookingForm .reservationField .tableChoiceTrigger>span:first-child,
+#editForm.editFormModern .reservationField .tableChoiceTrigger>span:first-child{
+ flex:1 1 auto;
+ overflow:hidden;
+ white-space:nowrap;
+ text-overflow:ellipsis;
+ min-width:0;
+}
+#bookingForm .reservationField .tableChoiceAction,
+#editForm.editFormModern .reservationField .tableChoiceAction{
+ flex:0 0 auto;
+ font-weight:800;
+ color:#177a58;
+}
+
+/* Two identical text area columns for creation and editing. */
+#bookingForm .bookingExtraFields,
+#editForm.editFormModern .reservationExtraFields{
+ box-sizing:border-box;
+ grid-column:1/-1!important;
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:11px 16px!important;
+ align-items:start!important;
+ width:100%!important;
+ min-width:0!important;
+}
+#bookingForm .bookingExtraFields h3,
+#bookingForm .bookingExtraFields .bookingExtraHint{grid-column:1/-1!important}
+#bookingForm .bookingExtraFields > .reservationField,
+#editForm.editFormModern .reservationExtraFields > .reservationField{
+ grid-column:auto!important;
+}
+#bookingForm .bookingExtraFields textarea,
+#editForm.editFormModern .reservationExtraFields textarea{
+ box-sizing:border-box!important;
+ display:block!important;
+ width:100%!important;
+ max-width:100%!important;
+ min-width:0!important;
+ height:92px!important;
+ min-height:92px!important;
+ padding:10px 12px!important;
+ border:1px solid var(--rm-field-border)!important;
+ border-radius:var(--rm-field-radius)!important;
+ background:#fff!important;
+ color:#173e31!important;
+ font-family:inherit;
+ font-weight:450!important;
+ font-size:13px!important;
+ line-height:1.45!important;
+ resize:vertical;
+}
+#editForm.editFormModern .reservationExtraFields{padding-top:2px}
+#editForm.editFormModern .reservationExtraFields .editDetailLimit{
+ margin-top:0;
+ min-height:15px;
+ font-size:11px;
+ line-height:1.3;
+ color:#667b70;
+}
+
+/* Walk-in retains its deliberate one-tap number stepper and passes,
+   but its client input and captions obey the same field dimensions. */
+.walkinPanel #walkinForm > .reservationField{
+ display:grid!important;
+ grid-template-columns:minmax(0,1fr);
+ grid-template-rows:var(--rm-field-caption-height) auto;
+ gap:var(--rm-field-gap)!important;
+ min-width:0;
+ width:100%;
+}
+.walkinPanel #walkinForm .walkinGuestsField > .reservationFieldCaption{
+ height:var(--rm-field-caption-height);
+ min-height:var(--rm-field-caption-height);
+ font-size:12px;
+}
+.walkinPanel #walkinForm .walkinGuestStepper{
+ max-width:100%;
+}
+
+/* Preserve validation and accessible focus indicators. */
+#bookingForm .reservationField :is(input,textarea):focus-visible,
+#editForm.editFormModern .reservationField :is(input,textarea):focus-visible,
+#walkinForm .reservationField input:focus-visible,
+#bookingForm .reservationField .tableChoiceTrigger:focus-visible,
+#editForm.editFormModern .reservationField .tableChoiceTrigger:focus-visible{
+ outline:3px solid #4cb58b!important;
+ outline-offset:2px!important;
+}
+
+/* Tablet: all form fields have equal two-column tracks. */
+@media(max-width:960px){
+ #bookingForm,#editForm.editFormModern{
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:11px 13px!important;
+ }
+}
+
+/* Phone: single column prevents clipped labels and tiny controls. */
+@media(max-width:640px){
+ #bookingForm,#editForm.editFormModern{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:10px!important;
+ }
+ #bookingForm > .reservationField,
+ #editForm.editFormModern > .reservationField{
+  grid-column:1/-1!important;
+ }
+ #bookingForm .bookingExtraFields,
+ #editForm.editFormModern .reservationExtraFields{
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:10px!important;
+ }
+ #bookingForm .bookingExtraFields > .reservationField,
+ #editForm.editFormModern .reservationExtraFields > .reservationField{
+  grid-column:1/-1!important;
+ }
+ #bookingForm .bookingExtraFields textarea,
+ #editForm.editFormModern .reservationExtraFields textarea{height:92px!important;min-height:92px!important}
+}
+
+/* Dark mode: consistent with the existing V3 palette, including fields. */
+html[data-theme="dark"] :is(#bookingForm,#editForm.editFormModern,#walkinForm) .reservationFieldCaption{color:#e7f5ed!important}
+html[data-theme="dark"] :is(#bookingForm,#editForm.editFormModern,#walkinForm) .reservationFieldCaption small{color:#b7cfc2!important}
+html[data-theme="dark"] :is(#bookingForm,#editForm.editFormModern,#walkinForm) .reservationField :is(input,select,textarea),
+html[data-theme="dark"] :is(#bookingForm,#editForm.editFormModern) .reservationField .tableChoiceTrigger{
+ color:#eaf7ef!important;
+ background:#1d352b!important;
+ border-color:#527463!important;
+ color-scheme:dark;
+}
+html[data-theme="dark"] #editForm.editFormModern .reservationExtraFields .editDetailLimit{color:#c1d5c9}
