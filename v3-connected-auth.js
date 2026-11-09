@@ -209,7 +209,6 @@ try{
   logoutDialog.querySelector('.restoLogoutCancel').focus();
  };
  accountLogout?.addEventListener('click',requestLogout);
- sidebarLogout?.addEventListener('click',requestLogout);
  if(accountLogout)new MutationObserver(()=>{accountLogout.disabled=logout.disabled;}).observe(logout,{attributes:true,attributeFilter:['disabled']});
 
  const badge=document.getElementById('syncBadge');
@@ -218,7 +217,7 @@ try{
  const sidebarConnectionLabel=document.getElementById('sidebarConnectionLabel');
  const sidebarLogout=document.getElementById('sidebarLogout');
  if(sidebarLogout){
-  // All staff logout entry points share the branded confirmation.
+  sidebarLogout.addEventListener('click',requestLogout);
   new MutationObserver(()=>{sidebarLogout.disabled=logout.disabled;}).observe(logout,{attributes:true,attributeFilter:['disabled']});
  }
  const refreshSidebarConnection=()=>{
