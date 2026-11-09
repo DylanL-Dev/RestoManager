@@ -666,7 +666,7 @@ function prepareNewReservation(){
  // Start each new booking at the current restaurant-local clock time, keeping table shortcuts.
  const bookingTimeField=$('bookingTime');if(bookingTimeField)bookingTimeField.value=bookingNowTime();
  // Only clear fields belonging to the previous guest.
- for(const id of ['bookingClient','bookingAllergies','bookingNotes']){
+ for(const id of ['bookingClient','bookingHotelRoom','bookingAllergies','bookingNotes']){
   const field=$(id);if(field)field.value='';
  }
  const guests=$('bookingGuests');if(guests)guests.value='1';
@@ -681,7 +681,18 @@ window.addEventListener('restomanager:screen',e=>{
 function readReservations(){const raw=window.RestoSharedReservations||JSON.parse(localStorage.getItem('restomanager_reservations')||'[]');return ReservationEngine.normalizeReservations(raw)}
 $('bookingDate').value=bookingToday();
 $('bookingTime').value=bookingNowTime();
-['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient'].forEach(id=>{for(const type of ['input','change'])$(id).addEventListener(type,refreshAvailability)});
+function syncHotelRoomField(){
+ const isHotel=$('bookingType').value==='hotel';
+ const label=$('bookingHotelRoomField'),input=$('bookingHotelRoom');
+ if(!label||!input)return;
+ label.hidden=!isHotel;
+ input.disabled=!isHotel;
+ input.required=isHotel;
+ if(!isHotel)input.value='';
+}
+$('bookingType').addEventListener('change',syncHotelRoomField);
+syncHotelRoomField();
+['bookingDate','bookingTime','bookingGuests','bookingType','bookingClient','bookingHotelRoom'].forEach(id=>{for(const type of ['input','change'])$(id).addEventListener(type,refreshAvailability)});
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
@@ -689,7 +700,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw (window.RestoErrors?.business||Error)('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<bookingToday())throw (window.RestoErrors?.business||Error)('Impossible de créer une réservation à une date passée.');
- const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
+ const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim(),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
  if(candidate.notes.length>1000||candidate.allergies.length>500)throw (window.RestoErrors?.business||Error)('Les notes ou allergies dépassent la longueur autorisée. Raccourcissez votre saisie.');
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw (window.RestoErrors?.business||Error)('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
