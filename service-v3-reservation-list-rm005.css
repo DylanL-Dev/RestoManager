@@ -1,0 +1,87 @@
+/* RM-005 — reservations compactes, vue commune Restaurant / Réception.
+   Pure presentation: existing handlers, roles, statuses and booking IDs unchanged. */
+#reservationList .rmBookingGrid{
+ display:grid;grid-template-columns:64px minmax(115px,1.7fr) 62px minmax(86px,.8fr) 77px minmax(100px,1.1fr) minmax(88px,1.1fr) minmax(105px,auto);
+ align-items:center;gap:8px;min-width:0;
+}
+#reservationList .rmBookingColumns{
+ padding:9px 10px;color:#315b4d;background:#eaf4ed;border:1px solid #d6e5da;
+ border-radius:12px 12px 0 0;font-size:11px;font-weight:750;
+}
+#reservationList .rmBookingCard{
+ margin:0!important;padding:0!important;border:1px solid #e0e9e2!important;
+ border-radius:0!important;background:#fff!important;color:#173d32!important;
+ animation:none;min-width:0;
+}
+#reservationList .rmBookingCard:last-child{border-radius:0 0 12px 12px!important}
+#reservationList .rmBookingCard + .rmBookingCard{border-top:0!important}
+#reservationList .rmBookingCard:nth-child(even){background:#f9fcfa!important}
+#reservationList .rmBookingCard .rmBookingGrid{padding:9px 10px;min-height:53px}
+#reservationList .rmBookingGrid>*{min-width:0}
+#reservationList .rmBookingTime{font-size:14px;color:#13573f;font-variant-numeric:tabular-nums}
+#reservationList .rmBookingClient{display:flex;flex-direction:column;gap:2px}
+#reservationList .rmBookingOpen{
+ display:block;text-align:left;border:0!important;background:transparent!important;
+ color:#173d32!important;padding:2px!important;font-size:13px;font-weight:750;
+ overflow-wrap:anywhere;line-height:1.3
+}
+#reservationList .rmBookingOpen:hover{text-decoration:underline}
+#reservationList .rmBookingSub{font-size:11px;color:#597366}
+#reservationList .rmBookingGuests{font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+#reservationList .rmBookingTable{font-size:12px;font-weight:650;color:#176b50;overflow-wrap:anywhere}
+#reservationList .rmBookingOrigin{font-size:12px;color:#536d60}
+#reservationList .rmBookingStatus{font-size:11px;line-height:1.35;font-weight:700;color:#23594a;background:#edf5ef;padding:5px 6px;border-radius:7px}
+#reservationList .rmBookingFlags{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+#reservationList .rmBookingNoFlag{color:#91a299}
+#reservationList .rmBookingFlag{
+ border:1px solid #cbdad1!important;background:#f3f8f5!important;color:#275442!important;
+ border-radius:7px!important;padding:4px 6px!important;font-size:11px!important;font-weight:700;white-space:nowrap
+}
+#reservationList .rmBookingFlagAllergy{
+ background:#fff0ef!important;border-color:#f1aea7!important;color:#a32d26!important
+}
+#reservationList .rmBookingFlag:focus-visible,#reservationList .rmBookingOpen:focus-visible{
+ outline:3px solid #1b8a62;outline-offset:2px
+}
+#reservationList .rmBookingCard .reservationActions{
+ display:flex;align-items:center;justify-content:flex-end;gap:5px;flex-wrap:wrap;margin:0!important;padding:0!important;
+}
+#reservationList .rmBookingCard .reservationPrimaryActions,
+#reservationList .rmBookingCard .reservationSecondaryActions,
+#reservationList .rmBookingCard .reservationActionTools{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+#reservationList .rmBookingCard .reservationActions button{
+ font-size:11px!important;padding:6px 7px!important;border-radius:7px!important;min-height:31px;
+}
+#reservationList .rmBookingCard>.reservationExpanded{margin:4px 10px 10px;padding:12px;border:1px solid #d4e5db;border-radius:10px;background:#f6faf7}
+#reservationList .rmBookingCard>.fusionCoverHint{padding:0 10px;font-size:12px}
+html[data-theme="dark"] #reservationList .rmBookingCard{background:#1b3028!important;color:#effbf1!important;border-color:#456654!important}
+html[data-theme="dark"] #reservationList .rmBookingCard:nth-child(even){background:#20382d!important}
+html[data-theme="dark"] #reservationList .rmBookingOpen{color:#f2fff7!important}
+html[data-theme="dark"] #reservationList .rmBookingColumns{background:#254535;color:#e7f5ec;border-color:#456654}
+html[data-theme="dark"] #reservationList .rmBookingTime,html[data-theme="dark"] #reservationList .rmBookingTable{color:#a8efd0}
+html[data-theme="dark"] #reservationList .rmBookingOrigin,html[data-theme="dark"] #reservationList .rmBookingSub{color:#c3ddce}
+html[data-theme="dark"] #reservationList .rmBookingStatus{background:#315744;color:#e9fff1}
+html[data-theme="dark"] #reservationList .rmBookingFlagAllergy{background:#612b29!important;color:#ffe2de!important}
+@media(max-width:1100px){
+ #reservationList .rmBookingGrid{grid-template-columns:56px minmax(95px,1.7fr) 45px minmax(72px,.8fr) 90px 100px auto}
+ #reservationList .rmBookingGrid>*:nth-child(5){display:none}
+}
+@media(max-width:760px){
+ #reservationList .rmBookingColumns{display:none}
+ #reservationList .rmBookingCard{margin:9px 0!important;border:1px solid #d9e6dc!important;border-radius:13px!important;box-shadow:0 2px 9px #123b3410}
+ #reservationList .rmBookingCard .rmBookingGrid{
+  display:grid;grid-template-columns:66px minmax(0,1fr) auto;
+  grid-template-rows:auto auto auto;gap:7px 9px;padding:12px;
+ }
+ #reservationList .rmBookingGrid>*:nth-child(1){grid-area:1/1}
+ #reservationList .rmBookingGrid>*:nth-child(2){grid-area:1/2}
+ #reservationList .rmBookingGrid>*:nth-child(3){grid-area:1/3}
+ #reservationList .rmBookingGrid>*:nth-child(4){grid-area:2/2}
+ #reservationList .rmBookingGrid>*:nth-child(5){display:none}
+ #reservationList .rmBookingGrid>*:nth-child(6){grid-area:2/1}
+ #reservationList .rmBookingGrid>*:nth-child(7){grid-area:2/3}
+ #reservationList .rmBookingGrid>*:nth-child(8){grid-area:3/1/4/4;justify-content:flex-end;border-top:1px solid #e5eee8;padding-top:8px!important}
+ #reservationList .rmBookingCard .reservationActions button{min-height:36px}
+ #reservationList .rmBookingStatus{font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){#reservationList .rmBookingCard{animation:none!important}}
