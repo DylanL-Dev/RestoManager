@@ -69,11 +69,16 @@ async function main(){
  for(const account of accounts.filter((a,i)=>i!==4)){account.client=createClient(url,anonKey,{auth:{persistSession:false,autoRefreshToken:false}});const {error}=await account.client.auth.signInWithPassword({email:account.email,password:account.password});assert.ifError(error);}
  await sql('create publication supabase_realtime;alter publication supabase_realtime add table public.reservations,public.reservation_tables,public.restaurant_rooms,public.restaurant_tables,public.table_holds,public.table_fusion_links,public.restaurant_hours,public.restaurant_service_changes;');
  const day=await sql("select ((now() at time zone 'Europe/Paris')::date+1)::text;");
- const context={url,anonKey,accounts,sql,day,assert,ports,root};
+ const devSnapshot=process.argv.includes('--dev-snapshot');
+ const context={url,anonKey,accounts,sql,day,assert,ports,root,devSnapshot};
  console.log('INFO isolated components started; real Auth sessions established for two fictional restaurants');
  const legacy=await require('./browser-tests.cjs')({...context,readOnlyPhase:true});
  await sql(fs.readFileSync(path.join(root,'supabase/scripts/mission2_reservation_edits.sql'),'utf8'));
  await sql(fs.readFileSync(path.join(root,'supabase/scripts/mission3_validation_integration.sql'),'utf8'));
+ if(devSnapshot){
+  await sql(fs.readFileSync(path.join(root,'supabase/scripts/platform_owner_foundation.sql'),'utf8'));
+  await sql(fs.readFileSync(path.join(root,'supabase/scripts/bug01_private_reports.sql'),'utf8'));
+ }
  await waitFor(async()=>{const {data,error}=await accounts[0].client.rpc('service_sync_state_v1');return !error&&data?.capabilities?.reservation_edits===4;},'Mission 3 schema cache');
  const api=await require('./api-tests.cjs').run(context);
  const browser=await require('./browser-tests.cjs')(context);

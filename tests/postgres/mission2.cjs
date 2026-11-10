@@ -73,6 +73,11 @@ async function concurrent(firstWho,firstQuery,secondWho,secondQuery,expected){
    const reports=fs.readFileSync(path.join(root,'supabase/scripts/bug01_private_reports.sql'),'utf8');
    await ok(reports);await ok(reports);
   }
+  if(process.argv.includes('--dev-snapshot')){
+   await ok("do $$begin if not exists(select 1 from pg_roles where rolname='service_role') then create role service_role nologin bypassrls;end if;end$$;");
+   await ok(fs.readFileSync(path.join(__dirname,'dev-snapshot-20261110.sql'),'utf8'));
+   console.log('INFO DEV read-only catalog snapshot applied to isolated PostgreSQL only');
+  }
   console.log('PASS script applies atomically and can be reapplied locally');
   await test('Restaurant: room persisted, previous room gone, notes/allergies preserved',async()=>{
    const before=await record(1);await ok(ctx(1,edit(before,{p_hotel_room:'201'})));const after=await record(1);

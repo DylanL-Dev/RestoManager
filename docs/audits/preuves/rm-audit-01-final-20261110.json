@@ -1,0 +1,592 @@
+{
+  "checked_at_utc": "2026-11-10T09:58:03.727490+00:00",
+  "base_commit": "7b85445816b6a055f8ec0a77585b503483719444",
+  "manual_source": "https://github.com/DylanL-Dev/RestoManager/pull/75#issuecomment-6763913217",
+  "manual_evidence_level": "user-declared; no new hosted authenticated robot run",
+  "sdk": {
+    "before": "2.57.0",
+    "after": "2.119.0",
+    "frontend": "2.119.0",
+    "node_requirement": {
+      "node": ">=22.0.0"
+    },
+    "lockfile_sdk_components": {
+      "@supabase/auth-js": "2.119.0",
+      "@supabase/functions-js": "2.119.0",
+      "@supabase/postgrest-js": "2.119.0",
+      "@supabase/realtime-js": "2.119.0",
+      "@supabase/storage-js": "2.119.0"
+    }
+  },
+  "snapshot": {
+    "project": "lykoybacslvmhtzftqsf",
+    "functions": 58,
+    "tables": 17,
+    "rls_policies": 47,
+    "triggers": 24,
+    "sha256": "d0af4aab90826f528d4a6f2aab7470217e812504bef9a9f5082357214b58000d",
+    "contains_rows": false,
+    "scope": "DEV definitions, table and column ACLs, RLS and trigger bindings; table schema rebuilt from isolated fixtures"
+  },
+  "regression": {
+    "syntax_files": 106,
+    "node_tests": 111,
+    "node_files_final_run": 33,
+    "mission2_groups": 13,
+    "mission3_groups": 77,
+    "display_groups": 14,
+    "midnight": {
+      "passed": 2,
+      "failed": 0,
+      "results": [
+        {
+          "role": "fb_admin",
+          "status": "passed",
+          "before": "lundi 8 novembre 2032",
+          "after": "mardi 9 novembre 2032"
+        },
+        {
+          "role": "reception",
+          "status": "passed",
+          "before": "lundi 8 novembre 2032",
+          "after": "mardi 9 novembre 2032"
+        }
+      ]
+    },
+    "postgres": {
+      "mission": 3,
+      "passed": 62,
+      "failed": 0,
+      "containerNetwork": "none",
+      "tests": [
+        "Restaurant: room persisted, previous room gone, notes/allergies preserved",
+        "Reception: room persisted and change notification contains current/previous room",
+        "Room conflict rolls back all fields and assignments, role 1",
+        "Room conflict rolls back all fields and assignments, role 3",
+        "Exterior numeric guest remains roomless with notes/allergies, role 1",
+        "Exterior numeric guest remains roomless with notes/allergies, role 3",
+        "Concurrent edits 1 / 2: stale writer refused and allergy retained",
+        "Concurrent edits 1 / 3: stale writer refused and allergy retained",
+        "Concurrent edits 3 / 1: stale writer refused and allergy retained",
+        "Concurrent edits 3 / 3: stale writer refused and allergy retained",
+        "Concurrent distinct reservations cannot both take the same hotel room",
+        "Edit then cancellation retains room/notes and invalidates the open version",
+        "Existing table collision protection still rejects incompatible assignment",
+        "Concurrent reservations cannot both move onto the same free table",
+        "Active hold from another editor still blocks a table change",
+        "Table-only reassignment invalidates an existing editor",
+        "Smart placement invalidates non-target reservations as well",
+        "Role separation, inactive/no-profile users and anonymous RPC denial",
+        "RLS with two populated restaurants: foreign reads and edits refused",
+        "Missing version and both legacy editing endpoints fail closed",
+        "Legacy Reception creation remains available after editing endpoint protection",
+        "New private writer is subject to RLS, has fixed search_path, no public/anon execution",
+        "RCP-01: Reception keeps assigned table for unchanged covers, then right-sizes 2 to 10 to 2",
+        "RCP-01: Reception keeps a large table if no smaller compatible table is free",
+        "RCP-01: an active hold removes the best small table from Reception recommendations",
+        "Mission3: capabilities and revision fence are tenant scoped, include server time",
+        "Mission3: room-only edit preserves long historical notes and allergies exactly",
+        "Mission3: unchanged roomless hotel history stays editable; removing an existing hotel room is explicit error",
+        "Mission3: new hotel requires room; exterior numeric booking remains roomless",
+        "Mission3: lost confirm response retry, expired committed key and release cannot duplicate a booking",
+        "Mission3: status serializes behind confirmation and sees committed result",
+        "Mission3: pending status followed by late confirmation makes release return committed",
+        "Mission3: stale holds report expired and another account can reserve the released interval",
+        "Mission3: expiry and renewal use wall clock after a transaction has already started",
+        "Mission3: holding and confirming one operation twice concurrently creates only one reservation",
+        "Mission3: direct table and fusion writes, column writes and TRUNCATE are denied",
+        "Mission3: table configuration rejects invalid/unsafe and duplicate numeric labels",
+        "Mission3: renumbering invalidates an open editor before another UUID reuses its table number",
+        "Mission3: inactive room is rejected by edits, smart placement and temporary holds",
+        "Mission3: hotel walk-in optional name/room and exterior numeric identity keep their existing behavior",
+        "Mission3: booking versus table deactivation serializes and cannot leave inactive assignment",
+        "Mission3: deactivation before edit is rechecked, capacity decrease cannot invalidate a reservation",
+        "Mission3: 2-table fusion stays atomic and cannot be removed or moved while assigned",
+        "Mission3: 3-table fusion stays atomic and cannot be removed or moved while assigned",
+        "Mission3: rooms and service hours remain writable only to Restaurant, tenant isolated",
+        "Mission3: separate restaurants do not share a room or mutation mutex",
+        "Mission3: close service and stale edit serialize without day/row deadlock",
+        "Mission3: injected assignment failure rolls back details, versions, assignments and notifications",
+        "Mission3: migration preflight rejects changed tenant policy and rolls back that isolated alteration",
+        "Mission3: injected failure at end of migration rolls back preceding DDL atomically",
+        "Mission3: fictional database backup restores data, RPCs, RLS and role grants in an isolated database",
+        "Platform role: default deny, self-read only, no employee cross-read",
+        "Platform admin membership: only verified signed-in owner sees own active row",
+        "BUG-01: active Restaurant and Reception can submit but cannot read messages",
+        "BUG-01: only active platform owner can read cross-establishment reports",
+        "BUG-01: only owner may update status; immutable report data cannot be changed",
+        "mission2_reservation_edits.sql: non-superuser rollback preserves schema and writer privileges",
+        "mission2_reservation_edits.sql: non-superuser applies and reapplies without persistent schema CREATE",
+        "mission2_reservation_edits.sql: pre-existing schema CREATE grant is preserved",
+        "mission3_validation_integration.sql: non-superuser rollback preserves schema and writer privileges",
+        "mission3_validation_integration.sql: non-superuser applies and reapplies without persistent schema CREATE",
+        "mission3_validation_integration.sql: pre-existing schema CREATE grant is preserved"
+      ]
+    }
+  },
+  "sdk2119_standard_stack": {
+    "status": "Réussi",
+    "backend": "real self-hosted Supabase components; loopback only",
+    "images": {
+      "db": "restomanager-mission3/postgres:17-bookworm-flattened",
+      "auth": "docker.io/supabase/gotrue:v2.197.0@sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b",
+      "rest": "docker.io/postgrest/postgrest:v16.5@sha256:1347d7552b88f17832912c06afbf7c43209af6eeeb60834b04aae12c9bd9d5cc",
+      "realtime": "restomanager-mission3/realtime:v2.151.3-flattened"
+    },
+    "legacy": {
+      "passed": 2,
+      "failed": 0,
+      "results": [
+        {
+          "name": "Real pre-migration schema displays tables read-only and blocks writes: fb_admin",
+          "status": "passed"
+        },
+        {
+          "name": "Real pre-migration schema displays tables read-only and blocks writes: reception",
+          "status": "passed"
+        }
+      ],
+      "backend": "real Auth/REST on original schema, before Mission 2 and Mission 3 migrations"
+    },
+    "api": {
+      "passed": 29,
+      "failed": 0,
+      "results": [
+        {
+          "name": "Final isolated Mission 3 migration reapplies twice without schema drift",
+          "status": "passed"
+        },
+        {
+          "name": "Real Auth sessions identify all four tenant/role accounts",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates reservations in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates reservation_tables in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates restaurant_rooms in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates restaurant_tables in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates table_holds in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates table_fusion_links in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates restaurant_hours in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Hold REST column permissions hide owner tokens and tenant IDs",
+          "status": "passed"
+        },
+        {
+          "name": "Anonymous REST and protected RPC reveal no restaurant data",
+          "status": "passed"
+        },
+        {
+          "name": "Restaurant and Reception mutation permissions are enforced over HTTP",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated direct table/fusion writes cannot bypass protected RPC",
+          "status": "passed"
+        },
+        {
+          "name": "Foreign reservation mutation and foreign table attribution are refused by RPC",
+          "status": "passed"
+        },
+        {
+          "name": "HTTP stale editor is rejected RM001 and preserves allergy, notes and edited hotel room",
+          "status": "passed"
+        },
+        {
+          "name": "Hotel creation rejects an empty room and rolls back while preserving the hold",
+          "status": "passed"
+        },
+        {
+          "name": "Duplicate hotel room conflicts across different tables without partial creation",
+          "status": "passed"
+        },
+        {
+          "name": "Numeric exterior clients remain roomless through real create and Reception edit",
+          "status": "passed"
+        },
+        {
+          "name": "Simultaneous HTTP holds for the same table have exactly one winner",
+          "status": "passed"
+        },
+        {
+          "name": "Simultaneous HTTP confirmations on different tables both commit",
+          "status": "passed"
+        },
+        {
+          "name": "Restaurant and Reception create concurrently without incompatible table assignments",
+          "status": "passed"
+        },
+        {
+          "name": "Restaurant and Reception racing for the only compatible table have one winner",
+          "status": "passed"
+        },
+        {
+          "name": "Draft ownership, abandon and forced expiry are enforced by real RPC",
+          "status": "passed"
+        },
+        {
+          "name": "Repeated confirm key returns one persisted booking after release and expiry",
+          "status": "passed"
+        },
+        {
+          "name": "Committed HTTP response deliberately lost is recovered by original key without duplicate",
+          "status": "passed"
+        },
+        {
+          "name": "Concurrent edit and cancellation cannot reactivate or partially overwrite a reservation",
+          "status": "passed"
+        },
+        {
+          "name": "Two and three table fusions commit complete atomic assignments",
+          "status": "passed"
+        },
+        {
+          "name": "Service revision handshake reflects successful mutations and preserves tenant scope",
+          "status": "passed"
+        },
+        {
+          "name": "Final local invariants contain no incompatible overlap or orphan assignment",
+          "status": "passed"
+        }
+      ]
+    },
+    "browser": {
+      "passed": 6,
+      "failed": 0,
+      "results": [
+        {
+          "name": "Real login UI: Restaurant and Reception use distinct Auth accounts and sessions",
+          "status": "passed"
+        },
+        {
+          "name": "Real WebSocket/Postgres Changes updates the other role and preserves its open draft",
+          "status": "passed"
+        },
+        {
+          "name": "Real stale edit after reconnect is refused; room, allergy and unsaved input survive",
+          "status": "passed"
+        },
+        {
+          "name": "Explicit review/reload confirmation followed by a valid Reception edit synchronizes back",
+          "status": "passed"
+        },
+        {
+          "name": "Independent second-restaurant browser receives only its authorized snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "Real browser contexts have no uncaught JavaScript errors",
+          "status": "passed"
+        }
+      ],
+      "backend": "real Auth/REST/Realtime; application bridge unchanged except local URL/key and same-version SDK source"
+    }
+  },
+  "sdk2119_dev_snapshot_stack": {
+    "status": "Réussi",
+    "backend": "real self-hosted Supabase components; loopback only",
+    "images": {
+      "db": "restomanager-mission3/postgres:17-bookworm-flattened",
+      "auth": "docker.io/supabase/gotrue:v2.197.0@sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b",
+      "rest": "docker.io/postgrest/postgrest:v16.5@sha256:1347d7552b88f17832912c06afbf7c43209af6eeeb60834b04aae12c9bd9d5cc",
+      "realtime": "restomanager-mission3/realtime:v2.151.3-flattened"
+    },
+    "legacy": {
+      "passed": 2,
+      "failed": 0,
+      "results": [
+        {
+          "name": "Real pre-migration schema displays tables read-only and blocks writes: fb_admin",
+          "status": "passed"
+        },
+        {
+          "name": "Real pre-migration schema displays tables read-only and blocks writes: reception",
+          "status": "passed"
+        }
+      ],
+      "backend": "real Auth/REST on original schema, before Mission 2 and Mission 3 migrations"
+    },
+    "api": {
+      "passed": 34,
+      "failed": 0,
+      "results": [
+        {
+          "name": "Final isolated Mission 3 migration reapplies twice without schema drift",
+          "status": "passed"
+        },
+        {
+          "name": "DEV snapshot: all 17 application tables retain RLS and protected writer cannot bypass it",
+          "status": "passed"
+        },
+        {
+          "name": "Real Auth sessions identify all four tenant/role accounts",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates reservations in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates reservation_tables in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates restaurant_rooms in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates restaurant_tables in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates table_holds in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates table_fusion_links in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated REST RLS isolates restaurant_hours in both tenants and roles",
+          "status": "passed"
+        },
+        {
+          "name": "Hold REST column permissions hide owner tokens and tenant IDs",
+          "status": "passed"
+        },
+        {
+          "name": "Anonymous REST and protected RPC reveal no restaurant data",
+          "status": "passed"
+        },
+        {
+          "name": "Restaurant and Reception mutation permissions are enforced over HTTP",
+          "status": "passed"
+        },
+        {
+          "name": "DEV snapshot: Reception cannot create tables or install single/group walk-ins by RPC",
+          "status": "passed"
+        },
+        {
+          "name": "DEV snapshot: direct reservation and assignment REST writes cannot bypass version or role checks",
+          "status": "passed"
+        },
+        {
+          "name": "DEV snapshot: Reception cannot choose a table through public, legacy or internal RPC entry points",
+          "status": "passed"
+        },
+        {
+          "name": "DEV snapshot: Reception cannot install or release a valid seated booking; Restaurant can",
+          "status": "passed"
+        },
+        {
+          "name": "Authenticated direct table/fusion writes cannot bypass protected RPC",
+          "status": "passed"
+        },
+        {
+          "name": "Foreign reservation mutation and foreign table attribution are refused by RPC",
+          "status": "passed"
+        },
+        {
+          "name": "HTTP stale editor is rejected RM001 and preserves allergy, notes and edited hotel room",
+          "status": "passed"
+        },
+        {
+          "name": "Hotel creation rejects an empty room and rolls back while preserving the hold",
+          "status": "passed"
+        },
+        {
+          "name": "Duplicate hotel room conflicts across different tables without partial creation",
+          "status": "passed"
+        },
+        {
+          "name": "Numeric exterior clients remain roomless through real create and Reception edit",
+          "status": "passed"
+        },
+        {
+          "name": "Simultaneous HTTP holds for the same table have exactly one winner",
+          "status": "passed"
+        },
+        {
+          "name": "Simultaneous HTTP confirmations on different tables both commit",
+          "status": "passed"
+        },
+        {
+          "name": "Restaurant and Reception create concurrently without incompatible table assignments",
+          "status": "passed"
+        },
+        {
+          "name": "Restaurant and Reception racing for the only compatible table have one winner",
+          "status": "passed"
+        },
+        {
+          "name": "Draft ownership, abandon and forced expiry are enforced by real RPC",
+          "status": "passed"
+        },
+        {
+          "name": "Repeated confirm key returns one persisted booking after release and expiry",
+          "status": "passed"
+        },
+        {
+          "name": "Committed HTTP response deliberately lost is recovered by original key without duplicate",
+          "status": "passed"
+        },
+        {
+          "name": "Concurrent edit and cancellation cannot reactivate or partially overwrite a reservation",
+          "status": "passed"
+        },
+        {
+          "name": "Two and three table fusions commit complete atomic assignments",
+          "status": "passed"
+        },
+        {
+          "name": "Service revision handshake reflects successful mutations and preserves tenant scope",
+          "status": "passed"
+        },
+        {
+          "name": "Final local invariants contain no incompatible overlap or orphan assignment",
+          "status": "passed"
+        }
+      ]
+    },
+    "browser": {
+      "passed": 6,
+      "failed": 0,
+      "results": [
+        {
+          "name": "Real login UI: Restaurant and Reception use distinct Auth accounts and sessions",
+          "status": "passed"
+        },
+        {
+          "name": "Real WebSocket/Postgres Changes updates the other role and preserves its open draft",
+          "status": "passed"
+        },
+        {
+          "name": "Real stale edit after reconnect is refused; room, allergy and unsaved input survive",
+          "status": "passed"
+        },
+        {
+          "name": "Explicit review/reload confirmation followed by a valid Reception edit synchronizes back",
+          "status": "passed"
+        },
+        {
+          "name": "Independent second-restaurant browser receives only its authorized snapshot",
+          "status": "passed"
+        },
+        {
+          "name": "Real browser contexts have no uncaught JavaScript errors",
+          "status": "passed"
+        }
+      ],
+      "backend": "real Auth/REST/Realtime; application bridge unchanged except local URL/key and same-version SDK source"
+    }
+  },
+  "commands_initial": [
+    {
+      "name": "syntax",
+      "command": "npm run test:syntax",
+      "exit_code": 0,
+      "seconds": 2.18
+    },
+    {
+      "name": "unit",
+      "command": "npm test",
+      "exit_code": 0,
+      "seconds": 1.47
+    },
+    {
+      "name": "mission2",
+      "command": "npm run test:mission2:browser",
+      "exit_code": 0,
+      "seconds": 21.17
+    },
+    {
+      "name": "mission3",
+      "command": "npm run test:mission3:browser",
+      "exit_code": 0,
+      "seconds": 62.54
+    },
+    {
+      "name": "display",
+      "command": "npm run test:display",
+      "exit_code": 0,
+      "seconds": 24.2
+    },
+    {
+      "name": "postgres",
+      "command": "npm run test:mission3:postgres",
+      "exit_code": 0,
+      "seconds": 38.98
+    },
+    {
+      "name": "supabase",
+      "command": "npm run test:mission3:supabase",
+      "exit_code": 1,
+      "seconds": 44.52
+    }
+  ],
+  "commands_authoritative_final": [
+    {
+      "name": "dev-authoritative-postgres-final",
+      "command": "npm run test:audit:dev:postgres",
+      "exit_code": 0,
+      "seconds": 41.03
+    },
+    {
+      "name": "dev-authoritative-final",
+      "command": "npm run test:audit:dev:supabase",
+      "exit_code": 0,
+      "seconds": 38.6
+    }
+  ],
+  "resolved_test_issues": [
+    "Old dist/main/index.js browser-bundle resolver incompatible with new package entry",
+    "New UMD var supabase not exposed on globalThis by Playwright init-script wrapper",
+    "Trigger loader record variable shadowed SQL alias; test replay corrected"
+  ],
+  "hosted_authenticated_robot": "NOT EXECUTED: no DEV credentials supplied",
+  "production_mutations": 0,
+  "shared_mutations": 0,
+  "pr_merged": false,
+  "status_proposal": "VALIDÉE / PRÊTE À CLÔTURER",
+  "ci_initial_attempt": {
+    "commit": "6486786b30dbf51f50e31d3dc630fdf40a8e36ba",
+    "run": 42795270743,
+    "conclusion": "failure",
+    "failed_assertion": "read-only message checked after first snapshot but before settled realtime state",
+    "correction": "Wait for both RestoSharedDataLoaded and explicit readonly state, keeping original message/write-block assertions and timeout"
+  },
+  "ci_readiness_reruns": [
+    {
+      "name": "ci-readiness-standard",
+      "command": "npm run test:mission3:supabase",
+      "exit_code": 0,
+      "seconds": 41.61
+    },
+    {
+      "name": "ci-readiness-dev",
+      "command": "npm run test:audit:dev:supabase",
+      "exit_code": 0,
+      "seconds": 40.13
+    }
+  ]
+}

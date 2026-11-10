@@ -1,0 +1,110 @@
+{
+  "checked_at": "2026-11-10T08:48:00.783373+00:00",
+  "source_commit": "27054a9bea94028b481efeca921f0a2c18ea1d42",
+  "render_commit": "8924fa6249aabd0d34e36ef1c19d17fc2e69700a",
+  "runtime": {
+    "configured_secrets": 0,
+    "configured_test_variables": 0
+  },
+  "dev_account_metadata": [
+    {
+      "role": "fb_admin",
+      "active_profiles": 1,
+      "linked_auth_users": 1,
+      "confirmed_users": 1,
+      "users_with_password": 1,
+      "non_banned_non_deleted_users": 1,
+      "matching_public_login_alias": 1
+    },
+    {
+      "role": "reception",
+      "active_profiles": 1,
+      "linked_auth_users": 1,
+      "confirmed_users": 1,
+      "users_with_password": 1,
+      "non_banned_non_deleted_users": 1,
+      "matching_public_login_alias": 1
+    }
+  ],
+  "browser_checks": [
+    {
+      "id": "PUBLIC-1440",
+      "status": "PASS",
+      "width": 1440,
+      "env": {
+        "name": "DEV",
+        "url": "https://lykoybacslvmhtzftqsf.supabase.co"
+      },
+      "page": "https://restomanager-v3-supabase-integration.onrender.com/login.html",
+      "errors": [],
+      "overflow": false,
+      "sdkResponses": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm",
+          "status": 200
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm",
+          "status": 200
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm",
+          "status": 200
+        }
+      ],
+      "blocked": []
+    },
+    {
+      "id": "SDK-2.119.0",
+      "status": "PASS",
+      "createClient": "function",
+      "sessionPresent": false,
+      "error": false,
+      "limit": "Import et session vide seulement ; pas de parité fonctionnelle démontrée"
+    },
+    {
+      "id": "SDK-2.57.0",
+      "status": "PASS",
+      "createClient": "function",
+      "sessionPresent": false,
+      "error": false,
+      "limit": "Import et session vide seulement ; pas de parité fonctionnelle démontrée"
+    },
+    {
+      "id": "MIDNIGHT-HELPER",
+      "status": "PASS",
+      "tables": "2032-11-09",
+      "bookings": "2032-11-09",
+      "limit": "Fonctions réellement servies, horloge simulée ; pas un service authentifié"
+    },
+    {
+      "id": "PUBLIC-390",
+      "status": "PASS",
+      "width": 390,
+      "env": {
+        "name": "DEV",
+        "url": "https://lykoybacslvmhtzftqsf.supabase.co"
+      },
+      "page": "https://restomanager-v3-supabase-integration.onrender.com/login.html",
+      "errors": [],
+      "overflow": false,
+      "sdkResponses": [
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm",
+          "status": 200
+        },
+        {
+          "url": "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm",
+          "status": 200
+        }
+      ],
+      "blocked": []
+    }
+  ],
+  "source_helper_sha256": "cd9e909ffd0680aff55e3e175335b38cb1aec57e232f93c577c7f6b5e11b2a5e",
+  "shared_writes": 0,
+  "created_accounts": 0,
+  "created_test_reservations": 0,
+  "deleted_test_reservations": 0,
+  "closure": "BLOCKED: missing authenticated DEV access and functional SDK parity evidence"
+}

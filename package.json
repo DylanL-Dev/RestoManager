@@ -17,10 +17,12 @@
     "test:mission3:browser": "node tests/browser/mission3.cjs",
     "test:mission3:supabase": "node tests/supabase/mission3.cjs",
     "test:syntax": "node tests/check-syntax.cjs",
-    "test:display": "node tests/browser/table-display.cjs"
+    "test:display": "node tests/browser/table-display.cjs",
+    "test:audit:dev:postgres": "node tests/postgres/mission2.cjs --mission3 --dev-snapshot",
+    "test:audit:dev:supabase": "node tests/supabase/mission3.cjs --dev-snapshot"
   },
   "devDependencies": {
-    "@supabase/supabase-js": "2.57.0",
+    "@supabase/supabase-js": "2.119.0",
     "playwright": "1.56.1"
   }
 }
