@@ -9,7 +9,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const os=require('node:os');
 
-async function run({url,anonKey,accounts,sql,day,assert=nodeAssert}){
+async function run({url,anonKey,accounts,sql,day,assert=nodeAssert,devSnapshot=false}){
  const endpoint=new URL(url);
  assert.ok(['127.0.0.1','localhost','[::1]'].includes(endpoint.hostname),'API tests require a loopback Supabase URL');
  assert.ok(['http:','https:'].includes(endpoint.protocol),'API tests require HTTP(S)');
@@ -101,6 +101,18 @@ async function run({url,anonKey,accounts,sql,day,assert=nodeAssert}){
    const migration=fs.readFileSync(path.resolve(__dirname,'../../supabase/scripts/mission3_validation_integration.sql'),'utf8');
    await db(migration);await db(migration);
   });
+  if(devSnapshot){
+   // Fixed read-only DEV export: execute only through the loopback test runner.
+   // Restore AFTER the migration-idempotence case, so it cannot mask DEV drift.
+   await db(fs.readFileSync(path.resolve(__dirname,'../postgres/dev-snapshot-20261110.sql'),'utf8'));
+   await test('DEV snapshot: all 17 application tables retain RLS and protected writer cannot bypass it',async()=>{
+    assert.equal(await db("select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and c.relkind='r' and c.relrowsecurity"),'17');
+    assert.equal(await db("select count(*) from pg_policies where schemaname in ('public','private')"),'47');
+    assert.equal(await db("select count(*) from pg_trigger t join pg_class c on c.oid=t.tgrelid join pg_namespace n on n.oid=c.relnamespace where n.nspname in ('public','private') and not t.tgisinternal"),'24');
+    assert.equal(await db("select rolbypassrls or rolsuper from pg_roles where rolname='resto_service_writer'"),'f');
+    assert.equal(await db("select pg_has_role('authenticated','resto_service_writer','USAGE')"),'f');
+   });
+  }
   originalHours=await json(`select coalesce(json_agg(h),'[]'::json) from (select restaurant_id,id,lunch_enabled,lunch_start,lunch_end,dinner_enabled,dinner_start,dinner_end from public.restaurant_hours where restaurant_id in (${quote(aId)},${quote(bId)})) h;`);
   // Fixtures are deliberately outside the seed IDs and are removed in finally.
   // All dates/notes/names are fictitious. Direct SQL is only the local fixture layer.
@@ -161,6 +173,49 @@ async function run({url,anonKey,accounts,sql,day,assert=nodeAssert}){
    rejection(await rpc(reception,'change_reservation_status_v3',{p_reservation_id:aReservation,p_expected:'reserved',p_status:'seated'}),['42501'],'Reception installation');
    success(await rpc(reception,'change_reservation_status_v3',{p_reservation_id:aReservation,p_expected:'reserved',p_status:'confirmed'}),'Reception confirmation');
   });
+  if(devSnapshot){
+   await test('DEV snapshot: Reception cannot create tables or install single/group walk-ins by RPC',async()=>{
+    rejection(await rpc(reception,'create_restaurant_table_v3',{p_label:'Table '+(labelBase+200),p_seats:2,p_room_id:rooms[0]}),['42501'],'Reception table creation');
+    rejection(await rpc(reception,'install_walkin_v3',{p_table:ownTables[0],p_guests:2,p_name:tag+'-denied-walkin',p_type:'exterieur'}),['42501'],'Reception single walk-in');
+    rejection(await rpc(reception,'install_walkin_group_v3',{p_tables:[ownTables[0],ownTables[1]],p_guests:3,p_name:tag+'-denied-group',p_type:'exterieur'}),['42501'],'Reception group walk-in');
+   });
+   await test('DEV snapshot: direct reservation and assignment REST writes cannot bypass version or role checks',async()=>{
+    const created=await create(admin,[ownTables[0]],slot(22)),before=await row(admin,created.booking);
+    for(const actor of [admin,reception]){
+     rejection(await actor.client.from('reservations').update({notes:'Must not overwrite'}).eq('id',created.booking).select('id'),['42501'],'Direct notes PATCH');
+     rejection(await actor.client.from('reservation_tables').update({table_id:ownTables[1]}).eq('reservation_id',created.booking).select('table_id'),['42501'],'Direct assignment PATCH');
+     rejection(await actor.client.from('reservations').delete().eq('id',created.booking).select('id'),['42501'],'Direct reservation DELETE');
+     const id=randomUUID();reservationIds.add(id);const when=slot(23);
+     rejection(await actor.client.from('reservations').insert({id,restaurant_id:aId,guest_name:tag+'-denied-insert',party_size:2,starts_at:when.start,ends_at:when.end,notes:'[RESTOMANAGER:EXTERIEUR]'}).select('id'),['42501'],'Direct reservation INSERT');
+    }
+    assert.deepEqual(await row(admin,created.booking),before,'All denied direct writes must leave the reservation unchanged');
+    const links=success(await admin.client.from('reservation_tables').select('table_id').eq('reservation_id',created.booking),'Assignment after direct write refusals');
+    assert.deepEqual(links.map(x=>x.table_id),[ownTables[0]]);
+   });
+   await test('DEV snapshot: Reception cannot choose a table through public, legacy or internal RPC entry points',async()=>{
+    const created=await create(admin,[ownTables[0]],slot(20));
+    const before=await row(reception,created.booking),args=editArgs(before,[ownTables[1]],{p_guest_name:tag+'-must-not-change'});
+    rejection(await rpc(reception,'update_reservation_v4',args),['42501'],'Restaurant editor bypass');
+    rejection(await rpc(reception,'reception_update_reservation_with_table_v1',args),['42501','PGRST202'],'Internal table editor bypass');
+    const legacy={...args};delete legacy.p_expected_version;delete legacy.p_hotel_room;
+    rejection(await rpc(reception,'update_reservation_v3',legacy),['42501','RM002'],'Legacy table editor bypass');
+    rejection(await reception.client.schema('private').rpc('update_reservation_v4',args),['PGRST106','42501'],'Private schema bypass');
+    assert.deepEqual(await row(admin,created.booking),before,'Denied RPCs must preserve every reservation field');
+    const assignment=success(await admin.client.from('reservation_tables').select('table_id').eq('reservation_id',created.booking),'Assignment after denials');
+    assert.deepEqual(assignment.map(x=>x.table_id),[ownTables[0]],'Denied RPCs must preserve the table');
+   });
+   await test('DEV snapshot: Reception cannot install or release a valid seated booking; Restaurant can',async()=>{
+    const created=await create(admin,[ownTables[0]],slot(21),{p_notes:'Note fictive\nALLERGIES À VÉRIFIER : Noix\n[RESTOMANAGER:EXTERIEUR]'});
+    const before=await row(admin,created.booking);
+    rejection(await rpc(reception,'change_reservation_status_v3',{p_reservation_id:created.booking,p_expected:'reserved',p_status:'seated'}),['42501'],'Reception seating');
+    success(await rpc(admin,'change_reservation_status_v3',{p_reservation_id:created.booking,p_expected:'reserved',p_status:'seated'}),'Restaurant seating positive control');
+    const seated=await row(admin,created.booking);
+    for(const status of ['completed','released'])rejection(await rpc(reception,'change_reservation_status_v3',{p_reservation_id:created.booking,p_expected:'seated',p_status:status}),['42501'],'Reception release');
+    assert.deepEqual(await row(admin,created.booking),seated,'Denied release must preserve the seated booking');
+    success(await rpc(admin,'change_reservation_status_v3',{p_reservation_id:created.booking,p_expected:'seated',p_status:'released'}),'Restaurant release positive control');
+    assert.equal((await row(admin,created.booking)).notes,before.notes,'Status changes must preserve notes and allergies');
+   });
+  }
   await test('Authenticated direct table/fusion writes cannot bypass protected RPC',async()=>{
    for(const a of [admin,reception]){
     rejection(await a.client.from('restaurant_tables').update({seats:1}).eq('id',ownTables[0]).select('id'),['42501'],'Direct table PATCH');

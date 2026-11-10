@@ -53,6 +53,8 @@ jobs:
       - run: npm ci
       - name: Disposable PostgreSQL migrations, concurrency and tenant isolation
         run: npm run test:mission3:postgres
+      - name: Read-only DEV catalog replay in isolated PostgreSQL
+        run: npm run test:audit:dev:postgres
 
   browser-mock:
     runs-on: ubuntu-24.04
@@ -94,4 +96,15 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Local Docker Auth, PostgREST, Realtime and independent browser accounts
         run: npm run test:mission3:supabase
+      - name: DEV permissions replay with real local Auth and frontend SDK
+        env:
+          MISSION3_ARTIFACTS: ${{ runner.temp }}/rm-audit-dev-snapshot
+        run: npm run test:audit:dev:supabase
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm-audit-dev-snapshot-fictitious-data
+          path: ${{ runner.temp }}/rm-audit-dev-snapshot
+          if-no-files-found: ignore
+          retention-days: 7
       # This workflow has no deployment steps, shared credentials or remote SQL.

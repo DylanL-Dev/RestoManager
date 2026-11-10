@@ -1,5 +1,7 @@
 # RM-AUDIT-01 — Étape 4 : recette authentifiée DEV Render
 
+**Mise à jour finale du 10/11/2026 :** [nouveaux tests et proposition de clôture](RM-AUDIT-01_VERIFICATIONS_FINALES_20261110.md). Statut technique proposé : **VALIDÉE / PRÊTE À CLÔTURER**, sans fusion de la PR #75 et sous réserve de validation formelle par le responsable. Les sections ci-dessous sont le **compte rendu historique initial**, avant les confirmations manuelles DEV et les nouveaux tests isolés ; leurs constats et preuves ne sont pas réécrits.
+
 Contrôle du 10 novembre 2026. Référence Git de préparation : `27054a9bea94028b481efeca921f0a2c18ea1d42`. Aucune étape antérieure n'est requalifiée. **Étape 4 bloquée ; clôture impossible à ce stade. RM-005 non commencée.**
 
 ## État constaté et preuves

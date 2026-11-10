@@ -5,10 +5,18 @@ const assert=require('node:assert/strict');const {chromium}=require('playwright'
 module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=false}){
  assert.equal(new URL(url).hostname,'127.0.0.1');
  const results=[];const contexts=[];let browser;let appUrl;
- const sdk=fs.readFileSync(require.resolve('@supabase/supabase-js').replace(/dist\/main\/index\.js$/,'dist/umd/supabase.js'),'utf8');
+ // 2.119 uses dist/index.cjs; 2.57 used dist/main/index.js. Resolve the
+ // same-version browser bundle from the package root, never inject Node CJS.
+ const sdkRoot=path.dirname(require.resolve('@supabase/supabase-js/package.json'));
+ const sdkVersion=JSON.parse(fs.readFileSync(path.join(sdkRoot,'package.json'),'utf8')).version;
+ for(const file of ['supabase-login.js','supabase-service-bridge.js']){
+  const frontendVersion=fs.readFileSync(path.join(root,file),'utf8').match(/supabase-js@([0-9.]+)\//)?.[1];
+  assert.equal(sdkVersion,frontendVersion,'The real browser harness must use the frontend SDK version');
+ }
+ const sdk=fs.readFileSync(path.join(sdkRoot,'dist/umd/supabase.js'),'utf8');
  const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
-  if(pathname==='/__sdk.mjs'){res.setHeader('Content-Type','text/javascript');res.end('export const createClient=globalThis.supabase.createClient;');return;}
+  if(pathname==='/__sdk.mjs'){res.setHeader('Content-Type','text/javascript');res.end('export const createClient=globalThis.__RestoAuditSDK.createClient;');return;}
   // The app now derives its endpoint from restomanager-env.js, not from
   // bridge/login literals. Serve a local-only replacement: NEVER allow this
   // disposable browser harness to contact DEV or production Supabase.
@@ -29,12 +37,28 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
  });
  async function open(account,loginUi=false){
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});contexts.push(context);
-  await context.addInitScript({content:sdk});
+  // The modern bundle declares a local `var supabase`; Playwright evaluates
+  // init scripts inside a wrapper. Publish that actual bundle explicitly.
+  await context.addInitScript({content:sdk+'\n;globalThis.__RestoAuditSDK=supabase;'});
   if(!loginUi){const {data:{session}}=await account.client.auth.getSession();await context.addInitScript(session=>localStorage.setItem('sb-127-auth-token',JSON.stringify(session)),session);}
   await context.route('**/*',route=>{const origin=new URL(route.request().url()).origin;return [appUrl,url].includes(origin)?route.continue():route.abort();});
   await context.routeWebSocket('**/*',ws=>{const origin=new URL(ws.url()).origin.replace(/^ws/,'http');if(origin!==url){ws.close();return;}ws.connectToServer();});
   const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  if(loginUi){await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();await page.waitForURL('**/v3-connected.html');}
+  if(loginUi){
+   await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();
+   try{await page.waitForURL('**/v3-connected.html');}
+   catch(error){
+    if(process.env.MISSION3_ARTIFACTS){
+     fs.mkdirSync(process.env.MISSION3_ARTIFACTS,{recursive:true});
+     const stage=await page.locator('#message').textContent().catch(()=>null);
+     const diagnostic={path:new URL(page.url()).pathname,hash:new URL(page.url()).hash,loginStage:stage,errors};
+     fs.writeFileSync(path.join(process.env.MISSION3_ARTIFACTS,'login-diagnostic.json'),JSON.stringify(diagnostic,null,2));
+     await page.locator('#password').fill('').catch(()=>{});
+     await page.screenshot({path:path.join(process.env.MISSION3_ARTIFACTS,'login-diagnostic.png')}).catch(()=>{});
+    }
+    throw error;
+   }
+  }
   else await page.goto(appUrl+'/v3-connected.html');
   await page.waitForFunction(readOnly=>readOnly?window.RestoSharedDataLoaded===true:window.RestoSupabaseReady===true,readOnlyPhase,{timeout:45000});
   // The first-visit onboarding suggestion is a real, dismissible overlay.
