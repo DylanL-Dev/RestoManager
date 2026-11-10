@@ -60,7 +60,11 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
    }
   }
   else await page.goto(appUrl+'/v3-connected.html');
-  await page.waitForFunction(readOnly=>readOnly?window.RestoSharedDataLoaded===true:window.RestoSupabaseReady===true,readOnlyPhase,{timeout:45000});
+  // A snapshot can arrive before the WebSocket handshake. Assert the settled
+  // read-only state, not a transient disconnected screen during cold startup.
+  await page.waitForFunction(readOnly=>readOnly
+   ?window.RestoSharedDataLoaded===true&&window.RestoSyncState==='readonly'
+   :window.RestoSupabaseReady===true,readOnlyPhase,{timeout:45000});
   // The first-visit onboarding suggestion is a real, dismissible overlay.
   // Close it through the same user-facing action before testing reservation
   // confirmations; never force clicks or disable the tutorial in the app.

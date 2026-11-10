@@ -95,6 +95,8 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Local Docker Auth, PostgREST, Realtime and independent browser accounts
+        env:
+          MISSION3_ARTIFACTS: ${{ runner.temp }}/rm-audit-standard
         run: npm run test:mission3:supabase
       - name: DEV permissions replay with real local Auth and frontend SDK
         env:
@@ -104,7 +106,9 @@ jobs:
         if: always()
         with:
           name: rm-audit-dev-snapshot-fictitious-data
-          path: ${{ runner.temp }}/rm-audit-dev-snapshot
+          path: |
+            ${{ runner.temp }}/rm-audit-standard
+            ${{ runner.temp }}/rm-audit-dev-snapshot
           if-no-files-found: ignore
           retention-days: 7
       # This workflow has no deployment steps, shared credentials or remote SQL.

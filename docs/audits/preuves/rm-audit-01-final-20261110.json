@@ -567,5 +567,26 @@
   "production_mutations": 0,
   "shared_mutations": 0,
   "pr_merged": false,
-  "status_proposal": "VALIDÉE / PRÊTE À CLÔTURER"
+  "status_proposal": "VALIDÉE / PRÊTE À CLÔTURER",
+  "ci_initial_attempt": {
+    "commit": "6486786b30dbf51f50e31d3dc630fdf40a8e36ba",
+    "run": 42795270743,
+    "conclusion": "failure",
+    "failed_assertion": "read-only message checked after first snapshot but before settled realtime state",
+    "correction": "Wait for both RestoSharedDataLoaded and explicit readonly state, keeping original message/write-block assertions and timeout"
+  },
+  "ci_readiness_reruns": [
+    {
+      "name": "ci-readiness-standard",
+      "command": "npm run test:mission3:supabase",
+      "exit_code": 0,
+      "seconds": 41.61
+    },
+    {
+      "name": "ci-readiness-dev",
+      "command": "npm run test:audit:dev:supabase",
+      "exit_code": 0,
+      "seconds": 40.13
+    }
+  ]
 }
