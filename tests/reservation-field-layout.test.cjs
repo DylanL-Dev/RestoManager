@@ -50,7 +50,7 @@ test('walk-in keeps dedicated one-tap control and shared captions',()=>{
  assert.match(html,/class="walkinGuestStepper"/);
 });
 test('booking and edit controls have the same geometry on all breakpoints',()=>{
- assert.match(page,/service-v3-reservation-fields\.css\?v=20261110-clone-midnight2/);
+ assert.match(page,/service-v3-reservation-fields\.css\?v=20261110-reception-parity1/);
  assert.match(css,/--rm-field-height:44px/);
  assert.match(css,/#bookingForm > \.reservationField/);
  assert.match(css,/#editForm\.editFormModern > \.reservationField/);
