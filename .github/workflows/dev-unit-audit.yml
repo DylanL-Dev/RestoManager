@@ -1,0 +1,20 @@
+name: DEV Clone - audit unit tests
+on:
+  push:
+    branches:
+      - feature/v3-supabase-full-clone
+  workflow_dispatch:
+jobs:
+  unit-audit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: JavaScript syntax check
+        run: npm run test:syntax
+      - name: Unit tests (isolated, no Supabase PROD access)
+        run: npm test
