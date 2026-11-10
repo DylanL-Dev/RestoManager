@@ -70,3 +70,14 @@ test('Reception and Restaurant use identical icon-marked reservation fields',()=
  assert.match(css,/html\.reception #bookingForm/);
  assert.match(page,/html\.reception #editForm\.editFormModern > label:has\(#editTable\)/);
 });
+
+test('Reception automatic table card occupies the same third grid column as Restaurant',()=>{
+ const auth=fs.readFileSync(path.join(root,'v3-connected-auth.js'),'utf8');
+ assert.doesNotMatch(auth,/RestoManager attribue une table disponible à l’enregistrement/);
+ assert.doesNotMatch(auth,/closest\\('label'\\)\\.after\\(text\\)/);
+ const html=form('bookingForm');
+ assert.ok(html.indexOf('id="bookingGuests"')<html.indexOf('id="bookingTable"'));
+ assert.ok(html.indexOf('id="bookingTable"')<html.indexOf('id="bookingAutoTableInfo"'));
+ assert.match(css,/html\\.reception #bookingForm > \\.reservationAutoTable/);
+ assert.match(page,/v3-connected-auth\\.js\\?v=20261110-reception-no-legacy-label1/);
+});
