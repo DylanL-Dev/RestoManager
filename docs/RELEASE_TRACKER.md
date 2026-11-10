@@ -80,6 +80,16 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - **Préparation RM-005 uniquement** : [candidat issue #3, périmètre/dépendances/risques/ordre proposé](audits/RM-005_PREPARATION_SANS_DEVELOPPEMENT.md). Aucun développement engagé ; identification à confirmer après clôture.
 - **Après clôture** : RM-005 peut être cadrée à partir de [l'issue #3](https://github.com/DylanL-Dev/RestoManager/issues/3) et du document de préparation ci-dessus. **Ne pas commencer son développement sans validation distincte du périmètre.** Conserver la règle d'une seule évolution active et la séparation DEV / V3 / MAIN / Supabase production.
 
+## Évolution active — RM-005 (étape 1, horaires configurables)
+
+**Statut : EN COURS DEV — 10/11/2026.** Démarrage explicitement autorisé par l'utilisateur (« C'est parti »). Branche de travail isolée : `feature/rm-005-horaires`, issue métier [#3](https://github.com/DylanL-Dev/RestoManager/issues/3). **Une seule évolution RM-005**, qui regroupe horaires, messages d'erreur, liste des réservations et présentation visuelle des tables de passage. Chaque volet doit être testé et accepté successivement ; **une seule livraison finale** après accord explicite.
+
+- **Étape 1 active :** horaires par restaurant (début/fin des services, dernière réservation, clôture, changement du jour de service, restaurants nocturnes). Préserver les valeurs actuelles du Mercure : midi 12:00–14:30, soir 19:00–21:30, clôture 23:30, changement de jour 00:00 Europe/Paris.
+- **Critères :** réglages isolés par établissement ; modification autorisée uniquement au rôle Restaurant habilité, Réception lecture seule ; aucun client installé ne disparaît ni ne se ferme silencieusement ; pas de réservation antidatée ou modifiée sans action ; reprise serveur en cas de coupure ; contrôle horaire cohérent sur deux appareils, été/hiver et après minuit.
+- **Risques critiques :** séparation date civile/journée de service, RLS, collisions et clôtures concurrentes, PWA/cache, notifications et continuité des réservations. Avant migration : tests sur base jetable, revue des RPC et sauvegarde de la configuration DEV ; aucune migration production.
+- **Volets suivants déjà cadrés :** erreur rouge explicite hors horaires à la création et à la modification ; liste Réservations compacte et accessible ; amélioration **visuelle uniquement** de la sélection des tables réellement libres pour les passages. Conserver l'étape actuelle d'installation après choix, sans nouveau statut « arrivé ».
+- **À ce stade :** branche créée et documentation de démarrage ; **aucune fonctionnalité codée, aucun test RM-005 déclaré réussi et aucun changement sur V3/MAIN/Supabase production**. La validation de l'étape 1 et la fusion vers DEV nécessiteront les preuves et la confirmation utilisateur.
+
 ## Fiche à dupliquer pour chaque mise à jour
 
 ```md
