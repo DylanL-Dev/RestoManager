@@ -3,6 +3,9 @@ on:
   push:
     branches:
       - feature/v3-supabase-full-clone
+  pull_request:
+    branches:
+      - feature/v3-supabase-full-clone
   workflow_dispatch:
 jobs:
   unit-audit:
