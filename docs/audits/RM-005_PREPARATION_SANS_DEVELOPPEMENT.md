@@ -35,28 +35,17 @@ Le contexte initial de cette issue évoque un changement de journée à 01:00. I
 - Préserver les réservations, leurs dates, l'historique, les affectations, les notes, les allergies, la synchronisation Realtime et les fusions ; ne pas créer de statut nouveau parce qu'il figurait dans une image illustrative.
 - Vérification comparative avant/après sur écran de Réception PC, Restaurant PC, tablette et téléphone ; clavier, lecteurs d'écran, navigation tactile, débordement horizontal et performance avec longue liste.
 
-## Volet C — Client de passage : choix de table avant installation (retour terrain 10/11/2026)
+## Parcours de passage — clarification terrain du 10/11/2026 (hors développement RM-005)
 
-**Anomalie actuelle rapportée :** le parcours « Installer un passage » associe trop tôt la création du passage à un état « installé / présent ». Le personnel doit pouvoir proposer au client **au minimum deux tables réellement disponibles** (standard établissement) et changer la table pressentie **avant** qu'il soit effectivement installé.
+**Retour utilisateur plus récent, qui remplace le besoin initial du volet C :** dans le parcours actuel « Installer un passage », le compte Restaurant permet **déjà de choisir une table avant d'enregistrer le passage**. Le personnel peut présenter les choix de tables au client, puis n'utiliser **« Ajouter » qu'une fois le client réellement installé**. Ce fonctionnement est considéré satisfaisant par l'utilisateur ; la précédente interprétation selon laquelle une nouvelle étape de sélection serait nécessaire était prématurée.
 
-### Comportement cible à spécifier et tester
-
-1. À l'arrivée d'un client sans réservation, l'équipe **Restaurant uniquement** indique les couverts et accède au choix de table ; afficher au moins **deux options compatibles lorsque la disponibilité réelle le permet**. Ne jamais inventer une seconde option si une seule table est libre ; expliquer clairement la disponibilité limitée.
-2. L'utilisateur peut consulter ou changer les propositions (table simple ou fusion compatible) sans inscrire prématurément « présent/installé », ni enregistrer une fausse heure d'installation. Réutiliser les contrôles de capacité, créneau et disponibilité du moteur de réservation.
-3. La simple sélection d'une table ne doit **pas** être assimilée à l'installation. Distinguer état de **préparation/sélection temporaire** et installation définitive sans réintroduire le statut « arrivé » supprimé du flux métier. Un maintien de courte durée peut être envisagé pour empêcher une collision, mais doit expirer ou être libéré à l'abandon ; valider le modèle exact avant de coder.
-4. Au clic sur **« Installer le passage »**, revérifier atomiquement la disponibilité côté serveur ; seulement alors créer/finaliser l'objet métier dans son état installé, enregistrer l'heure réelle d'installation, occuper la table et synchroniser Restaurant/Réception.
-5. Pouvoir abandonner le parcours sans créer de passage « fantôme », sans laisser de table occupée ou verrou bloqué ; présenter clairement les changements de disponibilité intervenus pendant la sélection.
-6. Ne pas donner à la Réception le droit d'installer un passage, de choisir manuellement une table ou de libérer les tables. Garder l'interface cohérente avec les formulaires et icônes Lucide existants.
-
-**Tests d'acceptation DEV :** 1/2/3 propositions disponibles, refus de table incompatible, changement de table avant confirmation, deux comptes concurrents sur une même table, abandon/expiration du maintien, installation une seule fois, heure réelle correctement enregistrée, aucune ligne « présent » avant validation, affichage Realtime et contrôle des permissions serveur/RLS. Tester sur PC/tablette/mobile et avec une fusion de tables autorisée.
-
-**Statut :** ajout au périmètre groupé RM-005 pour étude technique et validation ; aucun code métier modifié, aucune publication V3/MAIN/production.
+**Décision :** ne pas reconstruire le parcours ni introduire un nouvel état « en attente/arrivé », une nouvelle confirmation ou un mécanisme supplémentaire de réservation temporaire au titre de RM-005. Préserver le fonctionnement actuel. Une vérification non destructive sur DEV pourra simplement confirmer que l'ouverture du formulaire et le choix d'une table ne créent pas de passage « présent » avant clic sur « Ajouter », que la Réception n'a pas accès à ce parcours et que les options de table réellement libres restent sélectionnables. Si un vrai défaut est constaté, le documenter avant toute modification.
 
 ## Politique de livraison groupée RM-005
 
-Une seule **évolution de produit** et une livraison finale coordonnée, mais **commits de travail distincts et traçables** pour Volet A (horaires / règles / serveur), Volet B (liste UI), Volet C (passage et choix de table), tests et documentation. Ne pas confondre « une seule grosse mise à jour » avec « un seul commit géant » : le diagnostic et le rollback doivent rester possibles.
+Une seule **évolution de produit** et une livraison finale coordonnée, mais **commits de travail distincts et traçables** pour Volet A (horaires / règles / serveur), Volet B (liste UI), tests et documentation. Ne pas confondre « une seule grosse mise à jour » avec « un seul commit géant » : le diagnostic et le rollback doivent rester possibles.
 
-Ordre : (1) audit des dépendances, (2) contrat horaires/minuit et garde-fous serveur, (3) validation des heures dans les formulaires, (4) refonte compacte de la liste sur DEV, (5) parcours passages et choix de tables sur DEV, (6) tests unitaires, SQL/RLS, Playwright et recette manuelle des deux rôles sur PC/tablette/mobile, (7) **demande de validation explicite avant toute publication**.
+Ordre : (1) audit des dépendances, (2) contrat horaires/minuit et garde-fous serveur, (3) validation des heures dans les formulaires, (4) refonte compacte de la liste sur DEV, (5) tests unitaires, SQL/RLS, Playwright et recette manuelle des deux rôles sur PC/tablette/mobile, (6) **demande de validation explicite avant toute publication**.
 
 La V3 officielle, MAIN et Supabase production restent inchangés durant le développement. Un push sur la branche DEV peut déclencher un déploiement automatique **DEV Render uniquement** ; aucun push de publication V3/MAIN ni migration production sans accord distinct. Toute anomalie bloquante suspend l'ensemble RM-005 ; conserver les possibilités de retour arrière par volet.
 
