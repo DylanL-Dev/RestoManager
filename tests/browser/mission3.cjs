@@ -473,7 +473,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     return {
      editBox:bounds(root.querySelector('[data-reservation-action="edit"]')),
      moreBox:bounds(root.querySelector('.reservationMoreTrigger')),
-     installBox:bounds(root.querySelector('.reservationActionMain')),
+     installBox:bounds(root.querySelector('[data-reservation-action="seated"]')),
      changeBox:bounds(root.querySelector('.reservationChangeTable')),
      cardBox:bounds(root.closest('.reservationItem'))
     };
