@@ -29,7 +29,7 @@ test('owner login cannot create or promote a user',()=>{
  assert.match(auth,/data\.role!=='platform_admin'/);
  assert.match(auth,/!data\.active/);
  assert.doesNotMatch(auth,/auth\.signUp|auth\.admin|service_role|\.insert\(|\.update\(|\.upsert\(/);
- assert.match(html,/id="ownerPanel" hidden/);
+ assert.match(html,/<div id="ownerPanel"[^>]*\bhidden\b[^>]*>/);
  assert.match(html,/id="creatorLogin"/);
  assert.match(html,/type="password"/);
  assert.doesNotMatch(html,/service_role|secret_key|sb_secret_/i);
