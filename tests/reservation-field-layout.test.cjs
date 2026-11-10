@@ -81,3 +81,14 @@ test('Reception automatic table card occupies the same third grid column as Rest
  assert.match(css,/html\\.reception #bookingForm > \\.reservationAutoTable/);
  assert.match(page,/v3-connected-auth\\.js\\?v=20261110-reception-no-legacy-label1/);
 });
+
+test('Hotel is the default guest type on both Restaurant and Reception, including new reservations',()=>{
+ const html=form('bookingForm');
+ const service=fs.readFileSync(path.join(root,'service-v3.js'),'utf8');
+ assert.ok(html.includes('name="bookingTypeVisual" value="hotel" checked'));
+ assert.ok(!html.includes('name="bookingTypeVisual" value="exterieur" checked'));
+ assert.ok(html.includes('<option value="hotel">Client hôtel</option><option value="exterieur">Client extérieur</option>'));
+ assert.ok(service.includes("type.value='hotel'"));
+ assert.ok(service.includes("hotelChoice.checked=true"));
+ assert.ok(service.includes("type.dispatchEvent(new Event('change',{bubbles:true}))"));
+});
