@@ -483,25 +483,33 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(rect.x>=cardBox.x-1&&rect.x+rect.width<=cardBox.x+cardBox.width+1,
      'Action must fit inside the reservation card');
    }
-   if(role==='fb_admin'){
-    assert.ok(installBox&&changeBox,'Restaurant install/change actions must be present');
-    if(viewport.width>=750){
-     for(const rect of [editBox,changeBox,moreBox])
-      assert.ok(Math.abs(rect.y-installBox.y)<=2,JSON.stringify({message:'Tablet/desktop action misalignment',role,viewport,installBox,editBox,changeBox,moreBox}));
-     assert.ok(installBox.x<editBox.x&&editBox.x<changeBox.x&&changeBox.x<moreBox.x,
-      'Actions must follow install, edit, change table, extra order');
-    }else{
-     assert.ok(installBox.y+installBox.height<=editBox.y+2,
-      'Mobile keeps main action above secondary actions');
-    }
-   }else{
-    assert.equal(installBox,null,'Reception must not show install button');
-    assert.equal(changeBox,null,'Reception must not show table-change button');
-    assert.ok(await toolbar.locator('.reservationPrimaryActions').count()===0,
-     'Reception must not keep an empty primary column');
+   // Current compact UI keeps edit and overflow on the reservation card;
+   // installing/seating or changing a table stays in the Restaurant-only menu.
+   assert.equal(installBox,null,'Install action is not a separate toolbar button');
+   assert.equal(changeBox,null,'Table-change action is not a separate toolbar button');
+   if(viewport.width>=750){
+    assert.ok(Math.abs(editBox.y-moreBox.y)<=2,
+     'Tablet/desktop edit and overflow controls must align');
+    assert.ok(editBox.x<moreBox.x,'Edit must precede the overflow menu');
+   }
+   if(role==='reception'){
+    assert.equal(await toolbar.locator('[data-reservation-action="confirm"]').count(),1,
+     'Reception can still confirm a pending booking without managing the room');
    }
    await more.click();
-   await view.page.getByRole('dialog',{name:'Actions de la réservation'}).waitFor();
+   const menu=view.page.getByRole('dialog',{name:'Actions de la réservation'});
+   await menu.waitFor();
+   if(role==='fb_admin'){
+    assert.equal(await menu.getByRole('button',{name:'Installer à table'}).count(),1,
+     'Restaurant must retain seat action in its overflow menu');
+    assert.equal(await menu.getByRole('button',{name:'Changer la table'}).count(),1,
+     'Restaurant must retain table reassignment in its overflow menu');
+   }else{
+    assert.equal(await menu.getByRole('button',{name:'Installer à table'}).count(),0,
+     'Reception cannot seat customers');
+    assert.equal(await menu.getByRole('button',{name:'Changer la table'}).count(),0,
+     'Reception cannot manually change a table');
+   }
    await view.page.getByRole('button',{name:'Fermer les actions'}).click();
    await view.page.clock.runFor(240);
    await view.page.waitForFunction(()=>!document.querySelector('.reservationMenuOverlay'));
