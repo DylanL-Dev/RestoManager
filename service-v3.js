@@ -712,6 +712,15 @@ function prepareNewReservation(){
   const field=$(id);if(field)field.value='';
  }
  const guests=$('bookingGuests');if(guests)guests.value='1';
+ // Every fresh reservation defaults to a hotel guest, for Reception and Restaurant.
+ // Keep the native select, visual radio cards and hotel-room field in sync.
+ const type=$('bookingType');
+ if(type){
+  type.value='hotel';
+  const hotelChoice=document.querySelector('input[name="bookingTypeVisual"][value="hotel"]');
+  if(hotelChoice)hotelChoice.checked=true;
+  type.dispatchEvent(new Event('change',{bubbles:true}));
+ }
  const feedback=$('bookingFeedback');if(feedback)feedback.textContent='';
  refreshAvailability();
 }
