@@ -15,3 +15,5 @@ Cinquième passe : test adapté au bouton Actualiser déplacé dans le menu de c
 Sixième passe : assertions des actions de réservation adaptées au menu « … », avec vérification positive du rôle Restaurant et refus côté Réception.
 
 Septième passe : distinguer par data-reservation-action l'action Confirmer de Réception de l'action Installer de Restaurant.
+
+Huitième passe : fermeture explicite du didacticiel dans le navigateur Supabase local authentifié avant les confirmations ; tests UI simulés et RPC locaux conservés.
