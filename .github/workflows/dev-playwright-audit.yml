@@ -22,4 +22,5 @@ jobs:
       - name: Mission 2 isolated browser
         run: npm run test:mission2:browser
       - name: Mission 3 isolated browser
+        if: success() || failure()
         run: npm run test:mission3:browser
