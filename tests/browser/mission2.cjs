@@ -47,6 +47,13 @@ async function open(browser,url,role){
  return {context,page,errors};
 }
 async function edit(page,n=0){
+ // Fresh users get an onboarding suggestion. Dismiss it through the real UI
+ // instead of forcing a click through the overlay or disabling the tutorial.
+ const onboarding=page.locator('#restoTourWelcome');
+ if(await onboarding.isVisible()){
+  await onboarding.locator('#restoTourLater').click();
+  await onboarding.waitFor({state:'hidden'});
+ }
  await page.locator('[data-reservation-action=edit]').nth(n).click();await page.locator('#editForm').waitFor({state:'visible'});
  const dateLabel=await page.locator('#editDate').locator('..').innerText();assert.ok(!dateLabel.includes('Choisir une date'),'populated edit date is visible in the custom picker');
 }
