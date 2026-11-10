@@ -12,6 +12,16 @@ Le contexte initial de cette issue évoque un changement de journée à 01:00. I
 - Présenter aux collaborateurs une prévisualisation compréhensible des dates et réglages ; réserver la modification au rôle Restaurant autorisé et définir la lecture Réception.
 - Conserver les dates/heures réelles des réservations et l'historique. Aucun recalcul rétroactif implicite.
 
+
+## Retour terrain Réception — 10/11/2026 (à inclure dans le prochain incrément de validation des horaires)
+
+- Lors de la **modification d’une réservation existante**, un horaire saisi hors de la plage autorisée est actuellement insuffisamment signalé à l’utilisateur Réception.
+- Harmoniser avec la **création d’une réservation** : champ heure en état d’erreur bien visible (rouge, icône Lucide), message explicite et accessible précisant l’heure saisie et les plages actuellement autorisées, en tenant compte de la configuration du restaurant et du service sélectionné.
+- Appliquer le même comportement sur les formulaires de modification **Réception et Restaurant**, sur mobile, tablette et PC, sans perturber les autres champs ni supprimer les notes/allergies déjà saisies.
+- Empêcher l’enregistrement d’une heure invalide **côté interface et côté serveur** ; ne pas considérer le seul encadrement rouge comme une protection métier. Le cas des horaires après minuit doit suivre le futur contrat RM-005.
+- Tests d’acceptation : avant ouverture, entre services, après dernière réservation autorisée, exactement aux bornes, après minuit pour un établissement nocturne ; correction de l’heure puis enregistrement réussi ; aucune perte de saisie ou de réservation.
+- **Statut : demande enregistrée pour cadrage, pas encore développée, ni testée, ni publiée.** La correction d’accès initialement constatée sur le PC Réception était une erreur de frappe résolue : ne pas la confondre avec ce défaut d’affichage.
+
 ## Dépendances et risques
 
 Le modèle `restaurant_hours`, les RPC de clôture, la source serveur de temps/révision, les conversions Europe/Paris, le tableau de service, les filtres de réservation, Realtime, RLS, le cache et la PWA doivent partager le même contrat. Risques principaux : mélange date réelle/journée métier, disparition visuelle d'un client encore installé après minuit, double clôture, rattrapage après coupure, changement d'heure été/hiver, privilèges inter-établissements et anciens onglets conservant une règle précédente.
