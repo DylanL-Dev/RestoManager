@@ -324,10 +324,19 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.ok(presentation.width<=presentation.viewport+1,'Intro must not create horizontal overflow');
    const headerLayout=await view.page.evaluate(()=>({
     viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
-    refresh:document.getElementById('refreshAppBtn').getBoundingClientRect().toJSON()
+    refresh:document.getElementById('refreshAppBtn').getBoundingClientRect().toJSON(),
+    refreshDisplay:getComputedStyle(document.getElementById('refreshAppBtn')).display,
+    profile:document.getElementById('mobileAccountToggle').getBoundingClientRect().toJSON(),
+    mobileRefreshPresent:!!document.getElementById('mobileAccountRefresh')
    }));
    assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Header must not overflow viewport');
-   assert.ok(headerLayout.refresh.width>=42,'Refresh button must keep its touch target');
+   if(viewport.width<=900){
+    assert.equal(headerLayout.refreshDisplay,'none','Compact header must hide the desktop refresh button');
+    assert.ok(headerLayout.profile.width>=42,'Account menu trigger must keep its touch target');
+    assert.equal(headerLayout.mobileRefreshPresent,true,'Refresh action must remain available in the account menu');
+   }else{
+    assert.ok(headerLayout.refresh.width>=42,'Desktop refresh button must keep its touch target');
+   }
    pass(role+' '+viewport.width+'px responsive service identity and naturally wrapping heading');
    // Each indicator stays data-driven; only the Lucide presentation changes.
    const kpiTitles=['Clients présents','Clients attendus','Tables occupées','Places sur tables libres'];
