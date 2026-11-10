@@ -45,15 +45,15 @@ Créé le 10 novembre 2026, après l'incident de synchronisation lié à la jour
 | ID | Évolution isolée | DEV Clone | V3 | MAIN | Confirmation utilisateur / reste à vérifier |
 | --- | --- | --- | --- | --- | --- |
 | RM-001 | Jour de service : bascule à **00:00** plutôt qu'à 01:00 ; tables et réservations concordantes | Corrigé, test de non-régression ajouté | Publié, PR #66 | Publié, PR #65 | **Confirmé en production par l'utilisateur** le 10/11 : « c'est revenu l'erreur venait de là » |
-| RM-002 | Nouvelle interface des formulaires, champs et icônes Lucide, actions/raccourcis de table | Code présent dans DEV | Publié, PR #68 | Publié, PR #67 | **Publication code confirmée ; validation complète en situation réelle non consignée.** À vérifier séparément pour raccourcis, modification, deux rôles, tablette/mobile. |
-| RM-003 | Réception : alignement de « Table disponible — Attribution automatique », suppression du texte ajouté et du bouton manuel | Ancien texte parasite absent du code DEV ; CSS modernisé | Publié, PR #71 | Publié, PR #72 | **Publication code confirmée ; validation du rendu après PR #71/#72 à consigner.** Ne pas déclarer validé sans vérification. |
-| RM-004 | « Client hôtel » sélectionné par défaut pour Restaurant et Réception, initialement et après nouvelle réservation | Corrigé | Publié, PR #71 | Publié, PR #72 | Tests CI verts, **validation visuelle finale à consigner**. Client extérieur reste sélectionnable. |
+| RM-002 | Nouvelle interface des formulaires, champs et icônes Lucide, actions/raccourcis de table | Code présent dans DEV | Publié, PR #68 | Publié, PR #67 | **CONFIRMÉE EN PRODUCTION ✅** — confirmation globale explicite de l'utilisateur le 10/11/2026. Cette confirmation ne constitue pas un procès-verbal détaillé de tests tablette/mobile. |
+| RM-003 | Réception : alignement de « Table disponible — Attribution automatique », suppression du texte ajouté et du bouton manuel | Ancien texte parasite absent du code DEV ; CSS modernisé | Publié, PR #71 | Publié, PR #72 | **CONFIRMÉE EN PRODUCTION ✅** — confirmation globale explicite de l'utilisateur le 10/11/2026 pour le formulaire Réception. |
+| RM-004 | « Client hôtel » sélectionné par défaut pour Restaurant et Réception, initialement et après nouvelle réservation | Corrigé | Publié, PR #71 | Publié, PR #72 | **CONFIRMÉE EN PRODUCTION ✅** — confirmation globale explicite de l'utilisateur le 10/11/2026 ; Client extérieur reste sélectionnable. |
 
 *Les lignes historiques RM-001 à RM-004 décrivent l'état des livraisons passées, pas quatre tâches ouvertes en parallèle. Pour chaque évolution future, ajouter une ligne avant le premier commit et assurer son passage d'état.*
 
 ## Évolution en cours / prochaine évolution
 
-**Aucune nouvelle évolution fonctionnelle n'est engagée.** Avant d'en démarrer une, clôturer/consigner les vérifications encore ouvertes de RM-002 à RM-004 ou les marquer explicitement `BLOQUÉE / REPORTÉE` avec accord utilisateur. Ensuite demander quelle **seule** amélioration sera traitée.
+**Aucune nouvelle évolution fonctionnelle n'est engagée.** Les RM-001 à RM-004 sont désormais toutes confirmées en production par l'utilisateur le 10/11/2026. La prochaine évolution peut commencer, sous réserve d'ouvrir **une seule** nouvelle fiche et de la valider avant de passer à la suivante.
 
 ## Fiche à dupliquer pour chaque mise à jour
 
