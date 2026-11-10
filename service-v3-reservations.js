@@ -338,16 +338,46 @@ function render(){
  root.append(tabs);
  const shown=reservationView==='active'?active:reservationView==='departed'?departed:list;
  if(!shown.length){root.append(el('p',list.length?'Aucune réservation dans cette catégorie.':'Aucune réservation pour cette recherche.','reservationViewEmpty'));return}
+ const headings=el('div',undefined,'rmBookingGrid rmBookingColumns');
+ for(const label of ['Heure','Client / Chambre','Couverts','Table(s)','Origine','Statut','Indicateurs','Actions'])headings.append(el('span',label));
+ root.append(headings);
  shown.forEach(r=>{
- const card=el('article',undefined,'reservationItem');
- const head=el('div',undefined,'reservationHead');head.append(el('strong',r.time+' · '+r.client),el('span',statuses[r.status]||r.status,'reservationStatus'));card.append(head);const detailButton=el('button',expanded===r.id?'Masquer la fiche':'Voir la fiche et le suivi','reservationOpenDetail');detailButton.type='button';detailButton.setAttribute('aria-expanded',String(expanded===r.id));detailButton.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});card.append(detailButton);
- const total=r.tables.reduce((sum,n)=>sum+(TableStore.get().tables.find(t=>t.number===n)?.capacity||0),0);card.append(el('p',r.date+' · '+r.guests+' couvert(s) · '+(r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+r.tables[0])+(r.type==='hotel'?' · Hôtel'+(r.hotelRoom?' · Chambre '+r.hotelRoom:''):'')));if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
- if(r.allergies)card.append(el('p','⚠ Allergies signalées : '+r.allergies,'reservationAllergy'));
- if(r.notes)card.append(el('p','📝 '+r.notes,'reservationNotes'));
+ const card=el('article',undefined,'reservationItem rmBookingCard');
+ const line=el('div',undefined,'rmBookingGrid');
+ line.append(el('strong',r.time,'rmBookingTime'));
+ const client=el('div',undefined,'rmBookingClient');
+ const detailButton=el('button',r.client||'Client','rmBookingOpen');detailButton.type='button';
+ detailButton.setAttribute('aria-expanded',String(expanded===r.id));
+ detailButton.setAttribute('aria-label',(expanded===r.id?'Fermer':'Ouvrir')+' la fiche de '+(r.client||'cette réservation'));
+ detailButton.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});
+ client.append(detailButton);
+ if(r.type==='hotel'&&r.hotelRoom)client.append(el('small','Chambre '+r.hotelRoom,'rmBookingSub'));
+ line.append(client);
+ line.append(el('span',String(r.guests),'rmBookingGuests'));
+ line.append(el('span',r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+(r.tables[0]??'—'),'rmBookingTable'));
+ line.append(el('span',r.type==='hotel'?'Hôtel':'Extérieur','rmBookingOrigin'));
+ line.append(el('span',statuses[r.status]||r.status,'rmBookingStatus'));
+ const flags=el('div',undefined,'rmBookingFlags');
+ if(r.allergies){
+  const allergy=el('button','Allergie','rmBookingFlag rmBookingFlagAllergy');allergy.type='button';allergy.title='Consulter les allergies';
+  allergy.setAttribute('aria-label','Allergies signalées : ouvrir la fiche');
+  allergy.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});flags.append(allergy);
+ }
+ if(r.notes){
+  const note=el('button','Note','rmBookingFlag rmBookingFlagNote');note.type='button';note.title='Consulter la note';
+  note.setAttribute('aria-label','Note présente : ouvrir la fiche');
+  note.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});flags.append(note);
+ }
+ if(!flags.children.length)flags.append(el('span','—','rmBookingNoFlag'));
+ line.append(flags);card.append(line);
+ const total=r.tables.reduce((sum,n)=>sum+(TableStore.get().tables.find(t=>t.number===n)?.capacity||0),0);
+ if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
  if(expanded===r.id){
  const details=el('section',undefined,'reservationExpanded');
  details.append(el('h3','Suivi de la réservation'));
  details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
+ if(r.allergies)details.append(el('p','Allergies signalées : '+r.allergies,'reservationAllergy'));
+ if(r.notes)details.append(el('p','Note : '+r.notes,'reservationNotes'));
  if(r.confirmedAt)details.append(el('p','Confirmée le '+new Date(r.confirmedAt).toLocaleString('fr-FR')));
  if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}
  card.append(details);
@@ -382,7 +412,7 @@ function render(){
   tools.append(btn);
  }
  if(tools.children.length)actions.append(tools);
- card.append(actions);root.append(card);
+ line.append(actions);root.append(card);
  });
  window.lucide?.createIcons?.();
 }
