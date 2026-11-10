@@ -9,6 +9,15 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
  const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname==='/__sdk.mjs'){res.setHeader('Content-Type','text/javascript');res.end('export const createClient=globalThis.supabase.createClient;');return;}
+  // The app now derives its endpoint from restomanager-env.js, not from
+  // bridge/login literals. Serve a local-only replacement: NEVER allow this
+  // disposable browser harness to contact DEV or production Supabase.
+  if(pathname==='/restomanager-env.js'){
+   res.setHeader('Content-Type','text/javascript');
+   res.setHeader('Cache-Control','no-store');
+   res.end('export const supabaseEnvironment=Object.freeze('+JSON.stringify({name:'LOCAL_TEST',url, publishableKey:anonKey})+');');
+   return;
+  }
   const file=path.resolve(root,'.'+decodeURIComponent(pathname));
   if(!file.startsWith(root+path.sep)||/\/\.(git|env)(\/|$)/.test(file)){res.writeHead(404);res.end();return;}
   fs.readFile(file,(error,data)=>{if(error){res.writeHead(404);res.end();return;}
