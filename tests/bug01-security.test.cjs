@@ -43,7 +43,8 @@ test('BUG-01 creator uses verified owner login, root is only an alias',()=>{
  assert.match(creator,/value\.trim\(\)\.toLowerCase\(\)!=='root'/);
  assert.match(creator,/signInWithPassword/);
  assert.match(creator,/verifyOwner\(\)/);
- assert.match(creator,/installOwnerInbox\(\{client\}\)/);
+ assert.match(creator,/installCreatorConsole\(\{client,installOwnerInbox\}\)/);
+ assert.match(creator,/import \{installOwnerInbox\} from '\.\/creator-admin\.js/);
  assert.match(inbox,/from\('platform_reports'\)/);
  assert.match(inbox,/\.update\(\{status:selector\.value\}\)/);
  assert.match(html,/id="ownerUsername"/);
