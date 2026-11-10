@@ -9,3 +9,5 @@ Deuxième passe : sélecteur réel .restoTourLater et exécution des deux suites
 Troisième passage : fermeture du didacticiel également au démarrage de chaque contexte Mission 3.
 
 Quatrième passe : suppression de la seconde assertion obsolète sur le nom complet `#teamVenue`.
+
+Cinquième passe : test adapté au bouton Actualiser déplacé dans le menu de compte sur mobile, sans modification de l'interface.
