@@ -69,7 +69,13 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 
 ## Évolution en cours / prochaine évolution
 
-**Aucune nouvelle évolution fonctionnelle n'est engagée.** Les RM-001 à RM-004 sont désormais toutes confirmées en production par l'utilisateur le 10/11/2026. La prochaine évolution peut commencer, sous réserve d'ouvrir **une seule** nouvelle fiche et de la valider avant de passer à la suivante.
+**RM-AUDIT-01 — EN COURS (maintenance / audit, aucune nouvelle fonctionnalité).**
+
+- **Étape 1 — VALIDÉE (chargement de DEV Render uniquement)** : le déploiement DEV `8924fa6249aabd0d34e36ef1c19d17fc2e69700a` est revenu `live` sur Render le 10/11/2026 après nettoyage du cache. L'utilisateur confirme « Oui ça fonctionne j'ai effectué aucune réservation de teste ». Cela confirme l'accès/l'affichage de l'application, **pas** la création, l'édition, l'annulation, ni les deux sessions authentifiées.
+- **Étape 2 — À FAIRE** : remettre en conformité les six tests unitaires obsolètes signalés par l'audit Codex (ne pas masquer les assertions métier), puis relancer les suites sur DEV uniquement.
+- **Étape 3 — À FAIRE** : corriger le harnais des parcours Playwright (didacticiel interceptant un clic, libellé d'établissement, routage Supabase local et version SDK).
+- **Étape 4 — À TESTER** : exécuter les scénarios authentifiés sur DEV avec comptes de recette et vérifier deux sessions Réception/Restaurant ; aucune écriture de test en production.
+- Ne pas ouvrir RM-005 tant que RM-AUDIT-01 n'est pas clôturé ou explicitement reporté avec accord de l'utilisateur.
 
 ## Fiche à dupliquer pour chaque mise à jour
 
