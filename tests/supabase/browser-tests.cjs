@@ -37,6 +37,15 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
   if(loginUi){await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();await page.waitForURL('**/v3-connected.html');}
   else await page.goto(appUrl+'/v3-connected.html');
   await page.waitForFunction(readOnly=>readOnly?window.RestoSharedDataLoaded===true:window.RestoSupabaseReady===true,readOnlyPhase,{timeout:45000});
+  // The first-visit onboarding suggestion is a real, dismissible overlay.
+  // Close it through the same user-facing action before testing reservation
+  // confirmations; never force clicks or disable the tutorial in the app.
+  const welcome=page.locator('#restoTourWelcome');
+  await welcome.waitFor({state:'visible',timeout:1500}).catch(()=>{});
+  if(await welcome.isVisible()){
+   await welcome.locator('.restoTourLater').click();
+   await welcome.waitFor({state:'hidden'});
+  }
   return {context,page,errors};
  }
  async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();const card=page.locator('.reservationItem').filter({hasText:'Client fictif 1'});await card.locator('[data-reservation-action=edit]').click();await page.locator('#editForm').waitFor({state:'visible'});}
