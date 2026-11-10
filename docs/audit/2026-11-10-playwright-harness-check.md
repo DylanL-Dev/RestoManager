@@ -5,3 +5,5 @@ Contrôle non destructif des corrections de harnais DEV Clone : fermeture du did
 Nouvelle exécution CI : runner Ubuntu 24.04 épinglé après l'incompatibilité du dernier runner Ubuntu avec Playwright 1.56.1.
 
 Deuxième passe : sélecteur réel .restoTourLater et exécution des deux suites même en cas d'échec isolé.
+
+Troisième passage : fermeture du didacticiel également au démarrage de chaque contexte Mission 3.
