@@ -13,3 +13,5 @@ Quatrième passe : suppression de la seconde assertion obsolète sur le nom comp
 Cinquième passe : test adapté au bouton Actualiser déplacé dans le menu de compte sur mobile, sans modification de l'interface.
 
 Sixième passe : assertions des actions de réservation adaptées au menu « … », avec vérification positive du rôle Restaurant et refus côté Réception.
+
+Septième passe : distinguer par data-reservation-action l'action Confirmer de Réception de l'action Installer de Restaurant.
