@@ -66,7 +66,9 @@ html[data-theme="dark"] #reservationList .rmBookingFlagAllergy{background:#612b2
  #reservationList .rmBookingGrid{grid-template-columns:56px minmax(95px,1.7fr) 45px minmax(72px,.8fr) 90px 100px auto}
  #reservationList .rmBookingGrid>*:nth-child(5){display:none}
 }
-@media(max-width:760px){
+/* At 768px viewport the restaurant sidebar narrows the content pane. Switch
+   to stacked compact cards before inline row actions can overflow. */
+@media(max-width:1100px){
  #reservationList .rmBookingColumns{display:none}
  #reservationList .rmBookingCard{margin:9px 0!important;border:1px solid #d9e6dc!important;border-radius:13px!important;box-shadow:0 2px 9px #123b3410}
  #reservationList .rmBookingCard .rmBookingGrid{
