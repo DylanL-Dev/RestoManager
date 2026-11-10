@@ -7,3 +7,5 @@ Nouvelle exécution CI : runner Ubuntu 24.04 épinglé après l'incompatibilité
 Deuxième passe : sélecteur réel .restoTourLater et exécution des deux suites même en cas d'échec isolé.
 
 Troisième passage : fermeture du didacticiel également au démarrage de chaque contexte Mission 3.
+
+Quatrième passe : suppression de la seconde assertion obsolète sur le nom complet `#teamVenue`.
