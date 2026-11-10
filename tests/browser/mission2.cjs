@@ -51,7 +51,7 @@ async function edit(page,n=0){
  // instead of forcing a click through the overlay or disabling the tutorial.
  const onboarding=page.locator('#restoTourWelcome');
  if(await onboarding.isVisible()){
-  await onboarding.locator('#restoTourLater').click();
+  await onboarding.locator('.restoTourLater').click();
   await onboarding.waitFor({state:'hidden'});
  }
  await page.locator('[data-reservation-action=edit]').nth(n).click();await page.locator('#editForm').waitFor({state:'visible'});
