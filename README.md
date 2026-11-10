@@ -1,3 +1,9 @@
+## Suivi des publications DEV → V3 → MAIN
+
+Le **registre des mises à jour** et la règle « **une évolution à la fois jusqu'à validation explicite** » sont décrits dans [docs/RELEASE_TRACKER.md](docs/RELEASE_TRACKER.md). Lire et mettre à jour ce registre **avant chaque modification sur DEV** et avant toute PR V3/MAIN. Aucune publication non validée, aucune migration automatique vers Supabase production.
+
+---
+
 # RestoManager — V3 connectée à Supabase
 
 **RestoManager** est une application web responsive de gestion des réservations, des salles, des tables et du service en restauration. Elle s'adresse aux équipes **Restaurant** et **Réception**, avec une base commune Supabase, des mises à jour entre postes et une logique de placement assisté.
