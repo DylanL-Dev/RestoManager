@@ -351,3 +351,25 @@ html[data-theme="dark"] #bookingForm .bookingTypeOption strong svg{color:#a2e3bc
   min-height:48px!important;
  }
 }
+
+/* Shared layout invariant: Reception and Restaurant render the SAME modern
+   reservation form. Only the ability to choose a table differs by role. */
+html.reception #bookingForm > label.reservationField:has(#bookingTable),
+html.reception #editForm.editFormModern > label.reservationField:has(#editTable){
+ display:none!important;
+ visibility:hidden!important;
+}
+html.reception #bookingForm > .reservationAutoTable{
+ display:grid!important;
+ grid-template-rows:var(--rm-field-caption-height) var(--rm-field-height);
+}
+html.reception #bookingForm > .reservationField:not([hidden]),
+html.reception #editForm.editFormModern > .reservationField:not([hidden]){
+ box-sizing:border-box;
+ min-width:0!important;
+}
+/* Keep the remaining fields, icons, notes and form buttons identical for both roles. */
+html.reception #bookingForm > .bookingSubmitPrimary,
+html.reception #editForm.editFormModern .editFormActions button{
+ font-family:inherit;
+}
