@@ -79,9 +79,9 @@ try{
    const custom=select?.parentElement?.querySelector('.tableChoice');
    if(custom){custom.hidden=true;custom.style.setProperty('display','none','important');}
   }
-  const text=document.createElement('p');
-  text.textContent='RestoManager attribue une table disponible à l’enregistrement.';
-  document.querySelector('#bookingTable').closest('label').after(text);
+  // The unified form already includes #bookingAutoTableInfo in the third column.
+  // Do not insert a separate paragraph: it shifts the modern automatic table card
+  // to a third row in Reception and breaks Restaurant/Reception alignment.
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
   // The five menu destinations keep the same hierarchy on both staff roles.
   // Reception sees the read-only service overview, never restaurant passage actions.
