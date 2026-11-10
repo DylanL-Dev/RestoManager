@@ -108,8 +108,9 @@ test('new hotel bookings require a room in the same format as the server; exteri
  }
  for(const [type,name,room] of [['hotel','001a','001a'],['exterieur','402',null]]){
   const t=fixture({rpc:async(_name,args)=>args?.p_action==='hold'?null:{data:{}}});t.candidate.type=type;t.candidate.client=name;
+  if(type==='hotel')t.candidate.hotelRoom=room;
   await t.api.confirm(t.candidate);
-  assert.equal(t.calls.find(c=>c.args?.p_action==='confirm').args.p_room,room);
+  assert.equal(t.calls.find(c=>c.args?.p_action==='confirm').args.p_room,room?.toUpperCase()??null);
  }
 });
 test('long notes are rejected with original input intact and never silently truncated or submitted',async()=>{
