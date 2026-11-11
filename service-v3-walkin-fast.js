@@ -28,6 +28,13 @@ function choices(all){const n=Number($('walkinGuests').value);if(!Number.isInteg
 function noAvailabilityReason(all){
  const n=Number($('walkinGuests').value);
  if(!Number.isInteger(n)||n<1)return 'Indiquez un nombre de personnes valide.';
+ // A pre-existing booking for the same hotel room must not masquerade as
+ // every table being occupied. Keep normal duplicate-room protection.
+ const hotelRoom=String($('walkinRoom').value||'').trim();
+ if(document.querySelector('input[name="walkinType"]:checked')?.value!=='exterieur'&&hotelRoom){
+  const duplicate=E.findRoomConflict(draft(1),all);
+  if(duplicate)return 'Chambre '+hotelRoom+' : une réservation existe déjà sur ce créneau. Consultez-la dans Réservations avant de créer un nouveau passage. Ce blocage ne signifie pas que toutes les tables sont occupées.';
+ }
  const ranked=E.rankedTableChoices(TableStore.get().tables,window.RestoFusion?.pairs()||[],n);
  if(!ranked.length)return 'Aucune table ni fusion adaptée à '+n+' personne(s). Vérifiez les capacités dans Gestion.';
  if(n>=5&&!ranked.some(candidate=>candidate.numbers.length>1)){
