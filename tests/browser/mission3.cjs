@@ -53,6 +53,12 @@ async function open(browser,origin,role,viewport={width:390,height:844},timezone
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.clock.install({time:new Date(clock)});
  await page.goto(origin+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
+ const welcome=page.locator('#restoTourWelcome');
+ await welcome.waitFor({state:'visible',timeout:1500}).catch(()=>{});
+ if(await welcome.isVisible()){
+  await welcome.locator('.restoTourLater').click();
+  await welcome.waitFor({state:'hidden'});
+ }
  return {context,page,errors};
 }
 async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();assert.match(await page.locator('#reservationDate').locator('..').innerText(),/Choisir une date/);await page.locator('[data-reservation-action=edit]').first().click();await page.locator('#editForm').waitFor({state:'visible'})}
