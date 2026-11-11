@@ -1,6 +1,7 @@
 'use strict';
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
+const publicNotes=r=>String(r?.notes||'').replace(/\[RM:WALKIN_SEPARATE_OCCUPANT_V1\]/g,'').trim();
 const statuses={reserved:'À confirmer · Attendu',confirmed:'Confirmé · Attendu',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='upcoming',reservationSort='time',reservationSortDesc=false;
 let navEditBaseline=null,quickTableChange=null;
@@ -142,7 +143,7 @@ async function reviewCurrentEdit(){
   'Chambre : '+(current.hotelRoom||'—'), 'Date / heure : '+current.date+' à '+current.time,
   'Couverts : '+current.guests, 'Tables : '+current.tables.join(' + '),
   'Statut : '+(statuses[current.status]||current.status),
-  'Allergies : '+(current.allergies||'Aucune signalée'), 'Notes : '+(current.notes||'Aucune')
+  'Allergies : '+(current.allergies||'Aucune signalée'), 'Notes : '+(publicNotes(current)||'Aucune')
  ].join('\n');
  reviewedVersion=current.editVersion;
  $('editReloadCurrent').hidden=false;
@@ -408,7 +409,7 @@ function render(){
  status.append(icon(['completed','released'].includes(r.status)?'check-circle-2':r.status==='seated'?'users-round':r.status==='late'?'clock-alert':r.status==='cancelled'?'x-circle':'clock-3'),
   el('span',shortStatus));line.append(status);
  const flags=el('div',undefined,'rmBookingFlags');
- if(r.notes){
+ if(publicNotes(r)){
   const note=el('button',undefined,'rmBookingFlag rmBookingFlagNote');note.type='button';
   note.setAttribute('title','Consulter la note');note.setAttribute('aria-label','Note présente : ouvrir la fiche');
   note.append(icon('notebook-pen'),el('span','Note','rmBookingNoteLabel'));
@@ -430,7 +431,7 @@ function render(){
  details.append(el('h3','Suivi de la réservation'));
  details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
  if(r.allergies)details.append(el('p','Allergies signalées : '+r.allergies,'reservationAllergy'));
- if(r.notes)details.append(el('p','Note : '+r.notes,'reservationNotes'));
+ if(publicNotes(r))details.append(el('p','Note : '+publicNotes(r),'reservationNotes'));
  if(r.confirmedAt)details.append(el('p','Confirmée le '+new Date(r.confirmedAt).toLocaleString('fr-FR')));
  if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}
  card.append(details);
