@@ -35,8 +35,11 @@
   if(best){const badge=document.createElement('span');badge.className='walkinCardBadge';badge.textContent='★ Recommandée';heading.append(badge)}
   const name=document.createElement('strong');name.className='walkinCardName';name.textContent=title(numbers);
   const seats=document.createElement('span');seats.className='walkinCardDetail';
-  seats.textContent=capacity+' place'+(capacity!==1?'s':'');
-  const room=document.createElement('span');room.className='walkinCardDetail';room.textContent='Salle principale';
+  const seatsIcon=document.createElement('i');seatsIcon.dataset.lucide='users';seatsIcon.setAttribute('aria-hidden','true');
+  seats.append(seatsIcon,document.createTextNode(capacity+' place'+(capacity!==1?'s':'')));
+  const room=document.createElement('span');room.className='walkinCardDetail';
+  const roomIcon=document.createElement('i');roomIcon.dataset.lucide='map-pin';roomIcon.setAttribute('aria-hidden','true');
+  room.append(roomIcon,document.createTextNode('Salle principale'));
   const choice=document.createElement('span');choice.className='walkinCardIndicator';choice.textContent=select.value===option.value?'✓':'';
   card.append(heading,name,seats,room,choice);
   card.addEventListener('click',()=>{
@@ -58,19 +61,27 @@
   // Show up to three excellent fits, not an arbitrary large table.
   const recommended=sorted.filter(entry=>entry.capacity===minimum).slice(0,3);
   const recommendationValues=new Set(recommended.map(entry=>entry.option.value));
-  const others=sorted.filter(entry=>!recommendationValues.has(entry.option.value));
+  const allOthers=sorted.filter(entry=>!recommendationValues.has(entry.option.value));
+  const others=allOthers.slice(0,2);
   const bestGrid=$('walkinRecommendedCards'),otherGrid=$('walkinOtherCards');
   bestGrid.replaceChildren(...recommended.map(entry=>createCard(entry.option,true)));
   otherGrid.replaceChildren(...others.map(entry=>createCard(entry.option,false)));
   $('walkinAvailableCount').textContent=options.length+' table'+(options.length!==1?'s':'');
   $('walkinRecommendedCount').textContent=String(recommended.length);
   $('walkinOtherCount').textContent=String(others.length);
+  $('walkinOtherCount').setAttribute('aria-label',others.length+' autres tables affichées sur '+allOthers.length+' disponibles');
   $('walkinOtherHeading').hidden=!others.length;
   $('walkinGoOther').disabled=!others.length;
   $('walkinNoCards').hidden=options.length>0;
   if(options.length===0)$('walkinNoCards').textContent=$('walkinRecommendation')?.textContent||'Aucune table disponible pour le moment.';
   const chosen=sorted.find(entry=>entry.option.value===select.value);
   $('walkinSelectedText').textContent=chosen?'Table sélectionnée : '+title(chosen.numbers):'Aucune table sélectionnée';
+  const manual=$('walkinManualTable');
+  if(manual){
+   manual.hidden=!options.length;
+   manual.disabled=!options.length||select.disabled;
+   manual.textContent=allOthers.length>2?'Choisir manuellement · '+options.length+' options':'Choisir manuellement';
+  }
   $('walkinChangeTable').disabled=!options.length;
   deck.classList.toggle('walkinDeckEmpty',!options.length);
   const active=document.activeElement;
@@ -84,10 +95,21 @@
  window.addEventListener('restomanager:connection-state',schedule);
  $('walkinGoRecommended').addEventListener('click',()=>{$('walkinRecommendedCards').scrollIntoView({behavior:'smooth',block:'nearest'});$('walkinGoRecommended').classList.add('isActive');$('walkinGoOther').classList.remove('isActive')});
  $('walkinGoOther').addEventListener('click',()=>{$('walkinOtherCards').scrollIntoView({behavior:'smooth',block:'nearest'});$('walkinGoOther').classList.add('isActive');$('walkinGoRecommended').classList.remove('isActive')});
+ const manualButton=document.createElement('button');
+ manualButton.id='walkinManualTable';
+ manualButton.type='button';
+ manualButton.className='walkinManualTable';
+ manualButton.innerHTML='<i data-lucide="layout-grid" aria-hidden="true"></i><span>Choisir manuellement</span>';
+ deck.append(manualButton);
+ function openManual(){
+  if(!Array.from(select.options).some(option=>option.value&&!option.disabled))return;
+  window.RestoTableChoices?.open('walkinTable');
+ }
+ manualButton.addEventListener('click',openManual);
  $('walkinChangeTable').addEventListener('click',()=>{
   if(!select.options.length)return;
   // Keep the same table selector for keyboard and touch; no second data source.
-  window.RestoTableChoices?.open('walkinTable');
+  openManual();
  });
  window.RestoPassageCards={refresh:render};
  render();
