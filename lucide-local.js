@@ -48,6 +48,22 @@ const shapes={
 'check-circle-2':'<circle cx="12" cy="12" r="10"/><path d="m8 12 2.5 2.5L16 9"/>',
 'users':'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>'
 };
+/* RM-005: complete local Lucide glyphs needed by the reservation table.
+   All icons remain offline/PWA capable; no CDN or external font dependency. */
+Object.assign(shapes,{
+ 'bed-double':'<rect x="2" y="5" width="20" height="15" rx="2"/><path d="M2 10h20M2 17h20M6 10v7M6 13h5a2 2 0 0 1 2 2v2M15 10v3h7"/>',
+ 'user-round':'<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
+ 'users-round':'<path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 20v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ 'triangle-alert':'<path d="m10.3 3.9-8.2 14.2A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+ 'layers':'<path d="m12 2 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 17l9 5 9-5"/>',
+ 'notebook-pen':'<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M4 8h4M4 13h4M4 18h4M12 8h3"/><path d="m14 13 5.5-5.5a2 2 0 0 1 3 3L17 16l-4 1 1-4Z"/>',
+ 'clock-alert':'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2M18 17h.01"/>',
+ 'x-circle':'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/>',
+ 'pencil':'<path d="m15 5 4 4M4 20l4.8-1.2L21 6.6a2.83 2.83 0 0 0-4-4L4.8 14.8 4 20Z"/>',
+ 'arrow-up':'<path d="m5 12 7-7 7 7M12 19V5"/>',
+ 'arrow-down':'<path d="m5 12 7 7 7-7M12 5v14"/>',
+ 'circle-dot':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/>'
+});
 function createIcons(){
  document.querySelectorAll('[data-lucide]').forEach(el=>{
   const name=el.getAttribute('data-lucide');if(!shapes[name])return;
