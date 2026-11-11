@@ -66,3 +66,52 @@
 :is(html[data-theme="dark"],body.dark,html.dark) #passages .walkinCardName{color:#f0f9f3}
 :is(html[data-theme="dark"],body.dark,html.dark) #passages .walkinOtherHeading,
 :is(html[data-theme="dark"],body.dark,html.dark) #passages .walkinDeckHeading h3{color:#e4f8ec}
+
+/* RM-005 trial: Flex Row layout. Rollback branch: backup/dev-passage-cards-grid-20261111 */
+#passages #walkinRecommendedCards{
+ display:flex!important;
+ flex-direction:row!important;
+ flex-wrap:nowrap!important;
+ align-items:stretch;
+ gap:8px;
+ overflow-x:auto;
+ overscroll-behavior-x:contain;
+ scroll-snap-type:x proximity;
+ scrollbar-width:thin;
+ padding:2px 2px 6px;
+}
+#passages #walkinRecommendedCards>.walkinTableCard{
+ flex:0 0 calc((100% - 16px)/3)!important;
+ width:calc((100% - 16px)/3)!important;
+ max-width:none;
+ scroll-snap-align:start;
+}
+#passages #walkinOtherCards{
+ display:flex!important;
+ flex-direction:row!important;
+ flex-wrap:wrap!important;
+ align-items:stretch;
+ gap:8px;
+}
+#passages #walkinOtherCards>.walkinTableCard{
+ flex:0 0 calc((100% - 8px)/2)!important;
+ width:calc((100% - 8px)/2)!important;
+}
+@media(min-width:900px){
+ #passages #walkinRecommendedCards{gap:12px}
+ #passages #walkinRecommendedCards>.walkinTableCard{
+  flex-basis:calc((100% - 24px)/3)!important;
+  width:calc((100% - 24px)/3)!important;
+ }
+ #passages #walkinOtherCards{gap:12px}
+ #passages #walkinOtherCards>.walkinTableCard{
+  flex-basis:calc((100% - 24px)/3)!important;
+  width:calc((100% - 24px)/3)!important;
+ }
+}
+@media(max-width:359px){
+ #passages #walkinRecommendedCards>.walkinTableCard{
+  flex-basis:112px!important;
+  width:112px!important;
+ }
+}

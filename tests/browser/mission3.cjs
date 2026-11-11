@@ -454,6 +454,26 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      };
     });
     assert.ok(deck.heading?.includes('Tables disponibles maintenant'),'Passage card deck must have a clear heading');
+    const flexLayout=await form.evaluate(el=>{
+     const recommended=el.querySelector('#walkinRecommendedCards');
+     const other=el.querySelector('#walkinOtherCards');
+     const cards=[...recommended.querySelectorAll('.walkinTableCard')];
+     const rects=cards.map(card=>card.getBoundingClientRect());
+     return {
+      display:getComputedStyle(recommended).display,
+      direction:getComputedStyle(recommended).flexDirection,
+      otherDisplay:getComputedStyle(other).display,
+      otherWrap:getComputedStyle(other).flexWrap,
+      sameRow:rects.length<2||rects.every(rect=>Math.abs(rect.top-rects[0].top)<2),
+      documentOverflow:document.documentElement.scrollWidth-innerWidth
+     };
+    });
+    assert.equal(flexLayout.display,'flex','Recommended cards must render as flex');
+    assert.equal(flexLayout.direction,'row','Recommended cards must stay horizontal');
+    assert.equal(flexLayout.otherDisplay,'flex','Other available cards must render as flex');
+    assert.equal(flexLayout.otherWrap,'wrap','Other tables should wrap within viewport');
+    assert.ok(flexLayout.sameRow,'Recommended table cards must remain on one row');
+    assert.ok(flexLayout.documentOverflow<=2,'Flex Row must not create horizontal page overflow');
     assert.equal(deck.cards.length,deck.options.length,'Cards must mirror available table options');
     assert.equal(deck.selected,deck.options.length?1:0,'Exactly one table must be selected if available');
     assert.ok(deck.summary,'Chosen table summary must remain visible');
