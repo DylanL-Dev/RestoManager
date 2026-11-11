@@ -539,11 +539,23 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      window.RestoSharedReservations=[...window.RestoSharedReservations,duplicate];
      window.dispatchEvent(new Event('restomanager:v3-change'));
     });
+    await form.locator('#walkinRoom').fill('572');
+    const baselineAvailable=await form.locator('#walkinTable option').count();
     await form.locator('#walkinRoom').fill('571');
-    assert.match(await form.locator('#walkinRecommendation').innerText(),/Chambre 571 : une réservation existe déjà/);
-    assert.doesNotMatch(await form.locator('#walkinRecommendation').innerText(),/Aucune table libre/);
-    assert.equal(await form.locator('#walkinTable option').count(),0);
-    assert.equal(await form.locator('button[type=submit]').isDisabled(),true);
+    assert.match(await form.locator('#walkinSameRoomNotice').innerText(),/Chambre 571 : une réservation existe déjà/);
+    assert.equal(await form.locator('#walkinTable option').count(),baselineAvailable,
+      'Same hotel room must not make otherwise available tables disappear');
+    if(baselineAvailable){
+     assert.equal(await form.locator('button[type=submit]').isDisabled(),false);
+     const writesBefore=calls.filter(call=>call.name==='install_walkin_group_v3'||call.name==='install_walkin_group_v4').length;
+     await form.locator('button[type=submit]').click();
+     const confirmation=view.page.locator('.rmNoticeOverlay');
+     await confirmation.waitFor({state:'visible'});
+     assert.match(await confirmation.innerText(),/AUTRE personne/);
+     await confirmation.getByRole('button',{name:'Annuler'}).click();
+     assert.equal(calls.filter(call=>call.name==='install_walkin_group_v3'||call.name==='install_walkin_group_v4').length,writesBefore,
+      'Cancelling separate-occupant confirmation must not write reservations');
+    }
     await view.page.evaluate(()=>{
      window.RestoSharedReservations=window.__rm005PriorReservations;
      delete window.__rm005PriorReservations;
