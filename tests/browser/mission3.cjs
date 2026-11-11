@@ -441,6 +441,27 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     }));
     assert.equal(state.n,2);
     assert.ok(state.text.length>0,'Existing table recommendation still updates');
+    // RM-005 visual cards mirror the real table-availability select (single source of truth).
+    const deck=await form.evaluate(el=>{
+     const options=[...el.querySelectorAll('#walkinTable option')].filter(o=>o.value&&!o.disabled);
+     const cards=[...el.querySelectorAll('#walkinTableDeck .walkinTableCard')];
+     return {
+      options:options.map(o=>o.value),
+      cards:cards.map(o=>o.getAttribute('aria-label')),
+      selected:cards.filter(o=>o.getAttribute('aria-pressed')==='true').length,
+      summary:el.querySelector('#walkinSelectedText')?.textContent,
+      heading:el.querySelector('.walkinDeckHeading h3')?.textContent
+     };
+    });
+    assert.ok(deck.heading?.includes('Tables disponibles maintenant'),'Passage card deck must have a clear heading');
+    assert.equal(deck.cards.length,deck.options.length,'Cards must mirror available table options');
+    assert.equal(deck.selected,deck.options.length?1:0,'Exactly one table must be selected if available');
+    assert.ok(deck.summary,'Chosen table summary must remain visible');
+    if(deck.options.length>1){
+     const other= form.locator('#walkinTableDeck .walkinTableCard[aria-pressed="false"]').first();
+     await other.click();
+     assert.equal(await form.locator('#walkinTableDeck .walkinTableCard[aria-pressed="true"]').count(),1);
+    }
     // RM-005: never offer installation from a stale connected snapshot.
     await view.page.evaluate(()=>{window.RestoSupabaseReady=false;window.dispatchEvent(new Event('restomanager:connection-state'))});
     assert.equal(await form.locator('button[type=submit]').isDisabled(),true);
