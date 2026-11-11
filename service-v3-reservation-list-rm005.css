@@ -130,6 +130,7 @@ html[data-theme="dark"] #reservationList .rmBookingFlagAllergy{background:#612b2
    behind the Restaurant sidebar. Preserve desktop columns and phone cards. */
 #reservationList .rmBookingFlag{display:inline-flex;align-items:center;gap:4px;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 #reservationList .rmBookingFlag svg{width:13px;height:13px;flex:0 0 13px}
+#reservationList .rmBookingFlagText{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:1100px){
  #reservationList .rmBookingGuests::after{content:' pers.';font-size:10px;font-weight:500}
 }
