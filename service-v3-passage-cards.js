@@ -22,6 +22,12 @@
   return numbers.reduce((sum,n)=>sum+(Number(plan.find(t=>Number(t.number)===n)?.capacity)||0),0);
  }
  function title(numbers){return (numbers.length>1?'Tables ':'Table ')+numbers.join(' + ')}
+ function roomName(numbers){
+  const plan=TableStore.get();
+  const rooms=[...new Set(numbers.map(n=>plan.tables.find(t=>Number(t.number)===n)?.roomId))];
+  if(rooms.length!==1||!rooms[0])return 'Salle à vérifier';
+  return plan.rooms.find(room=>room.id===rooms[0])?.name||'Salle à vérifier';
+ }
  function createCard(option,best){
   const numbers=option.value.split(',').map(Number).filter(Number.isFinite);
   const capacity=tableCapacity(numbers)||Number(option.textContent.match(/(\d+) places/)?.[1])||0;
@@ -39,7 +45,7 @@
   seats.append(seatsIcon,document.createTextNode(capacity+' place'+(capacity!==1?'s':'')));
   const room=document.createElement('span');room.className='walkinCardDetail';
   const roomIcon=document.createElement('i');roomIcon.dataset.lucide='map-pin';roomIcon.setAttribute('aria-hidden','true');
-  room.append(roomIcon,document.createTextNode('Salle principale'));
+  room.append(roomIcon,document.createTextNode(roomName(numbers)));
   const choice=document.createElement('span');choice.className='walkinCardIndicator';choice.textContent=select.value===option.value?'✓':'';
   card.append(heading,name,seats,room,choice);
   card.addEventListener('click',()=>{
@@ -62,7 +68,8 @@
   const recommended=sorted.filter(entry=>entry.capacity===minimum).slice(0,3);
   const recommendationValues=new Set(recommended.map(entry=>entry.option.value));
   const allOthers=sorted.filter(entry=>!recommendationValues.has(entry.option.value));
-  const others=allOthers.slice(0,2);
+  const otherLimit=window.matchMedia('(min-width: 700px)').matches?3:2;
+  const others=allOthers.slice(0,otherLimit);
   const bestGrid=$('walkinRecommendedCards'),otherGrid=$('walkinOtherCards');
   bestGrid.replaceChildren(...recommended.map(entry=>createCard(entry.option,true)));
   otherGrid.replaceChildren(...others.map(entry=>createCard(entry.option,false)));
@@ -96,6 +103,8 @@
  select.addEventListener('change',schedule);
  window.addEventListener('restomanager:v3-change',schedule);
  window.addEventListener('restomanager:connection-state',schedule);
+ window.addEventListener('resize',schedule);
+ window.addEventListener('restomanager:v3-tables',schedule);
  $('walkinGoRecommended').addEventListener('click',()=>{$('walkinRecommendedCards').scrollIntoView({behavior:'smooth',block:'nearest'});$('walkinGoRecommended').classList.add('isActive');$('walkinGoOther').classList.remove('isActive')});
  $('walkinGoOther').addEventListener('click',()=>{$('walkinOtherCards').scrollIntoView({behavior:'smooth',block:'nearest'});$('walkinGoOther').classList.add('isActive');$('walkinGoRecommended').classList.remove('isActive')});
  const manualButton=document.createElement('button');

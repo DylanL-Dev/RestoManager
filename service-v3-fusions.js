@@ -10,11 +10,34 @@ function valid(){const tables=TableStore.get().tables;return read().filter(p=>Ar
 function groups(){
  const links=valid();
  if(!window.RestoSharedReservations)return links;
- const all=new Map(links.map(pair=>[key(pair),pair.slice().sort((a,b)=>a-b)]));
- for(const left of links)for(const right of links){
-  if(!left.some(n=>right.includes(n)))continue;
-  const group=[...new Set([...left,...right])].sort((a,b)=>a-b);
-  if(group.length===3)all.set(key(group),group);
+ // Only generate connected groups from explicitly authorised pairwise links.
+ // A chain A-B, B-C, C-D permits 3- and 4-table combinations; never bridge
+ // separate rooms or unrelated tables.
+ const all=new Map();
+ const adjacency=new Map();
+ for(const [a,b] of links){
+  if(!adjacency.has(a))adjacency.set(a,new Set());
+  if(!adjacency.has(b))adjacency.set(b,new Set());
+  adjacency.get(a).add(b);
+  adjacency.get(b).add(a);
+ }
+ let frontier=[];
+ for(const pair of links){
+  const group=pair.slice().sort((a,b)=>a-b);
+  const id=key(group);
+  if(!all.has(id)){all.set(id,group);frontier.push(group)}
+ }
+ for(let size=2;size<4;size++){
+  const next=[];
+  for(const group of frontier){
+   const neighbors=new Set(group.flatMap(n=>[...(adjacency.get(n)||[])]));
+   for(const n of neighbors){
+    if(group.includes(n))continue;
+    const expanded=[...group,n].sort((a,b)=>a-b),id=key(expanded);
+    if(!all.has(id)){all.set(id,expanded);next.push(expanded)}
+   }
+  }
+  frontier=next;
  }
  return [...all.values()];
 }
