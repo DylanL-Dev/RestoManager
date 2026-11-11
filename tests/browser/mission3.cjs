@@ -528,6 +528,28 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      await other.click();
      assert.equal(await form.locator('#walkinTableDeck .walkinTableCard[aria-pressed="true"]').count(),1);
     }
+    // RM-005 incident: hotel room already booked must not masquerade as zero free tables.
+    await view.page.evaluate(()=>{
+     window.__rm005PriorReservations=window.RestoSharedReservations;
+     const now=new Date(),pad=v=>String(v).padStart(2,'0');
+     const date=[now.getFullYear(),pad(now.getMonth()+1),pad(now.getDate())].join('-');
+     const time=pad(now.getHours())+':'+pad(now.getMinutes());
+     const duplicate={id:'room-conflict-fixture',type:'hotel',client:'571',hotelRoom:'571',
+      date,time,duration:90,guests:1,tables:[7],status:'reserved'};
+     window.RestoSharedReservations=[...window.RestoSharedReservations,duplicate];
+     window.dispatchEvent(new Event('restomanager:v3-change'));
+    });
+    await form.locator('#walkinRoom').fill('571');
+    assert.match(await form.locator('#walkinRecommendation').innerText(),/Chambre 571 : une réservation existe déjà/);
+    assert.doesNotMatch(await form.locator('#walkinRecommendation').innerText(),/Aucune table libre/);
+    assert.equal(await form.locator('#walkinTable option').count(),0);
+    assert.equal(await form.locator('button[type=submit]').isDisabled(),true);
+    await view.page.evaluate(()=>{
+     window.RestoSharedReservations=window.__rm005PriorReservations;
+     delete window.__rm005PriorReservations;
+     window.dispatchEvent(new Event('restomanager:v3-change'));
+    });
+    await form.locator('#walkinRoom').fill('');
     // RM-005: never offer installation from a stale connected snapshot.
     await view.page.evaluate(()=>{window.RestoSupabaseReady=false;window.dispatchEvent(new Event('restomanager:connection-state'))});
     assert.equal(await form.locator('button[type=submit]').isDisabled(),true);
