@@ -380,10 +380,20 @@ function render(){
  const detailButton=el('button',label,'rmBookingOpen');detailButton.type='button';
  detailButton.setAttribute('aria-expanded',String(expanded===r.id));
  detailButton.setAttribute('aria-label',(expanded===r.id?'Fermer':'Ouvrir')+' la fiche de '+label);
- detailButton.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});
+ const toggleDetails=()=>{expanded=expanded===r.id?null:r.id;render()};
+ detailButton.addEventListener('click',toggleDetails);
  clientText.append(detailButton);
  clientText.append(el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub'));
- client.append(clientText);line.append(client);
+ client.append(clientText);
+ // The phone reference includes a separate, accessible detail chevron.
+ // It is visually hidden outside of narrow cards; the original name
+ // button remains fully functional on all devices.
+ const detailChevron=el('button',undefined,'rmBookingMobileChevron');detailChevron.type='button';
+ detailChevron.setAttribute('aria-label',(expanded===r.id?'Fermer':'Ouvrir')+' la fiche de '+label);
+ detailChevron.setAttribute('aria-expanded',String(expanded===r.id));
+ detailChevron.append(icon('chevron-right'));detailChevron.addEventListener('click',toggleDetails);
+ client.append(detailChevron);
+ line.append(client);
  const guestCount=el('span',undefined,'rmBookingGuests');guestCount.append(icon('users-round'),el('b',String(r.guests)));
  guestCount.setAttribute('aria-label',String(r.guests)+' couvert'+(Number(r.guests)>1?'s':''));line.append(guestCount);
  const tableLabel=r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+(r.tables[0]??'—');
