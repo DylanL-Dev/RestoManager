@@ -19,6 +19,7 @@ try{
   await context.addInitScript(bookings=>{localStorage.setItem('restomanager_reservations',JSON.stringify(bookings))},mock);
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'/service-v3.html');
+  await page.evaluate(()=>window.RestoScreens.show('reservations'));
   await page.locator('#reservationShowAll').click();
   await page.waitForFunction(()=>document.querySelectorAll('.rmBookingCard').length>=2);
   assert.equal(await page.locator('#rmReservationFilters .reservationViewTab').count(),4);
