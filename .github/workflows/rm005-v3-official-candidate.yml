@@ -6,6 +6,16 @@ on:
 permissions:
   contents: read
 jobs:
+  legacy-unit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: npm test
   isolated-v3-browser:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -17,6 +27,5 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: node --check service-v3-reservations.js
       - run: node --check lucide-local.js
-      - run: npm test
       - run: npx playwright install --with-deps chromium
       - run: node tests/browser/rm005-v3-candidate.cjs
