@@ -567,6 +567,20 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // installing/seating or changing a table stays in the Restaurant-only menu.
    assert.equal(installBox,null,'Install action is not a separate toolbar button');
    assert.equal(changeBox,null,'Table-change action is not a separate toolbar button');
+   // RM-005 Full HD: desktop action buttons should be visually accessible
+   // and not rendered as tiny controls in the far-right table column.
+   if(viewport.width>=1440){
+    assert.ok(editBox.width>=43&&editBox.height>=43&&moreBox.width>=43&&moreBox.height>=43,
+     'Full HD edit and overflow actions must have >=44px targets');
+    const targetPlacement=await toolbar.evaluate(root=>{
+     const panel=root.closest('.rmBookingGrid'),cell=panel.children[7],actions=root;
+     const c=cell.getBoundingClientRect(),r=actions.getBoundingClientRect();
+     return {cellCenter:c.x+c.width/2,actionsCenter:r.x+r.width/2};
+    });
+    assert.ok(Math.abs(targetPlacement.cellCenter-targetPlacement.actionsCenter)<12,
+     'Full HD actions should be centered inside their table column');
+    pass(role+' Full HD reservation actions sized and aligned');
+   }
    if(viewport.width>=750){
     assert.ok(Math.abs(editBox.y-moreBox.y)<=2,
      'Tablet/desktop edit and overflow controls must align');
