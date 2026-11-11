@@ -326,9 +326,14 @@ try{
   if(error)throw window.RestoErrors?.business(error.code==='23505'?'Cette association existe déjà.':window.RestoErrors.message(error))||error;
   await window.RestoRefreshSharedService();
  };
- window.RestoInstallWalkin=async r=>{
+ window.RestoInstallWalkin=async(r,options={})=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
-  const {error}=await supabase.rpc('install_walkin_group_v3',{p_tables:idsFor(r.tables),p_guests:r.guests,p_name:r.client,p_type:r.type});
+  const params={p_tables:idsFor(r.tables),p_guests:r.guests,p_name:r.client,p_type:r.type};
+  const secondOccupant=options.allowSameRoom===true;
+  if(secondOccupant&&r.type!=='hotel')throw Error('Second occupant réservé aux clients de l’hôtel.');
+  const {error}=secondOccupant
+   ?await supabase.rpc('install_walkin_group_v4',{...params,p_allow_second_occupant:true})
+   :await supabase.rpc('install_walkin_group_v3',params);
   if(error)throw error;
   await window.RestoRefreshSharedService();
  };
