@@ -67,6 +67,7 @@ async function edit(page){await page.evaluate(()=>window.RestoScreens.show('rese
 async function submit(page){await page.locator('#editForm button[type=submit]').click()}
 async function saved(page){await page.waitForFunction(()=>document.getElementById('editForm').hidden)}
 async function message(page,match){await page.waitForFunction(value=>document.getElementById('reservationMessage').textContent.includes(value),match)}
+async function successToast(page,match){await page.waitForFunction(value=>{const toast=document.getElementById('editSuccessToast');return !toast.hidden&&toast.textContent.includes(value)&&!document.getElementById('reservationMessage').textContent.includes(value)},match)}
 async function push(page){await page.evaluate(()=>window.dispatchEvent(new Event('mission3:push')));await page.waitForFunction(()=>window.RestoSupabaseReady===true)}
 async function clean(view){assert.deepEqual(view.errors,[]);await view.context.close()}
 function pass(name){passed++;console.log('PASS mock UI '+name)}
@@ -79,7 +80,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    reset({historical:true});const view=await open(browser,origin,role);await edit(view.page);
    const before=records[0].notes;assert.ok((await view.page.locator('#editNotes').inputValue()).length>1000);assert.ok((await view.page.locator('#editAllergies').inputValue()).length>500);
    await view.page.locator('#editHotelRoom').fill('202');await submit(view.page);await saved(view.page);
-   assert.equal(records[0].notes,before);assert.equal(records[0].hotel_room,'202');pass(role+' historical long notes/allergies preserved on room edit');
+   assert.equal(records[0].notes,before);assert.equal(records[0].hotel_room,'202');await successToast(view.page,'Réservation modifiée.');pass(role+' historical long notes/allergies preserved on room edit');
    await edit(view.page);const count=calls.length;await view.page.locator('#editNotes').fill('X'.repeat(1001));await submit(view.page);
    assert.equal(calls.length,count);assert.equal((await view.page.locator('#editNotes').inputValue()).length,1001);assert.equal(await view.page.locator('#editNotes').getAttribute('aria-invalid'),'true');
    assert.equal(records[0].notes,before);await view.page.locator('#editNotes').fill('Note raccourcie');await view.page.locator('#editAllergies').fill('Noix');await submit(view.page);await saved(view.page);pass(role+' explicit changed text limits preserve draft');await clean(view);
@@ -87,11 +88,11 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   // Simulated server reallocation; real selection logic is tested in isolated PostgreSQL.
   reset();autoRightSize=true;const resized=await open(browser,origin,'reception');await edit(resized.page);
   await resized.page.locator('#editGuests').fill('10');await submit(resized.page);await saved(resized.page);
-  await message(resized.page,'table 8');
+  await successToast(resized.page,'table 8');
   assert.equal(records[0].assignedTableId,'table-8');
   await resized.page.waitForFunction(()=>window.RestoSharedReservations?.find(r=>r.id==='fictional-hotel')?.tables?.includes(8));
   await edit(resized.page);await resized.page.locator('#editGuests').fill('2');
-  await submit(resized.page);await saved(resized.page);await message(resized.page,'table 3');
+  await submit(resized.page);await saved(resized.page);await successToast(resized.page,'table 3');
   assert.equal(records[0].assignedTableId,'table-3');
   pass('Reception 2→10→2 automatically reassigned table is shown in confirmation');await clean(resized);
 
@@ -456,6 +457,20 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // placing install/edit/change-table/options together on wide viewports.
    await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
    await view.page.locator('#reservationShowAll').click();
+   // RM-005-REG-01: legacy 'active' notifications must open a real filter,
+   // preserving the targeted booking even when a different date was selected.
+   await view.page.evaluate(()=>{
+    document.getElementById('reservationDate').value='2031-01-01';
+    window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{detail:{view:'active',reservationId:'fictional-hotel'}}));
+   });
+   assert.equal(await view.page.locator('#reservationDate').inputValue(),day);
+   assert.equal(await view.page.locator('.reservationViewTab.isActive').innerText().then(s=>s.includes('À venir')),true);
+   assert.equal(await view.page.locator('.reservationExpanded').count(),1);
+   pass(role+' '+viewport.width+'px legacy active notification opens targeted upcoming booking');
+   // The compact layout checks below expect a collapsed card, not its expanded detail.
+   await view.page.locator('.rmBookingOpen').first().click();
+   assert.equal(await view.page.locator('.reservationExpanded').count(),0);
+   await view.page.locator('#reservationQuery').fill('');
    // Wait for the 230ms appScreenActive translateY entrance animation to finish.
    // Otherwise sequential boundingBox() calls capture different animation frames.
    await view.page.clock.runFor(330);

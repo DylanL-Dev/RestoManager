@@ -517,7 +517,8 @@ $('editForm').addEventListener('submit',async e=>{
    const quick=quickTableChange;quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
    editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;navEditBaseline=null;window.dispatchEvent(new Event('restomanager:editor-close'));
    const successText=quick?'Table changée avec succès — '+quick.client+' déplacée vers '+assignedLabel+'.':automaticallyReassigned?'Réservation modifiée. Attribution réajustée automatiquement : '+assignedLabel+'.':'Réservation modifiée.';
-   notify(successText);showEditSuccess(successText);
+   // Present success once, in the accessible green confirmation only.
+   $('reservationMessage').textContent='';showEditSuccess(successText);
    try{await window.RestoRefreshSharedService?.()}
    catch(_error){notify('Réservation modifiée. La mise à jour de l’affichage attend le retour de la connexion.');}
   }catch(err){
@@ -573,7 +574,7 @@ function openChangeTablePicker(id){
  if(!record||departedStatuses.has(record.status)||!['reserved','confirmed','late','arrived'].includes(record.status)){
   notify(window.RestoReception?'La Réception peut changer la table uniquement avant l’installation du client.':'Réservation indisponible pour un changement de table.');return;
  }
- reservationView='active';
+ reservationView='upcoming';
  expanded=record.id;
  render();
  // Avoid the editor scroll and the delayed requestAnimationFrame: this
@@ -612,9 +613,18 @@ window.addEventListener('restomanager:quick-change-table',event=>{
 // Notifications navigate to the appropriate status tab and expand the exact booking.
 window.addEventListener('restomanager:open-reservation',event=>{
  const data=event.detail||{};
- if(!['active','departed','all'].includes(data.view))return;
- reservationView=data.view;
- expanded=typeof data.reservationId==='string'?data.reservationId:null;
+ if(!['active','upcoming','seated','departed','all'].includes(data.view))return;
+ const target=typeof data.reservationId==='string'?load().find(r=>r.id===data.reservationId):null;
+ // 'active' was the old combined view. Route to an actual RM-005 tab,
+ // selecting the target booking's status when a notification identifies it.
+ reservationView=data.view==='active'
+  ?target?.status==='seated'?'seated':target&&departedStatuses.has(target.status)?'departed':'upcoming'
+  :data.view;
+ expanded=target?.id||null;
+ if(target){
+  $('reservationQuery').value=String(target.hotelRoom||target.client||'');
+  $('reservationDate').value=target.date;
+ }
  render();
  const card=$('reservationList')?.querySelector('.reservationExpanded');
  if(card)card.scrollIntoView({block:'nearest',behavior:'smooth'});
