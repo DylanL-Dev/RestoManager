@@ -59,6 +59,7 @@ async function edit(page){await page.evaluate(()=>window.RestoScreens.show('rese
 async function submit(page){await page.locator('#editForm button[type=submit]').click()}
 async function saved(page){await page.waitForFunction(()=>document.getElementById('editForm').hidden)}
 async function message(page,match){await page.waitForFunction(value=>document.getElementById('reservationMessage').textContent.includes(value),match)}
+async function singleSuccess(page,match){await page.waitForFunction(value=>{const toast=document.getElementById('editSuccessToast');return !toast.hidden&&toast.textContent.includes(value)&&!document.getElementById('reservationMessage').textContent.includes(value)},match)}
 async function push(page){await page.evaluate(()=>window.dispatchEvent(new Event('mission3:push')));await page.waitForFunction(()=>window.RestoSupabaseReady===true)}
 async function clean(view){assert.deepEqual(view.errors,[]);await view.context.close()}
 function pass(name){passed++;console.log('PASS mock UI '+name)}
@@ -79,11 +80,11 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   // Simulated server reallocation; real selection logic is tested in isolated PostgreSQL.
   reset();autoRightSize=true;const resized=await open(browser,origin,'reception');await edit(resized.page);
   await resized.page.locator('#editGuests').fill('10');await submit(resized.page);await saved(resized.page);
-  await message(resized.page,'table 8');
+  await singleSuccess(resized.page,'table 8');
   assert.equal(records[0].assignedTableId,'table-8');
   await resized.page.waitForFunction(()=>window.RestoSharedReservations?.find(r=>r.id==='fictional-hotel')?.tables?.includes(8));
   await edit(resized.page);await resized.page.locator('#editGuests').fill('2');
-  await submit(resized.page);await saved(resized.page);await message(resized.page,'table 3');
+  await submit(resized.page);await saved(resized.page);await singleSuccess(resized.page,'table 3');
   assert.equal(records[0].assignedTableId,'table-3');
   pass('Reception 2→10→2 automatically reassigned table is shown in confirmation');await clean(resized);
 
