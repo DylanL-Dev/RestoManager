@@ -511,11 +511,12 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(layout.scrollWidth<=layout.gridWidth+2,'Reservation content must not overflow its grid');
     assert.ok(layout.cardHeight<=195,'Compact tablet reservation must not have a large blank band');
     const rowY=i=>layout.rects[i].y;
+    const centerY=i=>layout.rects[i].y+layout.rects[i].height/2;
     if(layout.contentWidth>=660){
-     assert.ok([1,2,3,4,5,6,7].every(i=>Math.abs(rowY(i)-rowY(0))<18),
+     assert.ok([1,2,3,4,5,6,7].every(i=>Math.abs(centerY(i)-centerY(0))<6),
       'Wide tablet: all eight columns occupy one aligned row: '+JSON.stringify(layout));
     }else if(layout.contentWidth>=475){
-     assert.ok([1,2,3,5].every(i=>Math.abs(rowY(i)-rowY(0))<18),
+     assert.ok([1,2,3,5].every(i=>Math.abs(centerY(i)-centerY(0))<10),
       'Narrow tablet: time, guest, covers, table, status occupy first row: '+JSON.stringify(layout));
      assert.ok(rowY(6)>rowY(0)&&rowY(7)>rowY(0),'Narrow tablet: flags and actions belong below primary row');
     }else{
