@@ -486,6 +486,16 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(shortlist.manual,'Full manual table picker must be available');
     assert.ok(shortlist.icon,'Manual picker must use Lucide icon');
     assert.ok(deck.cards.length<=5,'Shortlist must have five cards at most');
+    const duplicateBanner=await form.evaluate(el=>({
+     options:el.querySelectorAll('#walkinTable option[value]:not([value=""]):not([disabled])').length,
+     hidden:el.querySelector('#walkinRecommendation').hidden,
+     statusText:el.querySelector('#walkinRecommendation').textContent,
+     noCardsHidden:el.querySelector('#walkinNoCards').hidden
+    }));
+    assert.equal(duplicateBanner.hidden,duplicateBanner.options>0,
+     'Recommendation banner should be hidden when selectable cards already explain the choice');
+    assert.ok(duplicateBanner.noCardsHidden,'Avoid duplicate no-availability explanation');
+    assert.ok(duplicateBanner.statusText.length>0,'Retain status text for unavailable/offline state');
     assert.equal(deck.selected,deck.options.length?1:0,'Exactly one table must be selected if available');
     assert.ok(deck.summary,'Chosen table summary must remain visible');
     if(deck.options.length){
