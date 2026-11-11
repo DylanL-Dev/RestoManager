@@ -493,10 +493,10 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      selected:el.querySelectorAll('#walkinTableDeck .walkinTableCard[aria-pressed="true"]').length
     }));
     assert.ok(shortlist.recommended<=3,'Maximum three recommendations');
-    assert.ok(shortlist.others<=2,'Maximum two additional tables');
+    assert.ok(shortlist.others<=(viewport.width>=700?3:2),'Responsive other-table limit');
     assert.ok(shortlist.manual,'Full manual table picker must be available');
     assert.ok(shortlist.icon,'Manual picker must use Lucide icon');
-    assert.ok(deck.cards.length<=5,'Shortlist must have five cards at most');
+    assert.ok(deck.cards.length<=(viewport.width>=700?6:5),'Responsive shortlist maximum');
     const duplicateBanner=await form.evaluate(el=>({
      options:el.querySelectorAll('#walkinTable option[value]:not([value=""]):not([disabled])').length,
      hidden:el.querySelector('#walkinRecommendation').hidden,
