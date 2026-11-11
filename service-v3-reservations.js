@@ -351,20 +351,30 @@ function render(){
  detailButton.setAttribute('aria-label',(expanded===r.id?'Fermer':'Ouvrir')+' la fiche de '+(r.client||'cette réservation'));
  detailButton.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});
  client.append(detailButton);
- if(r.type==='hotel'&&r.hotelRoom)client.append(el('small','Chambre '+r.hotelRoom,'rmBookingSub'));
+ if(r.type==='hotel'){
+  const room=String(r.hotelRoom||'').trim(),label=room?'Chambre '+room:'Client hôtel';
+  const clientLabel=String(r.client||'').trim().toLocaleLowerCase('fr-FR').replace(/\s+/g,' ');
+  const roomMention=room&&['chambre '+room,'ch. '+room,'ch '+room,room].includes(clientLabel);
+  client.append(el('small',roomMention?'Client hôtel':label,'rmBookingSub'));
+ }else client.append(el('small','Client extérieur','rmBookingSub'));
  line.append(client);
- line.append(el('span',String(r.guests),'rmBookingGuests'));
+ const guestCount=el('span',String(r.guests),'rmBookingGuests');
+ guestCount.setAttribute('aria-label',String(r.guests)+' couvert'+(Number(r.guests)>1?'s':''));
+ line.append(guestCount);
  line.append(el('span',r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+(r.tables[0]??'—'),'rmBookingTable'));
  line.append(el('span',r.type==='hotel'?'Hôtel':'Extérieur','rmBookingOrigin'));
  line.append(el('span',statuses[r.status]||r.status,'rmBookingStatus'));
  const flags=el('div',undefined,'rmBookingFlags');
  if(r.allergies){
-  const allergy=el('button','Allergie','rmBookingFlag rmBookingFlagAllergy');allergy.type='button';allergy.title='Consulter les allergies';
-  allergy.setAttribute('aria-label','Allergies signalées : ouvrir la fiche');
+  const allergy=el('button','Allergie · '+r.allergies,'rmBookingFlag rmBookingFlagAllergy');allergy.type='button';
+  allergy.title='Allergies signalées : '+r.allergies;
+  allergy.setAttribute('aria-label','Allergies signalées : '+r.allergies+'. Ouvrir la fiche');
+  const allergyIcon=document.createElement('i');allergyIcon.dataset.lucide='alert-triangle';allergyIcon.setAttribute('aria-hidden','true');allergy.prepend(allergyIcon);
   allergy.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});flags.append(allergy);
  }
  if(r.notes){
   const note=el('button','Note','rmBookingFlag rmBookingFlagNote');note.type='button';note.title='Consulter la note';
+  const noteIcon=document.createElement('i');noteIcon.dataset.lucide='notebook-pen';noteIcon.setAttribute('aria-hidden','true');note.prepend(noteIcon);
   note.setAttribute('aria-label','Note présente : ouvrir la fiche');
   note.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});flags.append(note);
  }
