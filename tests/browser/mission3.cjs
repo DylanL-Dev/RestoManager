@@ -459,6 +459,40 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // Wait for the 230ms appScreenActive translateY entrance animation to finish.
    // Otherwise sequential boundingBox() calls capture different animation frames.
    await view.page.clock.runFor(330);
+   // RM-005 screenshot regression: four filters in a true 2x2 grid and
+   // phone cards aligned in three readable rows, without overlapping controls.
+   if(viewport.width===390){
+    const mobile=await view.page.evaluate(()=>{
+     const rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,centerY:r.y+r.height/2}};
+     const tabs=[...document.querySelectorAll('#rmReservationFilters .reservationViewTab')].map(rect);
+     const date=document.querySelector('#reservationDate').closest('label');
+     const query=document.querySelector('#reservationQuery').closest('label');
+     const allDates=document.querySelector('#reservationShowAll');
+     const card=document.querySelector('.rmBookingCard');
+     const grid=card?.querySelector('.rmBookingGrid');
+     return {tabs,date:rect(date),query:rect(query),allDates:rect(allDates),
+      cells:grid?[...grid.children].map(rect):[],gridWidth:grid?.clientWidth,scrollWidth:grid?.scrollWidth,
+      cardHeight:card?rect(card).height:null};
+    });
+    assert.equal(mobile.tabs.length,4,'Four reservation filter buttons must be present');
+    assert.ok(Math.abs(mobile.tabs[0].y-mobile.tabs[1].y)<=2,'Mobile filters 1 and 2 must align');
+    assert.ok(Math.abs(mobile.tabs[2].y-mobile.tabs[3].y)<=2,'Mobile filters 3 and 4 must align');
+    assert.ok(mobile.tabs[2].y>mobile.tabs[0].y+24,'Mobile filter second row must follow first');
+    assert.ok(Math.abs(mobile.tabs[0].width-mobile.tabs[3].width)<=3,'Mobile filters have equal column widths');
+    assert.ok(Math.abs(mobile.date.y+mobile.date.height-(mobile.allDates.y+mobile.allDates.height))<=5,
+     'Date and Toutes les dates buttons must align at the bottom');
+    assert.ok(mobile.query.y>mobile.date.y+mobile.date.height-2,
+     'Search belongs below the date controls on a phone');
+    assert.equal(mobile.cells.length,8,'Mobile reservation card keeps all eight fields in DOM');
+    assert.ok(mobile.scrollWidth<=mobile.gridWidth+2,'Mobile reservation grid must not overflow');
+    assert.ok(mobile.cardHeight<=210,'Mobile booking remains compact without an empty middle band');
+    const cy=i=>mobile.cells[i].centerY;
+    assert.ok([1,2].every(i=>Math.abs(cy(i)-cy(0))<=9),
+     'Phone header: time, client and covers share the first row');
+    assert.ok(Math.abs(cy(3)-cy(5))<=9,'Phone second row: table and status align');
+    assert.ok(Math.abs(cy(6)-cy(7))<=12,'Phone footer: notes/allergies and actions align');
+    pass(role+' 390px booking filters 2x2, date/search and card lines aligned');
+   }
    const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
    const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
    const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
