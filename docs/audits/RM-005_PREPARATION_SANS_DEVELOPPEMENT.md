@@ -35,6 +35,20 @@ Le contexte initial de cette issue évoque un changement de journée à 01:00. I
 - Préserver les réservations, leurs dates, l'historique, les affectations, les notes, les allergies, la synchronisation Realtime et les fusions ; ne pas créer de statut nouveau parce qu'il figurait dans une image illustrative.
 - Vérification comparative avant/après sur écran de Réception PC, Restaurant PC, tablette et téléphone ; clavier, lecteurs d'écran, navigation tactile, débordement horizontal et performance avec longue liste.
 
+
+### Spécification visuelle validée — 11/11/2026
+
+Le responsable a validé explicitement la structure **Heure | Client / Chambre | Couverts | Table(s) | Origine | Statut | Indicateurs | Actions**. Ce périmètre fait partie de RM-005. L'interface actuelle réelle, blanche et vert foncé (captures PC et mobile), reste la référence ; ne pas remplacer son identité par les premiers prototypes bleu/violet ou or.
+
+- **PC** : une réservation = une ligne, table lisible, en-tête fixe si utile, largeur fluide ; colonnes alignées, pas de grands boutons répétés sous chaque réservation ; tri par heure/chambre/nom/couverts/table et filtres correspondant strictement aux statuts existants.
+- **Mobile** : carte compacte, heure + identité/chambre + couverts + table et statut prioritaires, une seconde ligne courte pour origine et indicateurs, actions tactiles ; aucun débordement horizontal imposant de faire glisser l'ensemble de la page.
+- **Indicateurs :** note = Lucide `notebook-pen`/équivalent et aperçu au toucher ; allergie = icône distincte + mot « Allergie » ou libellé clair dans le détail (urgence visuelle sans saturation). Ne jamais inférer « sans allergie » d'un champ absent. Une info critique doit être visible sans survol.
+- **Actions :** ouverture de la fiche en sélectionnant la ligne, menu secondaire « ⋯ » avec permissions réelles du rôle ; Réception ne peut installer/libérer/réattribuer manuellement une table. Conserver la disponibilité de l'édition/annulation selon règles et statut.
+- **Filtres :** la vue actuelle « En cours et à venir / Terminées et sorties / Toutes » sert de point de départ. Aucun nouveau statut « arrivé » ne sera inventé. Compteurs = catégories explicites sans addition incohérente ; dates et heures conformes au service.
+- **Maquette :** faire valider un aperçu fidèle au thème blanc/vert sur PC puis mobile avant édition métier. Les captures et dessins précédents sont des références conceptuelles, pas du code prêt à déployer.
+- **Recette :** conservation des notes, allergies, chambres, noms, états, tables fusionnées et historique ; synchro Realtime ; PC, tablette, mobile ; clavier et lecteur d'écran ; longue liste 100+ réservations ; performance et compatibilité navigateur professionnel.
+- **État :** spécification approuvée, aucune modification UI entreprise sur cette branche à ce jour. Priorité de conception réordonnée à cause du quota Codex ; la mise à jour finale reste groupée.
+
 ## Parcours de passage — clarification terrain du 10/11/2026 (hors développement RM-005)
 
 **Retour utilisateur plus récent, qui remplace le besoin initial du volet C :** dans le parcours actuel « Installer un passage », le compte Restaurant permet **déjà de choisir une table avant d'enregistrer le passage**. Le personnel peut présenter les choix de tables au client, puis n'utiliser **« Ajouter » qu'une fois le client réellement installé**. Ce fonctionnement est considéré satisfaisant par l'utilisateur ; la précédente interprétation selon laquelle une nouvelle étape de sélection serait nécessaire était prématurée.

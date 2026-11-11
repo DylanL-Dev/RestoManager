@@ -459,6 +459,116 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // Wait for the 230ms appScreenActive translateY entrance animation to finish.
    // Otherwise sequential boundingBox() calls capture different animation frames.
    await view.page.clock.runFor(330);
+   // The user's reference requires Lucide's actual `hotel` glyph for
+   // hotel customers, not the older bed-double substitute. Check the local
+   // SVG path on real DOM elements in both role views.
+   if(viewport.width===390){
+    const icons=await view.page.evaluate(()=>{
+     const hotel=document.querySelector('.rmBookingCard[data-type="hotel"] .rmBookingClient svg');
+     const exterior=document.querySelector('.rmBookingCard[data-type="external"] .rmBookingClient svg')
+       ||document.querySelector('.rmBookingCard[data-type="exterior"] .rmBookingClient svg');
+     return {hotel:hotel?[...hotel.querySelectorAll('path')].map(p=>p.getAttribute('d')):null,
+      exterior:exterior?[...exterior.querySelectorAll('path')].map(p=>p.getAttribute('d')):null};
+    });
+    assert.ok(icons.hotel?.includes('M10 22v-6.57'),
+      'Hotel reservations must display the authentic local Lucide hotel icon');
+    if(icons.exterior)assert.ok(!icons.exterior.includes('M10 22v-6.57'),
+      'External customers must keep the person icon');
+    pass(role+' mobile booking hotel guests display genuine Lucide hotel SVG');
+   }
+   // RM-005 screenshot regression: four filters in a true 2x2 grid and
+   // phone cards aligned in three readable rows, without overlapping controls.
+   if(viewport.width===390){
+    const mobile=await view.page.evaluate(()=>{
+     const rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,centerY:r.y+r.height/2}};
+     const tabs=[...document.querySelectorAll('#rmReservationFilters .reservationViewTab')].map(rect);
+     const date=document.querySelector('#reservationDate').closest('label');
+     const query=document.querySelector('#reservationQuery').closest('label');
+     const allDates=document.querySelector('#reservationShowAll');
+     const card=document.querySelector('.rmBookingCard');
+     const grid=card?.querySelector('.rmBookingGrid');
+     const chevron=card?.querySelector('.rmBookingMobileChevron');
+     const toolRail=card?.querySelector('.reservationActionTools');
+     const primary=card?.querySelector('.reservationPrimaryActions');
+     return {tabs,date:rect(date),query:rect(query),allDates:rect(allDates),
+      cells:grid?[...grid.children].map(rect):[],gridWidth:grid?.clientWidth,scrollWidth:grid?.scrollWidth,
+      cardHeight:card?rect(card).height:null,
+      chevron:chevron?rect(chevron):null,toolRail:toolRail?rect(toolRail):null,
+      buttons:toolRail?[...toolRail.querySelectorAll('button')].map(rect):[],
+      primary:primary?rect(primary):null,hasPrimaryAction:!!primary,
+      hasIndicators:!!card?.querySelector('.rmBookingFlag')};
+    });
+    assert.equal(mobile.tabs.length,4,'Four reservation filter buttons must be present');
+    assert.ok(Math.abs(mobile.tabs[0].y-mobile.tabs[1].y)<=2,'Mobile filters 1 and 2 must align');
+    assert.ok(Math.abs(mobile.tabs[2].y-mobile.tabs[3].y)<=2,'Mobile filters 3 and 4 must align');
+    assert.ok(mobile.tabs[2].y>mobile.tabs[0].y+24,'Mobile filter second row must follow first');
+    assert.ok(Math.abs(mobile.tabs[0].width-mobile.tabs[3].width)<=3,'Mobile filters have equal column widths');
+    assert.ok(Math.abs(mobile.date.y+mobile.date.height-(mobile.allDates.y+mobile.allDates.height))<=5,
+     'Date and Toutes les dates buttons must align at the bottom');
+    assert.ok(mobile.query.y>mobile.date.y+mobile.date.height-2,
+     'Search belongs below the date controls on a phone');
+    assert.equal(mobile.cells.length,8,'Mobile reservation card keeps all eight fields in DOM');
+    assert.ok(mobile.scrollWidth<=mobile.gridWidth+2,'Mobile reservation grid must not overflow');
+    assert.ok(mobile.cardHeight<=(mobile.hasPrimaryAction?245:195),
+     'Compact mobile card must avoid the oversized vertical action rail');
+    const cy=i=>mobile.cells[i].centerY;
+    assert.ok(Math.abs(cy(1)-cy(0))<=14,
+     'Phone header: time and client share the center of the first band');
+    assert.ok(Math.abs(cy(2)-cy(0))<=28,
+     'Phone covers stay inside the upper band, stacked over the table');
+    assert.ok(mobile.cells[3].y>mobile.cells[2].y+mobile.cells[2].height-3,
+     'Phone table stays below covers within the SAME upper band');
+    assert.ok(mobile.cells[5].y>=mobile.cells[0].y+mobile.cells[0].height-2,
+     'Phone lower band begins after the booking identity');
+    assert.ok(mobile.chevron&&mobile.chevron.width>=43&&mobile.chevron.height>=43,
+     'Phone booking detail chevron has a 44px accessible target');
+    assert.ok(Math.abs(mobile.chevron.centerY-mobile.cells[0].centerY)<=14,
+     'Phone chevron belongs to the compact upper band');
+    assert.ok(mobile.toolRail&&mobile.toolRail.width>=90,
+     'Phone actions share a single compact lower row');
+    assert.ok(Math.abs(mobile.toolRail.centerY-mobile.cells[5].centerY)<=11,
+     'Phone action row and status badge must align vertically');
+    assert.ok(mobile.buttons.length>=2,'Edit and overflow must both remain accessible');
+    for(const b of mobile.buttons)assert.ok(b.width>=43&&b.height>=43,
+     'Touch action targets remain 44px');
+    assert.ok(Math.abs(mobile.buttons[0].y-mobile.buttons[1].y)<=2,
+     'Edit and overflow buttons are now HORIZONTAL on the bottom row');
+    assert.ok(mobile.buttons[0].x+mobile.buttons[0].width<=mobile.buttons[1].x+2,
+     'Buttons must not overlap one another');
+    if(mobile.hasIndicators){
+     assert.ok(mobile.cells[6].y>=mobile.cells[5].y+mobile.cells[5].height-2,
+      'Notes/allergies go below the status only when they exist');
+    }else{
+     assert.ok(mobile.cells[6].height<1,'Empty notes row should be collapsed entirely');
+    }
+    if(mobile.hasPrimaryAction){
+     assert.ok(mobile.primary.y>=mobile.cells[5].y+mobile.cells[5].height-1,
+      'Reception confirmation stays visible after the action/status line');
+    }
+    pass(role+' 390px compact two-band card, horizontal actions and conditional indicators');
+   }
+   // RM-005: sort arrow stays inside its own header (Couverts/Table(s)).
+   if(viewport.width>=768){
+    const columns=await view.page.evaluate(()=>{
+     const heading=document.querySelector('#reservationList .rmBookingColumns');
+     if(!heading)return null;
+     return [...heading.children].map(col=>{
+      const a=col.getBoundingClientRect();
+      const arrow=col.querySelector('.rmBookingSort svg');
+      const b=arrow?.getBoundingClientRect();
+      return {x:a.x,right:a.right,visible:!!b&&b.width>0&&b.height>0,
+       arrow:b?{x:b.x,right:b.right}:null};
+     });
+    });
+    assert.equal(columns?.length,8,'Eight booking header columns must render on tablet/desktop');
+    for(const index of [0,1,2,3]){
+     const cell=columns[index];
+     if(!cell.visible)continue;
+     assert.ok(cell.arrow.x>=cell.x-1&&cell.arrow.right<=cell.right+1,
+      'Sort arrow must remain inside column '+index+' without overlapping another heading');
+    }
+    pass(role+' '+viewport.width+'px reservation heading sort arrows contained');
+   }
    const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
    const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
    const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
@@ -487,6 +597,20 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // installing/seating or changing a table stays in the Restaurant-only menu.
    assert.equal(installBox,null,'Install action is not a separate toolbar button');
    assert.equal(changeBox,null,'Table-change action is not a separate toolbar button');
+   // RM-005 Full HD: desktop action buttons should be visually accessible
+   // and not rendered as tiny controls in the far-right table column.
+   if(viewport.width>=1440){
+    assert.ok(editBox.width>=43&&editBox.height>=43&&moreBox.width>=43&&moreBox.height>=43,
+     'Full HD edit and overflow actions must have >=44px targets');
+    const targetPlacement=await toolbar.evaluate(root=>{
+     const panel=root.closest('.rmBookingGrid'),cell=panel.children[7],actions=root;
+     const c=cell.getBoundingClientRect(),r=actions.getBoundingClientRect();
+     return {cellCenter:c.x+c.width/2,actionsCenter:r.x+r.width/2};
+    });
+    assert.ok(Math.abs(targetPlacement.cellCenter-targetPlacement.actionsCenter)<12,
+     'Full HD actions should be centered inside their table column');
+    pass(role+' Full HD reservation actions sized and aligned');
+   }
    if(viewport.width>=750){
     assert.ok(Math.abs(editBox.y-moreBox.y)<=2,
      'Tablet/desktop edit and overflow controls must align');
@@ -495,6 +619,37 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    if(role==='reception'){
     assert.equal(await toolbar.locator('[data-reservation-action="confirm"]').count(),1,
      'Reception can still confirm a pending booking without managing the room');
+   }
+   // RM-005: verify the adaptive UI from the *actual available list width*.
+   // On a tablet with a fixed sidebar, the list can be phone-card width;
+   // on a wide tablet, the entire reservation is aligned in one row.
+   if(viewport.width===768){
+    const layout=await toolbar.evaluate(root=>{
+     const grid=root.closest('.rmBookingGrid');
+     const rc=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};
+     const rects=[...grid.children].map(rc);
+     return {contentWidth:grid.parentElement.clientWidth,gridWidth:grid.clientWidth,scrollWidth:grid.scrollWidth,
+      rects,cardHeight:grid.closest('.reservationItem').getBoundingClientRect().height};
+    });
+    assert.equal(layout.rects.length,8,'All eight reservation cells must remain mounted');
+    assert.ok(layout.scrollWidth<=layout.gridWidth+2,'Reservation content must not overflow its grid');
+    assert.ok(layout.cardHeight<=195,'Compact tablet reservation must not have a large blank band');
+    const rowY=i=>layout.rects[i].y;
+    const centerY=i=>layout.rects[i].y+layout.rects[i].height/2;
+    if(layout.contentWidth>=660){
+     assert.ok([1,2,3,4,5,6,7].every(i=>Math.abs(centerY(i)-centerY(0))<6),
+      'Wide tablet: all eight columns occupy one aligned row: '+JSON.stringify(layout));
+    }else if(layout.contentWidth>=475){
+     assert.ok([1,2,3,5].every(i=>Math.abs(centerY(i)-centerY(0))<10),
+      'Narrow tablet: time, guest, covers, table, status occupy first row: '+JSON.stringify(layout));
+     assert.ok(rowY(6)>rowY(0)&&rowY(7)>rowY(0),'Narrow tablet: flags and actions belong below primary row');
+    }else{
+     assert.ok(Math.abs(rowY(1)-rowY(2))<24,'Compact tablet: guest and covers share the top band');
+     assert.ok(rowY(6)>rowY(0)&&rowY(7)>rowY(0),'Compact tablet: alerts and actions remain in the bottom band');
+    }
+    if(artifacts){fs.mkdirSync(artifacts,{recursive:true});
+     await view.page.screenshot({path:path.join(artifacts,'rm005-reservations-tablet-'+role+'.png'),fullPage:true})}
+    pass(role+' 768px responsive reservation grid fits available panel width');
    }
    await more.click();
    const menu=view.page.getByRole('dialog',{name:'Actions de la réservation'});

@@ -87,6 +87,13 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
     const view=await open(account,true);
     assert.equal(await view.page.locator('.tableCard').count(),8);
     assert.equal(await view.page.evaluate(()=>window.RestoSupabaseReady),false);
+    // RestoSyncState changes before the status banner is repainted.
+    // Wait for the real read-only UI instead of asserting the stale
+    // intermediary connection-error banner. Do NOT bypass RLS/write checks.
+    await view.page.waitForFunction(()=>{
+     const banner=document.getElementById('serviceDataStatus');
+     return banner&&banner.dataset.state==='readonly';
+    },null,{timeout:10000});
     assert.match(await view.page.locator('#serviceDataStatus').innerText(),/mise à jour/);
     await view.page.evaluate(()=>window.RestoScreens.show('reservationForm'));
     assert.match(await view.page.locator('#availabilityInsight').innerText(),/mise à jour/);
