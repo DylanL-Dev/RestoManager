@@ -472,7 +472,8 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      const grid=card?.querySelector('.rmBookingGrid');
      return {tabs,date:rect(date),query:rect(query),allDates:rect(allDates),
       cells:grid?[...grid.children].map(rect):[],gridWidth:grid?.clientWidth,scrollWidth:grid?.scrollWidth,
-      cardHeight:card?rect(card).height:null};
+      cardHeight:card?rect(card).height:null,
+      hasPrimaryAction:!!card?.querySelector('.reservationPrimaryActions')};
     });
     assert.equal(mobile.tabs.length,4,'Four reservation filter buttons must be present');
     assert.ok(Math.abs(mobile.tabs[0].y-mobile.tabs[1].y)<=2,'Mobile filters 1 and 2 must align');
@@ -490,7 +491,13 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok([1,2].every(i=>Math.abs(cy(i)-cy(0))<=9),
      'Phone header: time, client and covers share the first row');
     assert.ok(Math.abs(cy(3)-cy(5))<=9,'Phone second row: table and status align');
-    assert.ok(Math.abs(cy(6)-cy(7))<=12,'Phone footer: notes/allergies and actions align');
+    if(mobile.hasPrimaryAction){
+     assert.ok(mobile.cells[7].y>=mobile.cells[6].y+mobile.cells[6].height-2,
+      'Reception with three actions: controls move below the alerts to preserve 44px targets');
+    }else{
+     assert.ok(Math.abs(cy(6)-cy(7))<=12,
+      'Phone footer: notes/allergies and two actions align');
+    }
     pass(role+' 390px booking filters 2x2, date/search and card lines aligned');
    }
    const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
