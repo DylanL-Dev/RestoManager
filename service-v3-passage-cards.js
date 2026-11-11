@@ -80,7 +80,7 @@
   if(manual){
    manual.hidden=!options.length;
    manual.disabled=!options.length||select.disabled;
-   manual.textContent=allOthers.length>2?'Choisir manuellement · '+options.length+' options':'Choisir manuellement';
+   manual.querySelector('span').textContent=allOthers.length>2?'Choisir manuellement · '+options.length+' options':'Choisir manuellement';
   }
   $('walkinChangeTable').disabled=!options.length;
   deck.classList.toggle('walkinDeckEmpty',!options.length);
