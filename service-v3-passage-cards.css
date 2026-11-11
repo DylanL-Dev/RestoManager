@@ -130,3 +130,7 @@
 #passages .walkinCardDetail{display:flex!important;align-items:center;gap:5px;min-width:0}
 #passages .walkinCardDetail svg{width:14px;height:14px;flex-shrink:0;color:#138363}
 :is(html[data-theme="dark"],body.dark,html.dark) #passages #walkinManualTable{color:#9ce4bd!important;border-color:#518b71!important}
+
+/* RM-005: an existing room never impersonates full occupancy. Confirm separately. */
+#passages #walkinSameRoomNotice:not([hidden]){display:block;margin:3px 0;padding:12px 14px;border-radius:12px;background:#fff5e4;border:1px solid #e7c687;color:#79551b;font-size:13px;font-weight:650;line-height:1.45}
+:is(html[data-theme="dark"],body.dark,html.dark) #passages #walkinSameRoomNotice:not([hidden]){background:#503d24;border-color:#aa8b50;color:#fff0c1}
