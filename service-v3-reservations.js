@@ -2,7 +2,7 @@
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
 const statuses={reserved:'À confirmer · Attendu',confirmed:'Confirmé · Attendu',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
-let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='active';
+let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='upcoming',reservationSort='time',reservationSortDesc=false;
 let navEditBaseline=null,quickTableChange=null;
 function showEditSuccess(message){
  const toast=$('editSuccessToast'),label=$('editSuccessText');
@@ -324,30 +324,113 @@ function showSmartPlacement(id){
 function render(){
  const date=$('reservationDate').value,query=$('reservationQuery').value.trim().toLocaleLowerCase('fr-FR');
  let list;try{list=load()}catch(e){return notify(errorMessage(e,'Impossible de lire les réservations. Réessayez après synchronisation.'))}
- list=list.filter(r=>(!date||r.date===date)&&(!query||[r.client,r.hotelRoom||'',...r.tables.map(String)].join(' ').toLocaleLowerCase('fr-FR').includes(query))).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
+ list=list.filter(r=>(!date||r.date===date)&&(!query||[r.client,r.hotelRoom||'',...r.tables.map(String)].join(' ').toLocaleLowerCase('fr-FR').includes(query)));
+ const sortValue=r=>reservationSort==='client'?(r.client||''):reservationSort==='guests'?Number(r.guests||0):reservationSort==='table'?Number(r.tables[0]||0):(r.date+'T'+r.time);
+ list.sort((a,b)=>{const va=sortValue(a),vb=sortValue(b);const cmp=typeof va==='number'?va-vb:String(va).localeCompare(String(vb),'fr',{numeric:true,sensitivity:'base'});return (reservationSortDesc?-1:1)*cmp||a.date.localeCompare(b.date)||a.time.localeCompare(b.time)});
  const root=$('reservationList');root.replaceChildren();
- const active=list.filter(r=>!departedStatuses.has(r.status));
+ const upcoming=list.filter(r=>!departedStatuses.has(r.status)&&r.status!=='seated');
+ const seated=list.filter(r=>r.status==='seated');
  const departed=list.filter(r=>departedStatuses.has(r.status));
- const tabs=el('div',undefined,'reservationViewTabs');
+ const tabs=el('div',undefined,'reservationViewTabs rmViewTabs');
  tabs.setAttribute('role','group');tabs.setAttribute('aria-label','Filtrer les réservations par suivi');
- for(const [key,label,count] of [['active','En cours et à venir',active.length],['departed','Terminées et sorties',departed.length],['all','Toutes',list.length]]){
-  const btn=el('button',label+' ('+count+')','reservationViewTab'+(reservationView===key?' isActive':''));
+ const icon=name=>{const i=document.createElement('i');i.dataset.lucide=name;i.setAttribute('aria-hidden','true');return i};
+ for(const [key,label,count,iconName] of [
+  ['upcoming','À venir',upcoming.length,'calendar-clock'],
+  ['seated','Installés / présents',seated.length,'users-round'],
+  ['departed','Terminés / sorties',departed.length,'check-circle-2'],
+  ['all','Toutes',list.length,'layers']
+ ]){
+  const btn=el('button',undefined,'reservationViewTab'+(reservationView===key?' isActive':''));
   btn.type='button';btn.setAttribute('aria-pressed',String(reservationView===key));
-  btn.addEventListener('click',()=>{reservationView=key;render()});tabs.append(btn);
+  btn.append(icon(iconName),el('span',label),el('strong',String(count),'rmViewCount'));
+  btn.addEventListener('click',()=>{reservationView=key;expanded=null;render()});tabs.append(btn);
  }
- root.append(tabs);
- const shown=reservationView==='active'?active:reservationView==='departed'?departed:list;
- if(!shown.length){root.append(el('p',list.length?'Aucune réservation dans cette catégorie.':'Aucune réservation pour cette recherche.','reservationViewEmpty'));return}
+ const tabsHost=$('rmReservationFilters')||root;
+ tabsHost.replaceChildren(tabs);
+ const shown=reservationView==='upcoming'?upcoming:reservationView==='seated'?seated:reservationView==='departed'?departed:list;
+ if(!shown.length){root.append(el('p',list.length?'Aucune réservation dans cette catégorie.':'Aucune réservation pour cette recherche.','reservationViewEmpty'));window.lucide?.createIcons?.();return}
+ const headings=el('div',undefined,'rmBookingGrid rmBookingColumns');
+ for(const [label,sortKey] of [
+  ['Heure','time'],['Client / Chambre','client'],['Couverts','guests'],
+  ['Table(s)','table'],['Origine',null],['Statut',null],['Indicateurs',null],['Actions',null]
+ ]){
+  const cell=el('span',undefined,'rmBookingColumn');
+  if(sortKey){
+   const sortButton=el('button',undefined,'rmBookingSort');sortButton.type='button';
+   sortButton.setAttribute('aria-label','Trier par '+label);sortButton.setAttribute('aria-pressed',String(reservationSort===sortKey));
+   sortButton.append(el('span',label),icon(reservationSort===sortKey?(reservationSortDesc?'arrow-down':'arrow-up'):'arrow-up-down'));
+   sortButton.addEventListener('click',()=>{reservationSortDesc=reservationSort===sortKey?!reservationSortDesc:false;reservationSort=sortKey;render()});
+   cell.append(sortButton);
+  }else cell.textContent=label;
+  headings.append(cell);
+ }
+ root.append(headings);
  shown.forEach(r=>{
- const card=el('article',undefined,'reservationItem');
- const head=el('div',undefined,'reservationHead');head.append(el('strong',r.time+' · '+r.client),el('span',statuses[r.status]||r.status,'reservationStatus'));card.append(head);const detailButton=el('button',expanded===r.id?'Masquer la fiche':'Voir la fiche et le suivi','reservationOpenDetail');detailButton.type='button';detailButton.setAttribute('aria-expanded',String(expanded===r.id));detailButton.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});card.append(detailButton);
- const total=r.tables.reduce((sum,n)=>sum+(TableStore.get().tables.find(t=>t.number===n)?.capacity||0),0);card.append(el('p',r.date+' · '+r.guests+' couvert(s) · '+(r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+r.tables[0])+(r.type==='hotel'?' · Hôtel'+(r.hotelRoom?' · Chambre '+r.hotelRoom:''):'')));if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
- if(r.allergies)card.append(el('p','⚠ Allergies signalées : '+r.allergies,'reservationAllergy'));
- if(r.notes)card.append(el('p','📝 '+r.notes,'reservationNotes'));
+ const card=el('article',undefined,'reservationItem rmBookingCard');
+ card.dataset.status=r.status;card.dataset.type=r.type;
+ const line=el('div',undefined,'rmBookingGrid');
+ const time=el('strong',undefined,'rmBookingTime');time.append(icon('clock-3'),el('span',r.time));line.append(time);
+ const client=el('div',undefined,'rmBookingClient');
+ client.append(icon(r.type==='hotel'?'hotel':'user-round'));
+ const clientText=el('div',undefined,'rmBookingClientText');
+ const room=String(r.hotelRoom||'').trim();
+ const rawClient=String(r.client||'').trim();
+ const roomMention=!!room&&['chambre '+room,'ch. '+room,'ch '+room].includes(rawClient.toLocaleLowerCase('fr-FR').replace(/\s+/g,' '));
+ const label=roomMention?'Ch. '+room:rawClient||'Client';
+ const detailButton=el('button',label,'rmBookingOpen');detailButton.type='button';
+ detailButton.setAttribute('aria-expanded',String(expanded===r.id));
+ detailButton.setAttribute('aria-label',(expanded===r.id?'Fermer':'Ouvrir')+' la fiche de '+label);
+ const toggleDetails=()=>{expanded=expanded===r.id?null:r.id;render()};
+ detailButton.addEventListener('click',toggleDetails);
+ clientText.append(detailButton);
+ clientText.append(el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub'));
+ client.append(clientText);
+ // The phone reference includes a separate, accessible detail chevron.
+ // It is visually hidden outside of narrow cards; the original name
+ // button remains fully functional on all devices.
+ const detailChevron=el('button',undefined,'rmBookingMobileChevron');detailChevron.type='button';
+ detailChevron.setAttribute('aria-label',(expanded===r.id?'Fermer':'Ouvrir')+' la fiche de '+label);
+ detailChevron.setAttribute('aria-expanded',String(expanded===r.id));
+ detailChevron.append(icon('chevron-right'));detailChevron.addEventListener('click',toggleDetails);
+ client.append(detailChevron);
+ line.append(client);
+ const guestCount=el('span',undefined,'rmBookingGuests');guestCount.append(icon('users-round'),el('b',String(r.guests)));
+ guestCount.setAttribute('aria-label',String(r.guests)+' couvert'+(Number(r.guests)>1?'s':''));line.append(guestCount);
+ const tableLabel=r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+(r.tables[0]??'—');
+ const tableCell=el('span',undefined,'rmBookingTable');tableCell.append(icon('armchair'),el('span',tableLabel));line.append(tableCell);
+ const origin=el('span',undefined,'rmBookingOrigin');origin.append(icon(r.type==='hotel'?'hotel':'user-round'),el('span',r.type==='hotel'?'Hôtel':'Extérieur'));line.append(origin);
+ const status=el('span',undefined,'rmBookingStatus');status.dataset.status=r.status;
+ const fullStatus=statuses[r.status]||r.status;
+ // List badges stay concise on PC/tablet/phone. The full operational
+ // status is preserved in the accessible label, tooltip and detail view.
+ const shortStatus=r.status==='reserved'?'À confirmer':r.status==='confirmed'?'Confirmée':fullStatus;
+ status.title=fullStatus;status.setAttribute('aria-label','Statut : '+fullStatus);
+ status.append(icon(['completed','released'].includes(r.status)?'check-circle-2':r.status==='seated'?'users-round':r.status==='late'?'clock-alert':r.status==='cancelled'?'x-circle':'clock-3'),
+  el('span',shortStatus));line.append(status);
+ const flags=el('div',undefined,'rmBookingFlags');
+ if(r.notes){
+  const note=el('button',undefined,'rmBookingFlag rmBookingFlagNote');note.type='button';
+  note.setAttribute('title','Consulter la note');note.setAttribute('aria-label','Note présente : ouvrir la fiche');
+  note.append(icon('notebook-pen'),el('span','Note','rmBookingNoteLabel'));
+  note.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});flags.append(note);
+ }
+ if(r.allergies){
+  const allergy=el('button',undefined,'rmBookingFlag rmBookingFlagAllergy');allergy.type='button';
+  allergy.title='Allergies signalées : '+r.allergies;
+  allergy.setAttribute('aria-label','Allergies signalées : '+r.allergies+'. Ouvrir la fiche');
+  allergy.append(icon('triangle-alert'),el('span','Allergie · '+r.allergies,'rmBookingFlagText'));
+  allergy.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});flags.append(allergy);
+ }
+ if(!flags.children.length)flags.append(el('span','—','rmBookingNoFlag'));
+ line.append(flags);card.append(line);
+ const total=r.tables.reduce((sum,n)=>sum+(TableStore.get().tables.find(t=>t.number===n)?.capacity||0),0);
+ if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
  if(expanded===r.id){
  const details=el('section',undefined,'reservationExpanded');
  details.append(el('h3','Suivi de la réservation'));
  details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
+ if(r.allergies)details.append(el('p','Allergies signalées : '+r.allergies,'reservationAllergy'));
+ if(r.notes)details.append(el('p','Note : '+r.notes,'reservationNotes'));
  if(r.confirmedAt)details.append(el('p','Confirmée le '+new Date(r.confirmedAt).toLocaleString('fr-FR')));
  if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}
  card.append(details);
@@ -358,7 +441,7 @@ function render(){
  const mainActions=el('div',undefined,'reservationPrimaryActions');
  const secondary=el('div',undefined,'reservationSecondaryActions');
  const extra=[];
- const makeAction=(kind,label,cls)=>{const btn=el('button',label,cls);btn.type='button';btn.dataset.reservationAction=kind;btn.addEventListener('click',()=>action(r.id,kind));return btn};
+ const makeAction=(kind,label,cls)=>{const btn=el('button',undefined,cls);btn.type='button';btn.setAttribute('aria-label',label);btn.append(icon(kind==='edit'?'pencil':kind==='confirm'?'check-circle-2':'circle-dot'),el('span',label,'rmBookingActionText'));btn.dataset.reservationAction=kind;btn.addEventListener('click',()=>action(r.id,kind));return btn};
  for(const [kind,label] of available){
   if(kind==='seated'&&!window.RestoReception)extra.push({label,run:()=>action(r.id,kind)});
   else if(kind==='completed'||kind==='confirm')mainActions.append(makeAction(kind,label,'reservationActionMain'+(kind==='confirm'?' reservationActionConfirm':'')));
@@ -382,7 +465,7 @@ function render(){
   tools.append(btn);
  }
  if(tools.children.length)actions.append(tools);
- card.append(actions);root.append(card);
+ line.append(actions);root.append(card);
  });
  window.lucide?.createIcons?.();
 }
@@ -434,7 +517,7 @@ $('editForm').addEventListener('submit',async e=>{
    const quick=quickTableChange;quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
    editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;navEditBaseline=null;window.dispatchEvent(new Event('restomanager:editor-close'));
    const successText=quick?'Table changée avec succès — '+quick.client+' déplacée vers '+assignedLabel+'.':automaticallyReassigned?'Réservation modifiée. Attribution réajustée automatiquement : '+assignedLabel+'.':'Réservation modifiée.';
-   // Only the green success notification is shown after a confirmed edit.
+   // Present success once, in the accessible green confirmation only.
    $('reservationMessage').textContent='';showEditSuccess(successText);
    try{await window.RestoRefreshSharedService?.()}
    catch(_error){notify('Réservation modifiée. La mise à jour de l’affichage attend le retour de la connexion.');}
@@ -491,7 +574,7 @@ function openChangeTablePicker(id){
  if(!record||departedStatuses.has(record.status)||!['reserved','confirmed','late','arrived'].includes(record.status)){
   notify(window.RestoReception?'La Réception peut changer la table uniquement avant l’installation du client.':'Réservation indisponible pour un changement de table.');return;
  }
- reservationView='active';
+ reservationView='upcoming';
  expanded=record.id;
  render();
  // Avoid the editor scroll and the delayed requestAnimationFrame: this
@@ -530,9 +613,18 @@ window.addEventListener('restomanager:quick-change-table',event=>{
 // Notifications navigate to the appropriate status tab and expand the exact booking.
 window.addEventListener('restomanager:open-reservation',event=>{
  const data=event.detail||{};
- if(!['active','departed','all'].includes(data.view))return;
- reservationView=data.view;
- expanded=typeof data.reservationId==='string'?data.reservationId:null;
+ if(!['active','upcoming','seated','departed','all'].includes(data.view))return;
+ const target=typeof data.reservationId==='string'?load().find(r=>r.id===data.reservationId):null;
+ // 'active' was the old combined view. Route to an actual RM-005 tab,
+ // selecting the target booking's status when a notification identifies it.
+ reservationView=data.view==='active'
+  ?target?.status==='seated'?'seated':target&&departedStatuses.has(target.status)?'departed':'upcoming'
+  :data.view;
+ expanded=target?.id||null;
+ if(target){
+  $('reservationQuery').value=String(target.hotelRoom||target.client||'');
+  $('reservationDate').value=target.date;
+ }
  render();
  const card=$('reservationList')?.querySelector('.reservationExpanded');
  if(card)card.scrollIntoView({block:'nearest',behavior:'smooth'});
