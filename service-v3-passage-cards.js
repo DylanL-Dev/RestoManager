@@ -72,8 +72,11 @@
   $('walkinOtherCount').setAttribute('aria-label',others.length+' autres tables affichées sur '+allOthers.length+' disponibles');
   $('walkinOtherHeading').hidden=!others.length;
   $('walkinGoOther').disabled=!others.length;
-  $('walkinNoCards').hidden=options.length>0;
-  if(options.length===0)$('walkinNoCards').textContent=$('walkinRecommendation')?.textContent||'Aucune table disponible pour le moment.';
+  // Cards already communicate the recommended tables. Keep the legacy status
+  // message visible only when no choice exists (closed service, sync failure, conflict).
+  const availabilityMessage=$('walkinRecommendation');
+  if(availabilityMessage)availabilityMessage.hidden=options.length>0;
+  $('walkinNoCards').hidden=true;
   const chosen=sorted.find(entry=>entry.option.value===select.value);
   $('walkinSelectedText').textContent=chosen?'Table sélectionnée : '+title(chosen.numbers):'Aucune table sélectionnée';
   const manual=$('walkinManualTable');
