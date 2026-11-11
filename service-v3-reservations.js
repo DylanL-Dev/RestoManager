@@ -390,8 +390,13 @@ function render(){
  const tableCell=el('span',undefined,'rmBookingTable');tableCell.append(icon('armchair'),el('span',tableLabel));line.append(tableCell);
  const origin=el('span',undefined,'rmBookingOrigin');origin.append(icon(r.type==='hotel'?'building-2':'user-round'),el('span',r.type==='hotel'?'Hôtel':'Extérieur'));line.append(origin);
  const status=el('span',undefined,'rmBookingStatus');status.dataset.status=r.status;
+ const fullStatus=statuses[r.status]||r.status;
+ // List badges stay concise on PC/tablet/phone. The full operational
+ // status is preserved in the accessible label, tooltip and detail view.
+ const shortStatus=r.status==='reserved'?'À confirmer':r.status==='confirmed'?'Confirmée':fullStatus;
+ status.title=fullStatus;status.setAttribute('aria-label','Statut : '+fullStatus);
  status.append(icon(['completed','released'].includes(r.status)?'check-circle-2':r.status==='seated'?'users-round':r.status==='late'?'clock-alert':r.status==='cancelled'?'x-circle':'clock-3'),
-  el('span',statuses[r.status]||r.status));line.append(status);
+  el('span',shortStatus));line.append(status);
  const flags=el('div',undefined,'rmBookingFlags');
  if(r.notes){
   const note=el('button',undefined,'rmBookingFlag rmBookingFlagNote');note.type='button';
