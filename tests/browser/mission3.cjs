@@ -467,6 +467,10 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.equal(await view.page.locator('.reservationViewTab.isActive').innerText().then(s=>s.includes('À venir')),true);
    assert.equal(await view.page.locator('.reservationExpanded').count(),1);
    pass(role+' '+viewport.width+'px legacy active notification opens targeted upcoming booking');
+   // The compact layout checks below expect a collapsed card, not its expanded detail.
+   await view.page.locator('.rmBookingOpen').first().click();
+   assert.equal(await view.page.locator('.reservationExpanded').count(),0);
+   await view.page.locator('#reservationQuery').fill('');
    // Wait for the 230ms appScreenActive translateY entrance animation to finish.
    // Otherwise sequential boundingBox() calls capture different animation frames.
    await view.page.clock.runFor(330);
