@@ -30,8 +30,8 @@ async function rpc(role,name,args){
  if(lostResponse){lostResponse=false;return {data:null,error:{code:'NETWORK',message:'Response lost after commit'}}}
  return {data:role==='reception'?{tables:['table-'+(records.indexOf(r)+1)],edit_version:r.edit_version}:r.edit_version,error:null};
 }
-async function open(browser,url,role){
- const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});
+async function open(browser,url,role,viewport={width:390,height:844}){
+ const context=await browser.newContext({viewport,isMobile:viewport.width<768,hasTouch:viewport.width<=768,serviceWorkers:'block'});
  await context.addInitScript(role=>{window.__mission2Role=role},role);
  await context.exposeFunction('__mission2Snapshot',snapshot);
  await context.exposeFunction('__mission2Rpc',(name,args)=>rpc(role,name,args));
@@ -137,6 +137,42 @@ const server=http.createServer((req,response)=>{
    assert.equal(records[0].guest_name,'Nom validé après consultation');assert.match(records[0].notes,/Arachide ajoutée par A/);
    assert.deepEqual(a.errors,[]);assert.deepEqual(b.errors,[]);await a.context.close();await b.context.close();
    passed+=3;console.log('PASS '+pair.join(' / ')+': conflict, reconnect preserving draft/version, explicit review/reload then save');
+  }
+  // Responsive RM-005 Passage UI: verify real browser layout and manual table picker,
+  // without making a reservation or calling installation RPCs.
+  for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
+   reset();const {context,page,errors}=await open(browser,url,'fb_admin',viewport);
+   await page.evaluate(()=>window.RestoScreens.show('passages'));
+   const stats=await page.evaluate(()=>{
+    const recommended=document.querySelector('#walkinRecommendedCards');
+    const others=document.querySelector('#walkinOtherCards');
+    const cards=[...recommended.querySelectorAll('.walkinTableCard')];
+    const rects=cards.map(c=>c.getBoundingClientRect());
+    const allCards=document.querySelectorAll('#walkinTableDeck .walkinTableCard');
+    return {
+     display:getComputedStyle(recommended).display,
+     direction:getComputedStyle(recommended).flexDirection,
+     recommended:cards.length,other:others.querySelectorAll('.walkinTableCard').length,
+     sameRow:rects.length<=1||rects.every(r=>Math.abs(r.top-rects[0].top)<2),
+     cards:allCards.length,svg:document.querySelectorAll('#walkinTableDeck .walkinTableCard svg').length,
+     overflow:document.documentElement.scrollWidth-innerWidth,
+     manual:document.querySelector('#walkinManualTable')?.getAttribute('type')==='button',
+     duplicateBanner:document.querySelector('#walkinRecommendation')?.hidden
+    };
+   });
+   assert.equal(stats.display,'flex','Recommended cards use flex');
+   assert.equal(stats.direction,'row','Recommended cards use flex row');
+   assert.ok(stats.recommended>0&&stats.recommended<=3,'Up to three table recommendations');
+   assert.ok(stats.other<=(viewport.width>=700?3:2),'Responsive alternative cards');
+   assert.ok(stats.sameRow,'Recommendations remain horizontally aligned');
+   assert.ok(stats.svg>=stats.cards,'Lucide icons render in dynamic table cards');
+   assert.ok(stats.overflow<=2,'No horizontal page overflow at '+viewport.width+'px');
+   assert.ok(stats.manual,'Manual table chooser is available');
+   assert.ok(stats.duplicateBanner,'Redundant recommendation banner hidden');
+   await page.locator('#walkinManualTable').click();
+   assert.equal(await page.locator('.tablePickerOverlay:not([hidden])').count(),1,'Manual picker opens');
+   assert.deepEqual(errors,[]);await context.close();
+   passed++;console.log('PASS Passage Flex Row, Lucide and manual picker '+viewport.width+'px');
   }
   console.log(JSON.stringify({passed,failed:0,backend:'in-memory mock; external network blocked',roles:['fb_admin','reception']}));
  }finally{await browser?.close();await new Promise(resolve=>server.close(resolve));}
