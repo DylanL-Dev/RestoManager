@@ -1,0 +1,22 @@
+name: V3 official RM-005 candidate validation
+on:
+  pull_request:
+    branches: [feature/refonte-service-responsive-v3]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-v3-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-audit --no-fund
+      - run: node --check service-v3-reservations.js
+      - run: node --check lucide-local.js
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/browser/rm005-v3-candidate.cjs
