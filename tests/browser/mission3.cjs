@@ -446,6 +446,11 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.equal(await form.locator('button[type=submit]').isDisabled(),true);
     assert.match(await view.page.locator('#walkinRecommendation').innerText(),/Synchronisation en cours ou connexion interrompue/);
     assert.equal(await view.page.locator('#walkinTable option').count(),0);
+    // RM-005: the same sync guard must protect one-click table release.
+    const releaseButtons=view.page.locator('#quickReleaseList .quickReleaseButton');
+    if(await releaseButtons.count())assert.equal(await releaseButtons.first().isDisabled(),true,
+     'Offline connected service must block one-click release');
+    assert.equal(await view.page.locator('#quickReleaseFeedback').count(),1);
     await view.page.evaluate(()=>{window.RestoSupabaseReady=true;window.dispatchEvent(new Event('restomanager:connection-state'))});
     assert.doesNotMatch(await view.page.locator('#walkinRecommendation').innerText(),/connexion interrompue/);
     assert.ok(state.buttons,'Stepper touch targets must remain accessible');
