@@ -441,6 +441,13 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     }));
     assert.equal(state.n,2);
     assert.ok(state.text.length>0,'Existing table recommendation still updates');
+    // RM-005: never offer installation from a stale connected snapshot.
+    await view.page.evaluate(()=>{window.RestoSupabaseReady=false;window.dispatchEvent(new Event('restomanager:connection-state'))});
+    assert.equal(await form.locator('button[type=submit]').isDisabled(),true);
+    assert.match(await view.page.locator('#walkinRecommendation').innerText(),/Synchronisation en cours ou connexion interrompue/);
+    assert.equal(await view.page.locator('#walkinTable option').count(),0);
+    await view.page.evaluate(()=>{window.RestoSupabaseReady=true;window.dispatchEvent(new Event('restomanager:connection-state'))});
+    assert.doesNotMatch(await view.page.locator('#walkinRecommendation').innerText(),/connexion interrompue/);
     assert.ok(state.buttons,'Stepper touch targets must remain accessible');
     assert.ok(state.width<=state.clientWidth+2,'Walk-in form must fit responsive viewport');
     pass(role+' '+viewport.width+'px clearer client selection, guest stepper and recommendation kept');
