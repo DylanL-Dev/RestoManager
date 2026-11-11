@@ -378,3 +378,36 @@ html[data-theme="dark"] #reservationList .rmBookingCard>.reservationExpanded{bac
  #reservationList .rmBookingClient>svg{width:14px;height:14px;flex:0 0 14px}
  #reservationList .rmBookingOpen{font-size:12px}
 }
+
+/* RM-005: prevent header sort arrows from drifting over the next column.
+   Flex contents may otherwise exceed a narrow CSS grid track, especially
+   when Chrome's text zoom is increased or the browser is pinch-zoomed. */
+#reservationList .rmBookingColumns > .rmBookingColumn{
+ min-width:0!important;max-width:100%!important;overflow:hidden!important;
+ box-sizing:border-box!important;
+}
+#reservationList .rmBookingColumns .rmBookingSort{
+ display:flex!important;align-items:center!important;justify-content:flex-start!important;
+ flex-wrap:nowrap!important;width:100%!important;max-width:100%!important;
+ min-width:0!important;overflow:hidden!important;box-sizing:border-box!important;
+ gap:3px!important;
+}
+#reservationList .rmBookingColumns .rmBookingSort > span{
+ display:block!important;min-width:0!important;max-width:100%!important;
+ overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;
+}
+#reservationList .rmBookingColumns .rmBookingSort > svg{
+ width:12px!important;height:12px!important;min-width:12px!important;
+ flex:0 0 12px!important;margin:0!important;
+}
+@container rmList (max-width:950px){
+ /* Keep headings legible on narrower tablet columns; accessible sort remains. */
+ #reservationList .rmBookingColumns .rmBookingColumn:nth-child(3) .rmBookingSort > svg,
+ #reservationList .rmBookingColumns .rmBookingColumn:nth-child(4) .rmBookingSort > svg{
+  display:none!important;
+ }
+ #reservationList .rmBookingColumns .rmBookingColumn:nth-child(3) .rmBookingSort,
+ #reservationList .rmBookingColumns .rmBookingColumn:nth-child(4) .rmBookingSort{
+  gap:0!important;
+ }
+}
