@@ -105,3 +105,19 @@ assert.equal(engine.seatingWarnings({...nextParty,time:'21:00'},[lateSeated])[0]
 assert.equal(engine.endMinutes({...lateSeated,seatedAt:undefined}),20*60+30,'Anciennes données sans horodatage');
 
 console.log('reservation-engine: scénarios métier et 1000 cas de concurrence horaire validés');
+
+ 
+// RM-005 Passage: best-fit ordering protects larger tables when smaller options work.
+const passageTables=[
+ {number:2,capacity:2,capacityMin:1},
+ {number:3,capacity:2,capacityMin:1},
+ {number:6,capacity:6,capacityMin:1},
+ {number:25,capacity:10,capacityMin:1}
+];
+const passageTwo=engine.rankedTableChoices(passageTables,[[2,3]],2);
+assert.equal(passageTwo[0].capacity,2,'2 people must not be directed to the 10-seat table');
+assert.equal(passageTwo[0].numbers.length,1,'single table wins when capacity is equal');
+const passageThree=engine.rankedTableChoices(passageTables,[[2,3]],3);
+assert.deepEqual(passageThree[0].numbers,[2,3],'3 people prefer the adapted fusion to 10 seats');
+const passageEight=engine.rankedTableChoices(passageTables,[[2,3]],8);
+assert.deepEqual(passageEight[0].numbers,[25],'8 people get the 10-seat table when no smaller setup fits');
