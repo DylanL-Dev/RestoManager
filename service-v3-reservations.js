@@ -622,7 +622,7 @@ window.addEventListener('restomanager:open-reservation',event=>{
   :data.view;
  expanded=target?.id||null;
  if(target){
-  $('reservationQuery').value='';
+  $('reservationQuery').value=String(target.hotelRoom||target.client||'');
   $('reservationDate').value=target.date;
  }
  render();
