@@ -487,10 +487,15 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      const allDates=document.querySelector('#reservationShowAll');
      const card=document.querySelector('.rmBookingCard');
      const grid=card?.querySelector('.rmBookingGrid');
+     const chevron=card?.querySelector('.rmBookingMobileChevron');
+     const toolRail=card?.querySelector('.reservationActionTools');
+     const primary=card?.querySelector('.reservationPrimaryActions');
      return {tabs,date:rect(date),query:rect(query),allDates:rect(allDates),
       cells:grid?[...grid.children].map(rect):[],gridWidth:grid?.clientWidth,scrollWidth:grid?.scrollWidth,
       cardHeight:card?rect(card).height:null,
-      hasPrimaryAction:!!card?.querySelector('.reservationPrimaryActions')};
+      chevron:chevron?rect(chevron):null,toolRail:toolRail?rect(toolRail):null,
+      buttons:toolRail?[...toolRail.querySelectorAll('button')].map(rect):[],
+      primary:primary?rect(primary):null,hasPrimaryAction:!!primary};
     });
     assert.equal(mobile.tabs.length,4,'Four reservation filter buttons must be present');
     assert.ok(Math.abs(mobile.tabs[0].y-mobile.tabs[1].y)<=2,'Mobile filters 1 and 2 must align');
@@ -503,19 +508,32 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      'Search belongs below the date controls on a phone');
     assert.equal(mobile.cells.length,8,'Mobile reservation card keeps all eight fields in DOM');
     assert.ok(mobile.scrollWidth<=mobile.gridWidth+2,'Mobile reservation grid must not overflow');
-    assert.ok(mobile.cardHeight<=210,'Mobile booking remains compact without an empty middle band');
+    assert.ok(mobile.cardHeight<=(mobile.hasPrimaryAction?285:235),
+     'Premium mobile card remains compact with permission-aware action layout');
     const cy=i=>mobile.cells[i].centerY;
-    assert.ok([1,2].every(i=>Math.abs(cy(i)-cy(0))<=9),
-     'Phone header: time, client and covers share the first row');
-    assert.ok(Math.abs(cy(3)-cy(5))<=9,'Phone second row: table and status align');
+    assert.ok([1,2].every(i=>Math.abs(cy(i)-cy(0))<=10),
+     'Phone header: time, client and covers share the first line');
+    assert.ok(Math.abs(cy(3)-cy(5))<=10,'Phone second line: table and status align');
+    assert.ok(mobile.cells[6].y>=mobile.cells[5].y+mobile.cells[5].height-2,
+     'Phone third line: allergies and notes below the status');
+    assert.ok(mobile.chevron&&mobile.chevron.width>=43&&mobile.chevron.height>=43,
+     'Phone booking has a 44px touch target to open its detail');
+    assert.ok(Math.abs(mobile.chevron.centerY-mobile.cells[0].centerY)<=12,
+     'Phone detail chevron belongs to the top line');
+    assert.ok(mobile.toolRail&&mobile.toolRail.width>=43,
+     'Phone keeps the action rail in a dedicated right-hand column');
+    assert.ok(mobile.toolRail.x>=mobile.cells[6].x+mobile.cells[6].width-1,
+     'Actions must never overlap allergy/note indicators');
+    assert.ok(mobile.buttons.length>=2,'Edit and overflow remain available');
+    for(const b of mobile.buttons)assert.ok(b.width>=43&&b.height>=43,
+     'Phone action buttons remain 44px touch targets');
+    assert.ok(mobile.buttons[1].y>=mobile.buttons[0].y+mobile.buttons[0].height-1,
+     'Phone Edit and overflow controls must be stacked vertically');
     if(mobile.hasPrimaryAction){
-     assert.ok(mobile.cells[7].y>=mobile.cells[6].y+mobile.cells[6].height-2,
-      'Reception with three actions: controls move below the alerts to preserve 44px targets');
-    }else{
-     assert.ok(Math.abs(cy(6)-cy(7))<=12,
-      'Phone footer: notes/allergies and two actions align');
+     assert.ok(mobile.primary.y>=mobile.cells[6].y+mobile.cells[6].height-2,
+      'Reception confirmation is displayed below alert fields, not hidden or overlapped');
     }
-    pass(role+' 390px booking filters 2x2, date/search and card lines aligned');
+    pass(role+' 390px premium cards, vertical action rail and readable indicators');
    }
    // RM-005: sort arrow stays inside its own header (Couverts/Table(s)).
    if(viewport.width>=768){
