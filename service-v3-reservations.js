@@ -366,10 +366,10 @@ function render(){
  line.append(el('span',statuses[r.status]||r.status,'rmBookingStatus'));
  const flags=el('div',undefined,'rmBookingFlags');
  if(r.allergies){
-  const allergy=el('button','Allergie · '+r.allergies,'rmBookingFlag rmBookingFlagAllergy');allergy.type='button';
+  const allergy=el('button',undefined,'rmBookingFlag rmBookingFlagAllergy');allergy.type='button';
   allergy.title='Allergies signalées : '+r.allergies;
   allergy.setAttribute('aria-label','Allergies signalées : '+r.allergies+'. Ouvrir la fiche');
-  const allergyIcon=document.createElement('i');allergyIcon.dataset.lucide='alert-triangle';allergyIcon.setAttribute('aria-hidden','true');allergy.prepend(allergyIcon);
+  const allergyIcon=document.createElement('i');allergyIcon.dataset.lucide='alert-triangle';allergyIcon.setAttribute('aria-hidden','true');allergy.append(allergyIcon,el('span','Allergie · '+r.allergies,'rmBookingFlagText'));
   allergy.addEventListener('click',()=>{expanded=expanded===r.id?null:r.id;render()});flags.append(allergy);
  }
  if(r.notes){
