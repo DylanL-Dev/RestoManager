@@ -434,7 +434,8 @@ $('editForm').addEventListener('submit',async e=>{
    const quick=quickTableChange;quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
    editing=null;editingBase=null;reviewedVersion=null;chosenTables=[];$('editForm').hidden=true;navEditBaseline=null;window.dispatchEvent(new Event('restomanager:editor-close'));
    const successText=quick?'Table changée avec succès — '+quick.client+' déplacée vers '+assignedLabel+'.':automaticallyReassigned?'Réservation modifiée. Attribution réajustée automatiquement : '+assignedLabel+'.':'Réservation modifiée.';
-   notify(successText);showEditSuccess(successText);
+   // Only the green success notification is shown after a confirmed edit.
+   $('reservationMessage').textContent='';showEditSuccess(successText);
    try{await window.RestoRefreshSharedService?.()}
    catch(_error){notify('Réservation modifiée. La mise à jour de l’affichage attend le retour de la connexion.');}
   }catch(err){
