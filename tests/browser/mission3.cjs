@@ -496,6 +496,29 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.equal(await toolbar.locator('[data-reservation-action="confirm"]').count(),1,
      'Reception can still confirm a pending booking without managing the room');
    }
+   // RM-005: tablet keeps the information on two compact rows, not a tall card.
+   if(viewport.width===768){
+    const tablet=await toolbar.evaluate(root=>{
+     const grid=root.closest('.rmBookingGrid');
+     const rects=[...grid.children].map(el=>{
+      const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};
+     });
+     return {gridWidth:grid.clientWidth,scrollWidth:grid.scrollWidth,rects,
+      cardHeight:grid.closest('.reservationItem').getBoundingClientRect().height};
+    });
+    assert.equal(tablet.rects.length,8,'Reservation tablet row contains all eight data cells');
+    assert.ok(tablet.scrollWidth<=tablet.gridWidth+2,'Tablet reservation row must not overflow');
+    assert.ok(tablet.cardHeight<=165,'Tablet reservation card should stay compact');
+    for(const i of [1,2,3,5]){
+     assert.ok(Math.abs(tablet.rects[i].y-tablet.rects[0].y)<19,
+      'Tablet primary reservation fields must share the first line');
+    }
+    assert.ok(tablet.rects[6].y>tablet.rects[0].y,'Tablet indicators belong to line 2');
+    assert.ok(tablet.rects[7].y>tablet.rects[0].y,'Tablet actions belong to line 2');
+    if(artifacts){fs.mkdirSync(artifacts,{recursive:true});
+     await view.page.screenshot({path:path.join(artifacts,'rm005-reservations-tablet-'+role+'.png'),fullPage:true})}
+    pass(role+' 768px compact two-line reservation grid');
+   }
    await more.click();
    const menu=view.page.getByRole('dialog',{name:'Actions de la réservation'});
    await menu.waitFor();
