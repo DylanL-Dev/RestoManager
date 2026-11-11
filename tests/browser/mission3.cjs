@@ -517,6 +517,28 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     }
     pass(role+' 390px booking filters 2x2, date/search and card lines aligned');
    }
+   // RM-005: sort arrow stays inside its own header (Couverts/Table(s)).
+   if(viewport.width>=768){
+    const columns=await view.page.evaluate(()=>{
+     const heading=document.querySelector('#reservationList .rmBookingColumns');
+     if(!heading)return null;
+     return [...heading.children].map(col=>{
+      const a=col.getBoundingClientRect();
+      const arrow=col.querySelector('.rmBookingSort svg');
+      const b=arrow?.getBoundingClientRect();
+      return {x:a.x,right:a.right,visible:!!b&&b.width>0&&b.height>0,
+       arrow:b?{x:b.x,right:b.right}:null};
+     });
+    });
+    assert.equal(columns?.length,8,'Eight booking header columns must render on tablet/desktop');
+    for(const index of [0,1,2,3]){
+     const cell=columns[index];
+     if(!cell.visible)continue;
+     assert.ok(cell.arrow.x>=cell.x-1&&cell.arrow.right<=cell.right+1,
+      'Sort arrow must remain inside column '+index+' without overlapping another heading');
+    }
+    pass(role+' '+viewport.width+'px reservation heading sort arrows contained');
+   }
    const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
    const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
    const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
