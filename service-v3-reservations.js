@@ -1,6 +1,9 @@
 'use strict';
 (function(){
 const $=id=>document.getElementById(id),KEY='restomanager_reservations',E=ReservationEngine;
+const SECOND_OCCUPANT_TAG='[RM:WALKIN_SEPARATE_OCCUPANT_V1]';
+const publicNotes=r=>String(r?.notes||'').replaceAll(SECOND_OCCUPANT_TAG,'').trim();
+const savedNotes=(input,previous)=>String(input||'').trim()+(String(previous?.notes||'').includes(SECOND_OCCUPANT_TAG)?SECOND_OCCUPANT_TAG:'');
 const statuses={reserved:'À confirmer · Attendu',confirmed:'Confirmé · Attendu',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='upcoming',reservationSort='time',reservationSortDesc=false;
 let navEditBaseline=null,quickTableChange=null;
@@ -107,7 +110,7 @@ function openSharedEditor(r,{directTablePicker=false}={}){
  $('editSuccessToast')?.setAttribute('hidden','');updateEditSummary(r);
  editing=r.id;editingBase=window.ReservationEdit.capture(r);reviewedVersion=null;chosenTables=r.tables.slice();
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
- $('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
+ $('editNotes').value=publicNotes(r);$('editAllergies').value=r.allergies||'';
  $('editHotelRoomField').hidden=r.type!=='hotel';$('editHotelRoom').disabled=r.type!=='hotel';
  $('editHotelRoom').value=r.type==='hotel'?(r.hotelRoom||''):'';
  $('editConflict').hidden=true;$('editCurrentValues').textContent='';$('editReloadCurrent').hidden=true;
@@ -142,7 +145,7 @@ async function reviewCurrentEdit(){
   'Chambre : '+(current.hotelRoom||'—'), 'Date / heure : '+current.date+' à '+current.time,
   'Couverts : '+current.guests, 'Tables : '+current.tables.join(' + '),
   'Statut : '+(statuses[current.status]||current.status),
-  'Allergies : '+(current.allergies||'Aucune signalée'), 'Notes : '+(current.notes||'Aucune')
+  'Allergies : '+(current.allergies||'Aucune signalée'), 'Notes : '+(publicNotes(current)||'Aucune')
  ].join('\n');
  reviewedVersion=current.editVersion;
  $('editReloadCurrent').hidden=false;
@@ -189,7 +192,7 @@ async function action(id,kind){
  if(kind==='confirm'){if(!['reserved','late'].includes(r.status))return notify('Cette réservation ne peut pas être confirmée.');all[i]={...r,status:'confirmed',confirmedAt:new Date().toISOString()};save(all);notify('Réservation confirmée.');return}
  if(kind==='edit'){
  editing=id;editingBase=window.ReservationEdit.capture(r);chosenTables=r.tables.slice();
- $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editNotes').value=r.notes||'';$('editAllergies').value=r.allergies||'';
+ $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editNotes').value=publicNotes(r);$('editAllergies').value=r.allergies||'';
  editChoices();$('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
  }
  if(kind==='cancel'&&!await window.RestoDialog.confirm('Annuler la réservation de '+r.client+' ?',{title:'Annuler la réservation',danger:true,acceptLabel:'Annuler la réservation'}))return;
@@ -408,7 +411,7 @@ function render(){
  status.append(icon(['completed','released'].includes(r.status)?'check-circle-2':r.status==='seated'?'users-round':r.status==='late'?'clock-alert':r.status==='cancelled'?'x-circle':'clock-3'),
   el('span',shortStatus));line.append(status);
  const flags=el('div',undefined,'rmBookingFlags');
- if(r.notes){
+ if(publicNotes(r)){
   const note=el('button',undefined,'rmBookingFlag rmBookingFlagNote');note.type='button';
   note.setAttribute('title','Consulter la note');note.setAttribute('aria-label','Note présente : ouvrir la fiche');
   note.append(icon('notebook-pen'),el('span','Note','rmBookingNoteLabel'));
@@ -430,7 +433,7 @@ function render(){
  details.append(el('h3','Suivi de la réservation'));
  details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
  if(r.allergies)details.append(el('p','Allergies signalées : '+r.allergies,'reservationAllergy'));
- if(r.notes)details.append(el('p','Note : '+r.notes,'reservationNotes'));
+ if(publicNotes(r))details.append(el('p','Note : '+publicNotes(r),'reservationNotes'));
  if(r.confirmedAt)details.append(el('p','Confirmée le '+new Date(r.confirmedAt).toLocaleString('fr-FR')));
  if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}
  card.append(details);
@@ -497,7 +500,7 @@ $('editForm').addEventListener('submit',async e=>{
    if(!editingBase||editingBase.id!==editing)throw business('Rouvrez la fiche avant de la modifier.');
    const updated=window.ReservationEdit.candidate(editingBase,{client:$('editClient').value,hotelRoom:$('editHotelRoom').value,
     date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:window.RestoReception?editingBase.tables.slice():chosenTables,
-    notes:$('editNotes').value,allergies:$('editAllergies').value});
+    notes:savedNotes($('editNotes').value,editingBase||editing),allergies:$('editAllergies').value});
    if(!window.RestoReception&&!updated.tables.length)throw business('Choisissez une table');
    // A nameless booking uses a descriptive label; the name field is optional.
    if(!Number.isInteger(updated.guests)||updated.guests<1||updated.guests>50)throw business('Nombre de couverts invalide.');
@@ -540,7 +543,7 @@ $('editForm').addEventListener('submit',async e=>{
  if(tables.length>1&&!sameTables(tables,previous.tables)&&!(window.RestoFusion?.pairs()||[]).some(p=>sameTables(p,tables)))throw business('Fusion non autorisée.');
  if(tables.length>1&&new Set(tables.map(n=>plan.tables.find(t=>t.number===n).roomId)).size>1)throw business('Fusion entre salles différentes interdite.');
  if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0]).capacityMin||1))throw business('Capacité minimale non respectée.');
- const updated=window.ReservationEdit.candidate(previous,{hotelRoom:previous.hotelRoom,notes:$('editNotes').value,allergies:$('editAllergies').value,client:$('editClient').value,date:$('editDate').value,time:$('editTime').value,guests,tables});
+ const updated=window.ReservationEdit.candidate(previous,{hotelRoom:previous.hotelRoom,notes:savedNotes($('editNotes').value,editingBase||editing),allergies:$('editAllergies').value,client:$('editClient').value,date:$('editDate').value,time:$('editTime').value,guests,tables});
  const check=E.validate(updated,all,editing);if(!check.valid)throw business(check.errors.join(' '));
  const rushCheck=window.RestoRush.evaluate(updated,all,editing);
  if(rushCheck.blocked&&!await window.RestoRush.confirm(updated,all,editing))return;
