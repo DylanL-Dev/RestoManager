@@ -474,9 +474,28 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.equal(flexLayout.otherWrap,'wrap','Other tables should wrap within viewport');
     assert.ok(flexLayout.sameRow,'Recommended table cards must remain on one row');
     assert.ok(flexLayout.documentOverflow<=2,'Flex Row must not create horizontal page overflow');
-    assert.equal(deck.cards.length,deck.options.length,'Cards must mirror available table options');
+    const shortlist=await form.evaluate(el=>({
+     recommended:el.querySelectorAll('#walkinRecommendedCards .walkinTableCard').length,
+     others:el.querySelectorAll('#walkinOtherCards .walkinTableCard').length,
+     manual:!!el.querySelector('#walkinManualTable'),
+     icon:!!el.querySelector('#walkinManualTable svg'),
+     selected:el.querySelectorAll('#walkinTableDeck .walkinTableCard[aria-pressed="true"]').length
+    }));
+    assert.ok(shortlist.recommended<=3,'Maximum three recommendations');
+    assert.ok(shortlist.others<=2,'Maximum two additional tables');
+    assert.ok(shortlist.manual,'Full manual table picker must be available');
+    assert.ok(shortlist.icon,'Manual picker must use Lucide icon');
+    assert.ok(deck.cards.length<=5,'Shortlist must have five cards at most');
     assert.equal(deck.selected,deck.options.length?1:0,'Exactly one table must be selected if available');
     assert.ok(deck.summary,'Chosen table summary must remain visible');
+    if(deck.options.length){
+     await form.locator('#walkinManualTable').click();
+     assert.equal(await view.page.locator('.tablePickerOverlay:not([hidden])').count(),1,
+      'Manual button must open all table choices');
+     assert.equal(await view.page.locator('.tablePickerGrid .tablePickerCard').count(),deck.options.length,
+      'Manual picker must offer every available choice');
+     await view.page.locator('.tablePickerClose').click();
+    }
     if(deck.options.length>1){
      const other= form.locator('#walkinTableDeck .walkinTableCard[aria-pressed="false"]').first();
      await other.click();
