@@ -495,7 +495,8 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
       cardHeight:card?rect(card).height:null,
       chevron:chevron?rect(chevron):null,toolRail:toolRail?rect(toolRail):null,
       buttons:toolRail?[...toolRail.querySelectorAll('button')].map(rect):[],
-      primary:primary?rect(primary):null,hasPrimaryAction:!!primary};
+      primary:primary?rect(primary):null,hasPrimaryAction:!!primary,
+      hasIndicators:!!card?.querySelector('.rmBookingFlag')};
     });
     assert.equal(mobile.tabs.length,4,'Four reservation filter buttons must be present');
     assert.ok(Math.abs(mobile.tabs[0].y-mobile.tabs[1].y)<=2,'Mobile filters 1 and 2 must align');
@@ -508,32 +509,41 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      'Search belongs below the date controls on a phone');
     assert.equal(mobile.cells.length,8,'Mobile reservation card keeps all eight fields in DOM');
     assert.ok(mobile.scrollWidth<=mobile.gridWidth+2,'Mobile reservation grid must not overflow');
-    assert.ok(mobile.cardHeight<=(mobile.hasPrimaryAction?285:235),
-     'Premium mobile card remains compact with permission-aware action layout');
+    assert.ok(mobile.cardHeight<=(mobile.hasPrimaryAction?245:195),
+     'Compact mobile card must avoid the oversized vertical action rail');
     const cy=i=>mobile.cells[i].centerY;
-    assert.ok([1,2].every(i=>Math.abs(cy(i)-cy(0))<=10),
-     'Phone header: time, client and covers share the first line');
-    assert.ok(Math.abs(cy(3)-cy(5))<=10,'Phone second line: table and status align');
-    assert.ok(mobile.cells[6].y>=mobile.cells[5].y+mobile.cells[5].height-2,
-     'Phone third line: allergies and notes below the status');
+    assert.ok([1,2].every(i=>Math.abs(cy(i)-cy(0))<=14),
+     'Phone header: time, client and covers share the first band');
+    assert.ok(mobile.cells[3].y>mobile.cells[2].y+mobile.cells[2].height-3,
+     'Phone table stays below covers within the SAME upper band');
+    assert.ok(mobile.cells[5].y>=mobile.cells[0].y+mobile.cells[0].height-2,
+     'Phone lower band begins after the booking identity');
     assert.ok(mobile.chevron&&mobile.chevron.width>=43&&mobile.chevron.height>=43,
-     'Phone booking has a 44px touch target to open its detail');
-    assert.ok(Math.abs(mobile.chevron.centerY-mobile.cells[0].centerY)<=12,
-     'Phone detail chevron belongs to the top line');
-    assert.ok(mobile.toolRail&&mobile.toolRail.width>=43,
-     'Phone keeps the action rail in a dedicated right-hand column');
-    assert.ok(mobile.toolRail.x>=mobile.cells[6].x+mobile.cells[6].width-1,
-     'Actions must never overlap allergy/note indicators');
-    assert.ok(mobile.buttons.length>=2,'Edit and overflow remain available');
+     'Phone booking detail chevron has a 44px accessible target');
+    assert.ok(Math.abs(mobile.chevron.centerY-mobile.cells[0].centerY)<=14,
+     'Phone chevron belongs to the compact upper band');
+    assert.ok(mobile.toolRail&&mobile.toolRail.width>=90,
+     'Phone actions share a single compact lower row');
+    assert.ok(Math.abs(mobile.toolRail.centerY-mobile.cells[5].centerY)<=11,
+     'Phone action row and status badge must align vertically');
+    assert.ok(mobile.buttons.length>=2,'Edit and overflow must both remain accessible');
     for(const b of mobile.buttons)assert.ok(b.width>=43&&b.height>=43,
-     'Phone action buttons remain 44px touch targets');
-    assert.ok(mobile.buttons[1].y>=mobile.buttons[0].y+mobile.buttons[0].height-1,
-     'Phone Edit and overflow controls must be stacked vertically');
-    if(mobile.hasPrimaryAction){
-     assert.ok(mobile.primary.y>=mobile.cells[6].y+mobile.cells[6].height-2,
-      'Reception confirmation is displayed below alert fields, not hidden or overlapped');
+     'Touch action targets remain 44px');
+    assert.ok(Math.abs(mobile.buttons[0].y-mobile.buttons[1].y)<=2,
+     'Edit and overflow buttons are now HORIZONTAL on the bottom row');
+    assert.ok(mobile.buttons[0].x+mobile.buttons[0].width<=mobile.buttons[1].x+2,
+     'Buttons must not overlap one another');
+    if(mobile.hasIndicators){
+     assert.ok(mobile.cells[6].y>=mobile.cells[5].y+mobile.cells[5].height-2,
+      'Notes/allergies go below the status only when they exist');
+    }else{
+     assert.ok(mobile.cells[6].height<1,'Empty notes row should be collapsed entirely');
     }
-    pass(role+' 390px premium cards, vertical action rail and readable indicators');
+    if(mobile.hasPrimaryAction){
+     assert.ok(mobile.primary.y>=mobile.cells[5].y+mobile.cells[5].height-1,
+      'Reception confirmation stays visible after the action/status line');
+    }
+    pass(role+' 390px compact two-band card, horizontal actions and conditional indicators');
    }
    // RM-005: sort arrow stays inside its own header (Couverts/Table(s)).
    if(viewport.width>=768){
