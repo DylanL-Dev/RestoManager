@@ -51,6 +51,13 @@ async function open(browser,url,role){
   await welcome.waitFor({state:'hidden'});
  }
  await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();
+ // RM-005 release smoke: four real filters and compact reservation cards.
+ assert.equal(await page.locator('#rmReservationFilters .reservationViewTab').count(),4);
+ assert.equal(await page.locator('.rmBookingCard').count(),2);
+ assert.equal(await page.locator('.rmBookingCard[data-type="hotel"] .rmBookingFlagAllergy').count(),1);
+ assert.equal(await page.locator('.rmBookingCard[data-type="hotel"] .rmBookingClient svg').count(),1);
+ const mobileLayout=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,list:document.querySelector('#reservationList')?.scrollWidth}));
+ assert.ok(mobileLayout.document<=mobileLayout.viewport+2,'Mobile interface must not overflow '+JSON.stringify(mobileLayout));
  return {context,page,errors};
 }
 async function edit(page,n=0){
