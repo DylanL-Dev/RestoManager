@@ -30,6 +30,9 @@ function noAvailabilityReason(all){
  if(!Number.isInteger(n)||n<1)return 'Indiquez un nombre de personnes valide.';
  const ranked=E.rankedTableChoices(TableStore.get().tables,window.RestoFusion?.pairs()||[],n);
  if(!ranked.length)return 'Aucune table ni fusion adaptée à '+n+' personne(s). Vérifiez les capacités dans Gestion.';
+ if(n>=5&&!ranked.some(candidate=>candidate.numbers.length>1)){
+  return 'Aucune fusion autorisée pour '+n+' personnes. Dans Gestion > Fusions, associez des tables voisines de la même salle. Les groupes de 3 ou 4 tables seront proposés automatiquement.';
+ }
  const result=E.validate(draft(ranked[0].numbers),all);
  if(result.errors.some(error=>error.includes('Horaire hors des services')))return 'Service fermé à cette heure. Vérifiez les horaires du midi et du soir dans Gestion du restaurant.';
  return 'Aucune table libre pour '+n+' personne(s) pendant 1 h 30. Vérifiez les arrivées à venir et les tables encore occupées.';
