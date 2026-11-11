@@ -496,28 +496,35 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.equal(await toolbar.locator('[data-reservation-action="confirm"]').count(),1,
      'Reception can still confirm a pending booking without managing the room');
    }
-   // RM-005: tablet keeps the information on two compact rows, not a tall card.
+   // RM-005: verify the adaptive UI from the *actual available list width*.
+   // On a tablet with a fixed sidebar, the list can be phone-card width;
+   // on a wide tablet, the entire reservation is aligned in one row.
    if(viewport.width===768){
-    const tablet=await toolbar.evaluate(root=>{
+    const layout=await toolbar.evaluate(root=>{
      const grid=root.closest('.rmBookingGrid');
-     const rects=[...grid.children].map(el=>{
-      const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};
-     });
-     return {gridWidth:grid.clientWidth,scrollWidth:grid.scrollWidth,rects,
-      cardHeight:grid.closest('.reservationItem').getBoundingClientRect().height};
+     const rc=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};
+     const rects=[...grid.children].map(rc);
+     return {contentWidth:grid.parentElement.clientWidth,gridWidth:grid.clientWidth,scrollWidth:grid.scrollWidth,
+      rects,cardHeight:grid.closest('.reservationItem').getBoundingClientRect().height};
     });
-    assert.equal(tablet.rects.length,8,'Reservation tablet row contains all eight data cells');
-    assert.ok(tablet.scrollWidth<=tablet.gridWidth+2,'Tablet reservation row must not overflow');
-    assert.ok(tablet.cardHeight<=165,'Tablet reservation card should stay compact');
-    for(const i of [1,2,3,5]){
-     assert.ok(Math.abs(tablet.rects[i].y-tablet.rects[0].y)<19,
-      'Tablet primary reservation fields must share the first line');
+    assert.equal(layout.rects.length,8,'All eight reservation cells must remain mounted');
+    assert.ok(layout.scrollWidth<=layout.gridWidth+2,'Reservation content must not overflow its grid');
+    assert.ok(layout.cardHeight<=195,'Compact tablet reservation must not have a large blank band');
+    const rowY=i=>layout.rects[i].y;
+    if(layout.contentWidth>=660){
+     assert.ok([1,2,3,4,5,6,7].every(i=>Math.abs(rowY(i)-rowY(0))<18),
+      'Wide tablet: all eight columns occupy one aligned row: '+JSON.stringify(layout));
+    }else if(layout.contentWidth>=475){
+     assert.ok([1,2,3,5].every(i=>Math.abs(rowY(i)-rowY(0))<18),
+      'Narrow tablet: time, guest, covers, table, status occupy first row: '+JSON.stringify(layout));
+     assert.ok(rowY(6)>rowY(0)&&rowY(7)>rowY(0),'Narrow tablet: flags and actions belong below primary row');
+    }else{
+     assert.ok(Math.abs(rowY(1)-rowY(2))<24,'Compact tablet: guest and covers share the top band');
+     assert.ok(rowY(6)>rowY(0)&&rowY(7)>rowY(0),'Compact tablet: alerts and actions remain in the bottom band');
     }
-    assert.ok(tablet.rects[6].y>tablet.rects[0].y,'Tablet indicators belong to line 2');
-    assert.ok(tablet.rects[7].y>tablet.rects[0].y,'Tablet actions belong to line 2');
     if(artifacts){fs.mkdirSync(artifacts,{recursive:true});
      await view.page.screenshot({path:path.join(artifacts,'rm005-reservations-tablet-'+role+'.png'),fullPage:true})}
-    pass(role+' 768px compact two-line reservation grid');
+    pass(role+' 768px responsive reservation grid fits available panel width');
    }
    await more.click();
    const menu=view.page.getByRole('dialog',{name:'Actions de la réservation'});
