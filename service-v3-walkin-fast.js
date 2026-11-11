@@ -26,7 +26,17 @@ function choices(all){const n=Number($('walkinGuests').value);if(!Number.isInteg
  })}
 
 function noAvailabilityReason(all){const tables=TableStore.get().tables;const n=Number($('walkinGuests').value);const suitable=tables.filter(t=>n>=Number(t.capacityMin||1)&&n<=Number(t.capacity));const result=E.validate(draft(suitable[0]?.number||1),all);const hours=result.errors.find(e=>e.includes('Horaire hors des services'));if(hours)return 'Service fermé à cette heure. Vérifiez les horaires du midi et du soir dans Gestion du restaurant.';return 'Aucune table libre pour '+n+' personne(s) à cette heure. Vérifiez les réservations et les tables occupées.'}
-function refresh(){updateGuestControls();try{const available=choices(load()),sel=$('walkinTable'),best=(sel.dataset.manual===String($('walkinGuests').value)&&available.find(c=>c.value===sel.value))||available[0];sel.replaceChildren();for(const t of available){const o=document.createElement('option');o.value=t.value;o.textContent=t.label+' · '+t.capacity+' places';sel.append(o)}if(best)sel.value=best.value;window.RestoTableChoices?.refresh('walkinTable');$('walkinRecommendation').textContent=best?'✓ '+best.label+' disponible · '+best.capacity+' places':noAvailabilityReason(load());$('walkinForm').querySelector('button[type=submit]').disabled=installing||!best;document.querySelectorAll('[data-walkin-pax]').forEach(b=>b.classList.toggle('selected',b.dataset.walkinPax===$('walkinGuests').value))}catch(e){$('walkinRecommendation').textContent='Disponibilités indisponibles : '+e.message;$('walkinForm').querySelector('button[type=submit]').disabled=true}}
+function refresh(){updateGuestControls();try{
+ // On the connected service, never offer a table while the shared snapshot is stale.
+ // A local fallback would give the impression that a passage can be installed offline.
+ if(document.getElementById('integrationGate')&&window.RestoSupabaseReady!==true){
+  const select=$('walkinTable');select.replaceChildren();select.dataset.manual='';
+  $('walkinRecommendation').textContent='Synchronisation en cours ou connexion interrompue. Réessayez après le retour de la connexion.';
+  $('walkinForm').querySelector('button[type=submit]').disabled=true;
+  window.RestoTableChoices?.refresh('walkinTable');
+  return;
+ }
+ const available=choices(load()),sel=$('walkinTable'),best=(sel.dataset.manual===String($('walkinGuests').value)&&available.find(c=>c.value===sel.value))||available[0];sel.replaceChildren();for(const t of available){const o=document.createElement('option');o.value=t.value;o.textContent=t.label+' · '+t.capacity+' places';sel.append(o)}if(best)sel.value=best.value;window.RestoTableChoices?.refresh('walkinTable');$('walkinRecommendation').textContent=best?'✓ '+best.label+' disponible · '+best.capacity+' places':noAvailabilityReason(load());$('walkinForm').querySelector('button[type=submit]').disabled=installing||!best;document.querySelectorAll('[data-walkin-pax]').forEach(b=>b.classList.toggle('selected',b.dataset.walkinPax===$('walkinGuests').value))}catch(e){$('walkinRecommendation').textContent='Disponibilités indisponibles : '+e.message;$('walkinForm').querySelector('button[type=submit]').disabled=true}}
 function updateGuestControls(){
  const input=$('walkinGuests'),value=Number(input.value);
  const valid=Number.isInteger(value)&&value>=1;
@@ -60,5 +70,5 @@ $('walkinForm').addEventListener('submit',async e=>{e.preventDefault();if(instal
  await window.RestoInstallWalkin(r);
 }else{
  localStorage.setItem(KEY,JSON.stringify(all.concat(r)));if(!load().some(item=>item.id===r.id))throw Error('Enregistrement non confirmé. Vérifiez le service avant de réessayer.');}window.dispatchEvent(new Event('restomanager:v3-change'));const msg='Installation réussie · '+best.label+' · '+r.guests+' personne(s) · '+(r.type==='hotel'?'Hôtel':'Extérieur');$('walkinFeedback').textContent='✓ '+msg;showInstallNotice(msg);$('walkinRoom').value='';refresh()}catch(err){const msg='Installation impossible : '+err.message;$('walkinFeedback').textContent=msg;showInstallNotice(msg,true)}finally{installing=false;refresh()}});
-window.addEventListener('restomanager:v3-change',refresh);window.addEventListener('storage',e=>{if(e.key===KEY)refresh()});window.addEventListener('focus',refresh);setInterval(refresh,30000);refresh();
+window.addEventListener('restomanager:v3-change',refresh);window.addEventListener('restomanager:connection-state',refresh);window.addEventListener('storage',e=>{if(e.key===KEY)refresh()});window.addEventListener('focus',refresh);setInterval(refresh,30000);refresh();
 })();
