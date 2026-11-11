@@ -21,7 +21,7 @@ try{
   await page.goto(origin+'/service-v3.html');
   await page.evaluate(()=>window.RestoScreens.show('reservations'));
   await page.locator('#reservationShowAll').click();
-  await page.waitForFunction(()=>document.querySelectorAll('.rmBookingCard').length>=2);
+  await page.waitForFunction(()=>document.querySelectorAll('.rmBookingCard').length>=2,{},{timeout:5000}).catch(async err=>{console.error('DEBUG V3',JSON.stringify(await page.evaluate(()=>({screen:window.RestoScreens?.current?.(),date:document.getElementById('reservationDate')?.value,filters:document.querySelectorAll('.reservationViewTab').length,text:document.getElementById('reservationList')?.innerText,records:localStorage.getItem('restomanager_reservations')?.slice(0,600)}))));console.error('PAGE ERRORS',errors);throw err});
   assert.equal(await page.locator('#rmReservationFilters .reservationViewTab').count(),4);
   assert.equal(await page.locator('.rmBookingCard').count(),2);
   assert.equal(await page.locator('.rmBookingCard[data-type=hotel] [data-reservation-action=edit]').count(),1);
