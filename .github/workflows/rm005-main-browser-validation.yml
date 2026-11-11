@@ -1,0 +1,23 @@
+name: RM-005 MAIN browser release verification
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  isolated-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Connected reservation editing and notification
+        run: npm run test:mission2:browser
+      # The full historical Mission 3 audit is separate; this release verifies the
+      # affected reservation paths and the four approved RM-005 filters.

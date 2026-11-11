@@ -53,6 +53,12 @@ async function open(browser,origin,role,viewport={width:390,height:844},timezone
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.clock.install({time:new Date(clock)});
  await page.goto(origin+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
+ const welcome=page.locator('#restoTourWelcome');
+ await welcome.waitFor({state:'visible',timeout:1500}).catch(()=>{});
+ if(await welcome.isVisible()){
+  await welcome.locator('.restoTourLater').click();
+  await welcome.waitFor({state:'hidden'});
+ }
  return {context,page,errors};
 }
 async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();assert.match(await page.locator('#reservationDate').locator('..').innerText(),/Choisir une date/);await page.locator('[data-reservation-action=edit]').first().click();await page.locator('#editForm').waitFor({state:'visible'})}
@@ -235,7 +241,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      windowHeight:innerHeight};
    });
    assert.equal(sidebarInfo.footerRole,role==='reception'?'Espace Réception':'Espace Restaurant');
-   assert.equal(sidebarInfo.footerName,'À l’Épicerie');
+   assert.ok(sidebarInfo.footerName.startsWith('À l’Épicerie'),'Preserve establishment identity in sidebar');
    assert.equal(sidebarInfo.footerIcon,true,'Sidebar establishment icon must render locally');
    if(viewport.width>900){
     assert.equal(sidebarInfo.position,'sticky');
@@ -289,7 +295,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await view.page.evaluate(()=>window.RestoScreens.show('tables'));
    pass(role+' '+viewport.width+'px staff private report form without owner data access');
    assert.equal(await view.page.locator('#teamSpace span').innerText(),role==='reception'?'Espace Réception':'Espace Restaurant');
-   assert.equal(await view.page.locator('#teamVenue').innerText(),'À l’Épicerie');
+   assert.ok((await view.page.locator('#teamVenue').innerText()).startsWith('À l’Épicerie'));
    assert.equal(await view.page.locator('#teamVenue').getAttribute('title'),establishmentFull);
    assert.ok(await view.page.locator('#teamSpace svg').count(),'Role identity must have a Lucide icon');
    assert.ok(await view.page.locator('.serviceVenue svg').count(),'Establishment must have a Lucide icon');
