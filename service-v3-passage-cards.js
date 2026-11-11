@@ -18,7 +18,7 @@
  form.append(summary);
  const $=id=>document.getElementById(id);
  function tableCapacity(numbers){
-  const plan=window.TableStore?.get()?.tables||[];
+  const plan=typeof TableStore!=='undefined'?TableStore.get().tables:[];
   return numbers.reduce((sum,n)=>sum+(Number(plan.find(t=>Number(t.number)===n)?.capacity)||0),0);
  }
  function title(numbers){return (numbers.length>1?'Tables ':'Table ')+numbers.join(' + ')}
