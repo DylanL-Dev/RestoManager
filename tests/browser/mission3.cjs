@@ -124,6 +124,17 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   await management.page.waitForFunction(()=>document.getElementById('shift-lunch-start').value==='11:30');
   assert.equal(await management.page.locator('#restaurantDefaultDuration').inputValue(),'120');assert.match(await management.page.locator('#tableAdminList').innerText(),/Table 1 · 1–8 places/);
   assert.deepEqual(await management.page.evaluate(()=>window.RestoFusion.pairs()),[[3,4]]);
+  // RM-005: a chain of authorised neighbouring pairs enables 6- and 8-cover fusions.
+  sharedChanges.fusionLinks=[
+   {table_a:'table-3',table_b:'table-4'},
+   {table_a:'table-4',table_b:'table-5'},
+   {table_a:'table-5',table_b:'table-6'}
+  ];await push(management.page);
+  const fusionGroups=await management.page.evaluate(()=>window.RestoFusion.pairs());
+  assert.ok(fusionGroups.some(group=>group.join(',')==='3,4,5'),'Three 2-seat tables can form 6 places');
+  assert.ok(fusionGroups.some(group=>group.join(',')==='3,4,5,6'),'Four linked 2-seat tables can form 8 places');
+  assert.ok(fusionGroups.every(group=>group.length<=4),'Only safe 2-, 3- and 4-table combinations are generated');
+  sharedChanges.fusionLinks=[{table_a:'table-3',table_b:'table-4'}];await push(management.page);
   await management.page.evaluate(()=>{const input=document.getElementById('shift-lunch-start');input.value='11:45';input.dispatchEvent(new Event('input',{bubbles:true}))});await push(management.page);
   assert.equal(await management.page.locator('#shift-lunch-start').inputValue(),'11:45');pass('atomic snapshot refreshes hours, tables and fusions without resetting an unrelated unsaved hours draft');await clean(management);
   for(const role of ['fb_admin','reception'])for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
@@ -498,6 +509,12 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(duplicateBanner.statusText.length>0,'Retain status text for unavailable/offline state');
     assert.equal(deck.selected,deck.options.length?1:0,'Exactly one table must be selected if available');
     assert.ok(deck.summary,'Chosen table summary must remain visible');
+    const actualRooms=await form.locator('.walkinTableCard .walkinCardDetail').allTextContents();
+    if(actualRooms.length)assert.ok(actualRooms.some(text=>text.includes('Salle fictive')),
+     'Table cards must show the configured room name, not a hard-coded Salle principale');
+    const visibleOtherCount=await form.locator('#walkinOtherCards .walkinTableCard').count();
+    assert.ok(visibleOtherCount<=(viewport.width>=700?3:2),
+     'Tablet and desktop show 3 other tables, mobile shows 2');
     if(deck.options.length){
      await form.locator('#walkinManualTable').click();
      assert.equal(await view.page.locator('.tablePickerOverlay:not([hidden])').count(),1,
