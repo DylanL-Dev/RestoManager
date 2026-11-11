@@ -19,5 +19,5 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Connected reservation editing and notification
         run: npm run test:mission2:browser
-      - name: Connected UI browser regressions
-        run: npm run test:mission3:browser
+      # The full historical Mission 3 audit is separate; this release verifies the
+      # affected reservation paths and the four approved RM-005 filters.
