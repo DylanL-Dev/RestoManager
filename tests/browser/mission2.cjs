@@ -43,6 +43,13 @@ async function open(browser,url,role){
  });
  const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(url+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
+ // Real first-visit tutorial must be dismissed before clicking reservations.
+ const welcome=page.locator('#restoTourWelcome');
+ await welcome.waitFor({state:'visible',timeout:1500}).catch(()=>{});
+ if(await welcome.isVisible()){
+  await welcome.locator('.restoTourLater').click();
+  await welcome.waitFor({state:'hidden'});
+ }
  await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();
  return {context,page,errors};
 }
