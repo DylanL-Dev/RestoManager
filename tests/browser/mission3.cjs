@@ -456,6 +456,16 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // placing install/edit/change-table/options together on wide viewports.
    await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
    await view.page.locator('#reservationShowAll').click();
+   // RM-005-REG-01: legacy 'active' notifications must open a real filter,
+   // preserving the targeted booking even when a different date was selected.
+   await view.page.evaluate(()=>{
+    document.getElementById('reservationDate').value='2031-01-01';
+    window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{detail:{view:'active',reservationId:'fictional-hotel'}}));
+   });
+   assert.equal(await view.page.locator('#reservationDate').inputValue(),day);
+   assert.equal(await view.page.locator('.reservationViewTab.isActive').innerText().then(s=>s.includes('À venir')),true);
+   assert.equal(await view.page.locator('.reservationExpanded').count(),1);
+   pass(role+' '+viewport.width+'px legacy active notification opens targeted upcoming booking');
    // Wait for the 230ms appScreenActive translateY entrance animation to finish.
    // Otherwise sequential boundingBox() calls capture different animation frames.
    await view.page.clock.runFor(330);
