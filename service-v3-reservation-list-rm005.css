@@ -83,7 +83,17 @@ html[data-theme="dark"] #reservationList .rmBookingFlagAllergy{background:#612b2
  #reservationList .rmBookingGrid>*:nth-child(6){grid-area:2/1}
  #reservationList .rmBookingGrid>*:nth-child(7){grid-area:2/3}
  #reservationList .rmBookingGrid>*:nth-child(8){grid-area:3/1/4/4;justify-content:flex-end;border-top:1px solid #e5eee8;padding-top:8px!important}
- #reservationList .rmBookingCard .reservationActions button{min-height:36px}
+ #reservationList .rmBookingCard .reservationActions{
+  flex-wrap:nowrap!important;align-items:center!important;gap:6px!important;
+}
+#reservationList .rmBookingCard .reservationPrimaryActions,
+#reservationList .rmBookingCard .reservationSecondaryActions,
+#reservationList .rmBookingCard .reservationActionTools{
+  flex-wrap:nowrap!important;align-items:center!important;gap:5px!important;
+}
+#reservationList .rmBookingCard .reservationActions button{
+  min-height:36px;flex-shrink:0;
+}
  #reservationList .rmBookingStatus{font-size:10px}
 }
 @media(prefers-reduced-motion:reduce){#reservationList .rmBookingCard{animation:none!important}}
