@@ -55,7 +55,7 @@ async function open(browser,url,role){
  assert.equal(await page.locator('#rmReservationFilters .reservationViewTab').count(),4);
  assert.equal(await page.locator('.rmBookingCard').count(),2);
  assert.equal(await page.locator('.rmBookingCard[data-type="hotel"] .rmBookingFlagAllergy').count(),1);
- assert.equal(await page.locator('.rmBookingCard[data-type="hotel"] .rmBookingClient svg').count(),1);
+ assert.equal(await page.locator('.rmBookingCard[data-type="hotel"] .rmBookingClient > svg').count(),1);
  const mobileLayout=await page.evaluate(()=>({viewport:innerWidth,document:document.documentElement.scrollWidth,list:document.querySelector('#reservationList')?.scrollWidth}));
  assert.ok(mobileLayout.document<=mobileLayout.viewport+2,'Mobile interface must not overflow '+JSON.stringify(mobileLayout));
  return {context,page,errors};
