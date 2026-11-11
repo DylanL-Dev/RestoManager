@@ -371,7 +371,7 @@ function render(){
  const line=el('div',undefined,'rmBookingGrid');
  const time=el('strong',undefined,'rmBookingTime');time.append(icon('clock-3'),el('span',r.time));line.append(time);
  const client=el('div',undefined,'rmBookingClient');
- client.append(icon(r.type==='hotel'?'bed-double':'user-round'));
+ client.append(icon(r.type==='hotel'?'hotel':'user-round'));
  const clientText=el('div',undefined,'rmBookingClientText');
  const room=String(r.hotelRoom||'').trim();
  const rawClient=String(r.client||'').trim();
@@ -388,7 +388,7 @@ function render(){
  guestCount.setAttribute('aria-label',String(r.guests)+' couvert'+(Number(r.guests)>1?'s':''));line.append(guestCount);
  const tableLabel=r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+(r.tables[0]??'—');
  const tableCell=el('span',undefined,'rmBookingTable');tableCell.append(icon('armchair'),el('span',tableLabel));line.append(tableCell);
- const origin=el('span',undefined,'rmBookingOrigin');origin.append(icon(r.type==='hotel'?'building-2':'user-round'),el('span',r.type==='hotel'?'Hôtel':'Extérieur'));line.append(origin);
+ const origin=el('span',undefined,'rmBookingOrigin');origin.append(icon(r.type==='hotel'?'hotel':'user-round'),el('span',r.type==='hotel'?'Hôtel':'Extérieur'));line.append(origin);
  const status=el('span',undefined,'rmBookingStatus');status.dataset.status=r.status;
  const fullStatus=statuses[r.status]||r.status;
  // List badges stay concise on PC/tablet/phone. The full operational
