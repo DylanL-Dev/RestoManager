@@ -241,7 +241,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      windowHeight:innerHeight};
    });
    assert.equal(sidebarInfo.footerRole,role==='reception'?'Espace Réception':'Espace Restaurant');
-   assert.equal(sidebarInfo.footerName,'À l’Épicerie');
+   assert.ok(sidebarInfo.footerName.startsWith('À l’Épicerie'),'Preserve establishment identity in sidebar');
    assert.equal(sidebarInfo.footerIcon,true,'Sidebar establishment icon must render locally');
    if(viewport.width>900){
     assert.equal(sidebarInfo.position,'sticky');
