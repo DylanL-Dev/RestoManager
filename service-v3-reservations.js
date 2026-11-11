@@ -354,7 +354,7 @@ function render(){
  if(r.type==='hotel'){
   const room=String(r.hotelRoom||'').trim(),label=room?'Chambre '+room:'Client hôtel';
   const clientLabel=String(r.client||'').trim().toLocaleLowerCase('fr-FR').replace(/\s+/g,' ');
-  const roomMention=room&&['chambre '+room,'ch. '+room,'ch '+room,room].includes(clientLabel);
+  const roomMention=room&&['chambre '+room,'ch. '+room,'ch '+room].includes(clientLabel);
   client.append(el('small',roomMention?'Client hôtel':label,'rmBookingSub'));
  }else client.append(el('small','Client extérieur','rmBookingSub'));
  line.append(client);
