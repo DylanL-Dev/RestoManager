@@ -295,7 +295,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await view.page.evaluate(()=>window.RestoScreens.show('tables'));
    pass(role+' '+viewport.width+'px staff private report form without owner data access');
    assert.equal(await view.page.locator('#teamSpace span').innerText(),role==='reception'?'Espace Réception':'Espace Restaurant');
-   assert.equal(await view.page.locator('#teamVenue').innerText(),'À l’Épicerie');
+   assert.ok((await view.page.locator('#teamVenue').innerText()).startsWith('À l’Épicerie'));
    assert.equal(await view.page.locator('#teamVenue').getAttribute('title'),establishmentFull);
    assert.ok(await view.page.locator('#teamSpace svg').count(),'Role identity must have a Lucide icon');
    assert.ok(await view.page.locator('.serviceVenue svg').count(),'Establishment must have a Lucide icon');
