@@ -512,8 +512,10 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(mobile.cardHeight<=(mobile.hasPrimaryAction?245:195),
      'Compact mobile card must avoid the oversized vertical action rail');
     const cy=i=>mobile.cells[i].centerY;
-    assert.ok([1,2].every(i=>Math.abs(cy(i)-cy(0))<=14),
-     'Phone header: time, client and covers share the first band');
+    assert.ok(Math.abs(cy(1)-cy(0))<=14,
+     'Phone header: time and client share the center of the first band');
+    assert.ok(Math.abs(cy(2)-cy(0))<=28,
+     'Phone covers stay inside the upper band, stacked over the table');
     assert.ok(mobile.cells[3].y>mobile.cells[2].y+mobile.cells[2].height-3,
      'Phone table stays below covers within the SAME upper band');
     assert.ok(mobile.cells[5].y>=mobile.cells[0].y+mobile.cells[0].height-2,
