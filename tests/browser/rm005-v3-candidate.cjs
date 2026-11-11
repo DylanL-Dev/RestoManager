@@ -17,10 +17,11 @@ try{
  for(const width of [390,768,1440]){
   const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block',timezoneId:'Europe/Paris'});
   await context.addInitScript(bookings=>{localStorage.setItem('restomanager_reservations',JSON.stringify(bookings))},mock);
-  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.stack||e.message));
   await page.goto(origin+'/service-v3.html');
   await page.evaluate(()=>window.RestoScreens.show('reservations'));
   await page.locator('#reservationShowAll').click();
+  await page.locator('.reservationViewTab').filter({hasText:'Toutes'}).click();
   await page.waitForFunction(()=>document.querySelectorAll('.rmBookingCard').length>=2,{},{timeout:5000}).catch(async err=>{console.error('DEBUG V3',JSON.stringify(await page.evaluate(()=>({screen:window.RestoScreens?.current?.(),date:document.getElementById('reservationDate')?.value,filters:document.querySelectorAll('.reservationViewTab').length,text:document.getElementById('reservationList')?.innerText,records:localStorage.getItem('restomanager_reservations')?.slice(0,600)}))));console.error('PAGE ERRORS',errors);throw err});
   assert.equal(await page.locator('#rmReservationFilters .reservationViewTab').count(),4);
   assert.equal(await page.locator('.rmBookingCard').count(),2);
