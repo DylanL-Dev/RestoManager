@@ -2,6 +2,9 @@
 /* Lucide-compatible local SVG icon set. No network dependency. */
 (function(){
 const shapes={
+'table-2':'<path d="M3 3h18v18H3z"/><path d="M3 9h18M9 9v12M15 9v12"/>',
+'star':'<path d="m12 2 3.1 6.4 7 .98-5.05 4.94 1.19 6.98L12 18.02l-6.24 3.28 1.19-6.98L1.9 9.38l7-.98Z"/>',
+'map-pin':'<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
 'circle-user-round':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="9" r="3"/><path d="M5.5 19a7.5 7.5 0 0 1 13 0"/>',
 'log-out':'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
 'clipboard-list':'<rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3"/><path d="M9 12h7M9 16h7M6.5 12h.01M6.5 16h.01"/>',
