@@ -459,6 +459,23 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // Wait for the 230ms appScreenActive translateY entrance animation to finish.
    // Otherwise sequential boundingBox() calls capture different animation frames.
    await view.page.clock.runFor(330);
+   // The user's reference requires Lucide's actual `hotel` glyph for
+   // hotel customers, not the older bed-double substitute. Check the local
+   // SVG path on real DOM elements in both role views.
+   if(viewport.width===390){
+    const icons=await view.page.evaluate(()=>{
+     const hotel=document.querySelector('.rmBookingCard[data-type="hotel"] .rmBookingClient svg');
+     const exterior=document.querySelector('.rmBookingCard[data-type="external"] .rmBookingClient svg')
+       ||document.querySelector('.rmBookingCard[data-type="exterior"] .rmBookingClient svg');
+     return {hotel:hotel?[...hotel.querySelectorAll('path')].map(p=>p.getAttribute('d')):null,
+      exterior:exterior?[...exterior.querySelectorAll('path')].map(p=>p.getAttribute('d')):null};
+    });
+    assert.ok(icons.hotel?.includes('M10 22v-6.57'),
+      'Hotel reservations must display the authentic local Lucide hotel icon');
+    if(icons.exterior)assert.ok(!icons.exterior.includes('M10 22v-6.57'),
+      'External customers must keep the person icon');
+    pass(role+' mobile booking hotel guests display genuine Lucide hotel SVG');
+   }
    // RM-005 screenshot regression: four filters in a true 2x2 grid and
    // phone cards aligned in three readable rows, without overlapping controls.
    if(viewport.width===390){
