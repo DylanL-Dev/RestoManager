@@ -37,7 +37,7 @@ test('a future reservation is checked against its target date, not current weekd
 });
 test('the responsive editor loads on DEV and never writes directly to Supabase',()=>{
  assert.doesNotThrow(()=>new Function(ui));
- assert.match(html,/service-v3-weekly-schedule\.css\?v=20261112-weekly1/);
+ assert.match(html,/service-v3-weekly-schedule\.css\?v=20261113-reception-readonly1/);
  assert.match(html,/service-v3-weekly-schedule\.js\?v=20261112-weekly1/);
  assert.match(css,/@media\(min-width:1050px\)/);
  assert.match(css,/@media\(min-width:701px\) and \(max-width:1049px\)/);
