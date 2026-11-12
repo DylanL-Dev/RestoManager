@@ -39,7 +39,7 @@
   if(unique.length>12)slot.grid.append(button(allSlots?'Réduire':`Voir les ${unique.length} créneaux`,false,()=>{allSlots=!allSlots;drawSlots()}));
   if(!unique.length)slot.hint.textContent='Aucun créneau ouvert pour cette date. Vérifiez les horaires du restaurant.';
   else slot.hint.textContent='Créneaux de 15 minutes définis selon les horaires enregistrés. Les disponibilités réelles des tables sont vérifiées après sélection.';
-  if(time.value&&!visible.includes(time.value)&&!allSlots){slot.grid.prepend(button(time.value,true,()=>{allSlots=true;drawSlots()}))}
+  if(time.value&&unique.includes(time.value)&&!visible.includes(time.value)&&!allSlots){slot.grid.prepend(button(time.value,true,()=>{allSlots=true;drawSlots()}))}
  }
  function drawGuests(){
   pax.grid.replaceChildren();
@@ -55,7 +55,6 @@
  // Inline, accessible validation: never move the guest's focus to a remote footer.
  const hotelRoom=document.getElementById('bookingHotelRoom');
  if(hotelRoom){hotelRoom.inputMode='numeric';hotelRoom.pattern='[0-9]+';hotelRoom.title='Numéro de chambre en chiffres uniquement (ex. 225)';}
- const fields={date,time,guests,room:hotelRoom};
  function inlineError(input,message){
   if(!input)return;
   let box=document.getElementById('rmDirectorError-'+input.id);
