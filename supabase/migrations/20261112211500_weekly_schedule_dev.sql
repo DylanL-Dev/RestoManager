@@ -21,7 +21,7 @@ DECLARE d text; service text; part jsonb; open_at text; close_at text; next_end 
 BEGIN
  IF NEW.weekly_schedule IS NULL THEN RETURN NEW; END IF;
  IF jsonb_typeof(NEW.weekly_schedule) <> 'object'
-   OR jsonb_object_length(NEW.weekly_schedule) <> 7 THEN
+   OR (SELECT count(*) FROM jsonb_object_keys(NEW.weekly_schedule)) <> 7 THEN
    RAISE EXCEPTION 'Le planning doit contenir exactement les sept jours.' USING ERRCODE='23514';
  END IF;
  FOREACH d IN ARRAY ARRAY['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] LOOP
