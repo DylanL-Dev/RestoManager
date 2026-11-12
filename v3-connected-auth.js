@@ -318,6 +318,17 @@ try{
   if(!t)throw Error('Table introuvable.');
   return t.id;
  });
+ window.RestoCreateFusionChain=async numbers=>{
+  if(window.RestoReception)throw Error('Action réservée à l’équipe Restaurant.');
+  if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))
+   throw Object.assign(Error('Synchronisation requise avant de créer une fusion.'),{code:'CAPABILITY_REQUIRED'});
+  if(!Array.isArray(numbers)||numbers.length<2||numbers.length>4||new Set(numbers).size!==numbers.length)
+   throw Error('Sélectionnez entre 2 et 4 tables différentes.');
+  const {data,error}=await supabase.rpc('create_fusion_chain_v1',{p_tables:idsFor(numbers)});
+  if(error)throw window.RestoErrors?.business(window.RestoErrors.message(error))||error;
+  await window.RestoRefreshSharedService();
+  return data;
+ };
  window.RestoChangeFusion=async(oldPair,newPair)=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   const {error}=await supabase.rpc('change_fusion_link_v3',{p_old:oldPair?idsFor(oldPair):null,p_new:newPair?idsFor(newPair):null});
