@@ -17,7 +17,7 @@ assert.match(tutorial,/RestoScreens\?\.request\?\./,'Tour must navigate through 
 assert.doesNotMatch(tutorial,/\.from\(['"]reservations|\.insert\(|\.update\(|\.delete\(/,'Tutorial must never mutate reservations');
 assert.match(auth,/installTutorial\(\{user:authUser,profile,management\}\)/,'Initialize only inside authenticated staff flow');
 assert.match(html,/service-v3-tutorial\.css\?v=20261108-onboarding1/,'Load tutorial styles');
-assert.match(html,/v3-connected-auth\.js\?v=20261111-second-occupant1/,'Refresh authenticated module');
+assert.match(html,/v3-connected-auth\.js\?v=20261112-fusion-builder1/,'Refresh authenticated module');
 assert.match(css,/\.restoTourDock/,'Tutorial panel must have responsive styling');
 assert.match(css,/@media\(max-width:700px\)/,'Mobile styling required');
 console.log('Tutorial integration checks passed');
