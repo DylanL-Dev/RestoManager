@@ -880,6 +880,69 @@ html[data-theme="dark"] .editSuccessToast{background:#1d5039;border-color:#448e6
 <link rel="stylesheet" href="service-v3-reservation-fields.css?v=20261110-reception-parity1">
 <link rel="stylesheet" href="service-v3-reservation-list-rm005.css?v=20261111-mobile-compact-v2">
 <link rel="stylesheet" href="service-v3-passage-cards.css?v=20261111-second-occupant1"><link rel="stylesheet" href="service-v3-fusion-builder.css?v=20261112-fusion-polish2"><link rel="stylesheet" href="service-v3-management-categories.css?v=20261112-management-layout1">
+
+<style id="rm005-forecast-occupancy-dev">
+/* RM-005 DEV only: distinguish forecasts, real-time occupancy and new-booking simulations. */
+#rushDashboard,.currentOccupancy,.rmImmediateAvailability{min-width:0;background:#fff;border:1px solid #dce8e0;border-radius:18px;box-shadow:0 5px 18px #12274608}
+#rushDashboard{border-top:3px solid #bed5ed!important;margin-bottom:16px}
+#rushDashboard .rushDashHead h2{margin:0;font-size:clamp(18px,2.4vw,23px);line-height:1.25}
+#rushDashboard .rushDashHead p{margin-top:7px;color:#597166;font-size:13px;line-height:1.45}
+#rushDashboard .rushArrivalBreakdown.rmForecastTwoStatuses{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin:13px 0!important}
+#rushDashboard .rmForecastTwoStatuses .rushArrivalBreakdownItem{display:flex!important;align-items:center;gap:12px!important;min-width:0;min-height:82px;padding:13px 14px!important;border-radius:13px}
+#rushDashboard .rmForecastTwoStatuses .rmMetricIcon{width:22px;min-width:22px;height:22px;color:#175d81}
+#rushDashboard .rmForecastTwoStatuses .rushArrivalBreakdownItem:last-child .rmMetricIcon{color:#087857}
+#rushDashboard .rmForecastMetricText{display:flex;flex-direction:column;gap:3px;min-width:0}
+#rushDashboard .rmForecastMetricText strong{font-size:25px!important;line-height:1.1}
+#rushDashboard .rmForecastMetricText span{font-size:12px!important;line-height:1.3;color:#537067}
+#rushDashboard .rushLoadSummary{padding-bottom:10px}
+#rushDashboard .rmForecastHint{margin:11px 0 5px!important;padding:10px 12px;background:#eef7f1;border-radius:11px;color:#315b45!important}
+#rushDashboard .rmForecastDayTotal{font-size:12px!important;color:#587467!important;margin:7px 0 1px!important}
+#rushDashboard .rmForecastCarry{font-size:12px!important;background:#fff1e1;border-radius:9px;padding:10px 12px;color:#865110!important}
+.currentOccupancy{border-top:3px solid #c9dfd1;padding:18px;gap:14px;margin:0 0 16px}
+.currentOccupancy .occupancyHead{align-items:flex-start;gap:12px}
+.currentOccupancy .occupancyHeadingBlock{gap:5px}
+.currentOccupancy .rmOccupationSubtitle{color:#5e756a;font-size:13px;line-height:1.45;margin:3px 0 0}
+.currentOccupancy .rmOccupancyMetrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;min-width:0}
+.currentOccupancy .rmOccupancyMetric{display:flex;align-items:center;gap:10px;min-height:78px;padding:12px;border-radius:13px;background:#f6f9f7;border:1px solid #e2eae5;min-width:0}
+.currentOccupancy .rmOccupancyMetric:first-child{background:#eef5fc;border-color:#d4e5f4}
+.currentOccupancy .rmOccupancyMetric:nth-child(2){background:#edf8f1;border-color:#c7e8d6}
+.currentOccupancy .rmOccupancyMetricIcon{width:21px;height:21px;min-width:21px;color:#187354}
+.currentOccupancy .rmOccupancyMetricWords{display:flex;flex-direction:column;gap:4px;min-width:0}
+.currentOccupancy .rmOccupancyMetricWords strong{font-size:24px;line-height:1.1;color:#184a37;font-variant-numeric:tabular-nums}
+.currentOccupancy .rmOccupancyMetricWords span{font-size:12px;line-height:1.3;color:#526d60}
+.currentOccupancy .rmOccupationCapacity{font-size:12px;color:#3c7055;margin:0}
+.currentOccupancy .occupancyHelp{line-height:1.45}
+.rmImmediateAvailability{display:grid;gap:14px;padding:18px;margin:0 0 19px;border-top:3px solid #d9e9dd}
+.rmImmediateHeading{display:grid;gap:5px}
+.rmImmediateHeading h2{font-size:clamp(18px,2.4vw,21px);margin:0!important;color:#174a36}
+.rmImmediateHeading p{margin:3px 0 0;font-size:13px;line-height:1.45;color:#607a6b}
+.rmImmediateResult{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:10px;align-items:stretch}
+.rmImmediateQuestion,.rmImmediateAnswer{display:flex;align-items:center;gap:12px;min-width:0;min-height:58px;padding:12px 14px;border-radius:12px;border:1px solid #d6e8db;box-sizing:border-box}
+.rmImmediateQuestion{background:#f7fbf9;color:#315848;font-size:13px}
+.rmImmediateAnswer{background:#e2f5e9;color:#086741;font-size:14px}
+.rmImmediateAnswer.rmImmediateFull{background:#fff0e2;color:#904b12;border-color:#ebcaad}
+.rmImmediateQuestion svg,.rmImmediateAnswer svg{width:22px;min-width:22px;height:22px}
+.rmImmediateCount{font-weight:800;overflow-wrap:anywhere}
+@media(max-width:1050px){.currentOccupancy .rmOccupancyMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ #rushDashboard{padding:14px!important}
+ #rushDashboard .rmForecastTwoStatuses .rushArrivalBreakdownItem{padding:10px!important;gap:8px!important;min-height:68px}
+ #rushDashboard .rmForecastMetricText strong{font-size:22px!important}
+ #rushDashboard .rmForecastMetricText span{font-size:11px!important}
+ .currentOccupancy,.rmImmediateAvailability{padding:14px!important}
+ .currentOccupancy .rmOccupancyMetric{padding:10px;min-height:70px;gap:8px}
+ .currentOccupancy .rmOccupancyMetricWords strong{font-size:22px}
+ .currentOccupancy .rmOccupancyMetricWords span{font-size:11px}
+ .rmImmediateResult{grid-template-columns:minmax(0,1fr);gap:8px}
+ .rmImmediateQuestion,.rmImmediateAnswer{min-height:49px}
+}
+html[data-theme="dark"] #rushDashboard,html[data-theme="dark"] .currentOccupancy,html[data-theme="dark"] .rmImmediateAvailability{background:#1c352a;color:#edf8ee;border-color:#476753}
+html[data-theme="dark"] :is(.rmOccupancyMetric,.rmImmediateQuestion){background:#253f31;border-color:#466750}
+html[data-theme="dark"] .rmImmediateAnswer{background:#19543a;border-color:#397c55;color:#e8f8ee}
+html[data-theme="dark"] :is(.rmOccupancyMetricWords strong,.rmImmediateHeading h2,.rmForecastMetricText strong){color:#ebf8ed!important}
+html[data-theme="dark"] :is(.rmOccupancyMetricWords span,.rmOccupationSubtitle,.rmOccupationCapacity,.rmImmediateHeading p,.rmForecastMetricText span){color:#bed8c6!important}
+html[data-theme="dark"] #rushDashboard .rmForecastHint{background:#214b38;color:#d7eedf!important}
+</style>
 </head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button><button type="button" id="mobileAccountToggle" class="mobileAccountToggle" aria-label="Ouvrir le menu du compte" aria-haspopup="true" aria-controls="mobileAccountMenu" aria-expanded="false"><i data-lucide="circle-user-round" aria-hidden="true"></i><span class="mobileAccountStatusDot" aria-hidden="true"></span></button></div><div id="mobileAccountMenu" class="mobileAccountMenu" role="group" aria-label="Compte et connexion" hidden><div class="mobileAccountIdentity"><span class="mobileAccountAvatar" aria-hidden="true"><i data-lucide="utensils-crossed" id="mobileAccountRoleIcon"></i></span><div><strong id="mobileAccountRole">Espace Restaurant</strong><small id="mobileAccountName">Compte Restaurant</small><span class="mobileAccountSession">Session active</span></div></div><div class="mobileAccountSync" id="mobileAccountSync" data-state="pending" role="status" aria-live="polite"><i data-lucide="refresh-cw" aria-hidden="true"></i><span class="mobileAccountStatusDot" aria-hidden="true"></span><div><strong id="mobileAccountSyncLabel">Connexion en cours</strong><small id="mobileAccountSyncDetail">Vérification des données partagées…</small></div></div><button type="button" class="mobileAccountRefresh" id="mobileAccountRefresh"><i data-lucide="refresh-cw" aria-hidden="true"></i>Actualiser les données</button><button type="button" class="mobileAccountLogout" id="mobileAccountLogout"><i data-lucide="log-out" aria-hidden="true"></i>Se déconnecter</button></div></header>
 
@@ -892,7 +955,7 @@ html[data-theme="dark"] .editSuccessToast{background:#1d5039;border-color:#448e6
 <a href="#passages" class="mobileNavItem" data-nav="passages" aria-label="Passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Passage</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="resto-errors.js?v=20261108-tables-display"></script><script src="reservation-engine.js?v=20261107-mission2"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261108-tables-display"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="booking-availability.js?v=20261108-tables-display"></script><script src="service-v3-kpi-detail.js?v=20261109-director-feedback1"></script><script src="service-v3.js?v=20261112-arrival-clarity-dev1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="reservation-edit.js?v=20261109-optional-guest1"></script><script src="service-v3-reservations.js?v=20261111-reg01-single-toast1"></script><script src="service-v3-walkin-fast.js?v=20261111-second-occupant1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261109-reception-readonly1"></script>
+<script src="resto-errors.js?v=20261108-tables-display"></script><script src="reservation-engine.js?v=20261107-mission2"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261108-tables-display"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="booking-availability.js?v=20261108-tables-display"></script><script src="service-v3-kpi-detail.js?v=20261109-director-feedback1"></script><script src="service-v3.js?v=20261112-rm005-three-views-dev1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="reservation-edit.js?v=20261109-optional-guest1"></script><script src="service-v3-reservations.js?v=20261111-reg01-single-toast1"></script><script src="service-v3-walkin-fast.js?v=20261111-second-occupant1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261109-reception-readonly1"></script>
 <script src="service-v3-passage-cards.js?v=20261111-rooms-fusions4"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
