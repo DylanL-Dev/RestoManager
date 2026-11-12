@@ -25,7 +25,7 @@
  const change=(input,value)=>{input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))};
  function drawSlots(){
   slot.grid.replaceChildren();
-  const shifts=Object.values(window.ReservationEngine?.getShifts?.()||{}).filter(x=>x.enabled),today=parisNow(),selected=date.value;
+  const today=parisNow(),selected=date.value,shifts=Object.values(window.ReservationEngine?.getShiftsForDate?.(selected)||window.ReservationEngine?.getShifts?.()||{}).filter(x=>x.enabled);
   if(!selected){slot.hint.textContent='Choisissez d’abord une date.';return}
   const first=selected===today.date?Math.ceil(today.minute/15)*15:0,values=[];
   if(selected>=today.date)for(const shift of shifts){
