@@ -11,7 +11,7 @@
  .rmDirectorChoiceGrid button{min-height:43px;padding:8px 7px;border:1px solid #b8d1c5;border-radius:10px;background:transparent;color:inherit;font:650 13px system-ui;cursor:pointer}
  .rmDirectorChoiceGrid button[aria-pressed="true"]{background:#087f5b!important;border-color:#087f5b!important;color:#fff!important}
  .rmDirectorChoiceGrid button:focus-visible{outline:3px solid #48ac8b;outline-offset:2px}
- .rmDirectorChoicesHint{font:12px/1.5 system-ui;opacity:.8;margin:5px 0 0}
+ .rmDirectorChoicesHint{font:12px/1.5 system-ui;opacity:.8;margin:5px 0 0}\n .rmDirectorFieldError{font:600 12px/1.4 system-ui;color:#a92727;margin:5px 0 0}\n .rmDirectorFieldError[hidden],.rmDirectorFeedbackMoved{display:none!important}
  @media(max-width:520px){.rmDirectorChoiceGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.rmDirectorChoiceGrid button{min-height:44px}}`;
  document.head.append(style);
  const make=(label,id,input)=>{const wrap=document.createElement('div');wrap.id=id;wrap.className='rmDirectorChoices';const title=document.createElement('strong');title.className='rmDirectorChoicesTitle';title.textContent=label;const grid=document.createElement('div');grid.className='rmDirectorChoiceGrid';grid.setAttribute('role','group');grid.setAttribute('aria-label',label);const hint=document.createElement('p');hint.className='rmDirectorChoicesHint';wrap.append(title,grid,hint);input.closest('label')?.insertAdjacentElement('afterend',wrap);return {grid,hint}};
@@ -51,6 +51,40 @@
  }
  for(const event of ['input','change']){date.addEventListener(event,()=>{allSlots=false;drawSlots()});time.addEventListener(event,drawSlots);guests.addEventListener(event,drawGuests)}
  for(const name of ['restomanager:hours','restomanager:supabase-snapshot','restomanager:v3-tables','restomanager:screen'])window.addEventListener(name,()=>{drawSlots();drawGuests()});
+
+ // Inline, accessible validation: never move the guest's focus to a remote footer.
+ const hotelRoom=document.getElementById('bookingHotelRoom');
+ if(hotelRoom){hotelRoom.inputMode='numeric';hotelRoom.pattern='[0-9]+';hotelRoom.title='Numéro de chambre en chiffres uniquement (ex. 225)';}
+ const fields={date,time,guests,room:hotelRoom};
+ function inlineError(input,message){
+  if(!input)return;
+  let box=document.getElementById('rmDirectorError-'+input.id);
+  if(!box){box=document.createElement('p');box.id='rmDirectorError-'+input.id;box.className='rmDirectorFieldError';box.setAttribute('role','alert');input.closest('label')?.append(box);}
+  box.textContent=message||'';box.hidden=!message;
+  if(message){input.setAttribute('aria-invalid','true');input.setAttribute('aria-describedby',box.id)}
+  else{input.removeAttribute('aria-invalid');if(input.getAttribute('aria-describedby')===box.id)input.removeAttribute('aria-describedby')}
+ }
+ const roomError='Numéro de chambre invalide : utilisez uniquement des chiffres (ex. 225).';
+ for(const input of [date,time,guests,hotelRoom].filter(Boolean)){
+  input.addEventListener('invalid',event=>{
+   event.preventDefault();
+   const message=input===hotelRoom?roomError:input===date?'Choisissez une date valide.':input===time?'Choisissez un créneau de réservation.':'Indiquez un nombre de couverts valide.';
+   inlineError(input,message);
+  });
+  for(const ev of ['input','change'])input.addEventListener(ev,()=>inlineError(input,''));
+ }
+ if(hotelRoom)hotelRoom.addEventListener('input',()=>{if(hotelRoom.value&&!/^[0-9]+$/.test(hotelRoom.value))inlineError(hotelRoom,roomError)});
+ const feedback=document.getElementById('bookingFeedback');
+ if(feedback){
+  const moveError=()=>{
+   const msg=feedback.textContent.trim();
+   feedback.classList.remove('rmDirectorFeedbackMoved');
+   if(!msg||!/(invalide|incorrect|requis|hors service|impossible|refusée|doit contenir)/i.test(msg))return;
+   const input=/(chambre)/i.test(msg)?hotelRoom:/(couvert|personne)/i.test(msg)?guests:/(date)/i.test(msg)?date:/(heure|horaire|créneau)/i.test(msg)?time:null;
+   if(input){inlineError(input,msg);feedback.classList.add('rmDirectorFeedbackMoved')}
+  };
+  new MutationObserver(moveError).observe(feedback,{childList:true,characterData:true,subtree:true});
+ }
  setInterval(drawSlots,60000);
  drawSlots();drawGuests();
 })();
