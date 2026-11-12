@@ -144,6 +144,7 @@ export async function setRestaurantTableActiveShared(id,active){
 
 async function roomAdminClient(){
  requireWrite();
+ const {requireStaff}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  const {profile}=await requireStaff();
  if(profile.role!=='fb_admin')throw window.RestoErrors?.business('Seul le compte Restaurant peut gérer les salles.')||Error('Accès refusé.');
  return profile;
