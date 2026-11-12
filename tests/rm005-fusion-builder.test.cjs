@@ -22,7 +22,7 @@ test('RM-005: same active restaurant/room, distinct tables, no auto-number adjac
 });
 test('RM-005: mobile tablet desktop layout with real preview, groups and actions',()=>{
  assert.match(html,/service-v3-fusion-builder\.css/);
- assert.match(html,/service-v3-fusions\.js\?v=20261112-fusion-polish2/);
+ assert.match(html,/service-v3-fusions\.js\?v=20261112-management-layout1/);
  assert.match(css,/@media\(max-width:950px\)/);
  assert.match(css,/@media\(max-width:520px\)/);
  assert.match(css,/\.rmFusionPreview/);
