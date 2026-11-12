@@ -329,13 +329,17 @@ function bookingArrivalDefault(date=bookingToday()){
   .map(shift=>({start:bookingMinuteOf(shift.start),end:bookingMinuteOf(shift.end)}))
   .filter(shift=>shift.end>=shift.start).sort((a,b)=>a.start-b.start);
  if(!shifts.length)return {date,time:'19:00'};
- // Advance to the next quarter hour to avoid suggesting a time in the past.
- const earliest=date>nowDate?0:(Math.ceil(nowMinute/15)*15);
- for(const shift of shifts){
-  const candidate=Math.max(shift.start,earliest);
-  if(candidate<=shift.end&&candidate<24*60)return {date,time:bookingClock(candidate)};
+ // Find the next arrival in a genuinely open service, including weekend rules.
+ let target=date<nowDate?nowDate:date;
+ for(let attempt=0;attempt<8;attempt++,target=nextBookingDate(target)){
+  const earliest=target===nowDate?Math.ceil(nowMinute/15)*15:0;
+  for(const shift of shifts){
+   const candidate=Math.ceil(Math.max(shift.start,earliest)/15)*15;
+   if(candidate<=shift.end&&candidate<24*60&&ReservationEngine.isServiceOpen(target,bookingClock(candidate)))
+    return {date:target,time:bookingClock(candidate)};
+  }
  }
- return {date:date>nowDate?date:nextBookingDate(nowDate),time:bookingClock(shifts[0].start)};
+ return {date:target,time:'19:00'};
 }
 
 let date=today();
@@ -717,9 +721,9 @@ function refreshAvailability(){
  // Explain a closed booking slot instead of pretending that every table is occupied.
  const bookingMinutes=value=>Number(String(value).slice(0,2))*60+Number(String(value).slice(3,5));
  const allowedShifts=Object.values(ReservationEngine.getShifts()).filter(shift=>shift.enabled);
- const inBookingHours=allowedShifts.some(shift=>bookingMinutes(time)>=bookingMinutes(shift.start)&&bookingMinutes(time)<=bookingMinutes(shift.end));
+ const inBookingHours=ReservationEngine.isServiceOpen(dateValue,time);
  if(!inBookingHours){
-  if(insight)insight.append(node('p','availabilityWarning','L’heure d’arrivée choisie ('+time+') est hors service : aucune réservation ne peut être validée pour cet horaire. Vous pouvez préparer une réservation à toute heure, mais l’arrivée doit appartenir à un créneau ouvert : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
+  if(insight)insight.append(node('p','availabilityWarning','L’heure d’arrivée choisie ('+time+') n’est pas réservable : '+(ReservationEngine.closedWeekendLunch(dateValue,time)?'restaurant fermé le samedi et dimanche midi. ':'aucun service ouvert à cet horaire. ')+'Choisissez un horaire parmi les services réellement ouverts : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
   select.dataset.availabilityState='out_of_service';select.dataset.availabilityMessage='Horaire hors service';
   window.RestoTableChoices?.refresh('bookingTable');
   return;
@@ -854,6 +858,7 @@ $('bookingForm').addEventListener('submit',async event=>{
  if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw (window.RestoErrors?.business||Error)('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<bookingToday())throw (window.RestoErrors?.business||Error)('Impossible de créer une réservation à une date passée.');
+ if($('bookingDate').value===bookingToday()&&$('bookingTime').value<bookingNowTime())throw (window.RestoErrors?.business||Error)('Impossible de réserver une heure déjà passée aujourd’hui. Choisissez un créneau futur.');
  const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim()||($('bookingType').value==='hotel'?('Chambre '+$('bookingHotelRoom').value.trim()):'Client extérieur'),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
  if(candidate.notes.length>1000||candidate.allergies.length>500)throw (window.RestoErrors?.business||Error)('Les notes ou allergies dépassent la longueur autorisée. Raccourcissez votre saisie.');
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw (window.RestoErrors?.business||Error)('Fusion non autorisée.');
