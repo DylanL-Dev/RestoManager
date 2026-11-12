@@ -37,7 +37,7 @@ test('RM-005: all Lucide symbols referenced by fusion management exist in local 
  const names=[...js.matchAll(/icon\('([^']+)'\)/g)].map(m=>m[1]);
  for(const name of names)assert.ok(icons.includes("'"+name+"'"),"Missing offline Lucide glyph: "+name);
  assert.match(icons,/'link-2':/);
- assert.match(html,/lucide-local\.js\?v=20261112-fusion-polish2/);
+ assert.match(html,/<script[^>]+src="lucide-local\.js\?v=[^"\s]+"/,'Offline Lucide bundle must be loaded with a cache key');
 });
 test('RM-005: approved mockup visual components and responsive layouts remain present',()=>{
  for(const cls of ['rmFusionSteps','rmFusionRoomFilter','rmFusionPreviewIllustration','rmFusionCheckRow','rmFusionGroupsHeading','rmFusionLinkText']){
