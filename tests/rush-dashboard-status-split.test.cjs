@@ -38,10 +38,6 @@ test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 s
  assert.ok(iconNodes.some(n=>n.dataset.lucide==='settings'));
  assert.ok(iconNodes.some(n=>n.dataset.lucide==='calendar-clock'));
  assert.ok(iconNodes.some(n=>n.dataset.lucide==='armchair'));
- /* Previous three-card icon expectation removed because the two-card UI is approved. */
- /* assert.deepEqual(iconNodes.map(n=>n.dataset.lucide),[
-  'settings','activity','calendar-clock','alert-triangle','users'
- ]); */
 
  const metricValue=card=>Number(card.children.find(n=>n.className==='rmForecastMetricText')?.children?.[0]?.textContent);
  assert.equal(metricValue(expectedCards[0]),20,'Expected guests');
