@@ -92,7 +92,8 @@ function progress(data){
 const parisClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 const currentMinutes=()=>{const parts=parisClock.formatToParts(new Date());const h=parts.find(p=>p.type==='hour')?.value||'0';const m=parts.find(p=>p.type==='minute')?.value||'0';return Number(h)*60+Number(m)};
 let lastRushDashboard=null;
-let rushDetailsExpanded=false;
+let rushDetailsExpanded=true;
+let rushLiveExpanded=false;
 let rushHelpExpanded=false;
 function dashboard(date,all){
  const target=$('rushDashboard');if(!target)return;
@@ -184,10 +185,17 @@ function dashboard(date,all){
    (isToday?mins(r.time)<=nowMinute+60:mins(r.time)>=w.start&&mins(r.time)<w.end))
    .reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
   const toHandle=installedCovers+waitingSoon;
-  const live=rushNode('div','rmLiveServiceAlert');
-  const liveHeading=rushNode('div','rmLiveServiceAlertHeading');
+  const live=rushNode('details','rmLiveServiceAlert rmLiveCollapsible');
+  live.open=rushLiveExpanded;
+  const liveHeading=rushNode('summary','rmLiveServiceHeader');
+  const headingTitle=rushNode('span','rmLiveServiceAlertHeading');
   const liveIcon=rushNode('i');liveIcon.dataset.lucide='utensils';liveIcon.setAttribute('aria-hidden','true');
-  liveHeading.append(liveIcon,rushNode('strong','','PILOTAGE DU SERVICE · EN DIRECT'));
+  headingTitle.append(liveIcon,rushNode('strong','','PILOTAGE DU SERVICE · EN DIRECT'));
+  const compact=rushNode('span','rmLiveCompactCount',toHandle+' couverts à suivre');
+  const chevronLive=rushNode('i','rmLiveChevron');chevronLive.dataset.lucide='chevron-down';chevronLive.setAttribute('aria-hidden','true');
+  liveHeading.append(headingTitle,compact,chevronLive);
+  live.append(liveHeading);
+  const liveExpandedContent=rushNode('div','rmLiveExpandedContent');
   const liveMetrics=rushNode('div','rmLiveServiceAlertMetrics');
   liveMetrics.append(
    rushNode('strong','',installedCovers+' couverts en salle maintenant'),
@@ -195,9 +203,11 @@ function dashboard(date,all){
    rushNode('span','',waitingSoon+' couvert(s) '+(isToday?'attendus dans l’heure, retards inclus':'attendus sur cette plage')),
    rushNode('strong','rmLiveServiceTotal',toHandle+' couverts à suivre '+(isToday?'dans l’heure':'sur cette plage'))
   );
-  live.append(liveHeading,liveMetrics);
+  liveExpandedContent.append(liveMetrics);
   const note=rushNode('p','rmLiveServiceNote','Ce total additionne les clients installés et les réservations encore attendues à court terme. Les passages et fusions comptent une seule fois. Les arrivées du créneau restent distinctes.');
-  live.append(note);
+  liveExpandedContent.append(note);
+  live.append(liveExpandedContent);
+  live.addEventListener('toggle',()=>{rushLiveExpanded=live.open;});
   result.prepend(live);
   const details=rushNode('details','rmArrivalDetails');
   details.open=rushDetailsExpanded;
