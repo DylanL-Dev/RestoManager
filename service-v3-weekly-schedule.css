@@ -83,3 +83,25 @@
  .rmWeeklyCopyAll{width:100%}
  .rmWeeklyTimes{grid-template-columns:1fr 1fr}
 }
+
+/* Reception: read-only weekly hours; editing remains restricted by existing Auth/RLS. */
+.rmReceptionWeeklyReadonly{padding:20px;margin:0 0 18px;border:1px solid #dbeae1;background:#fff;border-radius:18px;color:#194638;box-shadow:0 4px 18px #10382c0a}
+.rmReceptionWeeklyHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rmReceptionWeeklyHeading h2{margin:0;font-size:21px}
+.rmReceptionReadonlyBadge{display:inline-flex;padding:6px 10px;background:#e8f5ec;color:#176544;border-radius:999px;font-weight:750;font-size:12px}
+.rmReceptionWeeklyHint{margin:10px 0 17px;color:#60766b;font-size:13px;line-height:1.5}
+.rmReceptionWeeklyGrid{display:grid;gap:7px}
+.rmReceptionWeeklyDay{display:grid;grid-template-columns:125px minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px;padding:11px 12px;border:1px solid #e5ede8;border-radius:12px;background:#f8fbf9;min-width:0}
+.rmReceptionWeeklyDay>strong{font-size:14px}
+.rmReceptionWeeklyService{display:flex;align-items:center;gap:10px;justify-content:space-between;min-width:0}
+.rmReceptionWeeklyService small{font-weight:650;color:#5f7569}
+.rmReceptionWeeklyService span{font-weight:750;font-size:13px;white-space:nowrap}
+.rmReceptionWeeklyOpen{color:#176544}
+.rmReceptionWeeklyClosed{color:#b44747}
+@media(max-width:700px){
+ .rmReceptionWeeklyReadonly{padding:14px;margin:0 0 15px;border-radius:16px}
+ .rmReceptionWeeklyDay{grid-template-columns:1fr 1fr;padding:12px;row-gap:10px}
+ .rmReceptionWeeklyDay>strong{grid-column:1/-1}
+ .rmReceptionWeeklyService{flex-direction:column;align-items:flex-start;gap:4px}
+ .rmReceptionWeeklyService span{font-size:13px}
+}
