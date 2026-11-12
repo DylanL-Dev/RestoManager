@@ -139,6 +139,12 @@ function dashboard(date,all){
  welcomed.append(rushNode('strong','',breakdown.arrived),rushBreakdownLabel('users','Déjà arrivés / installés'));
  arrivalDetails.append(upcoming,late,welcomed);
  result.append(summary,arrivalDetails,progress(data));
+  // Clarify the distinction between the selected hour and all reservations for the day.
+  const daily=all.filter(r=>relevant(r,date));
+  const dailyGuests=daily.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  const periodLabel=rushNode('p','rushHint rushArrivalsHint',
+   'Créneau affiché : '+clock(w.start)+' – '+clock(w.end)+' · '+covers+' couvert(s) sur cette plage. Total des réservations actives du jour : '+dailyGuests+' couvert(s).');
+  result.append(periodLabel);
  const hint=rushNode('p','rushHint rushArrivalsHint',breakdown.late
   ?breakdown.late+' couvert(s) dont l’heure prévue est passée restent à accueillir. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
   :covers>=limit?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
@@ -161,9 +167,12 @@ function dashboard(date,all){
  const canQuoteAvailability=!isCurrentDay||queryMinutes<w.end;
  const queryTime=clock(queryMinutes);
  const tableState=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
+  // The 2-cover check below is a generic availability example, never the selected reservation.
+
  if(tableState?.valid){
   const critical=tableState.remaining<=3;
   const note=document.createElement('div');note.className='rushTablePressure'+(critical?' rushTablePressureCritical':'')+(covers>=limit?' rushLimitReached':'');
+    const example=document.createElement('small');example.textContent='Simulation de disponibilité pour une nouvelle réservation de 2 couverts';note.append(example);
   if(critical){
    note.setAttribute('role','status');
    const head=document.createElement('div');head.className='rushTablePressureHead';
