@@ -3,10 +3,10 @@
 const KEY='restomanager_rush_v1',RES='restomanager_reservations',DEFAULT={percent:60,window:60,step:15};
 const $=id=>document.getElementById(id);
 const rushNode=(tag,className,content)=>{const element=document.createElement(tag);if(className)element.className=className;if(content!==undefined)element.textContent=String(content);return element};
-const rushStatuses={waiting:new Set(['reserved','confirmed','late','arrived']),arrived:new Set(['seated','completed','released'])};
+const rushStatuses={waiting:new Set(['reserved','confirmed','late','arrived']),arrived:new Set(['seated'])};
 function isActualArrival(r,date){
  return !!r&&r.date===date&&typeof r.time==='string'&&
-  (ReservationEngine.isBlocking(r)||['completed','released'].includes(r.status));
+  ReservationEngine.isBlocking(r);
 }
 const actualParisParts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 function arrivalMinute(r,date){
@@ -153,13 +153,13 @@ function dashboard(date,all){
   words.append(rushNode('strong','',value),rushNode('span','',label));
   item.append(icon,words);return item;
  }
- arrivalDetails.append(metric(breakdown.waiting,'Encore attendus sur ce créneau','calendar-clock'),metric(breakdown.arrived,'Déjà accueillis (passages compris)','armchair'));
+ arrivalDetails.append(metric(breakdown.waiting,'Encore attendus sur ce créneau','calendar-clock'),metric(breakdown.arrived,'Encore installés de ce créneau (passages inclus)','armchair'));
  result.append(summary,arrivalDetails,progress(data));window.lucide?.createIcons?.({nodes:[result]});
   // Clarify the distinction between the selected hour and all reservations for the day.
   const daily=all.filter(r=>relevant(r,date));
   const dailyGuests=daily.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
   const periodLabel=rushNode('p','rushHint rushArrivalsHint',
-   'Arrivées du créneau '+clock(w.start)+' – '+clock(w.end)+' : '+covers+' couvert(s), passages inclus. Total du jour (arrivées et réservations actives) : '+dailyGuests+' couvert(s).');
+   'Arrivées actives '+clock(w.start)+' – '+clock(w.end)+' : '+covers+' couvert(s), passages inclus, clients déjà partis exclus. Total des couverts encore attendus ou installés du jour : '+dailyGuests+'.');
   result.append(periodLabel);
   // Live service load includes walk-ins and reservations installed at other times.
   const installedNow=all.filter(r=>r.date===date&&r.status==='seated');
@@ -191,7 +191,7 @@ function dashboard(date,all){
   ?breakdown.late+' couvert(s) en retard, déjà inclus dans les attendus. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
   :covers>=limit?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
-  :'Les passages accueillis sur cette plage sont inclus. Le seuil conseillé ne représente pas la capacité du restaurant.');
+  :'Les passages encore installés sur ce créneau sont inclus. Une table libérée retire immédiatement ses couverts ; le seuil conseillé n’est pas la capacité du restaurant.');
  result.append(hint);
  // An hour change must not hide guests who are still awaiting arrival.
  // Keep this operational warning separate from the current hour's forecast.
