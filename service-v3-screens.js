@@ -49,10 +49,10 @@ if(management){
   wrapper.append(summary,body);categoryContent.append(wrapper);
   const button=document.createElement('button');button.type='button';button.className='rmManagementCategoryButton';
   const symbolIcon=document.createElement('i');symbolIcon.dataset.lucide=iconNames[symbol]||'settings';symbolIcon.setAttribute('aria-hidden','true');
-  const words=document.createElement('span');words.className='rmManagementCategoryWords';
+  const navWords=document.createElement('span');navWords.className='rmManagementCategoryWords';
   const label=document.createElement('strong');label.textContent=title;
   const hint=document.createElement('small');hint.textContent=description;
-  words.append(label,hint);button.append(symbolIcon,words);
+  navWords.append(label,hint);button.append(symbolIcon,navWords);
   button.dataset.category=id;
   button.addEventListener('click',()=>activateCategory(id,{focus:true}));
   categoryNav.append(button);
