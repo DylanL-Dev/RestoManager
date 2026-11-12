@@ -977,6 +977,11 @@ html[data-theme="dark"] #rushDashboard .rmLiveServiceAlertMetrics .rmLiveService
 #rushDashboard .rmArrivalHelpButton svg{width:20px;height:20px}
 #rushDashboard .rmArrivalHelpText{border:1px solid #c7ddec;background:#f0f7fc;border-radius:12px;padding:12px 15px;color:#29506a;margin:0 0 12px;font-size:13px;line-height:1.5}
 #rushDashboard .rmArrivalHelpText p{margin:5px 0 0}
+#rushDashboard .rmArrivalHelpBenefits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+#rushDashboard .rmArrivalHelpBenefit{display:flex;align-items:flex-start;gap:9px;padding:10px;border:1px solid #d7e6ed;background:#fff;border-radius:9px;margin:0}
+#rushDashboard .rmArrivalHelpBenefit svg{width:17px;height:17px;flex:0 0 17px;color:#20765b;margin-top:2px}
+#rushDashboard .rmArrivalHelpBenefit strong{color:#244c43}
+@media(max-width:680px){#rushDashboard .rmArrivalHelpBenefits{grid-template-columns:1fr}}
 #rushDashboard .rmArrivalDetails{margin:10px 0 0;border:1px solid #dbe8df;border-radius:12px;overflow:hidden;background:#fafcfb}
 #rushDashboard .rmArrivalDetailsToggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;cursor:pointer;color:#1f674c;font-size:13px;font-weight:800;list-style:none;user-select:none}
 #rushDashboard .rmArrivalDetailsToggle::-webkit-details-marker{display:none}
