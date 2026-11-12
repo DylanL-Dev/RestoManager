@@ -92,9 +92,12 @@
  }
  // A table layout for desktop/tablet is styled via CSS; details stay open there
  // while mobile shows compact accordion cards.
+ let previousWide=null;
  function adjustLayout(){
   const wide=window.matchMedia('(min-width: 701px)').matches;
-  for(const [day] of days){if(wide)controls[day].row.open=true}
+  if(wide===previousWide)return;
+  previousWide=wide;
+  for(const [day] of days)controls[day].row.open=wide||day==='monday';
  }
  window.addEventListener('resize',adjustLayout,{passive:true});adjustLayout();
  copyAll.addEventListener('click',()=>{
