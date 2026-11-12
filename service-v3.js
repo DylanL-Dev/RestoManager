@@ -92,8 +92,6 @@ function progress(data){
 const parisClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 const currentMinutes=()=>{const parts=parisClock.formatToParts(new Date());const h=parts.find(p=>p.type==='hour')?.value||'0';const m=parts.find(p=>p.type==='minute')?.value||'0';return Number(h)*60+Number(m)};
 let lastRushDashboard=null;
-let rushDetailsExpanded=true;
-let rushLiveExpanded=false;
 let rushHelpExpanded=false;
 function dashboard(date,all){
  const target=$('rushDashboard');if(!target)return;
@@ -185,48 +183,12 @@ function dashboard(date,all){
    (isToday?mins(r.time)<=nowMinute+60:mins(r.time)>=w.start&&mins(r.time)<w.end))
    .reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
   const toHandle=installedCovers+waitingSoon;
-  const live=rushNode('details','rmLiveServiceAlert rmLiveCollapsible');
-  live.open=rushLiveExpanded;
-  const liveHeading=rushNode('summary','rmLiveServiceHeader');
-  const headingTitle=rushNode('span','rmLiveServiceAlertHeading');
-  const liveIcon=rushNode('i');liveIcon.dataset.lucide='utensils';liveIcon.setAttribute('aria-hidden','true');
-  headingTitle.append(liveIcon,rushNode('strong','','PILOTAGE DU SERVICE · EN DIRECT'));
-  const compact=rushNode('span','rmLiveCompactCount',toHandle+' couverts à suivre');
-  const chevronLive=rushNode('i','rmLiveChevron');chevronLive.dataset.lucide='chevron-down';chevronLive.setAttribute('aria-hidden','true');
-  liveHeading.append(headingTitle,compact,chevronLive);
-  live.append(liveHeading);
-  const liveExpandedContent=rushNode('div','rmLiveExpandedContent');
-  const liveMetrics=rushNode('div','rmLiveServiceAlertMetrics');
-  liveMetrics.append(
-   rushNode('strong','',installedCovers+' couverts en salle maintenant'),
-   rushNode('span','',installedTables.size+' table'+(installedTables.size>1?'s':'')+' occupée'+(installedTables.size>1?'s':'')),
-   rushNode('span','',waitingSoon+' couvert(s) '+(isToday?'attendus dans l’heure, retards inclus':'attendus sur cette plage')),
-   rushNode('strong','rmLiveServiceTotal',toHandle+' couverts à suivre '+(isToday?'dans l’heure':'sur cette plage'))
-  );
-  liveExpandedContent.append(liveMetrics);
-  const note=rushNode('p','rmLiveServiceNote','Ce total additionne les clients installés et les réservations encore attendues à court terme. Les passages et fusions comptent une seule fois. Les arrivées du créneau restent distinctes.');
-  liveExpandedContent.append(note);
-  live.append(liveExpandedContent);
-  live.addEventListener('toggle',()=>{rushLiveExpanded=live.open;});
-  result.prepend(live);
-  const details=rushNode('details','rmArrivalDetails');
-  details.open=rushDetailsExpanded;
-  const summaryLine=rushNode('summary','rmArrivalDetailsToggle');
-  const chevron=rushNode('i');chevron.dataset.lucide='chevron-down';chevron.setAttribute('aria-hidden','true');
-  const caption=rushNode('span','',rushDetailsExpanded?'Masquer le détail du créneau':'Voir le détail du créneau');
-  summaryLine.append(caption,chevron);
-  const detailBody=rushNode('div','rmArrivalDetailsBody');
-  details.append(summaryLine,detailBody);
-  details.addEventListener('toggle',()=>{rushDetailsExpanded=details.open;caption.textContent=details.open?'Masquer le détail du créneau':'Voir le détail du créneau';});
-  for(const el of Array.from(result.children)){if(el!==live)detailBody.append(el)}
-  result.append(details);
-  window.lucide?.createIcons?.({nodes:[live,details]});
  const hint=rushNode('p','rushHint rushArrivalsHint',breakdown.late
   ?breakdown.late+' couvert(s) en retard, déjà inclus dans les attendus. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
   :covers>=limit?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
   :'Les passages encore installés sur ce créneau sont inclus. Une table libérée retire immédiatement ses couverts ; le seuil conseillé n’est pas la capacité du restaurant.');
- detailBody.append(hint);
+ result.append(hint);
  // An hour change must not hide guests who are still awaiting arrival.
  // Keep this operational warning separate from the current hour's forecast.
  if(date===rushLocalDate()){
@@ -242,7 +204,7 @@ function dashboard(date,all){
    const action=rushNode('button','rmArrivalOverdueAction','Voir les réservations');
    action.type='button';action.addEventListener('click',()=>{window.RestoScreens?.request?.('reservations');});
    carried.append(action);
-   result.insertBefore(carried,details);
+   result.append(carried);
    window.lucide?.createIcons?.({nodes:[carried]});
   }
  }
