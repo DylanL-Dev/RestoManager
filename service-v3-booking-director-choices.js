@@ -31,7 +31,7 @@
   if(selected>=today.date)for(const shift of shifts){
    const start=mins(shift.start),end=mins(shift.end);
    if(!Number.isFinite(start)||!Number.isFinite(end)||end<start)continue;
-   for(let at=Math.ceil(Math.max(first,start)/15)*15;at<=end&&at<1440;at+=15)values.push(clock(at));
+   for(let at=Math.ceil(Math.max(first,start)/15)*15;at<=end&&at<1440;at+=15){if(window.ReservationEngine?.isServiceOpen?.(selected,clock(at))!==false)values.push(clock(at));}
   }
   const unique=[...new Set(values)].sort();
   const visible=allSlots?unique:unique.slice(0,12);
