@@ -137,15 +137,20 @@ function dashboard(date,all){
   ];
   for(const [iconName,label,description] of items){
    const line=rushNode('p','rmArrivalHelpBenefit');
-   const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
+   const icon=rushNode('i','rmArrivalHelpIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
    const content=rushNode('span');content.append(rushNode('strong','',label+' — '),document.createTextNode(description));
    line.append(icon,content);benefits.append(line);
   }
   explanation.append(benefits,
    rushNode('p','','Les informations évoluent avec les réservations, les installations et les départs enregistrés.'),
    rushNode('p','','Objectif : mieux coordonner la réception et le restaurant, fluidifier l’accueil et améliorer la qualité du service.'));
-  window.lucide?.createIcons?.({nodes:[explanation]});
   target.append(explanation);
+  window.lucide?.createIcons?.({nodes:[explanation]});
+  // Local Lucide replaces <i> with <svg>; enforce fixed dimensions after rendering.
+  explanation.querySelectorAll('.rmArrivalHelpIcon').forEach(svg=>{
+   svg.setAttribute('width','18');svg.setAttribute('height','18');
+   svg.style.cssText='width:18px!important;height:18px!important;min-width:18px;max-width:18px;flex:0 0 18px;display:block;align-self:flex-start;margin-top:2px;color:#20765b';
+  });
  }
  if(window.lucide?.createIcons)window.lucide.createIcons({nodes:[heading]});
  const windows=[];
