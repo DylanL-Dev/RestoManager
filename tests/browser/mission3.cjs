@@ -402,7 +402,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    }));
    assert.equal(current.title,'Occupation actuelle');
    assert.equal(current.icon,true,'Occupation actuelle must use an offline Lucide icon');
-   assert.equal(current.count,2,'Occupation chart must retain its existing two progress indicators');
+   assert.equal(current.count,1,'Approved compact Occupation actuelle chart shows one active occupancy indicator');
    pass(role+' '+viewport.width+'px four KPI and occupancy icons displayed with unchanged values');
    // All service subsections use local Lucide without changing business metrics.
    if(role==='reception'){
