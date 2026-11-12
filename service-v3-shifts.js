@@ -93,11 +93,13 @@ window.addEventListener('restomanager:hours',refreshSharedHours);
 window.addEventListener('restomanager:supabase-snapshot',refreshSharedHours);
 form.addEventListener('submit',async event=>{event.preventDefault();const next={};for(const key of names){const enabled=document.getElementById('shift-'+key+'-enabled').checked,start=document.getElementById('shift-'+key+'-start').value,end=document.getElementById('shift-'+key+'-end').value;if(!start||!end||start>=end){document.getElementById('shiftFeedback').textContent='Horaires invalides : vérifiez les heures de début et de dernière commande.';return}next[key]={enabled,start,end}}
 if(next.lunch.enabled&&next.dinner.enabled&&next.lunch.end>=next.dinner.start){document.getElementById('shiftFeedback').textContent='Les deux services ne doivent pas se chevaucher.';return}
+let weeklyDraft=null;
+try{weeklyDraft=window.RestoWeeklyScheduleDraft?.()||null;}catch(error){document.getElementById('shiftFeedback').textContent=error.message;return;}
 if(window.RestoSharedReservations){
  const feedback=document.getElementById('shiftFeedback'),button=form.querySelector('[type=submit]');
  button.disabled=true;
  try{
-  await window.RestoSaveSharedHours(next,Number(durationSelect.value),{saturdayLunchClosed:weekendFields.saturdayLunchClosed.checked,sundayLunchClosed:weekendFields.sundayLunchClosed.checked});
+  await window.RestoSaveSharedHours(next,Number(durationSelect.value),{saturdayLunchClosed:weeklyDraft?!weeklyDraft.saturday.lunch.enabled:weekendFields.saturdayLunchClosed.checked,sundayLunchClosed:weeklyDraft?!weeklyDraft.sunday.lunch.enabled:weekendFields.sundayLunchClosed.checked},weeklyDraft);
   feedback.textContent='Horaires et durée enregistrés pour toute l’équipe.';
  }catch(error){window.RestoErrors?.diagnostic('save-hours',error);feedback.textContent=window.RestoErrors?.message(error,'Horaires non confirmés. Réessayez après synchronisation.')||'Horaires non confirmés. Réessayez après synchronisation.'}finally{button.disabled=false}
  return;
