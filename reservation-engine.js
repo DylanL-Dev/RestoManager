@@ -184,10 +184,29 @@
         return result;
     }
 
+    const WEEKDAYS=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    // Weekday keys are stored per restaurant in Supabase; fall back to legacy
+    // shared shifts only when the weekly schedule does not exist.
+    function getShiftsForDate(date) {
+        const schedule=globalThis.RestoSharedHours?.weeklySchedule;
+        if (!validDate(date) || !schedule || typeof schedule!=='object') return getShifts();
+        const day=WEEKDAYS[new Date(date+'T12:00:00Z').getUTCDay()];
+        const entry=schedule[day];
+        if (!entry || !entry.lunch || !entry.dinner) return getShifts();
+        const result={};
+        for (const key of ['lunch','dinner']){
+            const raw=entry[key];
+            result[key]={enabled:raw.enabled===true,start:String(raw.start||''),
+                end:String(raw.end||'')};
+        }
+        return result;
+    }
+
     // The per-restaurant weekly closure is synchronized from Supabase DEV.
     function closedWeekendLunch(date,time) {
         if (!validDate(date) || !Number.isFinite(minutes(time))) return false;
         const weekday=new Date(date+'T12:00:00Z').getUTCDay();
+        if (globalThis.RestoSharedHours?.weeklySchedule) return false;
         const weekend=globalThis.RestoSharedHours?.weekend;
         if (!weekend?.supported || !(weekday===6&&weekend.saturdayLunchClosed || weekday===0&&weekend.sundayLunchClosed)) return false;
         const lunch=getShifts().lunch;
@@ -195,7 +214,7 @@
     }
     function isServiceOpen(date,time) {
         if (!validDate(date) || !Number.isFinite(minutes(time)) || closedWeekendLunch(date,time)) return false;
-        return Object.values(getShifts()).some(shift=>shift.enabled && minutes(time)>=minutes(shift.start) && minutes(time)<=minutes(shift.end));
+        return Object.values(getShiftsForDate(date)).some(shift=>shift.enabled && minutes(time)>=minutes(shift.start) && minutes(time)<=minutes(shift.end));
     }
 
     function validate(candidate, reservations, ignoredId) {
@@ -314,6 +333,7 @@
         normalizeReservations: normalizeReservations,
         validate: validate,
         getShifts: getShifts,
+        getShiftsForDate: getShiftsForDate,
         isServiceOpen: isServiceOpen,
         closedWeekendLunch: closedWeekendLunch,
         seatingWarnings: seatingWarnings,
