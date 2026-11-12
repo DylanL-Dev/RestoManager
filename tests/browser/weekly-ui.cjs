@@ -39,6 +39,13 @@ for(const day of dayKeys)schedule[day]={lunch:{enabled:day!=='saturday'&&day!=='
    assert.deepEqual(copied.tuesday,copied.monday);
    const docWidth=await page.evaluate(()=>document.documentElement.scrollWidth);
    assert.ok(docWidth<=width+4,'horizontal overflow at '+width+'px: '+docWidth);
+   if(width===800){
+    await page.setViewportSize({width:390,height:850});
+    await page.waitForTimeout(150);
+    const open=await page.locator('.rmWeeklyRow[open]').count();
+    assert.equal(open,1,'rotation from tablet to phone must collapse all but Monday');
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth)<=394,'no overflow after rotation');
+   }
    await page.close();
    console.log('PASS weekly scheduler responsive and interactions at '+width+'px');
   }
