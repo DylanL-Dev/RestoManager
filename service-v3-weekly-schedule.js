@@ -21,7 +21,7 @@
  const grid=form.querySelector('.shiftSettingsGrid');
  if(grid)grid.insertAdjacentElement('afterend',root);else form.prepend(root);
  const controls={};
- const hm=s=>/^([01]\\d|2[0-3]):[0-5]\\d$/.test(String(s||''));
+ const hm=s=>/^([01]\d|2[0-3]):[0-5]\d$/.test(String(s||''));
  function setState(day,key,model){
   const el=controls[day][key];el.enabled.checked=model.enabled===true;
   el.start.value=model.start;el.end.value=model.end;
