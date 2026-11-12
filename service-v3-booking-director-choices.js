@@ -19,7 +19,7 @@
  const pax=make('Choisir le nombre de couverts','rmDirectorGuestChoices',guests);
  let allSlots=false,allGuests=false;
  const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
- const mins=s=>{const m=/^(\\d{2}):(\\d{2})$/.exec(String(s||''));return m?Number(m[1])*60+Number(m[2]):NaN};
+ const mins=s=>{const m=/^(\d{2}):(\d{2})$/.exec(String(s||''));return m?Number(m[1])*60+Number(m[2]):NaN};
  const parisNow=()=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date()).filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return {date:p.year+'-'+p.month+'-'+p.day,minute:Number(p.hour)*60+Number(p.minute)}};
  const button=(text,pressed,click)=>{const b=document.createElement('button');b.type='button';b.textContent=text;b.setAttribute('aria-pressed',String(pressed));b.addEventListener('click',click);return b};
  const change=(input,value)=>{input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))};
