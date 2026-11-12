@@ -122,3 +122,16 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - **Validation utilisateur :** en attente pour les nouvelles interactions Réception/Restaurant sur Render ; aucun déploiement V3 / MAIN.
 
 - **Audit technique final RM-JOHN-01** : PR QA #102 non fusionnée, 6/6 contrôles GitHub réussis dont 127/127 tests unitaires ; fermeture samedi/dimanche midi vérifiée par test SQL sans réservation persistée. **Statut : À TESTER CLONE**, validation utilisateur sur Render nécessaire.
+
+
+## RM-JOHN-02 — Planning hebdomadaire par jour — À TESTER CLONE (12/11/2026)
+
+- Demande validée par l'utilisateur : reprendre la maquette de planning hebdomadaire sur PC, tablette et mobile, sans modifier V3/MAIN. Volet actif de RM-005.
+- **DEV uniquement** : sept jours indépendants, ouverture midi/soir, heures de début et dernière réservation, copier vers jour cible et copier lundi→jours ouvrés.
+- Réglages par restaurant synchronisés via `restaurant_hours.weekly_schedule` et garde serveur sur chaque création / changement d'horaire. Le jour est déterminé selon **Europe/Paris**.
+- Migration DEV : `20261112211500_weekly_schedule_dev.sql`. Permissions durcies : `20261112212500_weekly_hours_rls_dev.sql`.
+- Navigation responsive : tableau PC, disposition intermédiaire tablette, cartes repliables téléphone. Tests Playwright `tests/browser/weekly-ui.cjs` pour 1440/800/390 px.
+- **Aucune réservation existante modifiée** ; durée existante conservée (60 min au moment de l'audit), jours fermés antérieurs conservés.
+- Rapport : [RM-JOHN-02](audits/RM-JOHN-02_PLANNING_HEBDOMADAIRE.md).
+- Fermetures ponctuelles par date : **hors de cette version**, à cadrer séparément.
+- État : tests GitHub en cours, test Render et validation explicite utilisateur encore nécessaires avant promotion.
