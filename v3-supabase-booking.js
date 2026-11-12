@@ -141,6 +141,39 @@ export async function setRestaurantTableActiveShared(id,active){
  if(error)throw error;
  return data;
 }
+
+async function roomAdminClient(){
+ requireWrite();
+ const {profile}=await requireStaff();
+ if(profile.role!=='fb_admin')throw window.RestoErrors?.business('Seul le compte Restaurant peut gérer les salles.')||Error('Accès refusé.');
+ return profile;
+}
+export async function createRestaurantRoomShared(name){
+ const profile=await roomAdminClient();
+ const label=String(name||'').trim();
+ if(!label||label.length>60)throw window.RestoErrors?.business('Indiquez un nom de salle de 1 à 60 caractères.')||Error('Nom invalide.');
+ const {data:existing,error:readError}=await supabase.from('restaurant_rooms').select('name,sort_order').eq('restaurant_id',profile.restaurant_id).eq('active',true);
+ if(readError)throw readError;
+ if((existing||[]).some(r=>r.name.trim().toLocaleLowerCase('fr')===label.toLocaleLowerCase('fr')))
+  throw window.RestoErrors?.business('Cette salle existe déjà.')||Error('Salle existante.');
+ const order=Math.max(0,...(existing||[]).map(r=>Number(r.sort_order)||0))+1;
+ const {data,error}=await supabase.from('restaurant_rooms').insert({restaurant_id:profile.restaurant_id,name:label,active:true,sort_order:order}).select('id,name').single();
+ if(error)throw error;
+ return data;
+}
+export async function deactivateRestaurantRoomShared(id){
+ const profile=await roomAdminClient();
+ if(!id)throw Error('Salle introuvable.');
+ const {data:tables,error:tableError}=await supabase.from('restaurant_tables').select('id').eq('restaurant_id',profile.restaurant_id).eq('room_id',id).limit(1);
+ if(tableError)throw tableError;
+ if(tables?.length)throw window.RestoErrors?.business('Cette salle contient des tables, même désactivées. Déplacez-les avant de désactiver la salle.')||Error('Salle non vide.');
+ const {data,error}=await supabase.from('restaurant_rooms').update({active:false}).eq('restaurant_id',profile.restaurant_id).eq('id',id).eq('active',true).select('id').single();
+ if(error)throw error;
+ return data;
+}
+window.RestoCreateRestaurantRoom=createRestaurantRoomShared;
+window.RestoDeactivateRestaurantRoom=deactivateRestaurantRoomShared;
+
 window.RestoCreateRestaurantTable=createRestaurantTableShared;
 window.RestoSetRestaurantTableActive=setRestaurantTableActiveShared;
 
