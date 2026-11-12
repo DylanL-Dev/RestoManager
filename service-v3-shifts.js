@@ -3,6 +3,21 @@
 const form=document.getElementById('restaurantShiftForm');if(!form)return;
 const KEY='restomanager_shifts_v1',names=['lunch','dinner'],defaults=ReservationEngine.getShifts();
 for(const key of names){const shift=defaults[key];for(const [field,value] of Object.entries(shift)){const input=document.getElementById('shift-'+key+'-'+field);if(!input)continue;if(field==='enabled')input.checked=value;else input.value=value}}
+// Explicit, restaurant-scoped closure settings for Saturday and Sunday lunch.
+const weekendBox=document.createElement('fieldset');
+weekendBox.id='restaurantWeekendLunch';
+const weekendLegend=document.createElement('legend');weekendLegend.textContent='Service du midi le week-end';
+weekendBox.append(weekendLegend);
+const weekendFields={};
+for(const [key,title] of [['saturdayLunchClosed','Samedi midi fermé'],['sundayLunchClosed','Dimanche midi fermé']]){
+ const label=document.createElement('label'),input=document.createElement('input');
+ input.type='checkbox';input.id='shift-weekend-'+key;weekendFields[key]=input;
+ label.append(input,document.createTextNode(' '+title));weekendBox.append(label);
+}
+const weekendHint=document.createElement('p');weekendHint.className='muted';
+weekendHint.textContent='Les créneaux fermés sont refusés à la Réception et par Supabase, même si des tables sont libres.';
+weekendBox.append(weekendHint);
+(form.querySelector('.shiftSettingsGrid')||form).append(weekendBox);
 const durationBox=document.createElement('div');durationBox.className='restaurantDurationSetting';
 const durationLabel=document.createElement('label');durationLabel.textContent='Durée par défaut d’une table';
 const durationSelect=document.createElement('select');durationSelect.id='restaurantDefaultDuration';
@@ -63,8 +78,10 @@ function refreshSharedHours(){
  if(!window.RestoSharedHours)return;
  const signature=JSON.stringify(window.RestoSharedHours);
  if(signature===lastSharedHours)return;
- const {shifts,duration}=window.RestoSharedHours;
+ const {shifts,duration,weekend}=window.RestoSharedHours;
  lastSharedHours=signature;
+ weekendBox.hidden=!weekend?.supported;
+ for(const key of Object.keys(weekendFields)){weekendFields[key].checked=weekend?.[key]===true;weekendFields[key].disabled=!weekend?.supported;}
  for(const key of names){
   document.getElementById('shift-'+key+'-enabled').checked=shifts[key].enabled;
   for(const field of ['start','end'])document.getElementById('shift-'+key+'-'+field).value=shifts[key][field];
@@ -80,7 +97,7 @@ if(window.RestoSharedReservations){
  const feedback=document.getElementById('shiftFeedback'),button=form.querySelector('[type=submit]');
  button.disabled=true;
  try{
-  await window.RestoSaveSharedHours(next,Number(durationSelect.value));
+  await window.RestoSaveSharedHours(next,Number(durationSelect.value),{saturdayLunchClosed:weekendFields.saturdayLunchClosed.checked,sundayLunchClosed:weekendFields.sundayLunchClosed.checked});
   feedback.textContent='Horaires et durée enregistrés pour toute l’équipe.';
  }catch(error){window.RestoErrors?.diagnostic('save-hours',error);feedback.textContent=window.RestoErrors?.message(error,'Horaires non confirmés. Réessayez après synchronisation.')||'Horaires non confirmés. Réessayez après synchronisation.'}finally{button.disabled=false}
  return;
