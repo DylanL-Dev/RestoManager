@@ -60,7 +60,14 @@
    row.append(time,details,status);section.append(row);
   }
   root.append(section);
-  root.append(node('p','receptionServiceFoot','État partagé · actualisé à '+clock.format(new Date())+'. La capacité indique les places configurées, pas les disponibilités garanties à un horaire donné.'));
+  const syncedAt=Number(window.RestoLastSyncAt)||0;
+  const syncedLabel=syncedAt?clock.format(new Date(syncedAt)):'non renseignée';
+  const syncState=window.RestoSyncState;
+  if(syncState==='error'||syncState==='pending'||navigator.onLine===false){
+   const warning=node('p','receptionServiceEmpty','Attention : synchronisation '+(navigator.onLine===false?'hors ligne':'non confirmée')+'. Les chiffres affichés peuvent être anciens. Vérifiez la connexion avant de vous fier aux disponibilités.');
+   warning.setAttribute('role','alert');root.insertBefore(warning,cards);
+  }
+  root.append(node('p','receptionServiceFoot','Dernière synchronisation des données : '+syncedLabel+'. La capacité indique les places configurées, pas les disponibilités garanties à un horaire donné.'));
  }
  window.addEventListener('restomanager:supabase-snapshot',render);
  window.addEventListener('restomanager:screen',render);
