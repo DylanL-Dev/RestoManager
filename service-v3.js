@@ -3,7 +3,7 @@
 const KEY='restomanager_rush_v1',RES='restomanager_reservations',DEFAULT={percent:60,window:60,step:15};
 const $=id=>document.getElementById(id);
 const rushNode=(tag,className,content)=>{const element=document.createElement(tag);if(className)element.className=className;if(content!==undefined)element.textContent=String(content);return element};
-const rushStatuses={waiting:new Set(['reserved','confirmed','late']),arrived:new Set(['arrived','seated'])};
+const rushStatuses={waiting:new Set(['reserved','confirmed','late','arrived']),arrived:new Set(['seated'])};
 function rushLocalDate(){
  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
  const values=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
@@ -83,7 +83,7 @@ function dashboard(date,all){
  target.replaceChildren();
  const shifts=Object.entries(ReservationEngine.getShifts()).filter(([,s])=>s.enabled);
  const heading=document.createElement('div');heading.className='rushDashHead';
- heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2 class="serviceIconHeading"><i data-lucide="activity" aria-hidden="true"></i><span>Charge des arrivées</span></h2><p>Suivi du créneau : clients encore à venir, arrivées en retard et clients déjà installés.</p></div>';
+ heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISION · CRÉNEAU</span><h2 class="serviceIconHeading"><i data-lucide="calendar-clock" aria-hidden="true"></i><span>Prévisions d’arrivées</span></h2><p>Couverts prévus sur le créneau affiché, distincts de l’occupation actuelle de la salle.</p></div>';
  if(!window.RestoReception){
   const gear=rushNode('button','rushSettingsShortcut');gear.type='button';
   gear.setAttribute('aria-label','Régler la limite des arrivées');
@@ -125,20 +125,21 @@ function dashboard(date,all){
  const result=document.createElement('div');result.className='rushDashContent';target.append(result);
  function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
  const numbers=document.createElement('div');numbers.className='rushLoadNumbers';
- const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Arrivées prévues / limite conseillée'));numbers.append(rushNode('strong','',covers+' / '+limit),loadLabel);
+ const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Couverts sur ce créneau / limite conseillée'));numbers.append(rushNode('strong','',covers+' / '+limit),loadLabel);
  const level=covers>limit?'Limite dépassée':covers===limit?'Seuil atteint':covers>=limit*.8?'Presque au seuil':'Flux maîtrisé';
  const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
  function rushBreakdownLabel(iconName,label){const line=rushNode('span','rushBreakdownLabel');const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');line.append(icon,rushNode('span','',label));return line;}
- const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown';
- const upcoming=rushNode('div','rushArrivalBreakdownItem');
- upcoming.append(rushNode('strong','',breakdown.upcoming),rushBreakdownLabel('calendar-clock','Encore à venir'));
- const late=rushNode('div','rushArrivalBreakdownItem rushArrivalLate'+(breakdown.late?' isLate':''));
- late.append(rushNode('strong','',breakdown.late),rushBreakdownLabel('alert-triangle','Heure prévue dépassée'));
- const welcomed=rushNode('div','rushArrivalBreakdownItem');
- welcomed.append(rushNode('strong','',breakdown.arrived),rushBreakdownLabel('users','Déjà arrivés / installés'));
- arrivalDetails.append(upcoming,late,welcomed);
- result.append(summary,arrivalDetails,progress(data));
+ const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown rmForecastTwoStatuses';
+ function metric(value,label,iconName){
+  const item=rushNode('div','rushArrivalBreakdownItem');
+  const icon=rushNode('i','rmMetricIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
+  const words=rushNode('div','rmForecastMetricText');
+  words.append(rushNode('strong','',value),rushNode('span','',label));
+  item.append(icon,words);return item;
+ }
+ arrivalDetails.append(metric(breakdown.waiting,'Couverts attendus','calendar-clock'),metric(breakdown.arrived,'Couverts installés sur ce créneau','armchair'));
+ result.append(summary,arrivalDetails,progress(data));window.lucide?.createIcons?.({nodes:[result]});
   // Clarify the distinction between the selected hour and all reservations for the day.
   const daily=all.filter(r=>relevant(r,date));
   const dailyGuests=daily.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
@@ -146,10 +147,10 @@ function dashboard(date,all){
    'Créneau affiché : '+clock(w.start)+' – '+clock(w.end)+' · '+covers+' couvert(s) sur cette plage. Total des réservations actives du jour : '+dailyGuests+' couvert(s).');
   result.append(periodLabel);
  const hint=rushNode('p','rushHint rushArrivalsHint',breakdown.late
-  ?breakdown.late+' couvert(s) dont l’heure prévue est passée restent à accueillir. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
+  ?breakdown.late+' couvert(s) en retard, déjà inclus dans les attendus. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
   :covers>=limit?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
-  :'Arrivées réparties : ce créneau reste sous la limite conseillée.');
+  :'Les retards restent inclus dans les couverts attendus. Le seuil conseillé ne représente pas la capacité du restaurant.');
  result.append(hint);
  // An hour change must not hide guests who are still awaiting arrival.
  // Keep this operational warning separate from the current hour's forecast.
@@ -166,26 +167,35 @@ function dashboard(date,all){
  const queryMinutes=isCurrentDay?Math.max(w.start,nowClock+1):w.start;
  const canQuoteAvailability=!isCurrentDay||queryMinutes<w.end;
  const queryTime=clock(queryMinutes);
- const tableState=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
-  // The 2-cover check below is a generic availability example, never the selected reservation.
-
- if(tableState?.valid){
-  const critical=tableState.remaining<=3;
-  const note=document.createElement('div');note.className='rushTablePressure'+(critical?' rushTablePressureCritical':'')+(covers>=limit?' rushLimitReached':'');
-    const example=document.createElement('small');example.textContent='Simulation de disponibilité pour une nouvelle réservation de 2 couverts';note.append(example);
-  if(critical){
-   note.setAttribute('role','status');
-   const head=document.createElement('div');head.className='rushTablePressureHead';
-   const symbol=document.createElement('span');symbol.className='rushTablePressureSymbol';symbol.textContent=tableState.remaining===0?'!':'!';
-   symbol.setAttribute('aria-hidden','true');
-   const heading=document.createElement('strong');heading.textContent=tableState.remaining===0?'Créneau complet pour 2 personnes':'Attention · Peu de tables disponibles';
-   head.append(symbol,heading);note.append(head);
+ // This simulation is a separate operational block, not part of arrival forecasts.
+ const occupancy=$('currentOccupancy');
+ if(occupancy){
+  let panel=$('rmImmediateAvailability');
+  if(!panel){
+   panel=rushNode('section','rmImmediateAvailability');
+   panel.id='rmImmediateAvailability';
+   panel.setAttribute('aria-label','Simulation de disponibilité pour une nouvelle réservation');
+   occupancy.insertAdjacentElement('afterend',panel);
   }
-  const message=document.createElement('p');
-  message.textContent=tableState.remaining===0?'Aucune table compatible encore disponible pour 2 couverts à '+queryTime+'. Proposez un autre horaire.':critical?'Seulement '+tableState.remaining+' table'+(tableState.remaining>1?'s':'')+' compatible'+(tableState.remaining>1?'s':'')+' encore réservable'+(tableState.remaining>1?'s':'')+' pour 2 couverts à '+queryTime+'. Vérifiez les disponibilités avant de confirmer.':tableState.remaining+' tables compatibles encore réservables pour 2 couverts à '+queryTime+'.';
-  if(covers>=limit)message.textContent+=' Attention : le seuil conseillé d’arrivées est déjà atteint pour cette heure.';
-  note.append(message);result.append(note);
+  const heading=rushNode('div','rmImmediateHeading'),title=rushNode('h2','serviceIconHeading');
+  const icon=rushNode('i');icon.dataset.lucide='zap';icon.setAttribute('aria-hidden','true');
+  title.append(icon,rushNode('span','','Disponibilité immédiate'));
+  heading.append(rushNode('span','rushSectionEyebrow','SIMULATION · NOUVELLE RÉSERVATION'),title,
+    rushNode('p','','Estimation pour une nouvelle réservation, indépendante des prévisions et de l’occupation actuelle.'));
+  const state=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
+  const answer=rushNode('div','rmImmediateResult'),question=rushNode('div','rmImmediateQuestion');
+  const people=rushNode('i');people.dataset.lucide='users';people.setAttribute('aria-hidden','true');
+  question.append(people,rushNode('span','','Pour 2 couverts à '+(canQuoteAvailability?queryTime:'un prochain créneau')));
+  const remaining=state?.valid?state.remaining:null;
+  const count=remaining===null?'Disponibilités à vérifier sur un créneau ouvert':remaining===0?'Aucune table compatible disponible':remaining+' table'+(remaining>1?'s':'')+' compatible'+(remaining>1?'s':'')+' disponible'+(remaining>1?'s':'');
+  const resultBox=rushNode('div','rmImmediateAnswer'+(remaining===0?' rmImmediateFull':''));
+  const grid=rushNode('i');grid.dataset.lucide='layout-grid';grid.setAttribute('aria-hidden','true');
+  resultBox.append(grid,rushNode('strong','rmImmediateCount',count));
+  answer.append(question,resultBox);
+  panel.replaceChildren(heading,answer);
+  window.lucide?.createIcons?.({nodes:[panel]});
  }
+
  }update()}
 setInterval(()=>{if(lastRushDashboard&&document.visibilityState!=='hidden')dashboard(lastRushDashboard.date,lastRushDashboard.all)},60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&lastRushDashboard)dashboard(lastRushDashboard.date,lastRushDashboard.all)});
