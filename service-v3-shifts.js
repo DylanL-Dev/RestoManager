@@ -5,7 +5,7 @@ const KEY='restomanager_shifts_v1',names=['lunch','dinner'],defaults=Reservation
 for(const key of names){const shift=defaults[key];for(const [field,value] of Object.entries(shift)){const input=document.getElementById('shift-'+key+'-'+field);if(!input)continue;if(field==='enabled')input.checked=value;else input.value=value}}
 // Explicit, restaurant-scoped closure settings for Saturday and Sunday lunch.
 const weekendBox=document.createElement('fieldset');
-weekendBox.id='restaurantWeekendLunch';
+weekendBox.id='restaurantWeekendLunch';weekendBox.hidden=true;
 const weekendLegend=document.createElement('legend');weekendLegend.textContent='Service du midi le week-end';
 weekendBox.append(weekendLegend);
 const weekendFields={};
