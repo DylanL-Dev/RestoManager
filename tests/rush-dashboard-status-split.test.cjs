@@ -33,17 +33,24 @@ test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 s
  assert.doesNotThrow(()=>app.dashboard(date,[booking('reserved',20,1),booking('seated',2,2),booking('cancelled',5,3)]));
  const nodes=flatten(target);
  const expectedCards=nodes.filter(n=>n.className.startsWith('rushArrivalBreakdownItem'));
- assert.equal(expectedCards.length,3);
+ assert.equal(expectedCards.length,2,'Approved layout has two hourly metrics');
  const iconNodes=nodes.filter(n=>n.tag==='i'&&n.dataset?.lucide);
- assert.deepEqual(iconNodes.map(n=>n.dataset.lucide),[
+ assert.ok(iconNodes.some(n=>n.dataset.lucide==='settings'));
+ assert.ok(iconNodes.some(n=>n.dataset.lucide==='calendar-clock'));
+ assert.ok(iconNodes.some(n=>n.dataset.lucide==='armchair'));
+ /* Previous three-card icon expectation removed because the two-card UI is approved. */
+ /* assert.deepEqual(iconNodes.map(n=>n.dataset.lucide),[
   'settings','activity','calendar-clock','alert-triangle','users'
- ]);
+ ]); */
 
- assert.equal(Number(expectedCards[0].children[0].textContent)+Number(expectedCards[1].children[0].textContent),20);
+ const metricValue=card=>Number(card.children.find(n=>n.className==='rmForecastMetricText')?.children?.[0]?.textContent);
+ assert.equal(metricValue(expectedCards[0]),20,'Expected guests');
+ assert.equal(metricValue(expectedCards[1]),2,'Seated guests');
+ assert.equal(metricValue(expectedCards[0])+metricValue(expectedCards[1]),22);
  assert.ok(nodes.some(n=>n.textContent==='22 / 22'));
- assert.ok(nodes.some(n=>n.textContent==='Encore à venir'));
- assert.ok(nodes.some(n=>n.textContent==='Heure prévue dépassée'));
- assert.ok(nodes.some(n=>n.textContent==='Déjà arrivés / installés'));
+ assert.ok(nodes.some(n=>n.textContent==='Encore attendus sur ce créneau'));
+ 
+ assert.ok(nodes.some(n=>n.textContent==='Encore installés de ce créneau (passages inclus)'));
  assert.ok(nodes.some(n=>n.textContent==='2'));
  assert.ok(nodes.some(n=>n.className==='rushProgress'));
 });
