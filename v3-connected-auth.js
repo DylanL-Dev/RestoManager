@@ -302,13 +302,14 @@ try{
  document.addEventListener('click',forbidden,true);
  // The native reservation list now consumes the shared snapshot directly.
  // No duplicate prototype panel or independent local reservation list.
- window.RestoSaveSharedHours=async(shifts,duration,weekend)=>{
+ window.RestoSaveSharedHours=async(shifts,duration,weekend,weeklySchedule)=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   if(profile.role!=='fb_admin')throw Error('La modification des horaires est réservée au responsable.');
   const values={duration};
   for(const key of ['lunch','dinner']){
    for(const field of ['enabled','start','end'])values[key+'_'+field]=shifts[key][field];
   }
+  if(weeklySchedule&&window.RestoSharedHours?.weeklySchedule)values.weekly_schedule=weeklySchedule;
   // Backward compatible with schemas where weekly closure columns are not deployed.
   if(weekend&&window.RestoSharedHours?.weekend?.supported){
    values.saturday_lunch_closed=weekend.saturdayLunchClosed===true;
