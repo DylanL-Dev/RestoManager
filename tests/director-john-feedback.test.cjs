@@ -9,7 +9,7 @@ const html=read('v3-connected.html');
 const service=read('service-v3.js');
 test('John: director booking selectors have valid JavaScript and load only in DEV screen',()=>{
  assert.doesNotThrow(()=>new Function(controls));
- assert.match(html,/service-v3-booking-director-choices\.js\?v=20261112-john-choices1/);
+ assert.match(html,/service-v3-booking-director-choices\.js\?v=20261112-weekend-closures1/);
  assert.match(controls,/bookingDate/);assert.match(controls,/bookingTime/);assert.match(controls,/bookingGuests/);
 });
 test('John: quarter-hour choices follow registered service hours and exclude past arrivals',()=>{
@@ -35,4 +35,16 @@ test('John: advisory pressure threshold has explicit explanation and exceptional
  assert.match(service,/ce n’est pas la capacité maximale de la salle/);
  assert.match(service,/Confirmer exceptionnellement/);
  assert.match(service,/Seuil conseillé d’arrivées sur une heure/);
+});
+
+test('John: Saturday and Sunday lunch closed; weekdays and weekend dinner remain open',()=>{
+ const Engine=require('../reservation-engine.js'),prior=globalThis.RestoSharedHours;
+ globalThis.RestoSharedHours={duration:90,shifts:{lunch:{enabled:true,start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'21:30'}},weekend:{supported:true,saturdayLunchClosed:true,sundayLunchClosed:true}};
+ try{
+  assert.equal(Engine.isServiceOpen('2026-11-14','12:30'),false);
+  assert.equal(Engine.isServiceOpen('2026-11-15','12:30'),false);
+  assert.equal(Engine.isServiceOpen('2026-11-13','12:30'),true);
+  assert.equal(Engine.isServiceOpen('2026-11-14','19:15'),true);
+  assert.equal(Engine.closedWeekendLunch('2026-11-14','12:30'),true);
+ }finally{if(prior===undefined)delete globalThis.RestoSharedHours;else globalThis.RestoSharedHours=prior;}
 });
