@@ -118,5 +118,7 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - **Preuves détaillées :** [RM-JOHN-01 — sept remarques](audits/RM-JOHN-01_RETours_20261112.md).
 - **Modifications DEV :** créneaux quart d'heure, choix de couverts, erreurs près des champs, explication du seuil conseillé ; salle Prestige ajoutée dans Supabase DEV, sans table déplacée.
 - **Fermeture du week-end : correction DEV codée et vérifiée en SQL** : champs samedi/dimanche dédiés dans Supabase, trigger empêchant les nouvelles réservations du midi et les changements d'horaire vers ce service fermé ; choix de créneaux et Gestion raccordés. Essais transactionnels sans enregistrement fictif. **Toujours À TESTER CLONE sur Render** avec les deux rôles avant V3/MAIN.
-- **Configuration DEV à confirmer :** midi 00:00–18:00, soir 19:00–23:55 et durée de table 45 min, différents des horaires habituels. Ne pas écraser sans validation.
+- **Configuration DEV restaurée** après constat des valeurs de test inhabituelles : midi 12:00–14:30, soir 19:00–21:30, durée de table 90 min. Les anciennes valeurs étaient 00:00–18:00, 19:00–23:55 et 45 min ; aucune réservation déjà présente n'a été supprimée.
 - **Validation utilisateur :** en attente pour les nouvelles interactions Réception/Restaurant sur Render ; aucun déploiement V3 / MAIN.
+
+- **Audit technique final RM-JOHN-01** : PR QA #102 non fusionnée, 6/6 contrôles GitHub réussis dont 127/127 tests unitaires ; fermeture samedi/dimanche midi vérifiée par test SQL sans réservation persistée. **Statut : À TESTER CLONE**, validation utilisateur sur Render nécessaire.
