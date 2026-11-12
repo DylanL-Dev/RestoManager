@@ -27,7 +27,7 @@ export function prepareServiceSnapshot(snapshot,decodeBookingDetails){
    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||'',editVersion:r.edit_version||null};
  });
  return {plan:{version:1,rooms,tables},values:{
-  RestoSharedHours:{shifts,duration:hours.duration},RestoSharedReservations:reservations,
+  RestoSharedHours:{shifts,duration:hours.duration,weekend:{supported:Object.prototype.hasOwnProperty.call(hours,'saturday_lunch_closed')&&Object.prototype.hasOwnProperty.call(hours,'sunday_lunch_closed'),saturdayLunchClosed:hours.saturday_lunch_closed===true,sundayLunchClosed:hours.sunday_lunch_closed===true}},RestoSharedReservations:reservations,
   RestoSmartPlacementTableIds:new Map(tables.map(t=>[t.number,t.id])),
   RestoDraftHolds:snapshot.holds.map(h=>({id:h.id,number:number(h.table_id),start:Date.parse(h.starts_at),end:Date.parse(h.ends_at),expiry:Date.parse(h.expires_at),team:h.draft_role==='reception'?'Réception':'Restaurant'})),
   RestoInactiveRestaurantTables:snapshot.tables.filter(t=>!t.active),
