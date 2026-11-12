@@ -110,3 +110,13 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 ```
 
 **Rappel impératif à annoncer à l'utilisateur lorsqu'il demande une nouvelle tâche :** « Nous avons déjà RM-XXX en cours / à valider. On la termine ou on la reporte explicitement avant d'ouvrir la suivante. »
+
+
+## Audit direction RM-JOHN-01 — 12/11/2026 (DEV UNIQUEMENT)
+
+- **Statut : À TESTER CLONE / PARTIEL**. Demandé explicitement par l'utilisateur : auditer les sept retours du directeur, corriger sur DEV sans toucher à V3 ni MAIN. C'est un volet d'audit de RM-005, pas une autorisation de publication.
+- **Preuves détaillées :** [RM-JOHN-01 — sept remarques](audits/RM-JOHN-01_RETours_20261112.md).
+- **Modifications DEV :** créneaux quart d'heure, choix de couverts, erreurs près des champs, explication du seuil conseillé ; salle Prestige ajoutée dans Supabase DEV, sans table déplacée.
+- **Blocage P1 à résoudre avant V3/MAIN :** fermeture du midi le samedi et le dimanche non modélisée côté base et non sécurisée dans les chemins de réservation. Ne pas simuler un correctif uniquement frontal.
+- **Configuration DEV à confirmer :** midi 00:00–18:00, soir 19:00–23:55 et durée de table 45 min, différents des horaires habituels. Ne pas écraser sans validation.
+- **Validation utilisateur :** en attente pour les nouvelles interactions Réception/Restaurant sur Render ; aucun déploiement V3 / MAIN.
