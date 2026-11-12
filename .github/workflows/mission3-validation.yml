@@ -73,6 +73,8 @@ jobs:
         run: npm run test:mission2:browser
       - name: Mission 3 responsive, conflict and controlled-clock UI regressions
         run: npm run test:mission3:browser
+      - name: Responsive weekly hours PC tablet mobile
+        run: node tests/browser/weekly-ui.cjs
       - name: Tables rendering, loading and pre-migration consultation
         run: npm run test:display
       - uses: actions/upload-artifact@v4
