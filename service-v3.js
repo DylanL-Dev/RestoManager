@@ -125,8 +125,8 @@ function dashboard(date,all){
  const result=document.createElement('div');result.className='rushDashContent';target.append(result);
  function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
  const numbers=document.createElement('div');numbers.className='rushLoadNumbers';
- const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Couverts sur ce créneau / limite conseillée'));numbers.append(rushNode('strong','',covers+' / '+limit),loadLabel);
- const level=covers>limit?'Limite dépassée':covers===limit?'Seuil atteint':covers>=limit*.8?'Presque au seuil':'Flux maîtrisé';
+ const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Réservations de ce créneau / seuil conseillé'));numbers.append(rushNode('strong','',covers+' / '+limit),loadLabel);
+ const level=covers>limit?'Seuil de réservations dépassé':covers===limit?'Seuil de réservations atteint':covers>=limit*.8?'Réservations nombreuses':'Réservations réparties';
  const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
  function rushBreakdownLabel(iconName,label){const line=rushNode('span','rushBreakdownLabel');const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');line.append(icon,rushNode('span','',label));return line;}
@@ -146,6 +146,22 @@ function dashboard(date,all){
   const periodLabel=rushNode('p','rushHint rushArrivalsHint',
    'Créneau affiché : '+clock(w.start)+' – '+clock(w.end)+' · '+covers+' couvert(s) sur cette plage. Total des réservations actives du jour : '+dailyGuests+' couvert(s).');
   result.append(periodLabel);
+  // Live service load includes walk-ins and reservations installed at other times.
+  const installedNow=all.filter(r=>r.date===date&&r.status==='seated');
+  const installedCovers=installedNow.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  const installedTables=new Set(installedNow.flatMap(r=>Array.isArray(r.tables)?r.tables:[]));
+  const waitingNow=all.filter(r=>r.date===date&&rushStatuses.waiting.has(r.status)).reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  const live=rushNode('div','rmLiveServiceAlert');
+  const liveHeading=rushNode('div','rmLiveServiceAlertHeading');
+  const liveIcon=rushNode('i');liveIcon.dataset.lucide='utensils';liveIcon.setAttribute('aria-hidden','true');
+  liveHeading.append(liveIcon,rushNode('strong','','SERVICE EN COURS · SITUATION RÉELLE'));
+  const liveMetrics=rushNode('div','rmLiveServiceAlertMetrics');
+  liveMetrics.append(rushNode('strong','',installedCovers+' couverts installés'),rushNode('span','',installedTables.size+' table'+(installedTables.size>1?'s':'')+' occupée'+(installedTables.size>1?'s':'')),rushNode('span','',waitingNow+' couvert(s) encore attendus'));
+  live.append(liveHeading,liveMetrics);
+  const note=rushNode('p','rmLiveServiceNote','Les passages sont inclus dans les couverts installés. Le chiffre des réservations du créneau ne représente pas la charge du service.');
+  live.append(note);
+  result.prepend(live);
+  window.lucide?.createIcons?.({nodes:[live]});
  const hint=rushNode('p','rushHint rushArrivalsHint',breakdown.late
   ?breakdown.late+' couvert(s) en retard, déjà inclus dans les attendus. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
   :covers>=limit?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
@@ -174,14 +190,14 @@ function dashboard(date,all){
   if(!panel){
    panel=rushNode('section','rmImmediateAvailability');
    panel.id='rmImmediateAvailability';
-   panel.setAttribute('aria-label','Simulation de disponibilité pour une nouvelle réservation');
+   panel.setAttribute('aria-label','Disponibilité calculée pour une nouvelle réservation');
    occupancy.insertAdjacentElement('afterend',panel);
   }
   const heading=rushNode('div','rmImmediateHeading'),title=rushNode('h2','serviceIconHeading');
   const icon=rushNode('i');icon.dataset.lucide='zap';icon.setAttribute('aria-hidden','true');
   title.append(icon,rushNode('span','','Disponibilité immédiate'));
-  heading.append(rushNode('span','rushSectionEyebrow','SIMULATION · NOUVELLE RÉSERVATION'),title,
-    rushNode('p','','Estimation pour une nouvelle réservation, indépendante des prévisions et de l’occupation actuelle.'));
+  heading.append(rushNode('span','rushSectionEyebrow','DISPONIBILITÉ · NOUVELLE RÉSERVATION'),title,
+    rushNode('p','','Tables compatibles pour une nouvelle réservation, indépendamment des indicateurs d’activité.'));
   const state=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
   const answer=rushNode('div','rmImmediateResult'),question=rushNode('div','rmImmediateQuestion');
   const people=rushNode('i');people.dataset.lucide='users';people.setAttribute('aria-hidden','true');
