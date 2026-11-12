@@ -393,7 +393,7 @@ function serviceDisplayReady(){
  return false;
 }
 function render(){if(!serviceDisplayReady())return;const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted',visible.length?'Aucune table pour ce filtre.':'Aucune table active dans cette salle.'));
-const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0),'users'],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0),'calendar-clock'],['Tables occupées',occupiedNumbers.size,'armchair'],['Places sur tables libres',free,'layout-grid']];const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.tables?.length?' · Table '+r.tables.join(' + '):'')+(r.status==='confirmed'?' · Confirmé, non installé':'');
+const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients installés',seated.reduce((n,r)=>n+r.guests,0),'users'],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0),'calendar-clock'],['Tables occupées',occupiedNumbers.size,'armchair'],['Places sur tables libres',free,'layout-grid']];const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.tables?.length?' · Table '+r.tables.join(' + '):'')+(r.status==='confirmed'?' · Confirmé, non installé':'');
 const kpiLists=[
  seated.map(reservationLine),
  waiting.map(reservationLine),
@@ -427,18 +427,34 @@ function progressRow(label,count,total,percent){
  rail.append(bar);group.append(head,rail);return group;
 }
 const occupancyTitle=node('div','occupancyHead');
-const occupancyHeading=node('div','occupancyHeadingBlock');const occupancyH2=node('h2','occupancyTitleText');const occupancyIcon=node('i','occupancyTitleIcon');occupancyIcon.dataset.lucide='activity';occupancyIcon.setAttribute('aria-hidden','true');occupancyH2.append(occupancyIcon,node('span','', 'Occupation actuelle'));occupancyHeading.append(node('span','occupancySectionEyebrow','EN DIRECT · CLIENTS INSTALLÉS'),occupancyH2);occupancyTitle.append(occupancyHeading);
-const occupancyState=noFreeTables?'Complet':tablesPercent>=85?'Presque complet':tablesPercent>=60?'Service chargé':'Places disponibles';
+const occupancyHeading=node('div','occupancyHeadingBlock');
+const occupancyH2=node('h2','occupancyTitleText');
+const occupancyIcon=node('i','occupancyTitleIcon');occupancyIcon.dataset.lucide='armchair';occupancyIcon.setAttribute('aria-hidden','true');
+occupancyH2.append(occupancyIcon,node('span','','Occupation actuelle'));
+occupancyHeading.append(node('span','occupancySectionEyebrow','EN DIRECT · SALLE'),occupancyH2,node('p','rmOccupationSubtitle','Tables réellement occupées par des clients installés maintenant, hors réservations futures.'));
+occupancyTitle.append(occupancyHeading);
+const occupancyState=noFreeTables?'Toutes les tables occupées':tablesPercent>=85?'Presque complet':tablesPercent>=60?'Service chargé':'Places disponibles';
 occupancyTitle.append(node('span','occupancyState'+(noFreeTables?' isFull':tablesPercent>=85?' isBusy':''),occupancyState));
-const occupancyNote=node('p','occupancyHelp',noFreeTables
- ?'Toutes les tables sont occupées. Des places peuvent rester libres sur des tables déjà installées.'
- :totalTables-occupiedTables+' table(s) actuellement non occupée(s).');
-occupancy.replaceChildren(
- occupancyTitle,
- progressRow('Tables occupées',occupiedTables,totalTables,tablesPercent),
- progressRow('Clients présents / capacité totale',guestsPresent,totalSeats,seatsPercent),
- occupancyNote
+const occupancyMetrics=node('div','rmOccupancyMetrics');
+function occupancyTile(iconName,value,label){
+ const item=node('div','rmOccupancyMetric');
+ const icon=node('i','rmOccupancyMetricIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
+ const words=node('div','rmOccupancyMetricWords');words.append(node('strong','',value),node('span','',label));
+ item.append(icon,words);return item;
+}
+occupancyMetrics.append(
+ occupancyTile('users',guestsPresent,'Couverts installés'),
+ occupancyTile('armchair',occupiedTables,'Tables occupées'),
+ occupancyTile('check-circle-2',totalTables-occupiedTables,'Tables libres'),
+ occupancyTile('layout-grid',totalTables,'Tables au total')
 );
+occupancy.replaceChildren(
+ occupancyTitle,occupancyMetrics,
+ progressRow('Tables occupées / tables actives',occupiedTables,totalTables,tablesPercent),
+ node('p','rmOccupationCapacity',guestsPresent+' couverts installés sur '+totalSeats+' places ('+seatsPercent+' % des places).'),
+ node('p','occupancyHelp','Une table réservée pour plus tard reste libre tant qu’aucun client n’y est installé. Les tables fusionnées sont comptées individuellement.')
+);
+window.lucide?.createIcons?.({nodes:[occupancy]});
 
 $('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{const c=node('div','arrival');c.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));return c}));if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
 function occupationProgress(r){
