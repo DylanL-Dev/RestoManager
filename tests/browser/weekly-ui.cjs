@@ -32,7 +32,7 @@ for(const day of dayKeys)schedule[day]={lunch:{enabled:day!=='saturday'&&day!=='
    assert.equal(changed.thursday.dinner.enabled,true);
    // Copy Monday's independent lunch and dinner times to Tuesday.
    const monday=page.locator('.rmWeeklyRow[data-day="monday"]');
-   if(width<=700)await monday.locator('summary').click();
+   if(width<=700&&!(await monday.evaluate(el=>el.open)))await monday.locator('summary').click();
    await monday.locator('.rmWeeklyCopy').click();
    await monday.locator('.rmWeeklyCopyTarget').selectOption('tuesday');
    const copied=await page.evaluate(()=>window.RestoWeeklyScheduleDraft());
