@@ -124,7 +124,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    forcedError=null;records[0].status='cancelled';records[0].edit_version=uuid();await push(view.page);await view.page.locator('#editReviewCurrent').click();await view.page.locator('#editReloadCurrent').click();await view.page.getByRole('button',{name:'Remplacer ma saisie',exact:true}).click();await message(view.page,'terminée ou annulée');assert.equal(await view.page.locator('#editNotes').inputValue(),'Saisie non enregistrée');pass(role+' safe error and cancellation cannot restore stale reservation');await clean(view);
   }
   reset();const management=await open(browser,origin,'fb_admin');
-  await management.page.evaluate(()=>window.RestoScreens.show('administration'));await management.page.locator('#manageTables > summary').click();await management.page.locator('#administration > summary').click();
+  await management.page.evaluate(()=>window.RestoScreens.show('administration'));await management.page.locator('.rmManagementCategoryButton[data-category="manageTables"]').click();
   sharedChanges={lunchStart:'11:30:00',duration:120,firstTableSeats:8,fusionLinks:[{table_a:'table-3',table_b:'table-4'}]};await push(management.page);
   await management.page.waitForFunction(()=>document.getElementById('shift-lunch-start').value==='11:30');
   assert.equal(await management.page.locator('#restaurantDefaultDuration').inputValue(),'120');assert.match(await management.page.locator('#tableAdminList').innerText(),/Table 1 · 1–8 places/);
@@ -142,6 +142,35 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   sharedChanges.fusionLinks=[{table_a:'table-3',table_b:'table-4'}];await push(management.page);
   await management.page.evaluate(()=>{const input=document.getElementById('shift-lunch-start');input.value='11:45';input.dispatchEvent(new Event('input',{bubbles:true}))});await push(management.page);
   assert.equal(await management.page.locator('#shift-lunch-start').inputValue(),'11:45');pass('atomic snapshot refreshes hours, tables and fusions without resetting an unrelated unsaved hours draft');await clean(management);
+  // RM-005 responsive Gestion categories and visual organization, isolated mocked data.
+  for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
+   reset();const ui=await open(browser,origin,'fb_admin',viewport);
+   await ui.page.evaluate(()=>window.RestoScreens.show('administration'));
+   await ui.page.locator('.rmManagementCategoryButton[data-category="manageFusions"]').click();
+   assert.equal(await ui.page.locator('#manageFusions').isVisible(),true,'Fusion category is visible');
+   assert.equal(await ui.page.locator('#manageTables').isVisible(),false,'Unrelated category is hidden');
+   assert.equal(await ui.page.locator('.rmFusionTableHead').isVisible(),viewport.width>1050,'Desktop shows detailed fusion table header');
+   const tableCount=await ui.page.locator('.rmFusionTableCard').count();
+   assert.ok(tableCount>=3,'At least three selectable fusion cards');
+   await ui.page.locator('.rmFusionTableCard').nth(0).click();
+   await ui.page.locator('.rmFusionTableCard').nth(1).click();
+   await ui.page.locator('.rmFusionTableCard').nth(2).click();
+   assert.match(await ui.page.locator('.rmFusionPreviewTitle').innerText(),/3 tables/);
+   await ui.page.waitForFunction(()=>document.querySelectorAll('.rmFusionPreviewIllustration .rmFusionIllustratedTable svg').length===3,null,{timeout:5000});
+   assert.equal(await ui.page.locator('.rmFusionPreviewIllustration .rmFusionIllustratedTable svg').count(),3);
+   const metrics=await ui.page.evaluate(()=>({
+    overflow:Math.max(0,document.documentElement.scrollWidth-innerWidth),
+    categoryButtons:document.querySelectorAll('.rmManagementCategoryButton').length,
+    filters:document.querySelectorAll('.rmFusionGroupFilter').length,
+    hiddenOther:!document.getElementById('manageTables').classList.contains('rmManagementCategoryActive'),
+    selected:document.querySelectorAll('.rmFusionTableCard.isSelected').length,
+    previewIcons:document.querySelectorAll('.rmFusionCheckRow svg').length
+   }));
+   assert.ok(metrics.overflow<=3,'No page-level horizontal overflow at '+viewport.width+'px');
+   assert.ok(metrics.categoryButtons>=5&&metrics.filters===4&&metrics.hiddenOther&&metrics.selected===3&&metrics.previewIcons===3);
+   assert.deepEqual(ui.errors,[]);await clean(ui);
+   pass('Fusion Gestion categories responsive '+viewport.width+'px');
+  }
   for(const role of ['fb_admin','reception'])for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
    reset();const view=await open(browser,origin,role,viewport);
    // Navigation is identical in order and destination on both profiles;

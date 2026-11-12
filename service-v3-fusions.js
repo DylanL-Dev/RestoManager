@@ -37,8 +37,14 @@ headline.innerHTML='<strong><span class="rmFusionStepNumber">1</span> Sélection
 form.insertBefore(headline,selected);
 const preview=document.createElement('section');preview.className='rmFusionPreview';preview.setAttribute('aria-live','polite');
 form.insertBefore(preview,submit);
-const associated=document.createElement('section');associated.className='rmFusionDerived';associated.innerHTML='<h4>Groupes disponibles dans Passage</h4><div class="rmFusionDerivedList"></div><p>Ces groupes sont calculés à partir des associations enregistrées. Pour les modifier, gérez les associations ci-dessous.</p>';
+const associated=document.createElement('section');associated.className='rmFusionDerived rmFusionAuthorized';
+associated.innerHTML='<h4>Liste des regroupements possibles pour le service</h4><div class="rmFusionGroupFilters" role="group" aria-label="Filtrer les groupes selon leur taille"></div><div class="rmFusionTable"><div class="rmFusionTableHead"><span>Fusion</span><span>Nombre de tables</span><span>Capacité</span><span>Salle</span><span>Statut</span><span>Actions</span></div><div class="rmFusionDerivedList"></div></div><p>Les groupes résultent des associations autorisées ; modifier un lien peut changer plusieurs groupes. Gérez les liens dans la rubrique « Associations configurées ».</p>';
 list.before(associated);
+const linkDetails=document.createElement('details');linkDetails.className='rmFusionTechnical';
+const linkSummary=document.createElement('summary');linkSummary.append(document.createTextNode('Associations configurées entre tables'),icon('chevron-down'));
+const linkDescription=document.createElement('p');linkDescription.textContent='Chaque lien relie deux tables voisines. Retirer un lien peut rendre indisponibles plusieurs groupes de 3 ou 4 tables.';
+linkDetails.append(linkSummary,linkDescription);list.before(linkDetails);linkDetails.append(list);
+let selectedGroupSize=0;
 const note=document.createElement('p');note.className='rmFusionSafety';note.textContent='Important : l’application ne connaît pas la position physique des tables. Sélectionnez-les dans l’ordre où elles peuvent réellement être rapprochées.';
 form.insertBefore(note,preview);
 const roomNames=()=>TableStore.get().rooms||[];
@@ -60,7 +66,8 @@ roomSelect.addEventListener('change',()=>{chosen=[];editing=null;options()});
 const configureHint=element('p','rmFusionLegend');
 configureHint.append(icon('info'),document.createTextNode('Appuyez sur les cartes dans l’ordre où les tables se touchent. Les numéros indiquent l’ordre choisi.'));
 headline.after(configureHint);
-const displayGroups=element('div','rmFusionGroupsHeading');displayGroups.append(icon('layers'),element('strong','', 'Fusions déjà possibles'));
+const displayGroups=element('div','rmFusionGroupsHeading');displayGroups.append(icon('layers'),element('strong','', 'Fusions autorisées'));
+const groupBadge=element('span','rmFusionGroupCount','0 regroupement');displayGroups.append(groupBadge);
 associated.prepend(displayGroups);
 function updateRooms(){
  const selectedRoom=roomSelect.value;
@@ -125,13 +132,30 @@ function render(){
  list.replaceChildren();
  const pairs=valid();
  const groupList=associated.querySelector('.rmFusionDerivedList');groupList.replaceChildren();
- const derived=groups().filter(g=>g.length>=3).sort((a,b)=>a.length-b.length||a[0]-b[0]);
- if(!derived.length){const p=element('p','', 'Aucun groupe de 3 ou 4 tables disponible.');groupList.append(p)}
- for(const group of derived){
-  const chip=element('div','rmFusionGroupChip');
-  const heading=element('strong','',group.join(' + '));
-  const data=element('span','',group.length+' tables · '+capacity(group)+' places');
-  chip.append(icon('layers'),heading,data);groupList.append(chip);
+ const allGroups=groups().slice().sort((a,b)=>a.length-b.length||a[0]-b[0]);
+ const filters=associated.querySelector('.rmFusionGroupFilters');filters.replaceChildren();
+ const categories=[[0,'Toutes'],[2,'2 tables'],[3,'3 tables'],[4,'4 tables']];
+ for(const [size,label] of categories){
+  const count=allGroups.filter(group=>size===0||group.length===size).length;
+  const button=element('button','rmFusionGroupFilter'+(selectedGroupSize===size?' active':''),label+' ('+count+')');
+  button.type='button';button.setAttribute('aria-pressed',String(selectedGroupSize===size));
+  button.addEventListener('click',()=>{selectedGroupSize=size;render()});
+  filters.append(button);
+ }
+ const visible=allGroups.filter(group=>selectedGroupSize===0||group.length===selectedGroupSize);
+ groupBadge.textContent=allGroups.length+' groupe'+(allGroups.length>1?'s':'');
+ if(!visible.length){const p=element('p','rmFusionNoGroups',allGroups.length?'Aucune fusion dans cette catégorie.':'Aucune fusion autorisée pour le moment.');groupList.append(p)}
+ for(const group of visible){
+  const row=element('div','rmFusionGroupRow');
+  const name=element('div','rmFusionGroupCell rmFusionGroupName');name.append(icon('link-2'),element('strong','',group.join(' + ')));
+  const n=element('div','rmFusionGroupCell rmFusionGroupTables',group.length+' tables');
+  const seats=element('div','rmFusionGroupCell rmFusionGroupCapacity');seats.append(icon('users'),document.createTextNode(capacity(group)+' places'));
+  const hall=element('div','rmFusionGroupCell rmFusionGroupRoom');hall.append(icon('map-pin'),document.createTextNode(roomNames().find(r=>r.id===room(group[0]))?.name||'Salle à configurer'));
+  const status=element('div','rmFusionGroupCell rmFusionGroupStatus');status.append(icon('check-circle-2'),document.createTextNode('Autorisée'));
+  const actions=element('div','rmFusionGroupCell rmFusionGroupActions');
+  const edit=element('button','rmFusionManageLinks','Gérer');edit.type='button';edit.title='Voir les associations qui permettent ce groupe';
+  edit.prepend(icon('pencil'));edit.addEventListener('click',()=>{linkDetails.open=true;linkDetails.scrollIntoView({behavior:'smooth',block:'center'});});
+  actions.append(edit);row.append(name,n,seats,hall,status,actions);groupList.append(row);
  }
  if(!pairs.length){const p=document.createElement('p');p.textContent='Aucune association autorisée.';list.append(p)}
  for(const pair of pairs){

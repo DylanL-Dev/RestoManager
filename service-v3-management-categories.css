@@ -1,0 +1,86 @@
+/* RM-005 — Gestion : hierarchical categories and authorized fusion registry. DEV ONLY. */
+.appScreen[data-screen="administration"]>.managementIntro{margin-bottom:18px}
+.rmManagementWorkspace{display:grid;grid-template-columns:220px minmax(0,1fr);gap:20px;align-items:start;min-width:0}
+.rmManagementCategoryNav{display:flex;flex-direction:column;gap:7px;position:sticky;top:18px;align-self:start;background:#fff;border:1px solid #e0eae4;border-radius:17px;padding:11px;min-width:0}
+.rmManagementCategoryButton{display:flex;align-items:center;gap:10px;width:100%;min-height:54px;text-align:left;padding:10px 11px;border:1px solid transparent!important;border-radius:11px;background:transparent!important;color:#345746!important;cursor:pointer}
+.rmManagementCategoryButton svg{width:20px;height:20px;flex:none}
+.rmManagementCategoryButton .rmManagementCategoryWords{display:flex;flex-direction:column;gap:3px;min-width:0}
+.rmManagementCategoryWords strong{font-size:13px;line-height:1.32;overflow-wrap:anywhere}
+.rmManagementCategoryWords small{font-size:11px;line-height:1.35;color:#688074}
+.rmManagementCategoryButton.active{background:#dff5e8!important;border-color:#bce6ce!important;color:#075f43!important}
+.rmManagementCategoryButton.active .rmManagementCategoryWords small{color:#396b53}
+.rmManagementCategoryButton:focus-visible{outline:3px solid #2eae80;outline-offset:2px}
+.rmManagementCategoryContent{min-width:0}
+.rmManagementCategoryContent>.managementGroup:not(.rmManagementCategoryActive){display:none!important}
+.rmManagementCategoryContent>.managementGroup.rmManagementCategoryActive{display:block!important;min-width:0}
+.rmManagementCategoryContent #manageFusions>.managementGroupHead{display:none}
+.rmManagementCategoryContent #manageFusions>.managementGroupBody{padding:20px}
+.rmManagementCategoryContent #manageFusions .fusionAdmin{margin:0;padding:0;border:0;min-width:0;gap:18px}
+.rmManagementCategoryContent #manageFusions .fusionAdmin>p{margin:0;font-size:13px}
+.rmManagementCategoryContent #manageFusions .rmFusionSteps{margin:0;padding:0}
+.rmManagementCategoryContent #manageFusions .rmFusionBuilder{margin:0}
+.rmFusionAuthorized{margin-top:2px}
+.rmFusionAuthorized .rmFusionGroupsHeading{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+.rmFusionAuthorized .rmFusionGroupCount{margin-left:auto;background:#e4f5ea;border-radius:99px;padding:7px 12px;font-size:12px;font-weight:800;color:#066347}
+.rmFusionAuthorized>.rmFusionGroupFilters{display:flex;gap:8px;flex-wrap:wrap}
+.rmFusionGroupFilter{min-height:37px;border:1px solid #cee3d6!important;border-radius:9px!important;background:#fff!important;color:#28614a!important;font-size:12px!important;font-weight:700!important;padding:8px 14px!important}
+.rmFusionGroupFilter.active{background:#087e5b!important;border-color:#087e5b!important;color:#fff!important}
+.rmFusionGroupFilter:focus-visible{outline:3px solid #26a775}
+.rmFusionAuthorized .rmFusionTable{width:100%;min-width:0;overflow:hidden;border-radius:13px;border:1px solid #dfe9e2;background:#fff}
+.rmFusionTableHead,.rmFusionGroupRow{display:grid;grid-template-columns:minmax(130px,1.3fr) minmax(88px,.78fr) minmax(86px,.78fr) minmax(126px,1fr) minmax(90px,.65fr) minmax(80px,.65fr);gap:10px;align-items:center}
+.rmFusionTableHead{background:#edf5ef;padding:12px 14px;font-size:11px;color:#2c5540;font-weight:800}
+.rmFusionGroupRow{min-height:60px;border-top:1px solid #e0e9e3;padding:11px 14px;background:white}
+.rmFusionGroupRow:nth-child(even){background:#fafdfe}
+.rmFusionGroupCell{min-width:0;display:flex;align-items:center;gap:7px;font-size:12px;color:#385d4a;overflow-wrap:anywhere}
+.rmFusionGroupCell svg{height:16px;width:16px;flex:none;color:#087e5b}
+.rmFusionGroupName strong{font-size:13px;color:#193f31}
+.rmFusionGroupTables{justify-content:flex-start}
+.rmFusionGroupCapacity{font-weight:700}
+.rmFusionGroupStatus{background:#e4f7eb;border-radius:9px;color:#08704c;font-weight:750;padding:7px 8px}
+.rmFusionGroupActions{justify-content:flex-end}
+.rmFusionGroupActions .rmFusionManageLinks{display:flex;align-items:center;gap:6px;min-height:36px;border:1px solid #afdcc2!important;background:#eef9f1!important;border-radius:9px!important;color:#0a6549!important;padding:8px 10px!important;font-size:12px!important;font-weight:700!important}
+.rmFusionGroupActions .rmFusionManageLinks svg{width:15px;height:15px}
+.rmFusionAuthorized .rmFusionNoGroups{margin:0;padding:18px;color:#6b8576;font-size:13px}
+.rmFusionTechnical{border:1px solid #dce8e0;border-radius:16px;background:#fff;padding:0;min-width:0}
+.rmFusionTechnical>summary{list-style:none;display:flex;align-items:center;justify-content:space-between;padding:17px 19px;gap:12px;cursor:pointer;color:#1d4f39;font-size:14px;font-weight:800}
+.rmFusionTechnical>summary::-webkit-details-marker{display:none}
+.rmFusionTechnical>summary svg{width:18px;height:18px;color:#0d7d54;transition:transform .2s ease}
+.rmFusionTechnical[open]>summary svg{transform:rotate(180deg)}
+.rmFusionTechnical>p{padding:0 19px;font-size:12px;color:#667e71;line-height:1.5;margin:0 0 15px}
+.rmFusionTechnical #fusionList{padding:0 14px 12px}
+.rmFusionTechnical .rmFusionLinkRow{margin:0}
+.rmFusionAuthorized h4{margin-top:0}
+.rmFusionAuthorized .rmFusionDerivedList{display:block}
+@media(max-width:1300px){
+ .rmManagementWorkspace{grid-template-columns:182px minmax(0,1fr);gap:12px}
+ .rmManagementCategoryNav{padding:8px}
+ .rmManagementCategoryButton{gap:8px;padding:9px 8px}
+ .rmManagementCategoryContent #manageFusions>.managementGroupBody{padding:14px}
+ .rmFusionTableHead,.rmFusionGroupRow{gap:7px;padding-left:10px;padding-right:10px}
+}
+@media(max-width:1050px){
+ .rmManagementWorkspace{grid-template-columns:minmax(0,1fr);gap:12px}
+ .rmManagementCategoryNav{position:static;flex-direction:row;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:thin;gap:6px;padding:9px}
+ .rmManagementCategoryButton{flex:0 0 auto;width:auto;min-width:105px;max-width:200px;min-height:49px;padding:7px 10px}
+ .rmManagementCategoryWords small{display:none}
+ .rmFusionTableHead{display:none}
+ .rmFusionAuthorized .rmFusionDerivedList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;padding:12px}
+ .rmFusionAuthorized .rmFusionGroupRow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;border:1px solid #e0e9e3;border-radius:12px;padding:13px;background:#fff;min-width:0}
+ .rmFusionGroupName{grid-column:1/-1}
+ .rmFusionGroupRoom{grid-column:1/-1}
+ .rmFusionGroupStatus{justify-self:start}
+ .rmFusionGroupActions{justify-content:flex-end}
+}
+@media(max-width:640px){
+ .appScreen[data-screen="administration"]>.managementIntro{margin-bottom:12px}
+ .rmManagementCategoryNav{border-radius:12px}
+ .rmManagementCategoryButton{min-width:90px;min-height:44px;gap:6px}
+ .rmManagementCategoryButton svg{width:17px;height:17px}
+ .rmManagementCategoryWords strong{font-size:11px}
+ .rmManagementCategoryContent #manageFusions>.managementGroupBody{padding:12px}
+ .rmFusionAuthorized .rmFusionDerivedList{grid-template-columns:minmax(0,1fr);gap:9px;padding:10px}
+ .rmFusionAuthorized .rmFusionGroupRow{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+ .rmFusionGroupRoom{font-size:11px}
+ .rmFusionGroupFilter{padding:7px 9px!important}
+ .rmFusionAuthorized .rmFusionGroupCount{margin-left:0}
+}
