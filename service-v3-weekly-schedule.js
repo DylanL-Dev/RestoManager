@@ -46,7 +46,9 @@
   const heading=document.createElement('div');heading.className='rmWeeklyServiceHeading';
   const toggleLabel=document.createElement('label');toggleLabel.className='rmWeeklyToggle';
   const enabled=document.createElement('input');enabled.type='checkbox';enabled.setAttribute('aria-label',label+' : '+days.find(d=>d[0]===day)[1]);
-  const text=document.createElement('span');text.className='rmWeeklyServiceTitle';text.textContent=label;
+  const text=document.createElement('span');text.className='rmWeeklyServiceTitle';
+  const icon=document.createElement('i');icon.dataset.lucide=key==='lunch'?'sun':'moon';icon.setAttribute('aria-hidden','true');
+  const caption=document.createElement('span');caption.textContent=label;text.append(icon,caption);
   toggleLabel.append(enabled,text);
   const status=document.createElement('small');status.className='rmWeeklyServiceStatus';
   heading.append(toggleLabel,status);section.append(heading);
@@ -114,7 +116,7 @@
   if(signature===lastSignature)return;
   lastSignature=signature;root.hidden=false;form.classList.add('rmWeeklyMode');
   for(const [day] of days)for(const key of ['lunch','dinner'])setState(day,key,schedule[day]?.[key]||defaults[key]);
-  window.lucide?.createIcons?.({nodes:[root]});
+  window.lucide?.createIcons?.();
  }
  window.RestoWeeklyScheduleDraft=()=>{
   if(root.hidden)return null;
