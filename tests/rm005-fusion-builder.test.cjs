@@ -22,7 +22,7 @@ test('RM-005: same active restaurant/room, distinct tables, no auto-number adjac
 });
 test('RM-005: mobile tablet desktop layout with real preview, groups and actions',()=>{
  assert.match(html,/service-v3-fusion-builder\.css/);
- assert.match(html,/service-v3-fusions\.js\?v=20261112-fusion-builder1/);
+ assert.match(html,/service-v3-fusions\.js\?v=20261112-fusion-polish2/);
  assert.match(css,/@media\(max-width:950px\)/);
  assert.match(css,/@media\(max-width:520px\)/);
  assert.match(css,/\.rmFusionPreview/);
@@ -30,4 +30,23 @@ test('RM-005: mobile tablet desktop layout with real preview, groups and actions
  assert.match(js,/rmFusionDerivedList/);
  assert.match(js,/Retirer une association/);
  assert.match(js,/window\.RestoDialog\.confirm/);
+});
+
+test('RM-005: all Lucide symbols referenced by fusion management exist in local offline bundle',()=>{
+ const icons=read('lucide-local.js');
+ const names=[...js.matchAll(/icon\('([^']+)'\)/g)].map(m=>m[1]);
+ for(const name of names)assert.ok(icons.includes("'"+name+"'"),"Missing offline Lucide glyph: "+name);
+ assert.match(icons,/'link-2':/);
+ assert.match(html,/lucide-local\.js\?v=20261112-fusion-polish2/);
+});
+test('RM-005: approved mockup visual components and responsive layouts remain present',()=>{
+ for(const cls of ['rmFusionSteps','rmFusionRoomFilter','rmFusionPreviewIllustration','rmFusionCheckRow','rmFusionGroupsHeading','rmFusionLinkText']){
+  assert.ok(js.includes(cls),"Missing component "+cls);
+  assert.ok(css.includes(cls),"Missing style "+cls);
+ }
+ assert.match(css,/@media\(max-width:700px\)/);
+ assert.match(css,/@media\(max-width:1100px\)/);
+ assert.match(js,/repaintIcons\(\)/);
+ assert.match(js,/roomSelect\.addEventListener\('change'/);
+ assert.match(html,/service-v3-fusion-builder\.css\?v=20261112-fusion-polish2/);
 });
