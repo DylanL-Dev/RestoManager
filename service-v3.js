@@ -324,14 +324,13 @@ const nextBookingDate=date=>{const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.
 // never the clock time at which staff are entering the reservation.
 function bookingArrivalDefault(date=bookingToday()){
  const nowDate=bookingToday(),nowMinute=bookingMinuteOf(bookingNowTime());
- const shifts=Object.values(ReservationEngine.getShifts())
-  .filter(shift=>shift.enabled&&Number.isFinite(bookingMinuteOf(shift.start))&&Number.isFinite(bookingMinuteOf(shift.end)))
-  .map(shift=>({start:bookingMinuteOf(shift.start),end:bookingMinuteOf(shift.end)}))
-  .filter(shift=>shift.end>=shift.start).sort((a,b)=>a.start-b.start);
- if(!shifts.length)return {date,time:'19:00'};
- // Find the next arrival in a genuinely open service, including weekend rules.
+// Find the next arrival in a genuinely open service, including weekend rules.
  let target=date<nowDate?nowDate:date;
  for(let attempt=0;attempt<8;attempt++,target=nextBookingDate(target)){
+  const shifts=Object.values(ReservationEngine.getShiftsForDate(target))
+   .filter(shift=>shift.enabled&&Number.isFinite(bookingMinuteOf(shift.start))&&Number.isFinite(bookingMinuteOf(shift.end)))
+   .map(shift=>({start:bookingMinuteOf(shift.start),end:bookingMinuteOf(shift.end)}))
+   .filter(shift=>shift.end>=shift.start).sort((a,b)=>a.start-b.start);
   const earliest=target===nowDate?Math.ceil(nowMinute/15)*15:0;
   for(const shift of shifts){
    const candidate=Math.ceil(Math.max(shift.start,earliest)/15)*15;
