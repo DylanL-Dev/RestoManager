@@ -81,6 +81,53 @@ try{
    if(picker){picker.hidden=true;picker.style.setProperty('display','none','important');}
   }
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
+  // Réception can consult the shared weekly schedule, never edit it.
+  const receptionManagement=document.querySelector('[data-screen="administration"]');
+  const receptionCategories=receptionManagement?.querySelector('.rmManagementCategoryContent');
+  if(receptionCategories&&!document.getElementById('receptionWeeklyReadOnly')){
+   const card=document.createElement('section');
+   card.id='receptionWeeklyReadOnly';
+   card.className='rmReceptionWeeklyReadonly';
+   card.setAttribute('aria-label','Horaires du restaurant en lecture seule');
+   const heading=document.createElement('div');heading.className='rmReceptionWeeklyHeading';
+   const h=document.createElement('h2');h.textContent='Horaires du restaurant';
+   const badge=document.createElement('span');badge.className='rmReceptionReadonlyBadge';badge.textContent='Lecture seule';
+   heading.append(h,badge);
+   const hint=document.createElement('p');hint.className='rmReceptionWeeklyHint';hint.textContent='Planning partagé avec le Restaurant. Les horaires sont modifiables uniquement par le responsable du Restaurant.';
+   const grid=document.createElement('div');grid.className='rmReceptionWeeklyGrid';
+   grid.setAttribute('role','list');
+   card.append(heading,hint,grid);
+   receptionCategories.prepend(card);
+   const days=[['monday','Lundi'],['tuesday','Mardi'],['wednesday','Mercredi'],['thursday','Jeudi'],['friday','Vendredi'],['saturday','Samedi'],['sunday','Dimanche']];
+   const update=()=>{
+    const schedule=window.RestoSharedHours?.weeklySchedule;
+    grid.replaceChildren();
+    if(!schedule){
+     const status=document.createElement('p');status.className='muted';status.textContent='Chargement des horaires partagés…';
+     grid.append(status);return;
+    }
+    for(const [key,label] of days){
+     const row=document.createElement('div');row.className='rmReceptionWeeklyDay';row.setAttribute('role','listitem');
+     const dayName=document.createElement('strong');dayName.textContent=label;
+     row.append(dayName);
+     for(const [service,title] of [['lunch','Midi'],['dinner','Soir']]){
+      const part=schedule[key]?.[service];
+      const item=document.createElement('div');item.className='rmReceptionWeeklyService';
+      const caption=document.createElement('small');caption.textContent=title;
+      const val=document.createElement('span');
+      const open=part?.enabled===true;
+      val.textContent=open?String(part.start)+' – '+String(part.end):'Fermé';
+      val.className=open?'rmReceptionWeeklyOpen':'rmReceptionWeeklyClosed';
+      item.append(caption,val);row.append(item);
+     }
+     grid.append(row);
+    }
+   };
+   window.addEventListener('restomanager:hours',update);
+   window.addEventListener('restomanager:supabase-snapshot',update);
+   update();
+  }
+
   // The five menu destinations keep the same hierarchy on both staff roles.
   // Reception sees the read-only service overview, never restaurant passage actions.
   const reservationHeading=document.querySelector('#reservationForm .actionPanelBody h2');
