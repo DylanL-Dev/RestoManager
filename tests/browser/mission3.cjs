@@ -156,6 +156,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await ui.page.locator('.rmFusionTableCard').nth(1).click();
    await ui.page.locator('.rmFusionTableCard').nth(2).click();
    assert.match(await ui.page.locator('.rmFusionPreviewTitle').innerText(),/3 tables/);
+   await ui.page.waitForFunction(()=>document.querySelectorAll('.rmFusionPreviewIllustration .rmFusionIllustratedTable svg').length===3,null,{timeout:5000});
    assert.equal(await ui.page.locator('.rmFusionPreviewIllustration .rmFusionIllustratedTable svg').count(),3);
    const metrics=await ui.page.evaluate(()=>({
     overflow:Math.max(0,document.documentElement.scrollWidth-innerWidth),
