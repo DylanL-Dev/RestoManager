@@ -101,7 +101,7 @@ function dashboard(date,all){
  const heading=document.createElement('div');heading.className='rushDashHead';
  heading.innerHTML='<div><span class="rushSectionEyebrow">EN DIRECT · RESTAURANT</span><h2 class="serviceIconHeading"><i data-lucide="activity" aria-hidden="true"></i><span>Suivi des arrivées</span></h2></div>';
  const help=rushNode('button','rmArrivalHelpButton');help.type='button';help.setAttribute('aria-label','Comprendre le suivi des arrivées');
- help.setAttribute('aria-expanded',String(rushHelpExpanded));help.title='À quoi servent ces chiffres ?';
+ help.setAttribute('aria-expanded',String(rushHelpExpanded));help.title='À quoi sert le suivi des arrivées ?';
  const helpIcon=rushNode('i');helpIcon.dataset.lucide='info';helpIcon.setAttribute('aria-hidden','true');
  help.append(helpIcon);heading.append(help);
  help.addEventListener('click',()=>{rushHelpExpanded=!rushHelpExpanded;dashboard(date,all)});
@@ -124,8 +124,27 @@ function dashboard(date,all){
  target.append(heading);
  if(rushHelpExpanded){
   const explanation=rushNode('div','rmArrivalHelpText');explanation.setAttribute('role','note');
-  explanation.append(rushNode('strong','','Comment lire le suivi ?'),
-   rushNode('p','','« En salle » compte les couverts installés, passages inclus. « Attendus » compte les réservations à venir et en retard. « À suivre » additionne les clients installés et ceux attendus à court terme, sans doublon. Le détail du créneau est uniquement une lecture horaire, et son seuil conseillé n’est pas la capacité du restaurant.'));
+  explanation.append(
+   rushNode('strong','','À quoi sert le suivi des arrivées ?'),
+   rushNode('p','','Anticipez les arrivées et pilotez votre service en temps réel. Cet outil compare les clients attendus aux clients déjà installés pour faciliter l’organisation de l’accueil et de la salle.')
+  );
+  const benefits=rushNode('div','rmArrivalHelpBenefits');
+  const items=[
+   ['calendar-clock','Anticiper les arrivées','Préparer l’accueil et le placement des clients.'],
+   ['activity','Suivre l’affluence','Identifier les périodes de forte activité.'],
+   ['users','Adapter le service','Organiser les équipes selon les réservations et l’occupation réelle.'],
+   ['clock-alert','Repérer les retards','Garder une vue sur les clients encore attendus.']
+  ];
+  for(const [iconName,label,description] of items){
+   const line=rushNode('p','rmArrivalHelpBenefit');
+   const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
+   const content=rushNode('span');content.append(rushNode('strong','',label+' — '),document.createTextNode(description));
+   line.append(icon,content);benefits.append(line);
+  }
+  explanation.append(benefits,
+   rushNode('p','','Les informations évoluent avec les réservations, les installations et les départs enregistrés.'),
+   rushNode('p','','Objectif : mieux coordonner la réception et le restaurant, fluidifier l’accueil et améliorer la qualité du service.'));
+  window.lucide?.createIcons?.({nodes:[explanation]});
   target.append(explanation);
  }
  if(window.lucide?.createIcons)window.lucide.createIcons({nodes:[heading]});
