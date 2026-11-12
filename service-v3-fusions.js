@@ -33,7 +33,7 @@ const intro=document.querySelector('.fusionAdmin>p');
 if(intro)intro.textContent='Choisissez 2, 3 ou 4 tables physiquement voisines : RestoManager créera automatiquement les associations nécessaires.';
 form.classList.add('rmFusionBuilder');
 const headline=document.createElement('div');headline.className='rmFusionBuilderHeader';
-headline.innerHTML='<strong>1. Sélectionnez les tables</strong><span>2 à 4 tables de la même salle, dans leur ordre physique</span>';
+headline.innerHTML='<strong><span class="rmFusionStepNumber">1</span> Sélectionnez les tables à fusionner</strong><span>Choisissez 2, 3 ou 4 tables voisines de la même salle.</span>';
 form.insertBefore(headline,selected);
 const preview=document.createElement('section');preview.className='rmFusionPreview';preview.setAttribute('aria-live','polite');
 form.insertBefore(preview,submit);
@@ -42,19 +42,49 @@ list.before(associated);
 const note=document.createElement('p');note.className='rmFusionSafety';note.textContent='Important : l’application ne connaît pas la position physique des tables. Sélectionnez-les dans l’ordre où elles peuvent réellement être rapprochées.';
 form.insertBefore(note,preview);
 const roomNames=()=>TableStore.get().rooms||[];
+const decorate=(element,graphic,label)=>{element.append(icon(graphic),document.createTextNode(label));return element};
+const element=(tag,cls,txt)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(txt!==undefined)el.textContent=txt;return el};
+const primaryTitle=document.querySelector('.fusionAdmin>h3');
+if(primaryTitle){primaryTitle.classList.add('rmFusionPageTitle');primaryTitle.prepend(icon('link-2'))}
+const stage=element('nav','rmFusionSteps');stage.setAttribute('aria-label','Étapes pour créer une fusion');
+for(const [number,text] of [['1','Choisir les tables'],['2','Vérifier la fusion'],['3','Créer']]){
+ const item=element('div','rmFusionStep');
+ item.append(element('span','rmFusionStepNumber',number),element('span','rmFusionStepLabel',text));stage.append(item);
+}
+intro?.after(stage);
+const roomFilter=element('label','rmFusionRoomFilter');
+roomFilter.append(icon('map-pin'),element('span','', 'Salle : '));
+const roomSelect=document.createElement('select');roomSelect.id='rmFusionRoomSelect';roomSelect.setAttribute('aria-label','Filtrer les tables par salle');
+roomFilter.append(roomSelect);headline.append(roomFilter);
+roomSelect.addEventListener('change',()=>{chosen=[];editing=null;options()});
+const configureHint=element('p','rmFusionLegend');
+configureHint.append(icon('info'),document.createTextNode('Appuyez sur les cartes dans l’ordre où les tables se touchent. Les numéros indiquent l’ordre choisi.'));
+headline.after(configureHint);
+const displayGroups=element('div','rmFusionGroupsHeading');displayGroups.append(icon('layers'),element('strong','', 'Fusions déjà possibles'));
+associated.prepend(displayGroups);
+function updateRooms(){
+ const selectedRoom=roomSelect.value;
+ const rooms=roomNames().filter(r=>r.active!==false);
+ roomSelect.replaceChildren();
+ const all=document.createElement('option');all.value='';all.textContent='Toutes les salles';roomSelect.append(all);
+ for(const r of rooms){const option=document.createElement('option');option.value=r.id;option.textContent=r.name;roomSelect.append(option)}
+ roomSelect.value=rooms.some(r=>String(r.id)===selectedRoom)?selectedRoom:'';
+}
+const repaintIcons=()=>document.dispatchEvent(new Event('restomanager:icons-refresh'));
 function options(){
  const tables=TableStore.get().tables.slice().sort((a,b)=>a.number-b.number);
+ updateRooms();
  const chosenRoom=chosen.length?room(chosen[0]):null;
  picker.replaceChildren();
  for(const t of tables){
-  if(t.active===false)continue;
+  if(t.active===false||(roomSelect.value&&String(t.roomId)!==roomSelect.value))continue;
   const picked=chosen.includes(t.number),otherRoom=chosenRoom&&t.roomId!==chosenRoom;
   const btn=document.createElement('button');btn.type='button';btn.className='rmFusionTableCard'+(picked?' isSelected':'');
   btn.setAttribute('aria-pressed',String(picked));btn.disabled=busy||Boolean(otherRoom)||(!picked&&chosen.length>=4);
-  btn.append(icon('table-2'));
+  btn.append(icon('armchair'));
   const title=document.createElement('strong');title.textContent='Table '+t.number;
-  const count=document.createElement('span');count.textContent=t.capacity+' place'+(t.capacity>1?'s':'');
-  const order=document.createElement('span');order.className='rmFusionCardCheck';order.textContent=picked?String(chosen.indexOf(t.number)+1):'○';
+  const count=document.createElement('span');count.className='rmFusionSeatCount';count.append(icon('users'),document.createTextNode(' '+t.capacity+' place'+(t.capacity>1?'s':'')));
+  const order=document.createElement('span');order.className='rmFusionCardCheck';if(picked)order.append(icon('check'),document.createTextNode(String(chosen.indexOf(t.number)+1)));else order.append(icon('circle-dot'));
   btn.append(title,count,order);
   btn.addEventListener('click',()=>{if(picked)chosen=chosen.filter(n=>n!==t.number);else chosen.push(t.number);msg.textContent='';options()});
   picker.append(btn);
@@ -62,15 +92,33 @@ function options(){
  selected.textContent=chosen.length?chosen.length+' table'+(chosen.length>1?'s':'')+' sélectionnée'+(chosen.length>1?'s':'')+' · '+capacity(chosen)+' places':'Choisissez les tables à réunir';
  const size=chosen.length,validSelection=size>=2&&size<=4&&chosen.every(n=>room(n)===room(chosen[0]));
  preview.replaceChildren();
- const heading=document.createElement('strong');heading.textContent=size>=2?'Fusion de '+size+' tables — '+capacity(chosen)+' places':'Aperçu de votre fusion';preview.append(heading);
- const numbers=document.createElement('div');numbers.className='rmFusionPreviewNumbers';numbers.textContent=size?chosen.join('  +  '):'Sélectionnez 2 à 4 tables';preview.append(numbers);
- const checks=document.createElement('p');checks.textContent=validSelection?'✓ Même salle · ✓ Capacité : '+capacity(chosen)+' places · ✓ Associations : '+(size-1):'Sélectionnez au moins deux tables de la même salle.';preview.append(checks);
- if(validSelection){const links=document.createElement('p');links.className='rmFusionPreviewLinks';links.textContent='Liens créés ou conservés : '+chosen.slice(1).map((n,i)=>chosen[i]+' + '+n).join('  ·  ');preview.append(links)}
+ const caption=element('div','rmFusionPreviewCaption');caption.append(element('span','rmFusionStepNumber','2'),element('strong','', 'Aperçu de la fusion'));preview.append(caption);
+ const heading=element('strong','rmFusionPreviewTitle',size>=2?'Fusion de '+size+' tables — '+capacity(chosen)+' places':'Choisissez 2 à 4 tables');preview.append(heading);
+ const numbers=element('div','rmFusionPreviewNumbers',size?chosen.join('  +  '):'Aucune table sélectionnée');preview.append(numbers);
+ const illustration=element('div','rmFusionPreviewIllustration');illustration.setAttribute('aria-label',size?'Disposition prévue : '+chosen.join(' puis '):'Aperçu des tables');
+ for(const [i,n] of chosen.entries()){
+  if(i)illustration.append(element('span','rmFusionJoin','+'));
+  const pictured=element('div','rmFusionIllustratedTable');
+  pictured.append(icon('armchair'),element('strong','',String(n)));illustration.append(pictured);
+ }
+ preview.append(illustration);
+ const checks=element('div','rmFusionChecklist');
  const hall=roomNames().find(r=>r.id===chosenRoom)?.name;
- if(hall){const label=document.createElement('small');label.textContent='Salle : '+hall;preview.append(label)}
- submit.disabled=busy||!validSelection;submit.textContent=busy?'Enregistrement…':editing?'Enregistrer la modification':'Créer cette fusion';
+ const rows=[
+  [chosen.length>0&&chosen.every(n=>room(n)===chosenRoom),'Même salle',hall||'À définir'],
+  [size>=2,'Capacité totale',capacity(chosen)+' places'],
+  [validSelection,'Associations à créer',validSelection?(size-1)+' lien'+(size>2?'s':''):'2 tables minimum']
+ ];
+ for(const [ok,label,value] of rows){
+  const row=element('div','rmFusionCheckRow');
+  row.append(icon(ok?'check-circle-2':'circle-help'),element('span','',label),element('strong','',value));checks.append(row);
+ }
+ preview.append(checks);
+ const links=element('p','rmFusionPreviewLinks',validSelection?'Liens créés ou conservés : '+chosen.slice(1).map((n,i)=>chosen[i]+' + '+n).join('  ·  '):'Sélectionnez les tables physiquement voisines, dans leur ordre réel.');preview.append(links);
+ submit.disabled=busy||!validSelection;
+ submit.replaceChildren(icon(busy?'refresh-cw':editing?'save':'plus'),document.createTextNode(busy?' Enregistrement…':editing?' Enregistrer la modification':' Créer cette fusion'));
  cancel.hidden=editing===null&&!chosen.length;
- window.lucide?.createIcons?.();
+ repaintIcons();
 }
 function reset(){editing=null;chosen=[];busy=false;options()}
 function render(){
@@ -78,13 +126,20 @@ function render(){
  const pairs=valid();
  const groupList=associated.querySelector('.rmFusionDerivedList');groupList.replaceChildren();
  const derived=groups().filter(g=>g.length>=3).sort((a,b)=>a.length-b.length||a[0]-b[0]);
- if(!derived.length){const p=document.createElement('p');p.textContent='Aucun groupe de 3 ou 4 tables disponible.';groupList.append(p)}
- for(const group of derived){const chip=document.createElement('span');chip.className='rmFusionGroupChip';chip.textContent=group.join(' + ')+' · '+capacity(group)+' places';groupList.append(chip)}
+ if(!derived.length){const p=element('p','', 'Aucun groupe de 3 ou 4 tables disponible.');groupList.append(p)}
+ for(const group of derived){
+  const chip=element('div','rmFusionGroupChip');
+  const heading=element('strong','',group.join(' + '));
+  const data=element('span','',group.length+' tables · '+capacity(group)+' places');
+  chip.append(icon('layers'),heading,data);groupList.append(chip);
+ }
  if(!pairs.length){const p=document.createElement('p');p.textContent='Aucune association autorisée.';list.append(p)}
  for(const pair of pairs){
   const row=document.createElement('div');row.className='fusionRow rmFusionLinkRow';
   const info=document.createElement('span');info.className='rmFusionLinkInfo';info.append(icon('link-2'));
-  const caption=document.createElement('strong');caption.textContent=pair.join(' + ')+' · '+capacity(pair)+' places';info.append(caption);
+  const caption=element('strong','',pair.join(' + '));
+  const details=element('span','rmFusionLinkDetails',capacity(pair)+' places · '+(roomNames().find(r=>r.id===room(pair[0]))?.name||'Même salle'));
+  const description=element('div','rmFusionLinkText');description.append(caption,details);info.append(description);
   const actions=document.createElement('div');actions.className='fusionRowActions';
   const edit=document.createElement('button');edit.type='button';edit.append(icon('pencil'),document.createTextNode(' Modifier'));
   edit.onclick=()=>{editing=pair.slice();chosen=pair.slice();options();form.scrollIntoView({behavior:'smooth',block:'center'})};
@@ -99,7 +154,7 @@ function render(){
   };
   actions.append(edit,remove);row.append(info,actions);list.append(row);
  }
- window.lucide?.createIcons?.();
+ repaintIcons();
 }
 form.addEventListener('submit',async e=>{
  e.preventDefault();if(busy)return;
