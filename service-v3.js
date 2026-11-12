@@ -152,7 +152,7 @@ function dashboard(date,all){
  const result=document.createElement('div');result.className='rushDashContent';target.append(result);
  function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
  const numbers=document.createElement('div');numbers.className='rushLoadNumbers';
- const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Arrivées actives '+clock(w.start)+' – '+clock(w.end)+' · Seuil conseillé : '+limit+' couverts'));numbers.append(rushNode('strong','rmSlotArrivalsValue',covers+' couvert'+(covers>1?'s':'')+' sur ce créneau'),loadLabel);
+ const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Arrivées actives '+clock(w.start)+' – '+clock(w.end)+' · Seuil conseillé : '+limit+' couverts'));numbers.append(rushNode('strong','rmSlotArrivalsValue',covers+' / '+limit),loadLabel);
  const level=covers>limit?'Pic d’arrivées · vigilance':covers===limit?'Seuil d’arrivées atteint':covers>=limit*.8?'Arrivées nombreuses':covers===0?'Aucune arrivée active sur ce créneau':'Arrivées sous le seuil';
  const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
