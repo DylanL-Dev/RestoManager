@@ -55,6 +55,8 @@ const shapes={
 /* RM-005: complete local Lucide glyphs needed by the reservation table.
    All icons remain offline/PWA capable; no CDN or external font dependency. */
 Object.assign(shapes,{
+  'zap':'<path d="m13 2-3 8h7l-6 12 1-8H5l8-12Z"/>',
+  'utensils':'<path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v19M20 3c-4 3-5 7-5 11h5V3Zm0 11v8"/>',
  'bed-double':'<rect x="2" y="5" width="20" height="15" rx="2"/><path d="M2 10h20M2 17h20M6 10v7M6 13h5a2 2 0 0 1 2 2v2M15 10v3h7"/>',
  'user-round':'<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
  'users-round':'<path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 20v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
