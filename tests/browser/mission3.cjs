@@ -865,7 +865,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   for(const role of ['fb_admin','reception']){
    reset({overdue:true});const view=await open(browser,origin,role);await view.page.evaluate(()=>window.RestoScreens.show('tables'));
    await view.page.waitForFunction(()=>document.getElementById('rushDashboard').textContent.includes('22 /'));
-   await view.page.clock.fastForward(120000);const text=await view.page.locator('#rushDashboard').innerText();assert.match(text,/12:00.*13:00/s);assert.match(text,/22 couvert\(s\) attendus sur les créneaux précédents/);assert.match(text,/0 \/ /);
+   await view.page.clock.fastForward(120000);const text=await view.page.locator('#rushDashboard').innerText();assert.match(text,/12:00.*13:00/s);assert.match(text,/Retards à traiter · 22 couverts/);assert.match(text,/0 \/ /);
    assert.equal(await view.page.locator('#currentOccupancy').innerText().then(text=>/22/.test(text)),false);pass(role+' clock-controlled 11:59→12:01 keeps 22 overdue visible with zero current arrivals');await clean(view);
   }
   reset({overdue:true});const foreignClock=await open(browser,origin,'fb_admin',{width:390,height:844},'America/New_York');
