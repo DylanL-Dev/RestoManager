@@ -25,5 +25,5 @@ test('synchronized slot estimates are visible even when writes are readonly',()=
  assert.doesNotMatch(chips,/RestoSupabaseReady&&navigator/);
  assert.match(chips,/RestoSlotCapacity\?\.evaluate/);
  assert.match(chips,/rmSlotCard/);
- assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-seats-ready1/);
+ assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-arrival-chips-name1/);
 });
