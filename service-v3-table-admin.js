@@ -41,9 +41,10 @@ function refresh(){
  }catch(e){feedback.textContent=errorMessage(e)}};
  row.append(info,edit,remove);list.append(row);
  });
- if(window.RestoSharedReservations&&window.RestoInactiveRestaurantTables?.length){
-  const heading=document.createElement('h4');heading.textContent='Tables désactivées';list.append(heading);
-  for(const t of window.RestoInactiveRestaurantTables){
+ const selectedInactive=(window.RestoInactiveRestaurantTables||[]).filter(t=>t.room_id===window.RestoSharedRoomIds?.get(rooms.value));
+ if(window.RestoSharedReservations&&selectedInactive.length){
+  const heading=document.createElement('h4');heading.textContent='Tables retirées · '+(activeRoom?.name||'Salle');list.append(heading);
+  for(const t of selectedInactive){
    const row=document.createElement('div');row.className='tableAdminItem';
    const info=document.createElement('span');info.textContent=t.label+' · '+t.seats+' places · désactivée';
    const restore=document.createElement('button');restore.type='button';restore.textContent='Réactiver';
