@@ -200,3 +200,21 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 **Preuves DEV :** 10/10 cas jour/heure et autre établissement conformes ; installation d'un passage authentifié `install_walkin_group_v3` vendredi midi prolongé **PASS**, et créations Réception `reception_booking_v3` vendredi 15:50, samedi 16:00, dimanche 16:00 **PASS**, toutes réalisées en transaction **ROLLBACK** ; vérification de **0 réservation de test persistée**. Fonction helper inaccessible directement à `anon`/`authenticated`. QA finale : [#119](https://github.com/DylanL-Dev/RestoManager/pull/119).
 
 **Statut :** correctif technique appliqué et tests SQL réels PASS ; recette navigateur hébergé Render du passage et du planning par utilisateur **EN ATTENTE**. MAIN/V3 et Supabase PROD restent interdits de publication sans validation explicite et revue des migrations PROD.
+
+
+## RM-005 — Recette utilisateur clôturée 8/8 (13/11/2026)
+
+**Statut de la recette sur DEV : 8 tests utilisateur sur 8 validés.** Retour du propriétaire du projet et captures Render DEV :
+
+1. Créneaux horaires intelligents — **VALIDÉ**.
+2. Création d'une réservation — **VALIDÉ**.
+3. Synchronisation Réception / Restaurant — **VALIDÉ**.
+4. Client hôtel / client extérieur — **VALIDÉ**.
+5. Installation et libération d'un passage — **VALIDÉ** après correction des gardes horaires serveur. Capture : table 2, installation vendredi à 15:52, puis statut « libéré » observé en base DEV.
+6. Planning et fermetures — **VALIDÉ** pour les horaires ouverts testés : vendredi 12:00–16:30, réservation samedi 14/11 à 16:00 et dimanche 15/11 à 13:00. Le rejet hors horaire est couvert par la recette automatique. Les réservations de démonstration du week-end apparaissent comme annulées lors du contrôle DEV en lecture seule.
+7. Fusions intelligentes — **VALIDÉ**.
+8. Salles et Salle Prestige — **VALIDÉ**.
+
+**Tests automatiques :** [QA #119](https://github.com/DylanL-Dev/RestoManager/pull/119), trois workflows PASS / trois (158 tests Node), PostgreSQL, Playwright et Supabase local. **Render DEV :** commit `ba93af5`, statut LIVE. Les RPC SQL DEV ont également été validés sur des transactions annulées (0 réservation fictive persistée par les tests SQL).
+
+**Important :** la réussite de la recette DEV ne constitue PAS une autorisation de migrer Supabase PROD ou de publier sur MAIN/V3. Avant mise en production : préparer le diff SQL ciblé (planning hebdomadaire, rôles, RPC fusion et contrôle des noms extérieurs), prévoir sauvegarde/rollback, revérifier sécurité RLS et SQL, sauvegarder les branches divergentes, puis demander la validation explicite de l'utilisateur pour chaque publication.
