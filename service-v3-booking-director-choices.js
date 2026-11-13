@@ -85,6 +85,16 @@
  }
  window.RestoBookingSlotResult=slotCapacity;
  window.RestoShowSlotHelp=showSlotHelp;
+ // Delegated capture handler survives slot redraws and prevents an unavailable
+ // button from being treated like a normal selected time.
+ slot.grid.addEventListener('click',event=>{
+  const card=event.target?.closest?.('.rmSlotCard[data-unavailable="true"]');
+  if(!card)return;
+  event.preventDefault();event.stopPropagation();
+  const label=card.querySelector('strong')?.textContent||time.value;
+  showSlotHelp(label+' : aucune table ou fusion compatible pour '+(Number(guests.value)||1)+' couvert(s). Choisissez un autre créneau ou modifiez le nombre de couverts.','error');
+ },true);
+
  function slotButton(at){
   const result=slotCapacity(at),load=pressure(at);
   const display=button('',time.value===at,()=>{
