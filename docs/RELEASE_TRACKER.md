@@ -144,3 +144,14 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - **Échelle** : vert ≥5 places ; orange 2–4 ; rouge 1 ; gris complet. C'est **un indicateur de places physiques disponibles**, pas une promesse de table unique ; la validation Supabase reste l'autorité.
 - **Régression** : `tests/booking-slot-capacity.test.cjs` couvre places libres, chevauchements, réservations installées, verrous, fusions, comptes de groupes, réservations non attribuées et connexion indisponible.
 - **État** : À TESTER CLONE (Réception + Restaurant, PC/tablette/mobile, vraie concurrence multi-appareils). Pas d'autorisation de publication V3/MAIN.
+
+
+## RM-JOHN-04 — Salle Prestige et visibilité des créneaux (13/11/2026)
+
+- **DEV uniquement / À TESTER CLONE** : signalement utilisateur sur captures mobile, les créneaux montrent tous « À vérifier » et les tables de la Salle principale apparaissent même après sélection de Prestige.
+- Vérifié dans Supabase DEV : Salle principale **22 tables actives / 23 enregistrées**, Salle Prestige **0 table**, aucune réservation à venir sans attribution constatée au moment du contrôle. Aucune donnée modifiée.
+- **Correctif affichage** : le filtrage du panneau Tables prend désormais l'identifiant de salle sélectionné ; une Salle Prestige vide montre un état explicite et le formulaire conserve Prestige après ajout. Le choix de salle n'ajoute ni ne déplace automatiquement des tables. L'affichage des tables désactivées reste séparé pour permettre leur réactivation.
+- **Suppression sécurisée** : salle vide = bouton Supprimer qui désactive la salle côté Supabase, en conservant l'historique ; salle contenant des tables = refus. Table utilisée = « Retirer » (désactivation et conservation de l'historique), restauration possible. Aucune suppression irréversible d'une table liée à une réservation.
+- **Correctif créneaux** : estimations affichées si snapshot reçu et état de synchronisation `ok` ou `readonly` ; indisponibilité de connexion / donnée incomplète = « À vérifier ». Toujours soumis à la validation serveur.
+- **Tests** : `tests/room-isolation-and-slot-visual.test.cjs`, suite existante; validation mobile/tablette dans DEV encore nécessaire.
+- **Ne pas promouvoir vers V3 ou MAIN sans validation explicite**.
