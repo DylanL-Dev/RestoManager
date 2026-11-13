@@ -7,6 +7,8 @@ const root=path.resolve(__dirname,'../..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const script=read('service-v3-booking-director-choices.js');
 const estimator=read('service-v3-slot-capacity.js');
+const preview=read('service-v3-arrival-preview.js');
+const previewCss=read('service-v3-arrival-preview.css');
 const lucide=read('lucide-local.js');
 (async()=>{
  const browser=await chromium.launch({headless:true});
@@ -21,7 +23,7 @@ const lucide=read('lucide-local.js');
    <label><input type="time" id="bookingTime" value="19:00"></label>
    <label><input id="bookingGuests" type="number" value="2"></label>
    <p id="bookingFeedback"></p>
-   </form></body></html>`);
+   </form><form id="walkinForm"><label>Heure passage<input id="walkinTime" value="19:00"></label><div class="walkinGuestsField"><label>Personnes<input id="walkinGuests" type="number" value="2"></label></div></form></body></html>`);
    await page.addScriptTag({content:lucide});
    await page.evaluate(()=>{
     window.TableStore={get:()=>({tables:[{number:1,capacity:2,active:true},{number:2,capacity:2,active:true}]})};
@@ -36,7 +38,12 @@ const lucide=read('lucide-local.js');
     window.RestoBookingInterval=()=>[0,1];window.RestoBookingDraft={occupied:()=>[]};
     window.RestoRush={evaluate:candidate=>({blocked:candidate.time==='19:15',current:18,after:18+candidate.guests,limit:20})};
    });
-   await page.addScriptTag({content:estimator});await page.addScriptTag({content:script});
+   await page.addStyleTag({content:previewCss});
+   await page.addScriptTag({content:estimator});await page.addScriptTag({content:script});await page.addScriptTag({content:preview});
+   assert.match(await page.locator('#rmBookingArrivalPreview').innerText(),/18\/20/,'booking pressure visible before selecting covers');
+   assert.match(await page.locator('#rmWalkinArrivalPreview').innerText(),/18\/20/,'passage pressure visible before changing covers');
+   assert.equal(await page.locator('#rmWalkinArrivalPreview svg').count(),1,'walkin pressure uses Lucide activity');
+   assert.match(await page.locator('.rmSlotCard').first().innerText(),/Arrivées 18\/20/,'pressure appears in time chip without guest-size change');
    const first=page.locator('.rmSlotCard').first();
    const cardCount=await page.locator('.rmSlotCard').count();
    assert.equal(cardCount,width<=700?4:5,'compact mobile must show only four time slots');
