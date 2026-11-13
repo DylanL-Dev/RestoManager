@@ -192,7 +192,8 @@
   }
   const unique=[...new Set(values)].sort();
   const compact=window.matchMedia?.('(max-width:700px)').matches===true;
-  const count=compact?4:12;
+  const availableWidth=slot.grid.getBoundingClientRect().width||window.innerWidth;
+  const count=compact?4:availableWidth<850?8:12;
   const visible=allSlots?unique:unique.slice(0,count);
   for(const at of visible)slot.grid.append(slotButton(at));
   if(unique.length>count){const more=button(allSlots?'Réduire les horaires':`Voir les ${unique.length-count} autres horaires`,false,()=>{allSlots=!allSlots;drawSlots()});more.className='rmSlotExpand';slot.grid.append(more);}
