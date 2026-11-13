@@ -8,7 +8,11 @@ const booking=read('service-v3.js'),draft=read('booking-draft.js'),edit=read('se
 const auth=read('v3-supabase-booking.js'),migration=read('supabase/migrations/20261113015700_john_exterior_guest_required_dev.sql');
 test('Arrival slot badges use the SAME surge evaluator and Lucide users/activity/info',()=>{
  assert.match(choices,/window\.RestoRush\.evaluate\(/);
- assert.match(choices,/data-lucide='|dataset\.lucide='users'/);
+ assert.match(choices,/open:'check-circle-2'/);
+ assert.match(choices,/limited:'alert-circle'/);
+ assert.match(choices,/last:'alert-triangle'/);
+ assert.match(choices,/full:'x-circle'/);
+ assert.match(choices,/unknown:'circle-help'/);
  assert.match(choices,/dataset\.lucide='activity'/);
  assert.match(choices,/dataset\.lucide='info'/);
  assert.match(choices,/Forte affluence|Arrivées nombreuses/);
