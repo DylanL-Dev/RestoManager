@@ -12,6 +12,33 @@ function showEditSuccess(message){
  if(!toast||!label)return;
  label.textContent=message;toast.hidden=false;window.lucide?.createIcons?.();
 }
+function syncEditClientRequirement(type){
+ const input=$('editClient');if(!input)return;
+ const required=type==='exterieur';
+ input.required=required;
+ input.placeholder=required?'Nom du client extérieur (obligatoire)':'Nom et prénom (facultatif)';
+ const label=input.closest('label')?.querySelector('.reservationFieldCaption small');
+ if(label)label.textContent=required?'(obligatoire)':'(facultatif)';
+ input.setAttribute('aria-required',String(required));
+ if(!required)clearEditNameError();
+}
+function clearEditNameError(){
+ const node=document.getElementById('rmEditExternalNameError');
+ if(node)node.hidden=true;
+ $('editClient')?.removeAttribute('aria-invalid');
+}
+function validateEditName(){
+ const input=$('editClient');if(!input||editingBase?.type!=='exterieur')return true;
+ const invalid=!input.value.trim()||/^(client[ ]+ext[eé]rieur|sans[ ]+nom|anonyme)$/i.test(input.value.trim());
+ let error=document.getElementById('rmEditExternalNameError');
+ if(!error){error=document.createElement('p');error.id='rmEditExternalNameError';error.className='rmDirectorFieldError';error.setAttribute('role','alert');input.closest('label')?.append(error)}
+ error.textContent='Le nom du client extérieur est obligatoire pour retrouver sa réservation.';
+ error.hidden=!invalid;
+ if(invalid){input.setAttribute('aria-invalid','true');input.focus();return false}
+ input.removeAttribute('aria-invalid');return true;
+}
+$('editClient')?.addEventListener('input',clearEditNameError);
+$('editClient')?.addEventListener('invalid',event=>{if(editingBase?.type==='exterieur'){event.preventDefault();validateEditName()}});
 function updateEditSummary(r){
  const set=(id,value)=>{const node=$(id);if(node)node.textContent=value};
  set('editSummaryClient',r.client||'Client extérieur');
@@ -109,7 +136,7 @@ function openSharedEditor(r,{directTablePicker=false}={}){
  quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
  $('editSuccessToast')?.setAttribute('hidden','');updateEditSummary(r);
  editing=r.id;editingBase=window.ReservationEdit.capture(r);reviewedVersion=null;chosenTables=r.tables.slice();
- $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
+ $('editClient').value=r.client;syncEditClientRequirement(r.type);$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
  $('editNotes').value=publicNotes(r);$('editAllergies').value=r.allergies||'';
  $('editHotelRoomField').hidden=r.type!=='hotel';$('editHotelRoom').disabled=r.type!=='hotel';
  $('editHotelRoom').value=r.type==='hotel'?(r.hotelRoom||''):'';
@@ -493,6 +520,7 @@ $('editReloadCurrent')?.addEventListener('click',async()=>{
 });
 $('editForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!editing||savingEdit)return;
+ if(!validateEditName())return;
  if(window.RestoSharedReservations){
   const controls=[...$('editForm').elements].map(control=>({control,disabled:control.disabled}));
   savingEdit=true;controls.forEach(({control})=>{control.disabled=true});
