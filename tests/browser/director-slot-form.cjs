@@ -53,7 +53,7 @@ const lucide=read('lucide-local.js');
     assert.match(await page.locator('.rmSlotExpand').innerText(),/autres horaires/);
    }
    assert.equal(await first.getAttribute('data-level'),'limited','fresh shared snapshot must show indicative places even during pending websocket');
-   assert.equal(await first.locator('svg').count(),1,'Lucide guests icon is visible at '+width);
+   assert.equal(await first.locator('svg').count(),2,'Lucide guests and immediate arrival icon are visible at '+width);
    const pressure=page.locator('.rmSlotCard').filter({hasText:'19:15'});
    assert.equal(await pressure.getAttribute('data-pressure'),'busy','arrival load is marked');
    assert.equal(await pressure.locator('svg').count(),2,'Lucide activity badge is rendered');
