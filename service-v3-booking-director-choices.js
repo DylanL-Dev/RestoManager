@@ -118,7 +118,7 @@
  slot.grid.parentNode.append(slotHelp);
  slot.grid.classList.add('rmSlotAvailabilityGrid');
  const legend=document.createElement('div');legend.className='rmDirectorSlotLegend';
- legend.textContent='🟢 Tables disponibles · 🟠 Peu de places · 🔴 Dernière place · ⚪ Complet · ⚠ Arrivées nombreuses';
+ legend.innerHTML='<span><i data-lucide="check-circle-2"></i>Tables disponibles</span><span><i data-lucide="alert-circle"></i>Peu de places</span><span><i data-lucide="alert-triangle"></i>Dernière place</span><span><i data-lucide="x-circle"></i>Complet</span><span><i data-lucide="activity"></i>Arrivées nombreuses</span>';
  slot.grid.insertAdjacentElement('afterend',legend);
  const explanation=document.createElement('details');explanation.className='rmSlotExplainer';
  const summary=document.createElement('summary');
@@ -184,12 +184,17 @@
   if(result.state!=='unknown'&&!result.compatible){display.dataset.unavailable='true';display.setAttribute('aria-describedby','rmSlotHelp')}
   const hour=document.createElement('strong');hour.textContent=at;
   const capacity=document.createElement('small');capacity.className='rmSlotSeats';
-  const seatIcon=document.createElement('i');seatIcon.dataset.lucide='users';seatIcon.setAttribute('aria-hidden','true');
+  const seatIcon=document.createElement('i');
+  seatIcon.dataset.lucide=({open:'check-circle-2',limited:'alert-circle',last:'alert-triangle',full:'x-circle',unknown:'circle-help'})[result.state]||'users';
+  seatIcon.setAttribute('aria-hidden','true');
   const seatText=document.createElement('span');
   seatText.textContent=result.state==='unknown'?'À vérifier':result.remaining===0?'Complet':
    !result.compatible?'Pas de table pour '+guests.value:
    result.remaining+' place'+(result.remaining>1?'s':'')+' libre'+(result.remaining>1?'s':'');
-  capacity.append(seatIcon,seatText);display.append(hour,capacity);
+  capacity.append(seatIcon,seatText);
+  const selectedMark=document.createElement('span');selectedMark.className='rmSlotSelectedMark';selectedMark.setAttribute('aria-hidden','true');
+  const checkIcon=document.createElement('i');checkIcon.dataset.lucide='check';selectedMark.append(checkIcon);
+  display.append(hour,capacity,selectedMark);
   // Pressure is about the one-hour arrival recommendation, independent of free tables.
   if(load?.near){
    const badge=document.createElement('span');badge.className='rmSlotPressure';
@@ -219,9 +224,15 @@
   const count=compact?4:availableWidth<850?8:12;
   const visible=allSlots?unique:unique.slice(0,count);
   for(const at of visible)slot.grid.append(slotButton(at));
-  if(unique.length>count){const more=button(allSlots?'Réduire les horaires':`Voir les ${unique.length-count} autres horaires`,false,()=>{allSlots=!allSlots;drawSlots()});more.className='rmSlotExpand';slot.grid.append(more);}
+  if(unique.length>count){
+   const more=button(allSlots?'Réduire les horaires':`Voir les ${unique.length-count} autres horaires`,false,()=>{allSlots=!allSlots;drawSlots()});
+   more.className='rmSlotExpand';
+   const arrow=document.createElement('i');arrow.dataset.lucide=allSlots?'chevron-down':'chevron-down';arrow.setAttribute('aria-hidden','true');more.append(arrow);
+   slot.grid.append(more);
+  }
   if(!unique.length)slot.hint.textContent='Aucun créneau ouvert pour cette date. Vérifiez les horaires du restaurant.';
-  else slot.hint.textContent='Places physiques indicatives selon les tables, fusions et réservations. La disponibilité définitive est vérifiée lors de l’enregistrement.';
+  else if(slot.grid.querySelector('.rmSlotCard[data-level="unknown"]'))slot.hint.textContent='Disponibilité en cours de vérification : ne pas interpréter « À vérifier » comme une table libre.';
+  else slot.hint.textContent='Places estimées selon les tables, fusions et réservations. Vérification définitive à l’enregistrement.';
   if(time.value&&unique.includes(time.value)&&!visible.includes(time.value)&&!allSlots){slot.grid.prepend(slotButton(time.value))}
   window.lucide?.createIcons?.();
  }
