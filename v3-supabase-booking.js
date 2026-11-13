@@ -27,7 +27,8 @@ async function saveReceptionBooking(candidate,id,{explicitTableChoice=false}={})
  requireWrite();
  const {supabase}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  const start=parisDateTime(candidate.date,candidate.time);
- const name=String(candidate.client||'').trim()||(candidate.type==='hotel'?'Chambre '+String(candidate.hotelRoom||'').trim():'Client extérieur');
+ const name=String(candidate.client||'').trim()||(candidate.type==='hotel'?'Chambre '+String(candidate.hotelRoom||'').trim():'');
+ if(candidate.type==='exterieur'&&(!name||/^(client\\s+ext[eé]rieur|sans\\s+nom|anonyme)$/i.test(name)))throw window.RestoErrors?.business('Le nom du client extérieur est obligatoire.')||Error('Nom du client extérieur obligatoire');
  const notes=encodeBookingDetails(candidate);
  const args={
   p_reservation_id:id,p_expected_version:window.ReservationEdit.requireVersion(candidate.editVersion),
