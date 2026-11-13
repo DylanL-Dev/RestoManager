@@ -46,9 +46,10 @@ test('booking UI renders availability cards for both roles and preserves server 
  const html=fs.readFileSync('v3-connected.html','utf8');
  assert.doesNotThrow(()=>new Function(ui));
  assert.match(ui,/RestoSlotCapacity\?\.evaluate/);
- assert.match(ui,/RestoSupabaseReady/);
+ assert.match(ui,/RestoSharedDataLoaded/);
+ assert.match(ui,/RestoSyncState/);
  assert.match(ui,/Pas de table pour/);
  assert.match(ui,/restomanager:supabase-snapshot/);
  assert.match(html,/service-v3-slot-capacity\.js\?v=20261113-seats1/);
- assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-seats1/);
+ assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-seats-ready1/);
 });
