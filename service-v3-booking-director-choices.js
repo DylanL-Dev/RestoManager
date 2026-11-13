@@ -24,6 +24,12 @@
  .rmSlotCard .rmSlotSeats{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}
  .rmSlotCard .rmSlotSeats svg,.rmSlotCard .rmSlotPressure svg{display:block!important;width:14px!important;height:14px!important;min-width:14px!important;max-width:14px!important;flex:0 0 14px!important}
  .rmSlotCard .rmSlotPressure{display:inline-flex;align-items:center;gap:3px;color:#91570d;font:700 10px/1.25 system-ui}
+ .rmDirectorChoiceGrid button.rmSlotCard[data-level="limited"][aria-pressed="true"]{background:#fff6e5!important;color:#9a5d0e!important}
+ .rmDirectorChoiceGrid button.rmSlotCard[data-level="last"][aria-pressed="true"]{background:#fff0f0!important;color:#b62f39!important}
+ .rmDirectorChoiceGrid button.rmSlotCard[data-level="full"][aria-pressed="true"]{background:#f1f3f2!important;color:#768078!important}
+ .rmDirectorChoiceGrid button.rmSlotCard[data-level="unknown"][aria-pressed="true"]{background:#f5f8fa!important;color:#526671!important}
+ .rmSlotExplainer{display:flex;align-items:flex-start;gap:7px;margin:7px 0 10px;color:#4c7160;font:600 12px/1.55 system-ui}
+ .rmSlotExplainer svg{display:block!important;width:16px!important;height:16px!important;min-width:16px!important;max-width:16px!important;flex:0 0 16px!important}
  .rmSlotCard[data-pressure="busy"]{box-shadow:inset 0 -3px 0 #e0a235}
  .rmSlotCard[data-level="unknown"]{background:#f5f8fa!important}
  .rmSlotCard[data-level="unknown"] .rmSlotSeats{color:#536e82}
@@ -49,6 +55,11 @@
  const legend=document.createElement('div');legend.className='rmDirectorSlotLegend';
  legend.textContent='🟢 Places libres · 🟠 2–4 places · 🔴 Dernière place · ⚪ Complet · 🔵 À vérifier · ⚠ Affluence élevée';
  slot.grid.insertAdjacentElement('afterend',legend);
+ const explanation=document.createElement('div');explanation.className='rmSlotExplainer';
+ const information=document.createElement('i');information.dataset.lucide='info';information.setAttribute('aria-hidden','true');
+ const words=document.createElement('span');
+ words.textContent='Places libres = tables disponibles pendant la réservation. Affluence élevée = trop d’arrivées prévues sur la même heure. Ce sont deux indicateurs différents : la confirmation de forte affluence reste obligatoire.';
+ explanation.append(information,words);legend.insertAdjacentElement('afterend',explanation);
 
  let allSlots=false,allGuests=false;
  const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
