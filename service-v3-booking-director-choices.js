@@ -80,7 +80,8 @@
   // Do not infer readiness from the websocket badge alone.
   const shared=Array.isArray(window.RestoSharedReservations);
   const fresh=Number(window.RestoLastSyncAt)>0&&Date.now()-Number(window.RestoLastSyncAt)<300000;
-  const ready=shared?Boolean(window.RestoSharedDataLoaded&&navigator.onLine!==false&&fresh&&window.RestoSyncState!=='error'):true;
+  const connected=['ok','readonly'].includes(window.RestoSyncState);
+  const ready=shared?Boolean(window.RestoSharedDataLoaded&&navigator.onLine!==false&&window.RestoSyncState!=='error'&&(connected||fresh)):true;
   const plan=window.TableStore?.get?.();
   const tables=plan?.tables||[];
   const duration=Number(window.ReservationEngine?.getDefaultDuration?.()||90);
