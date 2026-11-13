@@ -149,7 +149,7 @@
   else{input.removeAttribute('aria-invalid');if(input.getAttribute('aria-describedby')===box.id)input.removeAttribute('aria-describedby')}
  }
  const roomError='Numéro de chambre invalide : utilisez uniquement des chiffres (ex. 225).';
- const invalidExternalName=value=>!String(value||'').trim()||/^(client\\s+ext[eé]rieur|sans\\s+nom|anonyme)$/i.test(String(value||'').trim());
+ const invalidExternalName=value=>!String(value||'').trim()||/^(client[ ]+ext[eé]rieur|sans[ ]+nom|anonyme)$/i.test(String(value||'').trim());
  const nameError='Le nom du client extérieur est obligatoire pour retrouver sa réservation.';
  function syncNameRequirement(){
   if(!name||!type)return;
