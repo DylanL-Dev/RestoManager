@@ -75,6 +75,8 @@ jobs:
         run: npm run test:mission3:browser
       - name: Responsive weekly hours PC tablet mobile
         run: node tests/browser/weekly-ui.cjs
+      - name: Seat and arrival-pressure chips plus exterior guest guard
+        run: node tests/browser/director-slot-form.cjs
       - name: Tables rendering, loading and pre-migration consultation
         run: npm run test:display
       - uses: actions/upload-artifact@v4
