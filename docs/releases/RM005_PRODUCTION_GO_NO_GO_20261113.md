@@ -81,6 +81,15 @@ Le fichier `supabase/release-prep/rm005_prod_readonly_preflight.sql` est **exclu
 - Si l'étape SQL ajoute des colonnes ou contraintes, le rollback applicatif ne suffit pas : conserver explicitement une trajectoire de **forward-fix** et de restauration de base éprouvée, sans suppression des nouvelles réservations.
 - Pendant une anomalie, stopper les écritures si nécessaire avant de revenir à l'ancienne interface ; vérifier que l'ancien code accepte encore le nouveau schéma.
 
+## Nouvelle préparation RLS — test de rôles sur DEV
+
+- Projet de correction versionné, **non autorisé** : `supabase/release-prep/rm005_prod_hours_rls_candidate_NOT_APPROVED.sql`, conservé **hors** `supabase/migrations`. Ce script est **à revoir et à rejouer sur une copie éphémère du schéma PROD avant toute utilisation** ; sa présence sur GitHub n'autorise pas son exécution.
+- Contrôle effectué en **transaction avec ROLLBACK sur Supabase DEV**, compte Réception `reception` : l'UPDATE des horaires ne renvoie aucune ligne et n'est donc pas appliqué.
+- Contrôle effectué en **transaction avec ROLLBACK sur Supabase DEV**, compte Restaurant `fb_admin` : l'UPDATE neutre renvoie la ligne de l'établissement, conformément au rôle.
+- Aucun horaire conservé, aucune réservation créée, aucune écriture PROD.
+- Le candidat contient une précondition arrêtant la migration si la politique de PROD ne correspond plus à la baseline, préserve la policy du rôle writer et exige une validation après remplacement.
+- Deux tests Node vérifient l'existence de garde-fous (ils **ne** remplacent pas l'exécution intégrale SQL sur un clone PROD).
+
 ## Travaux restant à effectuer avant un GO publiable
 
 - Monter une copie éphémère représentative du **schéma PROD** pour tester les migrations finales *dans le bon ordre*, sans utiliser des données clientes sans accord.
