@@ -67,7 +67,7 @@ test('RM005 DEV SQL restores weekly calendar check to all server booking paths w
  assert.doesNotMatch(sql,/DROP TABLE|TRUNCATE TABLE|DELETE FROM public\.reservations/i);
 });
 test('RM005 DEV walk-in hints use actual duration and point to the weekly planning',()=>{
- assert.match(walkin,/E\.getDefaultDuration\(\)\+' minutes'/);
+ assert.match(walkin,/E\.getDefaultDuration\(\)\+' minutes\. Vérifiez/);
  assert.match(walkin,/Planning hebdomadaire/);
  assert.match(html,/service-v3-walkin-fast\.js\?v=20261113-weekly-walkin1/);
  assert.doesNotThrow(()=>new Function(walkin));
