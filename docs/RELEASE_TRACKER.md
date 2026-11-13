@@ -218,3 +218,11 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 **Tests automatiques :** [QA #119](https://github.com/DylanL-Dev/RestoManager/pull/119), trois workflows PASS / trois (158 tests Node), PostgreSQL, Playwright et Supabase local. **Render DEV :** commit `ba93af5`, statut LIVE. Les RPC SQL DEV ont également été validés sur des transactions annulées (0 réservation fictive persistée par les tests SQL).
 
 **Important :** la réussite de la recette DEV ne constitue PAS une autorisation de migrer Supabase PROD ou de publier sur MAIN/V3. Avant mise en production : préparer le diff SQL ciblé (planning hebdomadaire, rôles, RPC fusion et contrôle des noms extérieurs), prévoir sauvegarde/rollback, revérifier sécurité RLS et SQL, sauvegarder les branches divergentes, puis demander la validation explicite de l'utilisateur pour chaque publication.
+
+
+## RM-006 — proposition de feuille de route (13/11/2026)
+
+- **État : CANDIDAT / PÉRIMÈTRE À VALIDER, aucune fonctionnalité RM-006 publiée ou développée à ce titre.**
+- Proposition détaillée : [RM006_ROADMAP_PROPOSAL_20261113.md](RM006_ROADMAP_PROPOSAL_20261113.md).
+- Préparer RM-005 ET RM-006 sans les mélanger : RM-005 passe par la revue SQL/branches/rollback puis demande d'accord explicite ; RM-006 reste à l'étape de sélection des fonctions avant développement.
+- Pas de modification de MAIN, RestoManager-V3 ou Supabase PROD sans accord explicite.
