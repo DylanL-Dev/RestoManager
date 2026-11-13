@@ -36,7 +36,7 @@ jobs:
           set -euo pipefail
           python3 - <<'PY'
           import os
-          from urllib.parse import urlsplit
+          from urllib.parse import urlsplit, parse_qs
           url = os.environ.get('RM_SUPABASE_PROD_DB_URL', '')
           if not url:
               raise SystemExit('Secret GitHub RM_SUPABASE_PROD_DB_URL manquant. Rien ne sera exporte.')
@@ -49,6 +49,9 @@ jobs:
               raise SystemExit('Connexion non reconnue. Verifier le secret sans le copier dans les logs.')
           direct = host == 'db.tnsrkargogckgtsxipwd.supabase.co' and name == 'postgres'
           pooler = (host == 'pooler.supabase.com' or host.endswith('.pooler.supabase.com')) and name == 'postgres.tnsrkargogckgtsxipwd'
+          tls_mode = parse_qs(p.query).get('sslmode', ['require'])[-1]
+          if tls_mode not in ('require','verify-ca','verify-full'):
+              raise SystemExit('Connexion refusee : TLS obligatoire (sslmode=require ou plus strict).')
           if p.scheme not in ('postgres','postgresql') or not (direct or pooler) or port != 5432 or not p.password:
               raise SystemExit('Cible refusee : utiliser la connexion directe ou Session pooler (port 5432) du projet Supabase PROD tnsrkargogckgtsxipwd.')
           print('Connexion validee : projet RestoManager PROD, port 5432. Mot de passe masque.')
