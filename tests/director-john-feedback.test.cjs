@@ -9,7 +9,7 @@ const html=read('v3-connected.html');
 const service=read('service-v3.js');
 test('John: director booking selectors have valid JavaScript and load only in DEV screen',()=>{
  assert.doesNotThrow(()=>new Function(controls));
- assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-arrival-chips-name1/);
+ assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-compact-arrival1/);
  assert.match(controls,/bookingDate/);assert.match(controls,/bookingTime/);assert.match(controls,/bookingGuests/);
 });
 test('John: quarter-hour choices follow registered service hours and exclude past arrivals',()=>{
