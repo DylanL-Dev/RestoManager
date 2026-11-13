@@ -135,3 +135,12 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Rapport : [RM-JOHN-02](audits/RM-JOHN-02_PLANNING_HEBDOMADAIRE.md).
 - Fermetures ponctuelles par date : **hors de cette version**, à cadrer séparément.
 - État : tests GitHub en cours, test Render et validation explicite utilisateur encore nécessaires avant promotion.
+
+## RM-JOHN-03 — Indicateur des places restantes par créneau (DEV, à valider)
+
+- **Origine** : proposition validée visuellement par l'utilisateur : « 4 places à 19h30 », couleurs de disponibilité comme billets de train, pour Réception et Restaurant.
+- **Code DEV** : `service-v3-slot-capacity.js` estime les places physiques non occupées sur l'intervalle complet à partir des tables connues, des réservations bloquantes et des verrous temporaires. Une fusion autorisée sert à confirmer la compatibilité du groupe mais ne crée jamais de capacité artificielle. `service-v3-booking-director-choices.js` présente l'indicateur sous chaque bouton de créneau ; code de réservation initial et attribution restent inchangés.
+- **Sécurité d'affichage** : synchronisation absente, hors ligne ou réservation sans table assignée → « À vérifier » ; absence de table compatible pour le nombre de couverts demandé → « Pas de table pour N », bouton indisponible ; les autres créneaux indiquent un nombre estimatif sous réserve de confirmation serveur.
+- **Échelle** : vert ≥5 places ; orange 2–4 ; rouge 1 ; gris complet. C'est **un indicateur de places physiques disponibles**, pas une promesse de table unique ; la validation Supabase reste l'autorité.
+- **Régression** : `tests/booking-slot-capacity.test.cjs` couvre places libres, chevauchements, réservations installées, verrous, fusions, comptes de groupes, réservations non attribuées et connexion indisponible.
+- **État** : À TESTER CLONE (Réception + Restaurant, PC/tablette/mobile, vraie concurrence multi-appareils). Pas d'autorisation de publication V3/MAIN.
