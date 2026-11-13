@@ -96,7 +96,7 @@
    change(time,at);
   });
   display.className='rmSlotCard';display.dataset.level=result.state;display.dataset.pressure=load?.blocked?'busy':'normal';
-  if(result.state!=='unknown'&&!result.compatible)display.setAttribute('aria-disabled','true');
+  if(result.state!=='unknown'&&!result.compatible){display.dataset.unavailable='true';display.setAttribute('aria-describedby','rmSlotHelp')}
   const hour=document.createElement('strong');hour.textContent=at;
   const capacity=document.createElement('small');capacity.className='rmSlotSeats';
   const seatIcon=document.createElement('i');seatIcon.dataset.lucide='users';seatIcon.setAttribute('aria-hidden','true');
