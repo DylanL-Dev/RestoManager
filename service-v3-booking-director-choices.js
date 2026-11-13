@@ -227,7 +227,7 @@
   if(unique.length>count){
    const more=button(allSlots?'Réduire les horaires':`Voir les ${unique.length-count} autres horaires`,false,()=>{allSlots=!allSlots;drawSlots()});
    more.className='rmSlotExpand';
-   const arrow=document.createElement('i');arrow.dataset.lucide=allSlots?'chevron-down':'chevron-down';arrow.setAttribute('aria-hidden','true');more.append(arrow);
+   const arrow=document.createElement('i');arrow.dataset.lucide=allSlots?'chevron-up':'chevron-down';arrow.setAttribute('aria-hidden','true');more.append(arrow);
    slot.grid.append(more);
   }
   if(!unique.length)slot.hint.textContent='Aucun créneau ouvert pour cette date. Vérifiez les horaires du restaurant.';
