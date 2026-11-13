@@ -78,13 +78,14 @@ jobs:
 
           # Environnement temporaire GitHub uniquement. Aucun export client n'est commite.
           docker run --rm \
+            --user "$(id -u):$(id -g)" \
             -e RM_SUPABASE_PROD_DB_URL \
             -e PGSSLMODE=require \
             -e PGCONNECT_TIMEOUT=20 \
             -v "$TMP_DIR:/backup" \
             postgres:17-alpine sh -euc '
               pg_dump --dbname="$RM_SUPABASE_PROD_DB_URL" \
-                --format=custom --compress=6 --file=/backup/production.dump \
+                --format=custom --file=/backup/production.dump \
                 --schema=public --schema=private --schema=auth \
                 --schema=storage --schema=supabase_migrations
               pg_restore --list /backup/production.dump > /backup/tableofcontents.txt
