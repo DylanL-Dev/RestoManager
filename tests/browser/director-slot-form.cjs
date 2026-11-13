@@ -47,7 +47,15 @@ const lucide=read('lucide-local.js');
    assert.equal(await first.getAttribute('data-level'),'limited','online snapshot must show actual remaining seats');
    assert.equal(await first.getAttribute('data-unavailable'),'true','incompatible party must be marked unavailable');
    await first.click();
-   assert.match(await page.locator('#rmSlotHelp').innerText(),/aucune table ou fusion compatible/i);
+   const inlineState=await page.locator('#rmSlotHelp').evaluate(el=>({message:el.textContent,hidden:el.hidden,display:getComputedStyle(el).display}));
+   if(!/aucune table ou fusion compatible/i.test(inlineState.message))console.error('SLOT_DEBUG',JSON.stringify({
+    inlineState,
+    cards:await page.locator('.rmSlotCard').first().evaluate(el=>({text:el.textContent,level:el.dataset.level,unavailable:el.dataset.unavailable,html:el.outerHTML.slice(0,600)})),
+    capacity:await page.evaluate(()=>window.RestoBookingSlotResult?.(document.getElementById('bookingTime').value)),
+    inForm:await page.locator('#rmSlotHelp').count()
+   }));
+   assert.match(inlineState.message,/aucune table ou fusion compatible/i);
+   assert.equal(inlineState.hidden,false,'inline warning must be visible');
    assert.equal(await page.locator('#bookingTime').inputValue(),'19:00');
    await page.locator('#bookingType').selectOption('exterieur');
    assert.equal(await page.locator('#bookingClient').getAttribute('required'),'','exterior client requires name');
