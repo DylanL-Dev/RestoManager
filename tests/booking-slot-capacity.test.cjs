@@ -51,5 +51,6 @@ test('booking UI renders availability cards for both roles and preserves server 
  assert.match(ui,/Pas de table pour/);
  assert.match(ui,/restomanager:supabase-snapshot/);
  assert.match(html,/service-v3-slot-capacity\.js\?v=20261113-seats1/);
- assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-mobile-grid-fix2/);
+ assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-real-tables1/);
+ assert.match(ui,/typeof TableStore!=='undefined'\?TableStore\.get\(\)/);
 });
