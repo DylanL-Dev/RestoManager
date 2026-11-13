@@ -21,6 +21,15 @@
  .rmSlotCard[data-level="full"]{background:#f1f3f2!important;border-color:#d7e0db!important;color:#768078!important;opacity:.8}
  .rmSlotCard[data-level="unknown"]{background:#f5f8fa!important;border-color:#cedadf!important;color:#526671!important}
  .rmDirectorChoiceGrid .rmSlotCard[aria-pressed="true"]{outline:3px solid #087f5b!important;outline-offset:2px}
+ .rmSlotCard .rmSlotSeats{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}
+ .rmSlotCard .rmSlotSeats svg,.rmSlotCard .rmSlotPressure svg{display:block!important;width:14px!important;height:14px!important;min-width:14px!important;max-width:14px!important;flex:0 0 14px!important}
+ .rmSlotCard .rmSlotPressure{display:inline-flex;align-items:center;gap:3px;color:#91570d;font:700 10px/1.25 system-ui}
+ .rmSlotCard[data-pressure="busy"]{box-shadow:inset 0 -3px 0 #e0a235}
+ .rmSlotCard[data-level="unknown"]{background:#f5f8fa!important}
+ .rmSlotCard[data-level="unknown"] .rmSlotSeats{color:#536e82}
+ .rmSlotHelp{margin:8px 0;padding:12px;border-radius:11px;background:#f2f8f5;border:1px solid #cbe1d2;color:#245642;font:600 12px/1.5 system-ui}
+ .rmSlotHelp[data-kind="error"]{background:#fff3eb;border-color:#efc39e;color:#9b4d18}
+ .rmSlotHelp[hidden]{display:none!important}
  .rmDirectorChoiceGrid .rmSlotCard:disabled{cursor:not-allowed}
  .rmDirectorSlotLegend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:9px 0 4px;font:650 11px/1.5 system-ui;color:#526960}
  .rmDirectorSlotLegend span{white-space:nowrap}
@@ -32,9 +41,13 @@
  const make=(label,id,input)=>{const wrap=document.createElement('div');wrap.id=id;wrap.className='rmDirectorChoices';const title=document.createElement('strong');title.className='rmDirectorChoicesTitle';title.textContent=label;const grid=document.createElement('div');grid.className='rmDirectorChoiceGrid';grid.setAttribute('role','group');grid.setAttribute('aria-label',label);const hint=document.createElement('p');hint.className='rmDirectorChoicesHint';wrap.append(title,grid,hint);input.closest('label')?.insertAdjacentElement('afterend',wrap);return {grid,hint}};
  const slot=make('Créneaux de réservation disponibles','rmDirectorTimeChoices',time);
  const pax=make('Choisir le nombre de couverts','rmDirectorGuestChoices',guests);
+ const slotHelp=document.createElement('p');slotHelp.id='rmSlotHelp';slotHelp.className='rmSlotHelp';
+ slotHelp.setAttribute('role','status');slotHelp.setAttribute('aria-live','polite');slotHelp.hidden=true;
+ const showSlotHelp=(message,kind='info')=>{slotHelp.textContent=message||'';slotHelp.hidden=!message;slotHelp.dataset.kind=kind};
+ slot.grid.parentNode.append(slotHelp);
  slot.grid.classList.add('rmSlotAvailabilityGrid');
  const legend=document.createElement('div');legend.className='rmDirectorSlotLegend';
- legend.textContent='🟢 5+ places · 🟠 2–4 places · 🔴 1 place · ⚪ Complet · 🔵 À vérifier';
+ legend.textContent='🟢 Places libres · 🟠 2–4 places · 🔴 Dernière place · ⚪ Complet · 🔵 À vérifier · ⚠ Affluence élevée';
  slot.grid.insertAdjacentElement('afterend',legend);
 
  let allSlots=false,allGuests=false;
@@ -54,23 +67,41 @@
    tables,reservations:window.RestoSharedReservations||[],groups:window.RestoFusion?.pairs?.()||[],
    heldNumbers:held.map(h=>h.number),ready:ready&&Boolean(tables.length)})||{state:'unknown',remaining:null,compatible:false};
  }
+ function pressure(at){
+  if(!window.RestoRush||!window.RestoSharedDataLoaded)return null;
+  const data=window.RestoRush.evaluate({date:date.value,time:at,guests:Number(guests.value)||1},window.ReservationEngine.normalizeReservations(window.RestoSharedReservations||[]));
+  return data?.invalid?null:data;
+ }
  function slotButton(at){
-  const result=slotCapacity(at);
-  const display=button('',time.value===at,()=>change(time,at));
-  display.className='rmSlotCard';display.dataset.level=result.state;
+  const result=slotCapacity(at),load=pressure(at);
+  const display=button('',time.value===at,()=>{
+   if(result.state!=='unknown'&&!result.compatible){
+    showSlotHelp(at+' : aucune table ou fusion compatible pour '+(Number(guests.value)||1)+' couvert(s). Choisissez un autre créneau ou modifiez le nombre de couverts.','error');
+    return;
+   }
+   showSlotHelp(load?.blocked?at+' : forte affluence prévue. La confirmation supplémentaire sera demandée à l’enregistrement.':'');
+   change(time,at);
+  });
+  display.className='rmSlotCard';display.dataset.level=result.state;display.dataset.pressure=load?.blocked?'busy':'normal';
+  if(result.state!=='unknown'&&!result.compatible)display.setAttribute('aria-disabled','true');
   const hour=document.createElement('strong');hour.textContent=at;
-  const capacity=document.createElement('small');
-  if(result.state==='unknown')capacity.textContent='À vérifier';
-  else if(result.remaining===0)capacity.textContent='Complet';
-  else if(!result.compatible)capacity.textContent='Pas de table pour '+guests.value;
-  else capacity.textContent=result.remaining+' place'+(result.remaining>1?'s':'')+' libre'+(result.remaining>1?'s':'');
-  display.append(hour,capacity);
-  // The chosen party must be accommodated on a compatible real table or fusion.
-  // Do not forbid "unknown": the existing server-side booking path stays authoritative.
-  display.disabled=result.state!=='unknown'&&!result.compatible;
-  display.title=result.state==='unknown'?(result.reason||'Disponibilité à confirmer par le serveur'):
-   result.compatible?result.remaining+' places physiques indicatives — attribution confirmée à la validation':
-   'Aucune table ou fusion disponible pour '+guests.value+' couverts';
+  const capacity=document.createElement('small');capacity.className='rmSlotSeats';
+  const seatIcon=document.createElement('i');seatIcon.dataset.lucide='users';seatIcon.setAttribute('aria-hidden','true');
+  const seatText=document.createElement('span');
+  seatText.textContent=result.state==='unknown'?'À vérifier':result.remaining===0?'Complet':
+   !result.compatible?'Pas de table pour '+guests.value:
+   result.remaining+' place'+(result.remaining>1?'s':'')+' libre'+(result.remaining>1?'s':'');
+  capacity.append(seatIcon,seatText);display.append(hour,capacity);
+  if(load?.blocked){
+   const badge=document.createElement('span');badge.className='rmSlotPressure';
+   const icon=document.createElement('i');icon.dataset.lucide='activity';icon.setAttribute('aria-hidden','true');
+   const txt=document.createElement('span');txt.textContent='Affluence élevée';
+   badge.append(icon,txt);display.append(badge);
+  }
+  display.title=result.state==='unknown'?'Disponibilité à confirmer':result.compatible?
+   result.remaining+' places physiques estimées ; arrivée '+(load?.blocked?'chargée':'normale'):
+   'Aucune table ou fusion compatible pour '+guests.value+' couverts';
+  display.setAttribute('aria-label',at+' — '+seatText.textContent+(load?.blocked?' — Forte affluence':''));
   return display;
  }
  function drawSlots(){
@@ -90,6 +121,7 @@
   if(!unique.length)slot.hint.textContent='Aucun créneau ouvert pour cette date. Vérifiez les horaires du restaurant.';
   else slot.hint.textContent='Places physiques indicatives selon les tables, fusions et réservations. La disponibilité définitive est vérifiée lors de l’enregistrement.';
   if(time.value&&unique.includes(time.value)&&!visible.includes(time.value)&&!allSlots){slot.grid.prepend(slotButton(time.value))}
+  window.lucide?.createIcons?.();
  }
  function drawGuests(){
   pax.grid.replaceChildren();
@@ -99,10 +131,11 @@
   if(max>8)pax.grid.append(button(allGuests?'Moins':`9 à ${Math.min(max,20)}`,false,()=>{allGuests=!allGuests;drawGuests()}));
   pax.hint.textContent='Pour un groupe plus grand, saisissez directement le nombre dans le champ Couverts. La capacité des tables reste vérifiée.';
  }
- for(const event of ['input','change']){date.addEventListener(event,()=>{allSlots=false;drawSlots()});time.addEventListener(event,drawSlots);guests.addEventListener(event,()=>{drawGuests();drawSlots()})}
+ for(const event of ['input','change']){date.addEventListener(event,()=>{allSlots=false;drawSlots();showSlotHelp('')});time.addEventListener(event,()=>{drawSlots();const current=slotCapacity(time.value);if(current.state!=='unknown'&&!current.compatible)showSlotHelp('Ce créneau ne dispose pas de table compatible pour '+guests.value+' couvert(s). Choisissez un autre horaire.','error')});guests.addEventListener(event,()=>{drawGuests();drawSlots();showSlotHelp('')})}
  for(const name of ['restomanager:hours','restomanager:supabase-snapshot','restomanager:v3-tables','restomanager:screen','restomanager:v3-change','restomanager:connection-state'])window.addEventListener(name,()=>{drawSlots();drawGuests()});
 
  // Inline, accessible validation: never move the guest's focus to a remote footer.
+ const name=document.getElementById('bookingClient'),type=document.getElementById('bookingType');
  const hotelRoom=document.getElementById('bookingHotelRoom');
  if(hotelRoom){hotelRoom.inputMode='numeric';hotelRoom.pattern='[0-9]+';hotelRoom.title='Numéro de chambre en chiffres uniquement (ex. 225)';}
  function inlineError(input,message){
@@ -114,6 +147,32 @@
   else{input.removeAttribute('aria-invalid');if(input.getAttribute('aria-describedby')===box.id)input.removeAttribute('aria-describedby')}
  }
  const roomError='Numéro de chambre invalide : utilisez uniquement des chiffres (ex. 225).';
+ const invalidExternalName=value=>!String(value||'').trim()||/^(client\\s+ext[eé]rieur|sans\\s+nom|anonyme)$/i.test(String(value||'').trim());
+ const nameError='Le nom du client extérieur est obligatoire pour retrouver sa réservation.';
+ function syncNameRequirement(){
+  if(!name||!type)return;
+  const external=type.value==='exterieur';
+  name.required=external;
+  name.placeholder=external?'Nom du client extérieur (obligatoire)':'Nom et prénom (facultatif)';
+  const label=name.closest('label')?.querySelector('.reservationFieldCaption small');
+  if(label)label.textContent=external?'(obligatoire)':'(facultatif)';
+  name.setAttribute('aria-required',String(external));
+  if(!external||!invalidExternalName(name.value))inlineError(name,'');
+ }
+ window.RestoExternalNameGuard={
+  valid(candidate){return candidate?.type!=='exterieur'||!invalidExternalName(candidate?.client)},
+  error:nameError,
+  validateField(){
+   if(type?.value==='exterieur'&&invalidExternalName(name?.value)){
+    inlineError(name,nameError);name?.focus();return false;
+   }
+   inlineError(name,'');return true;
+  }
+ };
+ type?.addEventListener('change',syncNameRequirement);
+ name?.addEventListener('input',()=>{if(!invalidExternalName(name.value))inlineError(name,'')});
+ name?.addEventListener('invalid',event=>{if(type?.value==='exterieur'){event.preventDefault();inlineError(name,nameError)}});
+ syncNameRequirement();
  for(const input of [date,time,guests,hotelRoom].filter(Boolean)){
   input.addEventListener('invalid',event=>{
    event.preventDefault();
