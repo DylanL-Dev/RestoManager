@@ -155,3 +155,14 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - **Correctif créneaux** : estimations affichées si snapshot reçu et état de synchronisation `ok` ou `readonly` ; indisponibilité de connexion / donnée incomplète = « À vérifier ». Toujours soumis à la validation serveur.
 - **Tests** : `tests/room-isolation-and-slot-visual.test.cjs`, suite existante; validation mobile/tablette dans DEV encore nécessaire.
 - **Ne pas promouvoir vers V3 ou MAIN sans validation explicite**.
+
+
+## RM-JOHN-05 — Créneaux & arrivée + nom des clients extérieurs (13/11/2026)
+
+- **Demande** : lier visuellement la disponibilité des horaires et le suivi des arrivées, ajouter icônes Lucide de places restantes, éviter les erreurs de capacité en bas de formulaire ; **garder impérativement la grande modale « Forte affluence »** comme deuxième confirmation.
+- **DEV seulement / À TESTER CLONE** : boutons de créneaux avec `users` (places estimées), `activity` (affluence élevée selon **le même moteur RestoRush** que le suivi des arrivées), `info` (explication des indicateurs). Couleurs des places préservées même lorsque le créneau est sélectionné.
+- Incompatibilité connue : bouton cliquable pour expliquer l'impossibilité sous les horaires sans changer la sélection ; validation du même état avant enregistrement. État de synchro incertain : laisser « À vérifier » et déléguer aux contrôles Supabase existants.
+- **La modale `RestoRush.confirm` n'a pas été remplacée ni retirée.** Les arrivées conseillées restent distinctes des places physiques.
+- **Nom obligatoire uniquement pour client extérieur** : champ `bookingClient` obligatoire avec message adjacent dans les deux rôles ; côté hôtel nom facultatif, numéro de chambre selon règles existantes. Éditeur de réservation adapté, sauvegarde Supabase et nouveau trigger `private.require_named_exterior_guest` sur INSERT/UPDATE de `guest_name/notes` pour les réservations marquées `[RESTOMANAGER:EXTERIEUR]`.
+- Migration DEV : `20261113015700_john_exterior_guest_required_dev.sql` **déjà appliquée à DEV seulement** ; tests SQL avec transaction annulée : nom générique refusé, nom réel accepté, aucune réservation factice conservée.
+- Tests : `tests/browser/director-slot-form.cjs` (mobile 390, tablette 800, PC 1440 ; icônes et couleurs ; blocage d'une capacité impossible ; bascule Hôtel/Extérieur), plus tests unitaires. Le résultat sur la véritable application Render doit être validé avec les deux rôles avant V3/MAIN.
