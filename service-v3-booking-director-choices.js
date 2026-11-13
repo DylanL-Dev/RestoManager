@@ -72,6 +72,29 @@
  @media(min-width:701px) and (max-width:1199px){
   .rmGuestQuickGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;max-width:560px!important}
  }
+ /* The legacy mobile rule .bookingTools button{grid-column:1/-1;width:100%}
+    was making every nested slot button fill a complete row on the REAL form. */
+ #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid{display:grid!important;grid-auto-flow:row!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;width:100%!important;max-width:none!important;align-items:stretch!important}
+ #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid>button.rmSlotCard{grid-column:auto!important;grid-row:auto!important;width:100%!important;height:auto!important;min-width:0!important;max-width:100%!important;min-height:86px!important;display:flex!important;align-items:flex-start!important;justify-content:center!important;text-align:left!important;padding:10px 12px!important;border-radius:13px!important;gap:5px!important;overflow:hidden}
+ #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid>button.rmSlotCard strong{align-self:stretch!important;text-align:left!important;font-size:17px!important;font-weight:800!important;line-height:1.2!important}
+ #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid>button.rmSlotCard .rmSlotSeats{align-self:stretch!important;justify-content:flex-start!important;text-align:left!important;font-size:11px!important;min-width:0!important}
+ #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid>button.rmSlotCard .rmSlotPressure{align-self:stretch!important;justify-content:flex-start!important;text-align:left!important;white-space:normal!important;line-height:1.25!important;overflow-wrap:anywhere}
+ #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid>button.rmSlotExpand{grid-column:1/-1!important;min-height:44px!important;height:auto!important;width:100%!important}
+ #bookingForm #rmDirectorGuestChoices .rmGuestQuickGrid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:7px!important;width:100%!important;max-width:none!important}
+ #bookingForm #rmDirectorGuestChoices .rmGuestQuickGrid>button.rmGuestChip{grid-column:auto!important;grid-row:auto!important;width:100%!important;min-width:0!important;height:42px!important;min-height:42px!important;padding:6px 4px!important}
+ @media(min-width:701px){
+  #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  #bookingForm #rmDirectorGuestChoices .rmGuestQuickGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+ }
+ @media(min-width:1200px){
+  #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  #bookingForm #rmDirectorGuestChoices .rmGuestQuickGrid{grid-template-columns:repeat(8,minmax(0,1fr))!important}
+ }
+ @media(max-width:365px){
+  #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid{gap:6px!important}
+  #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid>button.rmSlotCard{padding:9px 8px!important}
+  #bookingForm #rmDirectorTimeChoices .rmSlotAvailabilityGrid>button.rmSlotCard .rmSlotPressure{font-size:9px!important}
+ }
  .rmDirectorChoicesHint{font:12px/1.5 system-ui;opacity:.8;margin:5px 0 0}\n .rmDirectorFieldError{font:600 12px/1.4 system-ui;color:#a92727;margin:5px 0 0}\n .rmDirectorFieldError[hidden],.rmDirectorFeedbackMoved{display:none!important}
  @media(max-width:520px){.rmDirectorChoiceGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.rmDirectorChoiceGrid button{min-height:44px}}`;
  document.head.append(style);
