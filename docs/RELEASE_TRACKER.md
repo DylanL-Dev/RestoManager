@@ -187,3 +187,16 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Tests préexistants corrigés sur DEV pour la nouvelle version de script et les icônes Lucide, **sans désactiver les garde-fous métier**.
 - Comparaison SQL distante **lecture seule** : PROD ne dispose pas des champs de planning/fermetures ni du RPC de fusion 2–4 tables présents en DEV. Pas de migration ni copie de configuration DEV vers PROD.
 - Aucune validation de parcours hébergé authentifié Render pour les nouvelles fonctions ; consentement utilisateur obligatoire avant chaque lot V3/MAIN. Ne pas déclarer « prêt à publier » sans tests terrain, revue des dépendances et préparation de migrations distinctes.
+
+
+## Incident RM-005 — passage hors horaires historiques (13/11/2026)
+
+**Retour utilisateur Render DEV :** six tests métier validés sur huit (1 créneaux, 2 réservation, 3 synchronisation Réception/Restaurant, 4 hôtel/extérieur, 7 fusions, 8 salles/Prestige). Tests **5 installer/libérer un passage** et **6 planning/fermetures** initialement non validés. Puis incident : les passages du vendredi (service midi 12:00–16:30) et du samedi/dimanche (12:00–17:30) sont refusés malgré le planning sauvegardé.
+
+**Cause confirmée côté SQL :** le planning hebdomadaire est bien enregistré en DEV ; plusieurs RPC `SECURITY DEFINER` consultaient encore les champs horaires généraux `lunch_end=14:30` plutôt que les horaires par date. Le groupe SQL de passage `install_walkin_group_v3/v4` était directement concerné.
+
+**Correction DEV uniquement :** migrations `20261113153000_rm005_walkin_weekly_server_dev.sql` et `20261113164500_rm005_weekly_helper_writer_grant_dev.sql` appliquées à Supabase DEV. Sept fonctions serveur utilisent la règle hebdomadaire partagée ; la deuxième migration accorde l'EXECUTE du helper **uniquement au rôle interne `resto_service_writer`**, sans accorder d'accès direct à `anon` ni `authenticated`. Messages de formulaire clarifiés et durée réellement configurée utilisée. Aucun changement de réservation ou base PROD.
+
+**Preuves DEV :** 10/10 cas jour/heure et autre établissement conformes ; installation d'un passage authentifié `install_walkin_group_v3` vendredi midi prolongé **PASS**, et créations Réception `reception_booking_v3` vendredi 15:50, samedi 16:00, dimanche 16:00 **PASS**, toutes réalisées en transaction **ROLLBACK** ; vérification de **0 réservation de test persistée**. Fonction helper inaccessible directement à `anon`/`authenticated`. QA finale : [#119](https://github.com/DylanL-Dev/RestoManager/pull/119).
+
+**Statut :** correctif technique appliqué et tests SQL réels PASS ; recette navigateur hébergé Render du passage et du planning par utilisateur **EN ATTENTE**. MAIN/V3 et Supabase PROD restent interdits de publication sans validation explicite et revue des migrations PROD.
