@@ -10,6 +10,7 @@ const estimator=read('service-v3-slot-capacity.js');
 const preview=read('service-v3-arrival-preview.js');
 const previewCss=read('service-v3-arrival-preview.css');
 const lucide=read('lucide-local.js');
+const legacyCss=read('service-v3.css');
 (async()=>{
  const browser=await chromium.launch({headless:true});
  try{
@@ -38,6 +39,7 @@ const lucide=read('lucide-local.js');
     window.RestoBookingInterval=()=>[0,1];window.RestoBookingDraft={occupied:()=>[]};
     window.RestoRush={evaluate:candidate=>({blocked:candidate.time==='19:15',current:18,after:18+candidate.guests,limit:20})};
    });
+   await page.addStyleTag({content:legacyCss});
    await page.addStyleTag({content:previewCss});
    await page.addScriptTag({content:estimator});await page.addScriptTag({content:script});await page.addScriptTag({content:preview});
    assert.match(await page.locator('#rmBookingArrivalPreview').innerText(),/18\/20/,'booking pressure visible before selecting covers');
@@ -50,6 +52,14 @@ const lucide=read('lucide-local.js');
    if(width<=700){
     const columns=await page.locator('.rmSlotAvailabilityGrid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
     assert.equal(columns,2,'mobile time chips use two columns');
+    const slotPositions=await page.locator('.rmSlotCard').evaluateAll(cards=>cards.slice(0,3).map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y,w:el.getBoundingClientRect().width})));
+    assert.ok(Math.abs(slotPositions[0].y-slotPositions[1].y)<3,'first two slots must be in SAME row on actual application CSS');
+    assert.ok(slotPositions[1].x>slotPositions[0].x+20,'second slot must be on the right');
+    assert.ok(slotPositions[2].y>slotPositions[0].y+20,'third slot must start next row');
+    assert.ok(slotPositions[0].w<width/2,'each mobile slot must be compact, not full row');
+    const covers=await page.locator('.rmGuestChip').evaluateAll(cards=>cards.slice(0,5).map(el=>({x:el.getBoundingClientRect().x,y:el.getBoundingClientRect().y})));
+    assert.ok(covers[1].x>covers[0].x,'guest buttons must not be full row');
+    assert.ok(Math.abs(covers[0].y-covers[3].y)<3,'first four cover buttons must share a row');
     assert.match(await page.locator('.rmSlotExpand').innerText(),/autres horaires/);
    }
    assert.equal(await first.getAttribute('data-level'),'limited','fresh shared snapshot must show indicative places even during pending websocket');
