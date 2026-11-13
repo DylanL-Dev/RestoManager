@@ -1,0 +1,127 @@
+# RestoManager / RM-005 : sauvegarde chiffree hors MAIN et V3.
+# Demarrage uniquement quand ops/backup-request.txt change sur la branche d'operations.
+# Ne publie pas de code, n'execute aucun DDL/DML et n'envoie jamais de dump non chiffre sur GitHub.
+name: "RM - Sauvegarde chiffree Supabase PROD"
+
+on:
+  push:
+    branches:
+      - ops/supabase-prod-encrypted-backup-20261113
+    paths:
+      - ops/backup-request.txt
+
+permissions:
+  contents: read
+
+concurrency:
+  group: rm-supabase-prod-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    if: github.ref == 'refs/heads/ops/supabase-prod-encrypted-backup-20261113'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Charger les scripts audites
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Verifier la presence du secret et la cible PROD sans afficher la connexion
+        shell: bash
+        env:
+          RM_SUPABASE_PROD_DB_URL: ${{ secrets.RM_SUPABASE_PROD_DB_URL }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import os
+          from urllib.parse import urlsplit
+          url = os.environ.get('RM_SUPABASE_PROD_DB_URL', '')
+          if not url:
+              raise SystemExit('Secret GitHub RM_SUPABASE_PROD_DB_URL manquant. Rien ne sera exporte.')
+          try:
+              p = urlsplit(url)
+              name = p.username or ''
+              host = (p.hostname or '').lower()
+              port = p.port or 5432
+          except ValueError:
+              raise SystemExit('Connexion non reconnue. Verifier le secret sans le copier dans les logs.')
+          direct = host == 'db.tnsrkargogckgtsxipwd.supabase.co' and name == 'postgres'
+          pooler = (host == 'pooler.supabase.com' or host.endswith('.pooler.supabase.com')) and name == 'postgres.tnsrkargogckgtsxipwd'
+          if p.scheme not in ('postgres','postgresql') or not (direct or pooler) or port != 5432 or not p.password:
+              raise SystemExit('Cible refusee : utiliser la connexion directe ou Session pooler (port 5432) du projet Supabase PROD tnsrkargogckgtsxipwd.')
+          print('Connexion validee : projet RestoManager PROD, port 5432. Mot de passe masque.')
+          PY
+
+      - name: Effectuer le dump PostgreSQL 17 et chiffrer avant conservation
+        shell: bash
+        env:
+          RM_SUPABASE_PROD_DB_URL: ${{ secrets.RM_SUPABASE_PROD_DB_URL }}
+          RECIPIENT_FPR: 23BC77EE84DB2A7BDA5106A05F61D5D401F8E50B
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          TMP_DIR="$(mktemp -d)"
+          GNUPGHOME="$(mktemp -d)"
+          export GNUPGHOME
+          trap 'rm -rf "$TMP_DIR" "$GNUPGHOME"' EXIT
+          mkdir -p "$GITHUB_WORKSPACE/encrypted-backup"
+
+          # Public key only. Private recovery key is kept by the owner outside GitHub.
+          gpg --batch --quiet --import ops/backup-recipient-public.asc
+          KEY_FPR="$(gpg --batch --with-colons --fingerprint --list-keys | awk -F: '$1=="fpr" {print $10; exit}')"
+          if [[ "$KEY_FPR" != "$RECIPIENT_FPR" ]]; then
+            echo "::error::Cle de chiffrement differente de la cle de secours connue."
+            exit 1
+          fi
+
+          # Environnement temporaire GitHub uniquement. Aucun export client n'est commite.
+          docker run --rm \
+            -e RM_SUPABASE_PROD_DB_URL \
+            -e PGSSLMODE=require \
+            -e PGCONNECT_TIMEOUT=20 \
+            -v "$TMP_DIR:/backup" \
+            postgres:17-alpine sh -euc '
+              pg_dump --dbname="$RM_SUPABASE_PROD_DB_URL" \
+                --format=custom --compress=6 --file=/backup/production.dump \
+                --schema=public --schema=private --schema=auth \
+                --schema=storage --schema=supabase_migrations
+              pg_restore --list /backup/production.dump > /backup/tableofcontents.txt
+            '
+
+          # Echec explicite si les donnees vitales n'apparaissent pas dans l'archive.
+          test -s "$TMP_DIR/production.dump"
+          grep -Eq 'TABLE DATA[[:space:]]+public[[:space:]]+reservations[[:space:]]' "$TMP_DIR/tableofcontents.txt"
+          grep -Eq 'TABLE DATA[[:space:]]+auth[[:space:]]+users[[:space:]]' "$TMP_DIR/tableofcontents.txt"
+          sha256sum "$TMP_DIR/production.dump" | sed 's#  .*/#  #' > "$TMP_DIR/checksums.sha256"
+          {
+            printf 'RestoManager PROD : export PostgreSQL logique chiffre\n'
+            printf 'Date UTC : %s\n' "$(date -u +%FT%TZ)"
+            printf 'Commit GitHub : %s\n' "$GITHUB_SHA"
+            printf 'Projet : tnsrkargogckgtsxipwd\n'
+            printf 'Schemas : public, private, auth, storage, supabase_migrations\n'
+            printf 'IMPORTANT : export logique, pas une image complete du projet Supabase.\n'
+            printf 'Objets Storage, secrets de projet, configuration Auth et Edge Functions non inclus.\n'
+            printf 'Une restauration sur copie isolee reste obligatoire avant publication.\n'
+          } > "$TMP_DIR/README-BACKUP.txt"
+          tar -czf "$TMP_DIR/backup-package.tar.gz" -C "$TMP_DIR" \
+            production.dump tableofcontents.txt checksums.sha256 README-BACKUP.txt
+
+          stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+          output="$GITHUB_WORKSPACE/encrypted-backup/restomanager-prod-$stamp.tar.gz.gpg"
+          gpg --batch --quiet --yes --trust-model always \
+            --recipient "$RECIPIENT_FPR" --output "$output" --encrypt "$TMP_DIR/backup-package.tar.gz"
+          test "$(stat -c %s "$output")" -gt 1024
+
+          # L'archive sans chiffrement est supprimee avec le repertoire temporaire.
+          echo "Export effectue, structure verifiee et archive chiffree. Aucun fichier SQL en clair n'est transmis."
+
+      - name: Conserver exclusivement l'archive deja chiffree
+        uses: actions/upload-artifact@v4
+        with:
+          name: restomanager-prod-encrypted-backup-${{ github.run_id }}
+          path: encrypted-backup/*.gpg
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
