@@ -49,8 +49,8 @@ function noAvailabilityReason(all){
   return 'Aucune fusion autorisée pour '+n+' personnes. Dans Gestion > Fusions, associez des tables voisines de la même salle. Les groupes de 3 ou 4 tables seront proposés automatiquement.';
  }
  const result=E.validate(draft(ranked[0].numbers),all);
- if(result.errors.some(error=>error.includes('Horaire hors des services')))return 'Service fermé à cette heure. Vérifiez les horaires du midi et du soir dans Gestion du restaurant.';
- return 'Aucune table libre pour '+n+' personne(s) pendant 1 h 30. Vérifiez les arrivées à venir et les tables encore occupées.';
+ if(result.errors.some(error=>error.includes('Horaire hors des services')))return 'Service fermé à cette heure. Vérifiez les jours et créneaux ouverts dans Gestion → Planning hebdomadaire.';
+ return 'Aucune table libre pour '+n+' personne(s) pendant '+E.getDefaultDuration()+' minutes. Vérifiez les arrivées à venir et les tables encore occupées.';
 }
 function recommendationMessage(best,available,guests){
  if(!best)return '';
