@@ -11,14 +11,25 @@ let editId=null;
 function bookings(){return E.normalizeReservations(window.RestoSharedReservations||JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
  const plan=TableStore.get();list.replaceChildren();list.lastRoom=null;const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.id==='main'&&['Salle à configurer','Salle principale'].includes(r.name)?'Salle principale':r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
- plan.tables.slice().sort((a,b)=>a.roomId.localeCompare(b.roomId)||a.number-b.number).forEach(t=>{
+ const activeRoom=plan.rooms.find(r=>r.id===rooms.value);
+ const roomHeader=document.createElement('div');roomHeader.className='rmTableRoomListHeading';
+ const title=document.createElement('strong');title.textContent='Tables · '+(activeRoom?.name||'Salle');
+ const count=document.createElement('span'),selectedTables=plan.tables.filter(t=>t.roomId===rooms.value);
+ count.textContent=selectedTables.length+' table'+(selectedTables.length>1?'s':'');
+ roomHeader.append(title,count);list.append(roomHeader);
+ if(!selectedTables.length){
+  const empty=document.createElement('p');empty.className='rmTableRoomEmpty';
+  empty.textContent='Aucune table dans '+(activeRoom?.name||'cette salle')+'. Choisissez son numéro et sa capacité puis cliquez sur « Ajouter la table ».';
+  list.append(empty);
+ }
+ selectedTables.sort((a,b)=>a.number-b.number).forEach(t=>{
  if(!list.lastRoom||list.lastRoom!==t.roomId){const heading=document.createElement('h4');heading.textContent=plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle';list.append(heading);list.lastRoom=t.roomId}
  const row=document.createElement('div');row.className='tableAdminItem';
  const info=document.createElement('span');info.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places · '+(plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle');
  const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.onclick=()=>{editId=t.id;feedback.textContent='Modification de la table '+t.number+' : vérifiez les champs puis enregistrez.';$('tableAdminNumber').value=t.number;$('tableAdminMin').value=t.capacityMin||1;$('tableAdminMax').value=t.capacity;$('tableAdminRoom').value=t.roomId;$('tableAdminSubmit').textContent='Enregistrer les modifications';form.scrollIntoView({behavior:'smooth',block:'center'})};
- const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';if(window.RestoSharedReservations)remove.textContent='Désactiver';remove.onclick=async()=>{try{
+ const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';if(window.RestoSharedReservations)remove.textContent='Retirer';remove.onclick=async()=>{try{
  if(window.RestoSharedReservations){
-  if(!await window.RestoDialog.confirm('Désactiver la table '+t.number+' ? Elle ne sera plus proposée pour les nouvelles réservations. Son historique sera conservé.',{title:'Désactiver la table',danger:true,acceptLabel:'Désactiver'}))return;
+  if(!await window.RestoDialog.confirm('Retirer la table '+t.number+' de cette salle ? Elle ne sera plus proposée, mais son historique sera conservé. Vous pourrez la réactiver.',{title:'Retirer la table',danger:true,acceptLabel:'Retirer'}))return;
   if(typeof window.RestoSetRestaurantTableActive!=='function')throw business('Service temporairement indisponible.');
   await window.RestoSetRestaurantTableActive(t.id,false);await window.RestoRefreshSharedService();feedback.textContent='✓ Table '+t.number+' désactivée.';return;
  }
@@ -67,7 +78,7 @@ form.addEventListener('submit',async e=>{e.preventDefault();try{
   else await window.RestoCreateRestaurantTable({label:'Table '+number,seats:max,roomId:sharedRoomId});
   await window.RestoRefreshSharedService();}
   finally{submitButton.disabled=false;}
-  const wasEditing=Boolean(editId);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';
+  const wasEditing=Boolean(editId);editId=null;form.reset();$('tableAdminRoom').value=roomId;$('tableAdminSubmit').textContent='Ajouter la table';
   feedback.textContent='✓ Table '+number+(wasEditing?' modifiée':' ajoutée')+' avec succès — '+max+' places.';
   refresh();return;
  }
@@ -81,7 +92,8 @@ form.addEventListener('submit',async e=>{e.preventDefault();try{
  }
  TableStore.save(next);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Table enregistrée.';refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));
  }catch(err){feedback.textContent=errorMessage(err)}});
-window.addEventListener('restomanager:v3-tables',refresh);window.addEventListener('restomanager:supabase-snapshot',refresh);refresh();
+window.addEventListener('restomanager:v3-tables',refresh);window.addEventListener('restomanager:supabase-snapshot',refresh);
+$('tableAdminRoom').addEventListener('change',()=>{editId=null;$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Affichage des tables de la salle sélectionnée.';refresh()});refresh();
 })();
 
 (function(){
@@ -93,7 +105,7 @@ const style=document.createElement('style');style.textContent='.roomManager{padd
 box.innerHTML='<div class="roomManagerHeader"><div><h3>Gestion des salles</h3><p class="muted">Organisez vos espaces et leur capacité.</p></div></div><div id="roomManagerList"></div><form id="roomManagerForm"><label for="roomManagerName">Nouvelle salle<input id="roomManagerName" maxlength="60" required placeholder="Ex. Salon privé" autocomplete="off"></label><button type="submit"><span aria-hidden="true">＋</span> Ajouter la salle</button></form><p id="roomManagerFeedback" role="status" aria-live="polite"></p>';
 form.parentElement.insertBefore(box,form);
 const list=box.querySelector('#roomManagerList'),feedback=box.querySelector('#roomManagerFeedback');
-function refresh(){const plan=TableStore.get();list.replaceChildren();for(const room of plan.rooms){const row=document.createElement('div');row.className='roomManagerItem';const tables=plan.tables.filter(t=>t.roomId===room.id);const label=document.createElement('span');label.textContent=(room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name)+' · '+tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';row.append(label);if(room.id!=='main'){const remove=document.createElement('button');remove.type='button';remove.textContent=window.RestoSharedReservations?'Désactiver':'Supprimer';remove.addEventListener('click',async()=>{try{const next=TableStore.get();if(next.tables.some(t=>t.roomId===room.id))throw business('Cette salle contient encore des tables ou du mobilier.');if(!await window.RestoDialog.confirm('Supprimer la salle '+room.name+' ?',{title:'Supprimer la salle',danger:true,acceptLabel:'Supprimer'}))return;if(window.RestoSharedReservations){if(!window.RestoSupabaseReady||typeof window.RestoDeactivateRestaurantRoom!=='function')throw business('Synchronisation indisponible : suppression impossible.');await window.RestoDeactivateRestaurantRoom(window.RestoSharedRoomIds?.get(room.id));await window.RestoRefreshSharedService();feedback.textContent='Salle désactivée et synchronisée.'}else{next.rooms=next.rooms.filter(r=>r.id!==room.id);TableStore.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle supprimée.'}}catch(e){feedback.textContent=errorMessage(e)}});row.append(remove)}list.append(row)}}
+function refresh(){const plan=TableStore.get();list.replaceChildren();for(const room of plan.rooms){const row=document.createElement('div');row.className='roomManagerItem';const tables=plan.tables.filter(t=>t.roomId===room.id);const label=document.createElement('span');label.textContent=(room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name)+' · '+tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';row.append(label);if(room.id!=='main'){const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.addEventListener('click',async()=>{try{const next=TableStore.get();if(next.tables.some(t=>t.roomId===room.id))throw business('Cette salle contient encore des tables ou du mobilier.');if(!await window.RestoDialog.confirm('Supprimer la salle vide « '+room.name+' » de la liste active ? Les données historiques seront conservées.',{title:'Supprimer la salle',danger:true,acceptLabel:'Supprimer'}))return;if(window.RestoSharedReservations){if(!window.RestoSupabaseReady||typeof window.RestoDeactivateRestaurantRoom!=='function')throw business('Synchronisation indisponible : suppression impossible.');await window.RestoDeactivateRestaurantRoom(window.RestoSharedRoomIds?.get(room.id));await window.RestoRefreshSharedService();feedback.textContent='Salle désactivée et synchronisée.'}else{next.rooms=next.rooms.filter(r=>r.id!==room.id);TableStore.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle supprimée.'}}catch(e){feedback.textContent=errorMessage(e)}});row.append(remove)}list.append(row)}}
 box.querySelector('#roomManagerForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const input=box.querySelector('#roomManagerName'),button=box.querySelector('#roomManagerForm button');
