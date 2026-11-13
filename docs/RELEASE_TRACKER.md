@@ -178,3 +178,12 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - **Sécurité conservée :** aucune modification de la grande modale `RestoRush.confirm` pour dépassement du seuil lors de la réservation, ni des règles de validation Supabase. Aucun changement de base.
 - Nouveau module `service-v3-arrival-preview.js/.css`, modifications de `service-v3-booking-director-choices.js` ; tests Playwright du formulaire Réservation/Passage aux largeurs 390, 800 et 1440 px.
 - Déploiement Render DEV et validation visuelle des deux formulaires encore nécessaires. V3/MAIN non autorisés.
+
+
+## Prépublication RM-005 — revue CI 13/11/2026
+
+- **Statut global : CI PASS — À TESTER CLONE AVEC LES DEUX RÔLES / NON AUTORISÉ POUR V3 OU MAIN.** Rapport complet : [RM005_PREPUB_AUDIT_RESULT_20261113.md](audits/RM005_PREPUB_AUDIT_RESULT_20261113.md).
+- **3 workflows réussis / 3** sur [PR QA #117](https://github.com/DylanL-Dev/RestoManager/pull/117) (non fusionnée) : 152 tests Node/152, syntaxe 124/124, 13+98 scénarios browser, 14 affichages, tests hebdomadaires et créneaux sur 390/800/1440 px, PostgreSQL et Supabase local RLS/Auth/Realtime. Aucune erreur automatique résiduelle.
+- Tests préexistants corrigés sur DEV pour la nouvelle version de script et les icônes Lucide, **sans désactiver les garde-fous métier**.
+- Comparaison SQL distante **lecture seule** : PROD ne dispose pas des champs de planning/fermetures ni du RPC de fusion 2–4 tables présents en DEV. Pas de migration ni copie de configuration DEV vers PROD.
+- Aucune validation de parcours hébergé authentifié Render pour les nouvelles fonctions ; consentement utilisateur obligatoire avant chaque lot V3/MAIN. Ne pas déclarer « prêt à publier » sans tests terrain, revue des dépendances et préparation de migrations distinctes.
