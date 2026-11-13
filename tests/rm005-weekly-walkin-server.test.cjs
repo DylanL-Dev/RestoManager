@@ -6,6 +6,7 @@ const Engine=require('../reservation-engine.js');
 
 const read=path=>fs.readFileSync(path,'utf8');
 const sql=read('supabase/migrations/20261113153000_rm005_walkin_weekly_server_dev.sql');
+const grant=read('supabase/migrations/20261113164500_rm005_weekly_helper_writer_grant_dev.sql');
 const walkin=read('service-v3-walkin-fast.js');
 const html=read('v3-connected.html');
 const weekly={
@@ -71,4 +72,12 @@ test('RM005 DEV walk-in hints use actual duration and point to the weekly planni
  assert.match(walkin,/Planning hebdomadaire/);
  assert.match(html,/service-v3-walkin-fast\.js\?v=20261113-weekly-walkin1/);
  assert.doesNotThrow(()=>new Function(walkin));
+});
+
+test('RM005 private SQL helper grants only existing internal writer and no browser role',()=>{
+ assert.match(grant,/REVOKE ALL ON FUNCTION private\.restaurant_service_open_at_v1/);
+ assert.match(grant,/FROM PUBLIC, anon, authenticated/);
+ assert.match(grant,/GRANT EXECUTE ON FUNCTION private\.restaurant_service_open_at_v1/);
+ assert.match(grant,/TO resto_service_writer/);
+ assert.doesNotMatch(grant,/GRANT EXECUTE[^;]+TO\s+(anon|authenticated)/i);
 });
