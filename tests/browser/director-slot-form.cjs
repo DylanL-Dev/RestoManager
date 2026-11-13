@@ -31,13 +31,21 @@ const lucide=read('lucide-local.js');
       isServiceOpen:()=>true,normalizeReservations:list=>list
     };
     Object.defineProperty(navigator,'onLine',{configurable:true,get:()=>true});
-    window.RestoSharedReservations=[];window.RestoSharedDataLoaded=true;window.RestoSyncState='ok';
+    window.RestoSharedReservations=[];window.RestoSharedDataLoaded=true;window.RestoSyncState='pending';window.RestoLastSyncAt=Date.now();
     window.RestoFusion={pairs:()=>[]};
     window.RestoBookingInterval=()=>[0,1];window.RestoBookingDraft={occupied:()=>[]};
     window.RestoRush={evaluate:candidate=>({blocked:candidate.time==='19:15',current:18,after:18+candidate.guests,limit:20})};
    });
    await page.addScriptTag({content:estimator});await page.addScriptTag({content:script});
    const first=page.locator('.rmSlotCard').first();
+   const cardCount=await page.locator('.rmSlotCard').count();
+   assert.equal(cardCount,width<=700?4:5,'compact mobile must show only four time slots');
+   if(width<=700){
+    const columns=await page.locator('.rmSlotAvailabilityGrid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+    assert.equal(columns,2,'mobile time chips use two columns');
+    assert.match(await page.locator('.rmSlotExpand').innerText(),/autres horaires/);
+   }
+   assert.equal(await first.getAttribute('data-level'),'limited','fresh shared snapshot must show indicative places even during pending websocket');
    assert.equal(await first.locator('svg').count(),1,'Lucide guests icon is visible at '+width);
    const pressure=page.locator('.rmSlotCard').filter({hasText:'19:15'});
    assert.equal(await pressure.getAttribute('data-pressure'),'busy','arrival load is marked');
