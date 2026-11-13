@@ -17,14 +17,14 @@ const legacyCss=read('service-v3.css');
   for(const width of [390,800,1440]){
    const page=await browser.newPage({viewport:{width,height:850}});
    await page.setContent(`<!doctype html><html lang="fr"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body>
-   <form id="bookingForm"><label><span class="reservationFieldCaption">Nom du client <small>(facultatif)</small></span><input id="bookingClient" value=""></label>
+   <div class="bookingTools"><form id="bookingForm"><label><span class="reservationFieldCaption">Nom du client <small>(facultatif)</small></span><input id="bookingClient" value=""></label>
    <label><select id="bookingType"><option value="hotel">Client hôtel</option><option value="exterieur">Client extérieur</option></select></label>
    <label><input id="bookingHotelRoom"></label>
    <label><input type="date" id="bookingDate" value="2099-01-05"></label>
    <label><input type="time" id="bookingTime" value="19:00"></label>
    <label><input id="bookingGuests" type="number" value="2"></label>
    <p id="bookingFeedback"></p>
-   </form><form id="walkinForm"><label>Heure passage<input id="walkinTime" value="19:00"></label><div class="walkinGuestsField"><label>Personnes<input id="walkinGuests" type="number" value="2"></label></div></form></body></html>`);
+   </form></div><form id="walkinForm"><label>Heure passage<input id="walkinTime" value="19:00"></label><div class="walkinGuestsField"><label>Personnes<input id="walkinGuests" type="number" value="2"></label></div></form></body></html>`);
    await page.addScriptTag({content:lucide});
    await page.evaluate(()=>{
     window.TableStore={get:()=>({tables:[{number:1,capacity:2,active:true},{number:2,capacity:2,active:true}]})};
