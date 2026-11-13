@@ -9,7 +9,7 @@ const html=read('v3-connected.html');
 const service=read('service-v3.js');
 test('John: director booking selectors have valid JavaScript and load only in DEV screen',()=>{
  assert.doesNotThrow(()=>new Function(controls));
- assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-compact-arrival1/);
+ assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-instant1/);
  assert.match(controls,/bookingDate/);assert.match(controls,/bookingTime/);assert.match(controls,/bookingGuests/);
 });
 test('John: quarter-hour choices follow registered service hours and exclude past arrivals',()=>{
@@ -22,7 +22,7 @@ test('John: quarter-hour choices follow registered service hours and exclude pas
 });
 test('John: covers keep original numeric input and existing availability engine',()=>{
  assert.match(controls,/change\(guests,String\(n\)\)/);
- assert.match(controls,/saisissez directement le nombre dans le champ Couverts/);
+ assert.match(controls,/8\+/);assert.match(controls,/rmGuestQuickGrid/);assert.match(controls,/rmCustomGuestVisible/);
  assert.match(service,/ReservationEngine\.validate\(candidate,existing\)/);
 });
 test('John: invalid room number and remote errors are displayed inline beside fields',()=>{
