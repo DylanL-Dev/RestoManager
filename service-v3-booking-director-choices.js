@@ -38,6 +38,10 @@
  .rmDirectorChoiceGrid button.rmSlotCard[data-level="unknown"][aria-pressed="true"]{background:#f5f8fa!important;color:#526671!important}
  .rmSlotExplainer{display:flex;align-items:flex-start;gap:7px;margin:7px 0 10px;color:#4c7160;font:600 12px/1.55 system-ui}
  .rmSlotExplainer svg{display:block!important;width:16px!important;height:16px!important;min-width:16px!important;max-width:16px!important;flex:0 0 16px!important}
+ .rmSlotExplainer{display:block!important;margin:7px 0!important}
+ .rmSlotExplainer summary{display:flex!important;align-items:center!important;gap:7px!important;cursor:pointer!important;color:#1c7658!important;font-weight:750!important;list-style:none}
+ .rmSlotExplainer summary::-webkit-details-marker{display:none}
+ .rmSlotExplainer p{margin:8px 0 0!important;padding:10px 12px!important;border-radius:10px;background:#f2f8f5;line-height:1.5}
  .rmSlotCard[data-pressure="busy"]{box-shadow:inset 0 -3px 0 #e0a235}
  .rmSlotCard[data-level="unknown"]{background:#f5f8fa!important}
  .rmSlotCard[data-level="unknown"] .rmSlotSeats{color:#536e82}
@@ -93,11 +97,14 @@
  const legend=document.createElement('div');legend.className='rmDirectorSlotLegend';
  legend.textContent='🟢 Tables disponibles · 🟠 Peu de places · 🔴 Dernière place · ⚪ Complet · ⚠ Arrivées nombreuses';
  slot.grid.insertAdjacentElement('afterend',legend);
- const explanation=document.createElement('div');explanation.className='rmSlotExplainer';
+ const explanation=document.createElement('details');explanation.className='rmSlotExplainer';
+ const summary=document.createElement('summary');
  const information=document.createElement('i');information.dataset.lucide='info';information.setAttribute('aria-hidden','true');
- const words=document.createElement('span');
- words.textContent='Places libres = tables disponibles pendant la réservation. Affluence élevée = trop d’arrivées prévues sur la même heure. Ce sont deux indicateurs différents : la confirmation de forte affluence reste obligatoire.';
- explanation.append(information,words);legend.insertAdjacentElement('afterend',explanation);
+ const summaryText=document.createElement('span');summaryText.textContent='Comprendre les couleurs et les arrivées';
+ summary.append(information,summaryText);
+ const words=document.createElement('p');
+ words.textContent='Places libres : tables réellement compatibles pendant la réservation. Arrivées nombreuses : trop de couverts attendus sur la même heure. Ce n’est pas la capacité du restaurant ; la grande confirmation reste obligatoire si le seuil est dépassé.';
+ explanation.append(summary,words);legend.insertAdjacentElement('afterend',explanation);
 
  let allSlots=false,allGuests=false;
  const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
