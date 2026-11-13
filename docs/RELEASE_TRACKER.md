@@ -166,3 +166,15 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - **Nom obligatoire uniquement pour client extérieur** : champ `bookingClient` obligatoire avec message adjacent dans les deux rôles ; côté hôtel nom facultatif, numéro de chambre selon règles existantes. Éditeur de réservation adapté, sauvegarde Supabase et nouveau trigger `private.require_named_exterior_guest` sur INSERT/UPDATE de `guest_name/notes` pour les réservations marquées `[RESTOMANAGER:EXTERIEUR]`.
 - Migration DEV : `20261113015700_john_exterior_guest_required_dev.sql` **déjà appliquée à DEV seulement** ; tests SQL avec transaction annulée : nom générique refusé, nom réel accepté, aucune réservation factice conservée.
 - Tests : `tests/browser/director-slot-form.cjs` (mobile 390, tablette 800, PC 1440 ; icônes et couleurs ; blocage d'une capacité impossible ; bascule Hôtel/Extérieur), plus tests unitaires. Le résultat sur la véritable application Render doit être validé avec les deux rôles avant V3/MAIN.
+
+
+## RM-JOHN-07 — Maquettes mobile/tablette, affluence immédiate (13/11/2026)
+
+- **DEV uniquement — À VALIDER SUR CLONE.** Maquettes mobile/tablette acceptées, refonte frontend des créneaux et du nombre de couverts.
+- **Avant même le choix des couverts**, aperçu d'affluence indépendant du nombre de personnes via le **même moteur `RestoRush.evaluate`** : statut « Arrivées nombreuses » dès 80 % du seuil conseillé, « Seuil conseillé atteint » à 100 %, chiffres affichés sur chaque créneau et dans les formulaires Réservation et Passage.
+- **Disponibilité physique distincte** : ne jamais assimiler `21 / 22 arrivées` à `1 place libre`. L'estimation des tables reste recalculée après le choix d'un nombre de personnes.
+- **Mobile** : quatre créneaux visibles par défaut sur deux colonnes, bouton « Voir les autres horaires », boutons compacts `1..7 + 8+` pour les couverts. Le champ de nombre personnalisé n'apparaît que pour `8+`. La même logique est adaptée sur tablette et PC.
+- Icônes Lucide `activity`, `users`, `info` ; explications dans une section repliable.
+- **Sécurité conservée :** aucune modification de la grande modale `RestoRush.confirm` pour dépassement du seuil lors de la réservation, ni des règles de validation Supabase. Aucun changement de base.
+- Nouveau module `service-v3-arrival-preview.js/.css`, modifications de `service-v3-booking-director-choices.js` ; tests Playwright du formulaire Réservation/Passage aux largeurs 390, 800 et 1440 px.
+- Déploiement Render DEV et validation visuelle des deux formulaires encore nécessaires. V3/MAIN non autorisés.
