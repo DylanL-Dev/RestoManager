@@ -142,7 +142,8 @@
   const fresh=Number(window.RestoLastSyncAt)>0&&Date.now()-Number(window.RestoLastSyncAt)<300000;
   const connected=['ok','readonly'].includes(window.RestoSyncState);
   const ready=shared?Boolean(window.RestoSharedDataLoaded&&navigator.onLine!==false&&window.RestoSyncState!=='error'&&(connected||fresh)):true;
-  const plan=window.TableStore?.get?.();
+  // TableStore is defined as a global lexical const, not a property of window.
+  const plan=typeof TableStore!=='undefined'?TableStore.get():window.TableStore?.get?.();
   const tables=plan?.tables||[];
   const duration=Number(window.ReservationEngine?.getDefaultDuration?.()||90);
   const interval=window.RestoBookingInterval?.(date.value,at,duration);
