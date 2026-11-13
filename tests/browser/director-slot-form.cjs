@@ -30,6 +30,7 @@ const lucide=read('lucide-local.js');
       getShiftsForDate:()=>({lunch:{enabled:false,start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'20:00'}}),
       isServiceOpen:()=>true,normalizeReservations:list=>list
     };
+    Object.defineProperty(navigator,'onLine',{configurable:true,get:()=>true});
     window.RestoSharedReservations=[];window.RestoSharedDataLoaded=true;window.RestoSyncState='ok';
     window.RestoFusion={pairs:()=>[]};
     window.RestoBookingInterval=()=>[0,1];window.RestoBookingDraft={occupied:()=>[]};
@@ -43,6 +44,8 @@ const lucide=read('lucide-local.js');
    assert.equal(await pressure.locator('svg').count(),2,'Lucide activity badge is rendered');
    assert.equal(await pressure.getAttribute('data-level'),'limited','availability color remains based on remaining seats');
    await page.locator('#bookingGuests').fill('5');
+   assert.equal(await first.getAttribute('data-level'),'limited','online snapshot must show actual remaining seats');
+   assert.equal(await first.getAttribute('data-unavailable'),'true','incompatible party must be marked unavailable');
    await first.click();
    assert.match(await page.locator('#rmSlotHelp').innerText(),/aucune table ou fusion compatible/i);
    assert.equal(await page.locator('#bookingTime').inputValue(),'19:00');
