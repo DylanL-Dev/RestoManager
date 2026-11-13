@@ -154,7 +154,28 @@
   if(max>8)pax.grid.append(button(allGuests?'Moins':`9 à ${Math.min(max,20)}`,false,()=>{allGuests=!allGuests;drawGuests()}));
   pax.hint.textContent='Pour un groupe plus grand, saisissez directement le nombre dans le champ Couverts. La capacité des tables reste vérifiée.';
  }
- for(const event of ['input','change']){date.addEventListener(event,()=>{allSlots=false;drawSlots();showSlotHelp('')});time.addEventListener(event,()=>{drawSlots();const current=slotCapacity(time.value);if(current.state!=='unknown'&&!current.compatible)showSlotHelp('Ce créneau ne dispose pas de table compatible pour '+guests.value+' couvert(s). Choisissez un autre horaire.','error')});guests.addEventListener(event,()=>{drawGuests();drawSlots();showSlotHelp('')})}
+ // Avoid replacing a button between pointer-down and click: editing a number input
+ // fires 'input' immediately, then another 'change' on blur while the user taps a slot.
+ let lastDate=date.value,lastTime=time.value,lastGuests=guests.value;
+ function dateChanged(){
+  if(date.value===lastDate)return;
+  lastDate=date.value;allSlots=false;drawSlots();showSlotHelp('');
+ }
+ function timeChanged(){
+  if(time.value===lastTime)return;
+  lastTime=time.value;drawSlots();
+  const current=slotCapacity(time.value);
+  if(current.state!=='unknown'&&!current.compatible)showSlotHelp('Ce créneau ne dispose pas de table compatible pour '+guests.value+' couvert(s). Choisissez un autre horaire.','error');
+ }
+ function guestsChanged(){
+  if(guests.value===lastGuests)return;
+  lastGuests=guests.value;drawGuests();drawSlots();showSlotHelp('');
+ }
+ for(const event of ['input','change']){
+  date.addEventListener(event,dateChanged);
+  time.addEventListener(event,timeChanged);
+  guests.addEventListener(event,guestsChanged);
+ }
  for(const name of ['restomanager:hours','restomanager:supabase-snapshot','restomanager:v3-tables','restomanager:screen','restomanager:v3-change','restomanager:connection-state'])window.addEventListener(name,()=>{drawSlots();drawGuests()});
 
  // Inline, accessible validation: never move the guest's focus to a remote footer.
