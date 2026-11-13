@@ -52,7 +52,7 @@
  .rmGuestQuickGrid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:6px!important;max-width:none!important}
  .rmGuestQuickGrid .rmGuestChip{min-height:42px!important;padding:6px 3px!important;font-size:14px!important;font-weight:800!important;white-space:nowrap;border-radius:10px!important}
  .rmGuestQuickGrid .rmGuestChip[aria-pressed="true"]{background:#087f5b!important;color:#fff!important}
- .rmGuestNumberField{display:none!important}
+ .rmGuestNumberField{display:none!important;grid-column:1/-1}
  .rmGuestNumberField.rmCustomGuestVisible{display:grid!important;max-width:390px;margin-top:7px}
  .rmGuestNumberField.rmCustomGuestVisible input{min-height:44px}
  .rmDirectorSlotLegend{font-size:11px!important;line-height:1.4!important}
@@ -76,6 +76,7 @@
  const pax=make('Choisir le nombre de couverts','rmDirectorGuestChoices',guests);
  const guestField=guests.closest('label');
  guestField?.classList.add('rmGuestNumberField');
+ if(guestField)pax.grid.parentElement.insertAdjacentElement('afterend',guestField);
  pax.grid.classList.add('rmGuestQuickGrid');
  const guestHeading=pax.grid.parentElement.querySelector('.rmDirectorChoicesTitle');
  if(guestHeading)guestHeading.textContent='Couverts · sélection rapide';
