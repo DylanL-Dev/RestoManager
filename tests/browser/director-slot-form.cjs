@@ -11,6 +11,7 @@ const preview=read('service-v3-arrival-preview.js');
 const previewCss=read('service-v3-arrival-preview.css');
 const lucide=read('lucide-local.js');
 const legacyCss=read('service-v3.css');
+const slotTheme=read('ui/booking-slot-cards.css');
 (async()=>{
  const browser=await chromium.launch({headless:true});
  try{
@@ -40,6 +41,7 @@ const legacyCss=read('service-v3.css');
     window.RestoRush={evaluate:candidate=>({blocked:candidate.time==='19:15',current:18,after:18+candidate.guests,limit:20})};
    });
    await page.addStyleTag({content:legacyCss});
+   await page.addStyleTag({content:slotTheme});
    await page.addStyleTag({content:previewCss});
    await page.addScriptTag({content:estimator});await page.addScriptTag({content:script});await page.addScriptTag({content:preview});
    assert.match(await page.locator('#rmBookingArrivalPreview').innerText(),/18\/20/,'booking pressure visible before selecting covers');
@@ -63,7 +65,9 @@ const legacyCss=read('service-v3.css');
     assert.match(await page.locator('.rmSlotExpand').innerText(),/autres horaires/);
    }
    assert.equal(await first.getAttribute('data-level'),'limited','fresh shared snapshot must show indicative places even during pending websocket');
-   assert.equal(await first.locator('svg').count(),2,'Lucide guests and immediate arrival icon are visible at '+width);
+   assert.equal(await first.locator('.rmSlotSeats svg').count(),1,'Lucide table-availability icon visible at '+width);
+   assert.equal(await first.locator('.rmSlotPressure svg').count(),1,'Lucide immediate arrival icon visible at '+width);
+   assert.equal(await first.locator('.rmSlotSelectedMark svg').count(),1,'Lucide selected checkmark visible at '+width);
    const pressure=page.locator('.rmSlotCard').filter({hasText:'19:15'});
    assert.equal(await pressure.getAttribute('data-pressure'),'busy','arrival load is marked');
    assert.equal(await pressure.locator('svg').count(),2,'Lucide activity badge is rendered');
