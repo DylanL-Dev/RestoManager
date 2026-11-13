@@ -49,12 +49,41 @@
  .rmDirectorSlotLegend span{white-space:nowrap}
  .rmSlotCard svg{width:13px!important;height:13px!important;flex:0 0 13px}
  @media(max-width:520px){.rmDirectorChoiceGrid.rmSlotAvailabilityGrid{grid-template-columns:repeat(3,minmax(0,1fr))}.rmDirectorChoiceGrid .rmSlotCard{min-height:62px!important}.rmSlotCard strong{font-size:14px}}
+ .rmGuestQuickGrid{display:grid!important;grid-template-columns:repeat(8,minmax(0,1fr))!important;gap:6px!important;max-width:none!important}
+ .rmGuestQuickGrid .rmGuestChip{min-height:42px!important;padding:6px 3px!important;font-size:14px!important;font-weight:800!important;white-space:nowrap;border-radius:10px!important}
+ .rmGuestQuickGrid .rmGuestChip[aria-pressed="true"]{background:#087f5b!important;color:#fff!important}
+ .rmGuestNumberField{display:none!important}
+ .rmGuestNumberField.rmCustomGuestVisible{display:grid!important;max-width:390px;margin-top:7px}
+ .rmGuestNumberField.rmCustomGuestVisible input{min-height:44px}
+ .rmDirectorSlotLegend{font-size:11px!important;line-height:1.4!important}
+ .rmSlotExplainer{font-size:11px!important;line-height:1.45!important}
+ .rmDirectorChoicesTitle{font-weight:800}
+ .rmSlotCard .rmSlotSeats svg{width:15px!important;height:15px!important}
+ @media (max-width:700px){
+  .rmGuestQuickGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}
+  .rmGuestQuickGrid .rmGuestChip{min-height:42px!important}
+  #rmDirectorTimeChoices .rmSlotCard{min-height:80px!important;gap:5px!important;padding:10px 7px!important}
+  #rmDirectorTimeChoices .rmSlotPressure{line-height:1.2!important;text-align:center!important}
+ }
+ @media(min-width:701px) and (max-width:1199px){
+  .rmGuestQuickGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important;max-width:560px!important}
+ }
  .rmDirectorChoicesHint{font:12px/1.5 system-ui;opacity:.8;margin:5px 0 0}\n .rmDirectorFieldError{font:600 12px/1.4 system-ui;color:#a92727;margin:5px 0 0}\n .rmDirectorFieldError[hidden],.rmDirectorFeedbackMoved{display:none!important}
  @media(max-width:520px){.rmDirectorChoiceGrid{grid-template-columns:repeat(4,minmax(0,1fr))}.rmDirectorChoiceGrid button{min-height:44px}}`;
  document.head.append(style);
  const make=(label,id,input)=>{const wrap=document.createElement('div');wrap.id=id;wrap.className='rmDirectorChoices';const title=document.createElement('strong');title.className='rmDirectorChoicesTitle';title.textContent=label;const grid=document.createElement('div');grid.className='rmDirectorChoiceGrid';grid.setAttribute('role','group');grid.setAttribute('aria-label',label);const hint=document.createElement('p');hint.className='rmDirectorChoicesHint';wrap.append(title,grid,hint);input.closest('label')?.insertAdjacentElement('afterend',wrap);return {grid,hint}};
  const slot=make('Créneaux de réservation disponibles','rmDirectorTimeChoices',time);
  const pax=make('Choisir le nombre de couverts','rmDirectorGuestChoices',guests);
+ const guestField=guests.closest('label');
+ guestField?.classList.add('rmGuestNumberField');
+ pax.grid.classList.add('rmGuestQuickGrid');
+ const guestHeading=pax.grid.parentElement.querySelector('.rmDirectorChoicesTitle');
+ if(guestHeading)guestHeading.textContent='Couverts · sélection rapide';
+ const showCustomGuests=on=>{
+   guestField?.classList.toggle('rmCustomGuestVisible',Boolean(on));
+   if(on)guests?.focus();
+ };
+
  const slotHelp=document.createElement('p');slotHelp.id='rmSlotHelp';slotHelp.className='rmSlotHelp';
  slotHelp.setAttribute('role','status');slotHelp.setAttribute('aria-live','polite');slotHelp.hidden=true;
  const showSlotHelp=(message,kind='info')=>{slotHelp.textContent=message||'';slotHelp.hidden=!message;slotHelp.dataset.kind=kind};
@@ -93,8 +122,10 @@
  }
  function pressure(at){
   if(!window.RestoRush||!window.RestoSharedDataLoaded||navigator.onLine===false||window.RestoSyncState==='error')return null;
-  const data=window.RestoRush.evaluate({date:date.value,time:at,guests:Number(guests.value)||1},window.ReservationEngine.normalizeReservations(window.RestoSharedReservations||[]));
-  return data?.invalid?null:data;
+  // Preview is deliberately independent of the party-size choice.
+  // Current arrivals / advisory limit is NOT the number of remaining seats.
+  const data=window.RestoRush.evaluate({date:date.value,time:at,guests:0},window.ReservationEngine.normalizeReservations(window.RestoSharedReservations||[]));
+  return data?.invalid?null:{...data,near:data.current>=Math.max(1,Math.ceil(data.limit*.8))};
  }
  window.RestoBookingSlotResult=slotCapacity;
  window.RestoShowSlotHelp=showSlotHelp;
@@ -115,10 +146,10 @@
     showSlotHelp(at+' : aucune table ou fusion compatible pour '+(Number(guests.value)||1)+' couvert(s). Choisissez un autre créneau ou modifiez le nombre de couverts.','error');
     return;
    }
-   showSlotHelp(load?.blocked?at+' : forte affluence prévue. La confirmation supplémentaire sera demandée à l’enregistrement.':'');
+   showSlotHelp(load?.near?at+' : affluence élevée sur cette heure. L’alerte de confirmation reste active en cas de dépassement du seuil conseillé.':'');
    change(time,at);
   });
-  display.className='rmSlotCard';display.dataset.level=result.state;display.dataset.pressure=load?.blocked?'busy':'normal';
+  display.className='rmSlotCard';display.dataset.level=result.state;display.dataset.pressure=load?.near?'busy':'normal';
   if(result.state!=='unknown'&&!result.compatible){display.dataset.unavailable='true';display.setAttribute('aria-describedby','rmSlotHelp')}
   const hour=document.createElement('strong');hour.textContent=at;
   const capacity=document.createElement('small');capacity.className='rmSlotSeats';
@@ -129,16 +160,16 @@
    result.remaining+' place'+(result.remaining>1?'s':'')+' libre'+(result.remaining>1?'s':'');
   capacity.append(seatIcon,seatText);display.append(hour,capacity);
   // Pressure is about the one-hour arrival recommendation, independent of free tables.
-  if(load?.blocked){
+  if(load?.near){
    const badge=document.createElement('span');badge.className='rmSlotPressure';
    const icon=document.createElement('i');icon.dataset.lucide='activity';icon.setAttribute('aria-hidden','true');
-   const txt=document.createElement('span');txt.textContent='Arrivées '+load.current+'/'+load.limit+' · forte affluence';
+   const txt=document.createElement('span');txt.textContent='Arrivées '+load.current+'/'+load.limit+' · '+(load.current>=load.limit?'Seuil atteint':'Forte affluence');
    badge.append(icon,txt);display.append(badge);
   }
   display.title=result.state==='unknown'?'Disponibilité à confirmer':result.compatible?
-   result.remaining+' places physiques estimées ; arrivée '+(load?.blocked?'chargée':'normale'):
+   result.remaining+' places physiques estimées ; arrivée '+(load?.near?'chargée':'normale'):
    'Aucune table ou fusion compatible pour '+guests.value+' couverts';
-  display.setAttribute('aria-label',at+' — '+seatText.textContent+(load?.blocked?' — Forte affluence':''));
+  display.setAttribute('aria-label',at+' — '+seatText.textContent+(load?.near?' — Forte affluence':''));
   return display;
  }
  function drawSlots(){
@@ -164,12 +195,22 @@
  }
  function drawGuests(){
   pax.grid.replaceChildren();
-  const max=Math.max(1,Math.floor(window.TableStore?.get?.()?.tables?.reduce((sum,t)=>sum+Number(t.capacity||0),0)||54));
-  const upto=allGuests?Math.min(max,20):Math.min(max,8);
-  for(let n=1;n<=upto;n++)pax.grid.append(button(String(n),Number(guests.value)===n,()=>change(guests,String(n))));
-  if(max>8)pax.grid.append(button(allGuests?'Moins':`9 à ${Math.min(max,20)}`,false,()=>{allGuests=!allGuests;drawGuests()}));
-  pax.hint.textContent='Pour un groupe plus grand, saisissez directement le nombre dans le champ Couverts. La capacité des tables reste vérifiée.';
+  const current=Number(guests.value);
+  for(let n=1;n<=7;n++){
+   const chip=button(String(n),current===n,()=>{showCustomGuests(false);change(guests,String(n))});
+   chip.className='rmGuestChip';
+   pax.grid.append(chip);
+  }
+  const custom=button('8+',current>=8,()=>{
+   if(current<8)change(guests,'8');
+   showCustomGuests(true);
+  });
+  custom.className='rmGuestChip rmGuestCustom';
+  pax.grid.append(custom);
+  if(current>=8)guestField?.classList.add('rmCustomGuestVisible');
+  pax.hint.textContent='1 à 7 en un geste · 8+ pour saisir un groupe plus grand.';
  }
+
  // Avoid replacing a button between pointer-down and click: editing a number input
  // fires 'input' immediately, then another 'change' on blur while the user taps a slot.
  let lastDate=date.value,lastTime=time.value,lastGuests=guests.value;
