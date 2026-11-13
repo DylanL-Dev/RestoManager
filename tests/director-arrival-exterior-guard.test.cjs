@@ -11,7 +11,7 @@ test('Arrival slot badges use the SAME surge evaluator and Lucide users/activity
  assert.match(choices,/data-lucide='|dataset\.lucide='users'/);
  assert.match(choices,/dataset\.lucide='activity'/);
  assert.match(choices,/dataset\.lucide='info'/);
- assert.match(choices,/Affluence élevée/);
+ assert.match(choices,/Forte affluence|Arrivées nombreuses/);
  assert.match(choices,/rmSlotHelp/);
  assert.match(choices,/window\.RestoBookingSlotResult=slotCapacity/);
 });
