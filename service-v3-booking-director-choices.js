@@ -23,7 +23,15 @@
  .rmDirectorChoiceGrid .rmSlotCard[aria-pressed="true"]{outline:3px solid #087f5b!important;outline-offset:2px}
  .rmSlotCard .rmSlotSeats{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}
  .rmSlotCard .rmSlotSeats svg,.rmSlotCard .rmSlotPressure svg{display:block!important;width:14px!important;height:14px!important;min-width:14px!important;max-width:14px!important;flex:0 0 14px!important}
- .rmSlotCard .rmSlotPressure{display:inline-flex;align-items:center;gap:3px;color:#91570d;font:700 10px/1.25 system-ui}
+ .rmSlotCard .rmSlotPressure{display:inline-flex;align-items:center;gap:3px;color:#91570d;font:700 10px/1.25 system-ui} 
+ .rmDirectorChoiceGrid button.rmSlotExpand{grid-column:1/-1;min-height:38px!important;border-style:dashed!important;background:#f2f8f5!important;color:#14694f!important;font-weight:750!important}
+ @media(max-width:700px){
+  #rmDirectorTimeChoices .rmDirectorChoiceGrid.rmSlotAvailabilityGrid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}
+  #rmDirectorTimeChoices .rmDirectorChoiceGrid .rmSlotCard{width:100%!important;min-width:0!important;min-height:62px!important;padding:8px 5px!important}
+  #rmDirectorTimeChoices .rmSlotCard strong{font-size:15px!important}
+  #rmDirectorTimeChoices .rmSlotCard .rmSlotPressure{font-size:10px!important}
+ }
+
  .rmDirectorChoiceGrid button.rmSlotCard[data-level="limited"][aria-pressed="true"]{background:#fff6e5!important;color:#9a5d0e!important}
  .rmDirectorChoiceGrid button.rmSlotCard[data-level="last"][aria-pressed="true"]{background:#fff0f0!important;color:#b62f39!important}
  .rmDirectorChoiceGrid button.rmSlotCard[data-level="full"][aria-pressed="true"]{background:#f1f3f2!important;color:#768078!important}
@@ -53,7 +61,7 @@
  slot.grid.parentNode.append(slotHelp);
  slot.grid.classList.add('rmSlotAvailabilityGrid');
  const legend=document.createElement('div');legend.className='rmDirectorSlotLegend';
- legend.textContent='🟢 Places libres · 🟠 2–4 places · 🔴 Dernière place · ⚪ Complet · 🔵 À vérifier · ⚠ Affluence élevée';
+ legend.textContent='🟢 Tables disponibles · 🟠 Peu de places · 🔴 Dernière place · ⚪ Complet · ⚠ Arrivées nombreuses';
  slot.grid.insertAdjacentElement('afterend',legend);
  const explanation=document.createElement('div');explanation.className='rmSlotExplainer';
  const information=document.createElement('i');information.dataset.lucide='info';information.setAttribute('aria-hidden','true');
@@ -68,7 +76,11 @@
  const button=(text,pressed,click)=>{const b=document.createElement('button');b.type='button';b.textContent=text;b.setAttribute('aria-pressed',String(pressed));b.addEventListener('click',click);return b};
  const change=(input,value)=>{input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))};
  function slotCapacity(at){
-  const ready=Array.isArray(window.RestoSharedReservations)?Boolean(window.RestoSharedDataLoaded&&navigator.onLine!==false&&['ok','readonly'].includes(window.RestoSyncState)):true;
+  // A complete synchronized snapshot is usable during brief Realtime reconnection.
+  // Do not infer readiness from the websocket badge alone.
+  const shared=Array.isArray(window.RestoSharedReservations);
+  const fresh=Number(window.RestoLastSyncAt)>0&&Date.now()-Number(window.RestoLastSyncAt)<300000;
+  const ready=shared?Boolean(window.RestoSharedDataLoaded&&navigator.onLine!==false&&fresh&&window.RestoSyncState!=='error'):true;
   const plan=window.TableStore?.get?.();
   const tables=plan?.tables||[];
   const duration=Number(window.ReservationEngine?.getDefaultDuration?.()||90);
@@ -79,7 +91,7 @@
    heldNumbers:held.map(h=>h.number),ready:ready&&Boolean(tables.length)})||{state:'unknown',remaining:null,compatible:false};
  }
  function pressure(at){
-  if(!window.RestoRush||!window.RestoSharedDataLoaded)return null;
+  if(!window.RestoRush||!window.RestoSharedDataLoaded||navigator.onLine===false||window.RestoSyncState==='error')return null;
   const data=window.RestoRush.evaluate({date:date.value,time:at,guests:Number(guests.value)||1},window.ReservationEngine.normalizeReservations(window.RestoSharedReservations||[]));
   return data?.invalid?null:data;
  }
@@ -115,10 +127,11 @@
    !result.compatible?'Pas de table pour '+guests.value:
    result.remaining+' place'+(result.remaining>1?'s':'')+' libre'+(result.remaining>1?'s':'');
   capacity.append(seatIcon,seatText);display.append(hour,capacity);
+  // Pressure is about the one-hour arrival recommendation, independent of free tables.
   if(load?.blocked){
    const badge=document.createElement('span');badge.className='rmSlotPressure';
    const icon=document.createElement('i');icon.dataset.lucide='activity';icon.setAttribute('aria-hidden','true');
-   const txt=document.createElement('span');txt.textContent='Affluence élevée';
+   const txt=document.createElement('span');txt.textContent='Arrivées '+load.current+'/'+load.limit+' · forte affluence';
    badge.append(icon,txt);display.append(badge);
   }
   display.title=result.state==='unknown'?'Disponibilité à confirmer':result.compatible?
@@ -138,9 +151,11 @@
    for(let at=Math.ceil(Math.max(first,start)/15)*15;at<=end&&at<1440;at+=15){if(window.ReservationEngine?.isServiceOpen?.(selected,clock(at))!==false)values.push(clock(at));}
   }
   const unique=[...new Set(values)].sort();
-  const visible=allSlots?unique:unique.slice(0,12);
+  const compact=window.matchMedia?.('(max-width:700px)').matches===true;
+  const count=compact?4:12;
+  const visible=allSlots?unique:unique.slice(0,count);
   for(const at of visible)slot.grid.append(slotButton(at));
-  if(unique.length>12)slot.grid.append(button(allSlots?'Réduire':`Voir les ${unique.length} créneaux`,false,()=>{allSlots=!allSlots;drawSlots()}));
+  if(unique.length>count){const more=button(allSlots?'Réduire les horaires':`Voir les ${unique.length-count} autres horaires`,false,()=>{allSlots=!allSlots;drawSlots()});more.className='rmSlotExpand';slot.grid.append(more);}
   if(!unique.length)slot.hint.textContent='Aucun créneau ouvert pour cette date. Vérifiez les horaires du restaurant.';
   else slot.hint.textContent='Places physiques indicatives selon les tables, fusions et réservations. La disponibilité définitive est vérifiée lors de l’enregistrement.';
   if(time.value&&unique.includes(time.value)&&!visible.includes(time.value)&&!allSlots){slot.grid.prepend(slotButton(time.value))}
