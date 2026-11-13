@@ -72,6 +72,8 @@
   const data=window.RestoRush.evaluate({date:date.value,time:at,guests:Number(guests.value)||1},window.ReservationEngine.normalizeReservations(window.RestoSharedReservations||[]));
   return data?.invalid?null:data;
  }
+ window.RestoBookingSlotResult=slotCapacity;
+ window.RestoShowSlotHelp=showSlotHelp;
  function slotButton(at){
   const result=slotCapacity(at),load=pressure(at);
   const display=button('',time.value===at,()=>{
