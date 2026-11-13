@@ -34,7 +34,7 @@
  const pax=make('Choisir le nombre de couverts','rmDirectorGuestChoices',guests);
  slot.grid.classList.add('rmSlotAvailabilityGrid');
  const legend=document.createElement('div');legend.className='rmDirectorSlotLegend';
- legend.textContent='🟢 5+ places · 🟠 2–4 places · 🔴 1 place · ⚪ Complet / à vérifier';
+ legend.textContent='🟢 5+ places · 🟠 2–4 places · 🔴 1 place · ⚪ Complet · 🔵 À vérifier';
  slot.grid.insertAdjacentElement('afterend',legend);
 
  let allSlots=false,allGuests=false;
@@ -44,7 +44,7 @@
  const button=(text,pressed,click)=>{const b=document.createElement('button');b.type='button';b.textContent=text;b.setAttribute('aria-pressed',String(pressed));b.addEventListener('click',click);return b};
  const change=(input,value)=>{input.value=value;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}))};
  function slotCapacity(at){
-  const ready=Array.isArray(window.RestoSharedReservations)?Boolean(window.RestoSupabaseReady&&navigator.onLine!==false&&window.RestoSharedDataLoaded):true;
+  const ready=Array.isArray(window.RestoSharedReservations)?Boolean(window.RestoSharedDataLoaded&&navigator.onLine!==false&&['ok','readonly'].includes(window.RestoSyncState)):true;
   const plan=window.TableStore?.get?.();
   const tables=plan?.tables||[];
   const duration=Number(window.ReservationEngine?.getDefaultDuration?.()||90);
@@ -68,7 +68,7 @@
   // The chosen party must be accommodated on a compatible real table or fusion.
   // Do not forbid "unknown": the existing server-side booking path stays authoritative.
   display.disabled=result.state!=='unknown'&&!result.compatible;
-  display.title=result.state==='unknown'?'Disponibilité à confirmer par le serveur':
+  display.title=result.state==='unknown'?(result.reason||'Disponibilité à confirmer par le serveur'):
    result.compatible?result.remaining+' places physiques indicatives — attribution confirmée à la validation':
    'Aucune table ou fusion disponible pour '+guests.value+' couverts';
   return display;
