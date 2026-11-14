@@ -24,7 +24,8 @@ jobs:
       - name: Tests unitaires RM-005 et verifications d'import
         run: npm test
       - name: Rapport unitaire
-        run: echo "Syntaxe, modules, droits UI et unitaires : PASS" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Syntaxe, modules, droits UI et unitaires : PASS" >> "$GITHUB_STEP_SUMMARY"
 
   browsers:
     runs-on: ubuntu-24.04
@@ -42,7 +43,8 @@ jobs:
       - name: Affichage tableaux et Receptions / Restaurant
         run: npm run test:display
       - name: Rapport navigateurs
-        run: echo "Mission 3 navigateur, presentation et tables : PASS (donnees fictives)" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Mission 3 navigateur, presentation et tables : PASS (donnees fictives)" >> "$GITHUB_STEP_SUMMARY"
 
   postgres-isolated:
     runs-on: ubuntu-24.04
@@ -57,4 +59,5 @@ jobs:
       - name: Test PostgreSQL 17 isole, aucun acces Supabase PROD
         run: npm run test:mission3:postgres
       - name: Rapport PostgreSQL
-        run: echo "Regressions Postgres Mission 3 : PASS (container ephemere)" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          echo "Regressions Postgres Mission 3 : PASS (container ephemere)" >> "$GITHUB_STEP_SUMMARY"
