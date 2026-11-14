@@ -1,0 +1,62 @@
+name: RM-005 - planning 7 jours SQL isole
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/release-prep/rm005_weekly_phase_a_candidate_NOT_APPLIED.sql'
+      - 'tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql'
+      - 'tests/sql/rm005_weekly_phase_a_assertions.sql'
+      - '.github/workflows/rm005-weekly-phase-a-synthetic-sql.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: rm005_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rm005_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verifier migration candidate sur schema entierement synthetique
+        shell: bash
+        env:
+          PGPASSWORD: synthetic-ci-only
+        run: |
+          set -euo pipefail
+          db_cmd() {
+            docker run --rm --network host \
+              -e PGPASSWORD \
+              -v "$GITHUB_WORKSPACE:/app:ro" -w /app \
+              postgres:17-alpine psql -X -v ON_ERROR_STOP=1 \
+                -h 127.0.0.1 -p 5432 -U postgres -d rm005_test "$@"
+          }
+          db_cmd -f tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql
+          db_cmd -f supabase/release-prep/rm005_weekly_phase_a_candidate_NOT_APPLIED.sql
+          db_cmd -f tests/sql/rm005_weekly_phase_a_assertions.sql
+      - name: Aucun chemin vers Supabase PROD / aucun fichier de donnees
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -E 'tnsrkargogckgtsxipwd|RM_SUPABASE_PROD_DB_URL|pg_dump|service_role' \
+            tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql \
+            tests/sql/rm005_weekly_phase_a_assertions.sql; then
+            echo 'Le scenario SQL contient une reference PROD interdite.'
+            exit 1
+          fi
+          echo "Test isole confirme, sans acces Supabase reel."
