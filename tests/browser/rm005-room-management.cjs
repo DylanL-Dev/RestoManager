@@ -5,6 +5,11 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'../..');
 const script=fs.readFileSync(path.join(root,'service-v3-table-admin.js'),'utf8');
+const auth=fs.readFileSync(path.join(root,'v3-connected-auth.js'),'utf8');
+const guardStart=auth.indexOf('const allowedForms=window.RestoReception?');
+const guardEnd=auth.indexOf(' // Native HTML validation can prevent submit events entirely',guardStart);
+assert.ok(guardStart>0&&guardEnd>guardStart,'Production form guard must be found');
+const guardCode=auth.slice(guardStart,guardEnd);
 
 (async()=>{
  const browser=await chromium.launch({headless:true});
@@ -20,11 +25,13 @@ const script=fs.readFileSync(path.join(root,'service-v3-table-admin.js'),'utf8')
     window.ReservationEngine={normalizeReservations:v=>v,isBlocking:()=>false};
     window.RestoSharedReservations=[];
     window.RestoSupabaseReady=true;
+    window.RestoReception=false;
     window.RestoSharedRoomIds=new Map([['main','aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'],['p1','bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'],['e1','cccccccc-cccc-cccc-cccc-cccccccccccc']]);
     window.RestoInactiveRestaurantTables=[];
     window.RestoErrors={business:message=>Error(message),diagnostic:()=>{},message:e=>e.message};
     window.RestoDialog={confirm:async()=>true};
     window.renameCalls=[];
+    window.createdRooms=[];
     const emit=()=>window.dispatchEvent(new Event('restomanager:supabase-snapshot'));
     window.RestoRenameRestaurantRoom=async(id,name)=>{
      window.renameCalls.push({id,name});
@@ -32,6 +39,11 @@ const script=fs.readFileSync(path.join(root,'service-v3-table-admin.js'),'utf8')
      plan.rooms.find(room=>room.id===key).name=name;emit();
     };
     window.RestoRefreshSharedService=async()=>{emit()};
+    window.RestoCreateRestaurantRoom=async name=>{
+     const id='room-added',uuid='dddddddd-dddd-dddd-dddd-dddddddddddd';
+     plan.rooms.push({id,name});
+     window.RestoSharedRoomIds.set(id,uuid);window.createdRooms.push(name);emit();
+    };
     window.RestoCreateRestaurantTable=async({label,seats,roomId})=>{
      const roomKey=[...window.RestoSharedRoomIds].find(([,id])=>id===roomId)?.[0];
      plan.tables.push({id:'new-table',roomId:roomKey,number:Number(label.replace(/^Table /,'')),capacityMin:1,capacity:seats});
@@ -44,11 +56,24 @@ const script=fs.readFileSync(path.join(root,'service-v3-table-admin.js'),'utf8')
      plan.rooms=plan.rooms.filter(room=>room.id!==key);emit();
     };
    });
+   // Install the REAL authenticated capture-phase gate before UI listeners.
+   // Earlier browser mocks omitted this gate and missed the production bug.
+   await page.evaluate(source=>{
+    const label={textContent:''},logout=null;
+    const install=new Function('label','logout',source+
+      "\n document.addEventListener('submit',forbidden,true); document.addEventListener('click',forbidden,true);");
+    install(label,logout);
+   },guardCode);
    await page.addScriptTag({content:script});
    const manager=page.locator('.roomManager');
    assert.equal(await manager.locator('.roomManagerItem').count(),3);
    assert.match(await manager.innerText(),/Salle principale · 2 tables/);
    assert.match(await manager.innerText(),/Salle Prestige · 0 tables/);
+   // A real click+submit must pass the capture-phase authorization gate.
+   await manager.locator('#roomManagerName').fill('Salle supplémentaire');
+   await manager.locator('#roomManagerForm button[type=submit]').click();
+   await page.waitForFunction(()=>window.createdRooms.length===1);
+   assert.match(await manager.innerText(),/Salle supplémentaire · 0 tables/);
 
    await page.locator('#tableAdminRoom').selectOption('p1');
    assert.match(await page.locator('#tableAdminList').innerText(),/Aucune table dans Salle Prestige/);
@@ -80,7 +105,7 @@ const script=fs.readFileSync(path.join(root,'service-v3-table-admin.js'),'utf8')
    const empty=manager.locator('.roomManagerItem').filter({hasText:'Salle temporaire'});
    await empty.locator('button').filter({hasText:'Supprimer'}).click();
    assert.doesNotMatch(await manager.innerText(),/Salle temporaire/);
-   assert.equal(await manager.locator('.roomManagerItem').count(),2);
+   assert.equal(await manager.locator('.roomManagerItem').count(),3);
 
    const protectedRoom=manager.locator('.roomManagerItem').filter({hasText:'Salon privé'});
    await protectedRoom.locator('button').filter({hasText:'Supprimer'}).click();
@@ -91,7 +116,7 @@ const script=fs.readFileSync(path.join(root,'service-v3-table-admin.js'),'utf8')
    assert.ok(docWidth<=width+4,'Unexpected horizontal overflow at '+width+'px: '+docWidth);
    assert.deepEqual(errors,[],'Page errors: '+errors.join(', '));
    await page.close();
-   console.log('PASS room renaming, table isolation and deletion at '+width+'px');
+   console.log('PASS room create, rename, table isolation and deletion WITH auth guard at '+width+'px');
   }
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});

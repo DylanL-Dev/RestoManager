@@ -317,11 +317,15 @@ try{
  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
  // legacy localStorage-backed UI until they are replaced by server-side RPC calls.
- const allowedForms=window.RestoReception?['bookingForm','editForm','reportIssueForm']:['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm','fusionForm','reportIssueForm'];
+ const allowedForms=window.RestoReception?['bookingForm','editForm','reportIssueForm']:['bookingForm','editForm','tableAdminForm','roomManagerForm','walkinForm','restaurantShiftForm','fusionForm','reportIssueForm'];
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (!allowedForms.includes(form.id)||(!window.RestoSupabaseReady&&form.id!=='reportIssueForm'))){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
+  // Room rename editors are created dynamically, without unique form IDs.
+  // Only the Restaurant role may submit them, after shared data is writable.
+  const permittedRoomRename=!window.RestoReception&&form?.classList.contains('roomManagerRenameForm');
+  const permittedForm=form&&(allowedForms.includes(form.id)||permittedRoomRename);
+  if(e.type==='submit' && form && (!permittedForm||(!window.RestoSupabaseReady&&form.id!=='reportIssueForm'))){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout||btn.id==='reportIssueSubmit')return;
