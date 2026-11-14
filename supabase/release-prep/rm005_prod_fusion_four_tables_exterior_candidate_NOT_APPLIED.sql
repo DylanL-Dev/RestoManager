@@ -132,8 +132,10 @@ BEGIN
  o:=to_regprocedure('public.install_walkin_group_v4(uuid[],integer,text,text,boolean)');
  IF o IS NULL THEN RAISE EXCEPTION 'Missing PROD RPC public.install_walkin_group_v4'; END IF;
  source:=pg_get_functiondef(o);
- IF md5(source) <> 'ad2462b3184e637fa1ed27ad59a1b6d3' THEN
-   RAISE EXCEPTION 'PROD RPC baseline drift for public.install_walkin_group_v4';
+ IF md5(source) <> 'ad2462b3184e637fa1ed27ad59a1b6d3'
+   AND position('private.restaurant_service_open_at_v1(' IN source)=0
+ THEN
+   RAISE EXCEPTION 'PROD RPC drift or weekly Phase B missing for public.install_walkin_group_v4';
  END IF;
  IF (SELECT pg_get_userbyid(proowner) FROM pg_proc WHERE oid=o)<>'postgres'
  OR (SELECT prosecdef FROM pg_proc WHERE oid=o) IS DISTINCT FROM true
