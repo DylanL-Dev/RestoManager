@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RestoManager V3 — intégration</title><meta name="theme-color" content="#087f5b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="RestoManager"><link rel="manifest" href="manifest.json?v=20261109-pwa-path1"><link rel="icon" type="image/svg+xml" href="pwa-icon.svg"><link rel="icon" href="asset/img/logo.png"><link rel="stylesheet" href="service-v3.css?v=20261108-rush-subtle1"><link rel="stylesheet" href="service-v3-tutorial.css?v=20261108-onboarding1"><link rel="stylesheet" href="service-v3-passage-cards.css?v=20261111-main-passage2"><link rel="stylesheet" href="service-v3-arrival-preview.css?v=20261114-main-advisory1"><script defer src="lucide-local.js?v=20261111-main-passage2"></script><script defer src="service-v3-lucide.js?v=20261106-action-icons-fix1"></script><link rel="stylesheet" href="service-v3-calendar-picker.css?v=20261105-visual1"><style id="integrationGate">body{visibility:hidden}#integrationBanner{position:static;max-width:none;background:#103e31;color:white;padding:14px;border-radius:12px;font:600 13px system-ui;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#integrationBanner button{border:0;border-radius:8px;background:#d9f5e6;color:#103e31;padding:8px 12px}</style><style>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RestoManager V3 — intégration</title><meta name="theme-color" content="#087f5b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="RestoManager"><link rel="manifest" href="manifest.json?v=20261109-pwa-path1"><link rel="icon" type="image/svg+xml" href="pwa-icon.svg"><link rel="icon" href="asset/img/logo.png"><link rel="stylesheet" href="service-v3.css?v=20261108-rush-subtle1"><link rel="stylesheet" href="ui/booking-slot-cards.css?v=20261113-slot-library1"><link rel="stylesheet" href="service-v3-tutorial.css?v=20261108-onboarding1"><script defer src="lucide-local.js?v=20261113-slot-chevron1"></script><script defer src="service-v3-lucide.js?v=20261106-action-icons-fix1"></script><link rel="stylesheet" href="service-v3-calendar-picker.css?v=20261105-visual1"><style id="integrationGate">body{visibility:hidden}#integrationBanner{position:static;max-width:none;background:#103e31;color:white;padding:14px;border-radius:12px;font:600 13px system-ui;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}#integrationBanner button{border:0;border-radius:8px;background:#d9f5e6;color:#103e31;padding:8px 12px}</style><style>
 .reception :is([data-choice="walkin"],.quickReleasePanel,#passages,#manageHours,#manageTables,#manageClosure,#manageReports,#fusionSuggestions,#editFusionNotice,.tableDetailActions,.tableStatusActions),
 html.reception label:has(#bookingTable),html.reception label:has(#editTable),html.reception #bookingTable+.tableChoice,html.reception #editTable+.tableChoice{display:none!important}
 /* The reception role has five navigation tabs, including a read-only service dashboard. */
@@ -877,8 +877,150 @@ html[data-theme="dark"] #editForm.editFormModern .editReservationSummary{backgro
 html[data-theme="dark"] #editForm.editFormModern .editReservationSummary .editSummaryTable{background:#285b45;color:#e6f9ee}
 html[data-theme="dark"] .editSuccessToast{background:#1d5039;border-color:#448e61;color:#eafff1}
 </style>
-<link rel="stylesheet" href="service-v3-reservation-fields.css?v=20261110-reception-parity1"><link rel="stylesheet" href="service-v3-reservation-list-rm005.css?v=20261111-main-ui1">
-</head>
+<link rel="stylesheet" href="service-v3-reservation-fields.css?v=20261110-reception-parity1">
+<link rel="stylesheet" href="service-v3-reservation-list-rm005.css?v=20261111-mobile-compact-v2">
+<link rel="stylesheet" href="service-v3-passage-cards.css?v=20261111-second-occupant1"><link rel="stylesheet" href="service-v3-fusion-builder.css?v=20261112-fusion-polish2"><link rel="stylesheet" href="service-v3-management-categories.css?v=20261113-room-filter1">
+
+<style id="rm005-forecast-occupancy-dev">
+/* RM-005 DEV only: distinguish forecasts, real-time occupancy and new-booking simulations. */
+#rushDashboard,.currentOccupancy,.rmImmediateAvailability{min-width:0;background:#fff;border:1px solid #dce8e0;border-radius:18px;box-shadow:0 5px 18px #12274608}
+#rushDashboard{border-top:3px solid #bed5ed!important;margin-bottom:16px}
+#rushDashboard .rushDashHead h2{margin:0;font-size:clamp(18px,2.4vw,23px);line-height:1.25}
+#rushDashboard .rushDashHead p{margin-top:7px;color:#597166;font-size:13px;line-height:1.45}
+#rushDashboard .rushArrivalBreakdown.rmForecastTwoStatuses{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important;margin:13px 0!important}
+#rushDashboard .rmForecastTwoStatuses .rushArrivalBreakdownItem{display:flex!important;align-items:center;gap:12px!important;min-width:0;min-height:82px;padding:13px 14px!important;border-radius:13px}
+#rushDashboard .rmForecastTwoStatuses .rmMetricIcon{width:22px;min-width:22px;height:22px;color:#175d81}
+#rushDashboard .rmForecastTwoStatuses .rushArrivalBreakdownItem:last-child .rmMetricIcon{color:#087857}
+#rushDashboard .rmForecastMetricText{display:flex;flex-direction:column;gap:3px;min-width:0}
+#rushDashboard .rmForecastMetricText strong{font-size:25px!important;line-height:1.1}
+#rushDashboard .rmForecastMetricText span{font-size:12px!important;line-height:1.3;color:#537067}
+#rushDashboard .rushLoadSummary{padding-bottom:10px}
+#rushDashboard .rmForecastHint{margin:11px 0 5px!important;padding:10px 12px;background:#eef7f1;border-radius:11px;color:#315b45!important}
+#rushDashboard .rmForecastDayTotal{font-size:12px!important;color:#587467!important;margin:7px 0 1px!important}
+#rushDashboard .rmForecastCarry{font-size:12px!important;background:#fff1e1;border-radius:9px;padding:10px 12px;color:#865110!important}
+.currentOccupancy{border-top:3px solid #c9dfd1;padding:18px;gap:14px;margin:0 0 16px}
+.currentOccupancy .occupancyHead{align-items:flex-start;gap:12px}
+.currentOccupancy .occupancyHeadingBlock{gap:5px}
+.currentOccupancy .rmOccupationSubtitle{color:#5e756a;font-size:13px;line-height:1.45;margin:3px 0 0}
+.currentOccupancy .rmOccupancyMetrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;min-width:0}
+.currentOccupancy .rmOccupancyMetric{display:flex;align-items:center;gap:10px;min-height:78px;padding:12px;border-radius:13px;background:#f6f9f7;border:1px solid #e2eae5;min-width:0}
+.currentOccupancy .rmOccupancyMetric:first-child{background:#eef5fc;border-color:#d4e5f4}
+.currentOccupancy .rmOccupancyMetric:nth-child(2){background:#edf8f1;border-color:#c7e8d6}
+.currentOccupancy .rmOccupancyMetricIcon{width:21px;height:21px;min-width:21px;color:#187354}
+.currentOccupancy .rmOccupancyMetricWords{display:flex;flex-direction:column;gap:4px;min-width:0}
+.currentOccupancy .rmOccupancyMetricWords strong{font-size:24px;line-height:1.1;color:#184a37;font-variant-numeric:tabular-nums}
+.currentOccupancy .rmOccupancyMetricWords span{font-size:12px;line-height:1.3;color:#526d60}
+.currentOccupancy .rmOccupationCapacity{font-size:12px;color:#3c7055;margin:0}
+.currentOccupancy .occupancyHelp{line-height:1.45}
+.rmImmediateAvailability{display:grid;gap:14px;padding:18px;margin:0 0 19px;border-top:3px solid #d9e9dd}
+.rmImmediateHeading{display:grid;gap:5px}
+.rmImmediateHeading h2{font-size:clamp(18px,2.4vw,21px);margin:0!important;color:#174a36}
+.rmImmediateHeading p{margin:3px 0 0;font-size:13px;line-height:1.45;color:#607a6b}
+.rmImmediateResult{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:10px;align-items:stretch}
+.rmImmediateQuestion,.rmImmediateAnswer{display:flex;align-items:center;gap:12px;min-width:0;min-height:58px;padding:12px 14px;border-radius:12px;border:1px solid #d6e8db;box-sizing:border-box}
+.rmImmediateQuestion{background:#f7fbf9;color:#315848;font-size:13px}
+.rmImmediateAnswer{background:#e2f5e9;color:#086741;font-size:14px}
+.rmImmediateAnswer.rmImmediateFull{background:#fff0e2;color:#904b12;border-color:#ebcaad}
+.rmImmediateQuestion svg,.rmImmediateAnswer svg{width:22px;min-width:22px;height:22px}
+.rmImmediateCount{font-weight:800;overflow-wrap:anywhere}
+@media(max-width:1050px){.currentOccupancy .rmOccupancyMetrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ #rushDashboard{padding:14px!important}
+ #rushDashboard .rmForecastTwoStatuses .rushArrivalBreakdownItem{padding:10px!important;gap:8px!important;min-height:68px}
+ #rushDashboard .rmForecastMetricText strong{font-size:22px!important}
+ #rushDashboard .rmForecastMetricText span{font-size:11px!important}
+ .currentOccupancy,.rmImmediateAvailability{padding:14px!important}
+ .currentOccupancy .rmOccupancyMetric{padding:10px;min-height:70px;gap:8px}
+ .currentOccupancy .rmOccupancyMetricWords strong{font-size:22px}
+ .currentOccupancy .rmOccupancyMetricWords span{font-size:11px}
+ .rmImmediateResult{grid-template-columns:minmax(0,1fr);gap:8px}
+ .rmImmediateQuestion,.rmImmediateAnswer{min-height:49px}
+}
+html[data-theme="dark"] #rushDashboard,html[data-theme="dark"] .currentOccupancy,html[data-theme="dark"] .rmImmediateAvailability{background:#1c352a;color:#edf8ee;border-color:#476753}
+html[data-theme="dark"] :is(.rmOccupancyMetric,.rmImmediateQuestion){background:#253f31;border-color:#466750}
+html[data-theme="dark"] .rmImmediateAnswer{background:#19543a;border-color:#397c55;color:#e8f8ee}
+html[data-theme="dark"] :is(.rmOccupancyMetricWords strong,.rmImmediateHeading h2,.rmForecastMetricText strong){color:#ebf8ed!important}
+html[data-theme="dark"] :is(.rmOccupancyMetricWords span,.rmOccupationSubtitle,.rmOccupationCapacity,.rmImmediateHeading p,.rmForecastMetricText span){color:#bed8c6!important}
+html[data-theme="dark"] #rushDashboard .rmForecastHint{background:#214b38;color:#d7eedf!important}
+</style>
+<style id="rm005-live-priority-fix">
+/* DEV: real, installed diners must be visible before planned arrivals. */
+#rushDashboard .rmLiveServiceAlert{display:grid;gap:9px;padding:15px 17px;margin:0 0 16px;background:#e4f5ea;border:2px solid #84c9a4;border-radius:15px;min-width:0}
+#rushDashboard .rmLiveServiceAlertHeading{display:flex;gap:9px;align-items:center;font-size:12px;font-weight:800;letter-spacing:.045em;color:#116445}
+#rushDashboard .rmLiveServiceAlertHeading svg{width:20px;height:20px;min-width:20px}
+#rushDashboard .rmLiveServiceAlertMetrics{display:flex;align-items:center;flex-wrap:wrap;gap:9px 18px;color:#215d42;font-size:13px}
+#rushDashboard .rmLiveServiceAlertMetrics strong{font-size:clamp(21px,3vw,29px);line-height:1.2;color:#0e6042;font-variant-numeric:tabular-nums}
+#rushDashboard .rmLiveServiceAlertMetrics span{padding:6px 10px;border:1px solid #bee3cc;border-radius:10px;background:#f6fcf8;font-weight:700}
+#rushDashboard .rmLiveServiceNote{margin:0;font-size:12px;line-height:1.5;color:#456d58}
+html[data-theme="dark"] #rushDashboard .rmLiveServiceAlert{background:#1a513b;border-color:#387e59}
+html[data-theme="dark"] #rushDashboard .rmLiveServiceAlertHeading,html[data-theme="dark"] #rushDashboard .rmLiveServiceAlertMetrics strong{color:#d6ffe9}
+html[data-theme="dark"] #rushDashboard .rmLiveServiceAlertMetrics span{background:#244e39;color:#e7f8ed;border-color:#568368}
+html[data-theme="dark"] #rushDashboard .rmLiveServiceNote{color:#c3e4d2}
+@media(max-width:600px){#rushDashboard .rmLiveServiceAlert{padding:12px}#rushDashboard .rmLiveServiceAlertMetrics{align-items:stretch;flex-direction:column;gap:7px}#rushDashboard .rmLiveServiceAlertMetrics span{width:fit-content}}
+</style><style id="rm005-walkin-rush-hotfix">
+/* RM-005 DEV: the combined workload has a dedicated, readable metric. */
+#rushDashboard .rmLiveServiceAlertMetrics .rmLiveServiceTotal{background:#0e7753;color:#fff;border-color:#0e7753;font-weight:800;font-size:14px;padding:9px 12px}
+.tableCard .status{display:inline-flex!important;align-items:center;gap:5px!important;width:max-content;max-width:100%;white-space:nowrap}
+.tableCard .rmTableStateIcon{display:inline-block;flex:0 0 13px;width:13px;height:13px;stroke-width:2.1}
+html[data-theme="dark"] #rushDashboard .rmLiveServiceAlertMetrics .rmLiveServiceTotal{background:#178e64;border-color:#389e75;color:#fff}
+@media(max-width:480px){#rushDashboard .rmLiveServiceAlertMetrics .rmLiveServiceTotal{font-size:13px;white-space:normal}}
+</style><style id="rm005-cross-hour-clarity">
+#rushDashboard .rmLiveServiceAlertMetrics .rmLiveServiceTotal{display:inline-flex;align-items:center;min-height:42px;font-size:18px;font-variant-numeric:tabular-nums}
+#rushDashboard .rmSlotArrivalsValue{font-size:clamp(18px,2.5vw,28px);font-variant-numeric:tabular-nums}
+#rushDashboard .rmLiveServiceNote{max-width:80ch}
+@media(max-width:600px){#rushDashboard .rmLiveServiceAlertMetrics .rmLiveServiceTotal{font-size:16px;width:100%;justify-content:center}#rushDashboard .rmSlotArrivalsValue{font-size:20px}}
+</style><style id="rm005-arrivals-compact-dev">
+/* RM-005 DEV: operational counters and overdue warnings remain visible; hourly detail is optional. */
+#rushDashboard .rushDashHead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#rushDashboard .rushDashHead h2{margin:0;font-size:21px}
+#rushDashboard .rmArrivalHelpButton{display:inline-flex;align-items:center;justify-content:center;border:1px solid #bbdac8;background:#eef8f1;color:#176449;border-radius:10px;width:37px;height:37px;flex:0 0 37px;cursor:pointer}
+#rushDashboard .rmArrivalHelpButton svg{width:20px;height:20px}
+#rushDashboard .rmArrivalHelpText{border:1px solid #c7ddec;background:#f0f7fc;border-radius:12px;padding:12px 15px;color:#29506a;margin:0 0 12px;font-size:13px;line-height:1.5}
+#rushDashboard .rmArrivalHelpText p{margin:5px 0 0}
+#rushDashboard .rmArrivalHelpBenefits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:12px 0}
+#rushDashboard .rmArrivalHelpBenefit{display:flex;align-items:flex-start;gap:9px;padding:10px;border:1px solid #d7e6ed;background:#fff;border-radius:9px;margin:0}
+#rushDashboard .rmArrivalHelpBenefit svg.rmArrivalHelpIcon{display:block!important;width:18px!important;height:18px!important;min-width:18px!important;max-width:18px!important;flex:0 0 18px!important;color:#20765b;margin-top:2px}
+#rushDashboard .rmArrivalHelpBenefit strong{color:#244c43}
+@media(max-width:680px){#rushDashboard .rmArrivalHelpBenefits{grid-template-columns:1fr}}
+#rushDashboard .rmArrivalDetails{margin:10px 0 0;border:1px solid #dbe8df;border-radius:12px;overflow:hidden;background:#fafcfb}
+#rushDashboard .rmArrivalDetailsToggle{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;cursor:pointer;color:#1f674c;font-size:13px;font-weight:800;list-style:none;user-select:none}
+#rushDashboard .rmArrivalDetailsToggle::-webkit-details-marker{display:none}
+#rushDashboard .rmArrivalDetailsToggle svg{width:18px;height:18px;transition:transform .15s}
+#rushDashboard .rmArrivalDetails[open] .rmArrivalDetailsToggle svg{transform:rotate(180deg)}
+#rushDashboard .rmArrivalDetailsBody{padding:10px 15px 15px;border-top:1px solid #deebe1;display:grid;gap:8px}
+#rushDashboard .rmArrivalDetailsBody .rushLoadSummary{padding:0}
+#rushDashboard .rmArrivalDetailsBody .rushArrivalsHint{margin:2px 0!important;font-size:12px!important}
+#rushDashboard .rmArrivalOverdueAlert{display:flex;align-items:center;gap:12px;border:2px solid #efb768;background:#fff1db;padding:13px 15px;margin:12px 0 6px;border-radius:13px;color:#713b06}
+#rushDashboard .rmArrivalOverdueAlert>svg{width:24px;height:24px;flex:0 0 24px;color:#b35f09}
+#rushDashboard .rmArrivalOverdueWords{flex:1;min-width:0}
+#rushDashboard .rmArrivalOverdueWords strong{font-size:14px;line-height:1.4;color:#7f3908}
+#rushDashboard .rmArrivalOverdueWords p{margin:3px 0 0;font-size:12px;line-height:1.4;color:#82521f}
+#rushDashboard .rmArrivalOverdueAction{border:1px solid #dcac6b;background:#fffaf3;color:#864007;border-radius:9px;padding:10px 12px;font-weight:800;font-size:12px;cursor:pointer}
+#rushDashboard .rushAutomaticSlot{margin-top:8px}
+html[data-theme="dark"] #rushDashboard .rmArrivalDetails{background:#20372b;border-color:#44604d}
+html[data-theme="dark"] #rushDashboard .rmArrivalDetailsToggle{color:#b8efcd}
+html[data-theme="dark"] #rushDashboard .rmArrivalOverdueAlert{background:#4e351c;border-color:#c79044;color:#ffe7c4}
+html[data-theme="dark"] #rushDashboard .rmArrivalOverdueWords strong,html[data-theme="dark"] #rushDashboard .rmArrivalOverdueWords p{color:#ffe3b5}
+html[data-theme="dark"] #rushDashboard .rmArrivalHelpText{background:#1f3845;color:#e0f2ff;border-color:#456578}
+@media(max-width:650px){#rushDashboard .rmArrivalOverdueAlert{flex-wrap:wrap;gap:8px}#rushDashboard .rmArrivalOverdueAction{width:100%;text-align:center}#rushDashboard .rmArrivalDetailsToggle{padding:13px}#rushDashboard .rmArrivalHelpButton{width:34px;height:34px;flex-basis:34px}}
+</style><style id="rm005-live-compact-correct-target">
+/* Only the green live-service rectangle collapses; hourly details are visible by default. */
+#rushDashboard .rmLiveCollapsible{display:block!important;padding:0!important;overflow:hidden;min-width:0}
+#rushDashboard .rmLiveServiceHeader{display:flex;align-items:center;gap:12px;padding:12px 15px;cursor:pointer;list-style:none;min-height:58px}
+#rushDashboard .rmLiveServiceHeader::-webkit-details-marker{display:none}
+#rushDashboard .rmLiveServiceAlertHeading{display:inline-flex;gap:8px;align-items:center;flex:1;min-width:0;margin:0!important}
+#rushDashboard .rmLiveServiceAlertHeading strong{font-size:12px;line-height:1.3}
+#rushDashboard .rmLiveCompactCount{font-weight:850;font-size:clamp(14px,2vw,19px);color:#0c6b48;line-height:1.25;font-variant-numeric:tabular-nums}
+#rushDashboard .rmLiveChevron{height:19px;width:19px;min-width:19px;stroke-width:2.3;transition:transform .15s}
+#rushDashboard .rmLiveCollapsible[open] .rmLiveChevron{transform:rotate(180deg)}
+#rushDashboard .rmLiveCollapsible:not([open]) .rmLiveExpandedContent{display:none!important}
+#rushDashboard .rmLiveExpandedContent{padding:0 15px 14px;display:grid;gap:9px}
+#rushDashboard .rmLiveExpandedContent .rmLiveServiceAlertMetrics{gap:8px 13px}
+#rushDashboard .rmLiveExpandedContent .rmLiveServiceNote{margin:0}
+#rushDashboard .rmLiveServiceHeader:focus-visible{outline:3px solid #117c5d;outline-offset:-3px}
+html[data-theme="dark"] #rushDashboard .rmLiveCompactCount{color:#bbf6d5}
+@media(max-width:650px){#rushDashboard .rmLiveServiceHeader{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;padding:11px 12px}#rushDashboard .rmLiveServiceAlertHeading{grid-column:1;grid-row:1}#rushDashboard .rmLiveCompactCount{grid-column:1;grid-row:2;font-size:18px}#rushDashboard .rmLiveChevron{grid-column:2;grid-row:1 / 3;align-self:center}#rushDashboard .rmLiveExpandedContent{padding:0 12px 12px}}
+</style></head>
 <body><header class="top"><a class="brand" href="v3-connected.html#tables"><img src="asset/img/restomanager-chef-white.svg" alt=""><span><strong>RestoManager</strong><small>Simplifiez votre service</small></span></a><div class="heading"><b>Service du restaurant</b><span id="serviceDate"></span></div><div class="headerQuickActions"><button id="refreshAppBtn" class="refreshAppBtn" type="button" aria-label="Actualiser RestoManager" title="Actualiser RestoManager"><i data-lucide="refresh-cw" aria-hidden="true"></i><span>Actualiser</span></button><button type="button" id="mobileAccountToggle" class="mobileAccountToggle" aria-label="Ouvrir le menu du compte" aria-haspopup="true" aria-controls="mobileAccountMenu" aria-expanded="false"><i data-lucide="circle-user-round" aria-hidden="true"></i><span class="mobileAccountStatusDot" aria-hidden="true"></span></button></div><div id="mobileAccountMenu" class="mobileAccountMenu" role="group" aria-label="Compte et connexion" hidden><div class="mobileAccountIdentity"><span class="mobileAccountAvatar" aria-hidden="true"><i data-lucide="utensils-crossed" id="mobileAccountRoleIcon"></i></span><div><strong id="mobileAccountRole">Espace Restaurant</strong><small id="mobileAccountName">Compte Restaurant</small><span class="mobileAccountSession">Session active</span></div></div><div class="mobileAccountSync" id="mobileAccountSync" data-state="pending" role="status" aria-live="polite"><i data-lucide="refresh-cw" aria-hidden="true"></i><span class="mobileAccountStatusDot" aria-hidden="true"></span><div><strong id="mobileAccountSyncLabel">Connexion en cours</strong><small id="mobileAccountSyncDetail">Vérification des données partagées…</small></div></div><button type="button" class="mobileAccountRefresh" id="mobileAccountRefresh"><i data-lucide="refresh-cw" aria-hidden="true"></i>Actualiser les données</button><button type="button" class="mobileAccountLogout" id="mobileAccountLogout"><i data-lucide="log-out" aria-hidden="true"></i>Se déconnecter</button></div></header>
 
 <div class="shell"><nav class="sidebar" aria-label="Navigation principale"><a class="selected" href="#tables"><i data-lucide="layout-grid" class="navSvgIcon" aria-hidden="true"></i><span>Tables</span></a><a href="#reservations"><i data-lucide="calendar-days" class="navSvgIcon" aria-hidden="true"></i><span>Réservations</span></a><a href="#reservationForm"><i data-lucide="user-plus" class="navSvgIcon" aria-hidden="true"></i><span>Ajouter un client</span></a><a href="#passages"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i><span>Passages</span></a><a href="#administration"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i><span>Gestion</span></a><div class="sidebarFooter" aria-label="Établissement connecté"><div class="sidebarEstablishment"><i data-lucide="building-2" aria-hidden="true"></i><div class="sidebarEstablishmentDetails"><strong id="sidebarVenue">Mon établissement</strong><small id="sidebarRole">Espace Restaurant</small></div></div><div class="sidebarSession" aria-label="État de la connexion et compte"><div class="sidebarConnection" id="sidebarConnection" role="status" aria-live="polite" data-state="pending"><span class="sidebarConnectionDot" aria-hidden="true"></span><span id="sidebarConnectionLabel">Connexion en cours</span></div><button type="button" class="sidebarLogout" id="sidebarLogout"><i data-lucide="log-out" aria-hidden="true"></i><span>Se déconnecter</span></button></div><div class="sidebarMeta"><span>RestoManager</span><span>V3</span></div></div></nav>
@@ -890,14 +1032,24 @@ html[data-theme="dark"] .editSuccessToast{background:#1d5039;border-color:#448e6
 <a href="#passages" class="mobileNavItem" data-nav="passages" aria-label="Passages"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="utensils-crossed" class="navSvgIcon" aria-hidden="true"></i></span><span>Passage</span></a>
 <a href="#administration" class="mobileNavItem" data-nav="administration"><span class="mobileNavIcon" aria-hidden="true"><i data-lucide="settings" class="navSvgIcon" aria-hidden="true"></i></span><span>Gestion</span></a>
 </nav>
-<script src="resto-errors.js?v=20261108-tables-display"></script><script src="reservation-engine.js?v=20261107-mission2"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261108-tables-display"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="booking-availability.js?v=20261108-tables-display"></script><script src="service-v3-kpi-detail.js?v=20261109-director-feedback1"></script><script src="service-v3.js?v=20261110-clone-midnight2"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="reservation-edit.js?v=20261110-clone-midnight2"></script><script src="service-v3-reservations.js?v=20261111-room-occupants1"></script><script src="service-v3-walkin-fast.js?v=20261111-room-occupants1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261110-clone-midnight2"></script><script src="service-v3-passage-cards.js?v=20261111-main-passage2"></script><script>
+<script src="resto-errors.js?v=20261112-weekend-closures1"></script><script src="reservation-engine.js?v=20261112-weekly1"></script><script src="service-v3-table-store.js?v=20261106-messages"></script><script src="service-v3-dialogs.js?v=20261108-tables-display"></script><script src="service-v3-confirm.js?v=20261104-occupied1"></script><script src="service-v3-table-pressure.js?v=20261106-pressure1"></script><script src="booking-availability.js?v=20261108-tables-display"></script><script src="service-v3-kpi-detail.js?v=20261109-director-feedback1"></script><script src="service-v3.js?v=20261113-arrival-chips-name1"></script><script src="smart-placement-engine.js?v=20261106-preview1"></script><script src="reservation-edit.js?v=20261113-exterior-edit-required1"></script><script src="service-v3-reservations.js?v=20261113-exterior-edit-required1"></script><script src="service-v3-walkin-fast.js?v=20261113-weekly-walkin1"></script><script src="service-v3-quick-release.js?v=20261106-service-status"></script><script src="service-v3-table-choices.js?v=20261109-reception-readonly1"></script>
+<script src="service-v3-passage-cards.js?v=20261111-rooms-fusions4"></script><script>
 document.querySelectorAll('.quickAction[href^="#"]').forEach(function(link){
  link.addEventListener('click',function(){
   const target=document.querySelector(link.getAttribute('href'));
   if(target&&target.tagName==='DETAILS')target.open=true;
  });
 });
-</script><script>(function(){const select=document.getElementById('bookingType');const radios=document.querySelectorAll('input[name="bookingTypeVisual"]');radios.forEach(r=>r.addEventListener('change',()=>{if(r.checked){select.value=r.value;select.dispatchEvent(new Event('change',{bubbles:true}))}}));})();</script><script src="service-v3-table-admin.js?v=20261108-tables-display"></script><script src="service-v3-room-choices.js?v=20261103-room1"></script><script src="service-v3-screens.js?v=20261108-nav02-home1"></script><script src="service-v3-fusions.js?v=20261108-tables-display"></script><script src="service-v3-report-metrics.js?v=20261106-metrics-audit1"></script><script src="service-v3-history.js?v=20261106-metrics-audit1"></script><script src="service-v3-shifts.js?v=20261108-tables-display"></script><script src="service-v3-closure.js?v=20261106-shared-closure-guard1"></script><script src="service-v3-shared-closure.js?v=20261108-tables-display"></script><script src="service-v3-report-download.js?v=20261106-metrics-audit1"></script><script src="service-v3-reminders.js?v=20261109-profile-bell3"></script><script src="service-v3-fb-alerts.js?v=20261108-tables-display"></script><script src="service-v3-add-choice.js?v=20261108-nav01-back1"></script><script src="service-v3-time-picker.js?v=20261107-minute-default1"></script><script src="service-v3-arrival-preview.js?v=20261114-main-advisory1"></script><script src="service-v3-calendar-picker.js?v=20261104-cal2"></script><script src="service-v3-theme.js?v=20261107-custom-trigger1"></script><script src="service-v3-refresh.js?v=20261106-release2"></script><script src="service-v3-select-picker.js?v=20261110-clone-midnight2"></script><script src="reception-service-overview.js?v=20261109-reception-confirm1"></script><script type="module" src="v3-connected-auth.js?v=20261111-room-occupants1"></script><script type="module" src="v3-supabase-booking.js?v=20261110-clone-midnight2"></script><style id="rm005SecondOccupantNotice">
+</script><script>(function(){const select=document.getElementById('bookingType');const radios=document.querySelectorAll('input[name="bookingTypeVisual"]');radios.forEach(r=>r.addEventListener('change',()=>{if(r.checked){select.value=r.value;select.dispatchEvent(new Event('change',{bubbles:true}))}}));})();</script><script src="service-v3-table-admin.js?v=20261113-room-filter1"></script><script src="service-v3-room-choices.js?v=20261103-room1"></script><script src="service-v3-screens.js?v=20261112-management-layout1"></script><script src="service-v3-fusions.js?v=20261112-management-layout1"></script><script src="service-v3-report-metrics.js?v=20261106-metrics-audit1"></script><script src="service-v3-history.js?v=20261106-metrics-audit1"></script><link rel="stylesheet" href="service-v3-weekly-schedule.css?v=20261113-tablet-layout2"><script src="service-v3-shifts.js?v=20261112-weekly1"></script><script src="service-v3-weekly-schedule.js?v=20261113-tablet-icons2"></script><script src="service-v3-closure.js?v=20261106-shared-closure-guard1"></script><script src="service-v3-shared-closure.js?v=20261108-tables-display"></script><script src="service-v3-report-download.js?v=20261106-metrics-audit1"></script><script src="service-v3-reminders.js?v=20261109-profile-bell3"></script><script src="service-v3-fb-alerts.js?v=20261108-tables-display"></script><script src="service-v3-add-choice.js?v=20261108-nav01-back1"></script><script src="service-v3-time-picker.js?v=20261107-minute-default1"></script><script src="service-v3-slot-capacity.js?v=20261113-seats1"></script><link rel="stylesheet" href="service-v3-arrival-preview.css?v=20261114-main-advisory1"><script src="service-v3-booking-director-choices.js?v=20261113-real-tables1"></script><script src="service-v3-arrival-preview.js?v=20261114-main-advisory1"></script><script src="service-v3-calendar-picker.js?v=20261104-cal2"></script><script src="service-v3-theme.js?v=20261107-custom-trigger1"></script><script src="service-v3-refresh.js?v=20261106-release2"></script><script src="service-v3-select-picker.js?v=20261109-table-grid1"></script><script src="reception-service-overview.js?v=20261112-sync-clarity1"></script><script type="module" src="v3-connected-auth.js?v=20261113-reception-readonly1"></script><script type="module" src="v3-supabase-booking.js?v=20261113-exterior-required1"></script><style id="receptionTableCaptionFix">
+/* Reception only: override the compact editor's display:grid!important label rules. */
+html.reception #editForm.editFormModern > label:has(#editTable),
+html.reception #bookingForm label:has(#bookingTable),
+html.reception #editForm.editFormModern > label:has(#editTable) .tableChoice,
+html.reception #bookingForm label:has(#bookingTable) .tableChoice {
+  display:none!important;
+  visibility:hidden!important;
+}
+</style><style id="rm005SecondOccupantNotice">
 #walkinSameRoomNotice:not([hidden]){display:block;margin:6px 0 12px;padding:12px 14px;border-radius:12px;background:#fff5e4;border:1px solid #e7c687;color:#79551b;font-size:13px;font-weight:650;line-height:1.45}
 :is(html[data-theme="dark"],body.dark,html.dark) #walkinSameRoomNotice:not([hidden]){background:#503d24;border-color:#aa8b50;color:#fff0c1}
 </style>
