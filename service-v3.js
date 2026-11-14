@@ -42,15 +42,23 @@ function rushArrivalBreakdown(date,start,end,all,nowMinutes=currentMinutes(),tod
 }
 const mins=s=>Number(String(s).slice(0,2))*60+Number(String(s).slice(3,5));
 const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
-function settings(){try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return {percent:Number.isInteger(Number(v.percent))&&Number(v.percent)>=40&&Number(v.percent)<=90&&Number(v.percent)%5===0?Number(v.percent):60,window:60,step:15}}catch(_){return {...DEFAULT}}}
+function validPercent(v){return v!==null&&v!==undefined&&v!==''&&Number.isInteger(Number(v))&&Number(v)>=40&&Number(v)<=90&&Number(v)%5===0}
+function settings(){
+ const shared=globalThis.RestoSharedHours?.arrivalLimitPercent;
+ if(validPercent(shared))return {percent:Number(shared),window:60,step:15};
+ try{
+  const stored=JSON.parse(localStorage.getItem(KEY)||'{}');
+  return {percent:validPercent(stored.percent)?Number(stored.percent):DEFAULT.percent,window:60,step:15};
+ }catch(_){return {...DEFAULT}}
+}
 function capacity(){return TableStore.get().tables.reduce((sum,t)=>sum+Number(t.capacity||0),0)}
-function service(time){const m=mins(time);return Object.values(ReservationEngine.getShifts()).find(s=>s.enabled&&m>=mins(s.start)&&m<=mins(s.end))||null}
+function service(date,time){const m=mins(time);if(!ReservationEngine.isServiceOpen(date,time))return null;return Object.values(ReservationEngine.getShiftsForDate(date)).find(s=>s.enabled&&m>=mins(s.start)&&m<=mins(s.end))||null}
 function relevant(r,date){return isActualArrival(r,date)}
-function windowFor(time){const shift=service(time);if(!shift)return null;const start=Math.max(mins(shift.start),Math.floor(mins(time)/60)*60),end=Math.min(mins(shift.end)+1,start+settings().window);return {start,end,shift}}
+function windowFor(date,time){const shift=service(date,time);if(!shift)return null;const start=Math.max(mins(shift.start),Math.floor(mins(time)/60)*60),end=Math.min(mins(shift.end)+1,start+settings().window);return {start,end,shift}}
 function count(date,start,end,all,ignoreId){return all.filter(r=>r.id!==ignoreId&&relevant(r,date)&&arrivalMinute(r,date)>=start&&arrivalMinute(r,date)<end).reduce((n,r)=>n+Math.max(0,Number(r.guests)||0),0)}
-function evaluate(candidate,all,ignoreId){const win=windowFor(candidate.time);if(!win)return {blocked:false,invalid:true};const max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100));const current=count(candidate.date,win.start,win.end,all,ignoreId),after=current+Number(candidate.guests||0);return {blocked:after>limit,current,after,limit,max,start:win.start,end:win.end,range:clock(win.start)+' – '+clock(win.end),percent:max?Math.round(after/max*100):0}}
+function evaluate(candidate,all,ignoreId){const win=windowFor(candidate.date,candidate.time);if(!win)return {blocked:false,invalid:true};const max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100));const current=count(candidate.date,win.start,win.end,all,ignoreId),after=current+Number(candidate.guests||0);return {blocked:after>limit,current,after,limit,max,start:win.start,end:win.end,range:clock(win.start)+' – '+clock(win.end),percent:max?Math.round(after/max*100):0}}
 function suggestions(candidate,all,ignoreId){
- const shift=service(candidate.time);if(!shift)return [];
+ const shift=service(candidate.date,candidate.time);if(!shift)return [];
  const low=mins(shift.start),high=mins(shift.end),base=mins(candidate.time),list=[];
  // Exclude past alternatives only for the current restaurant-local date.
  // Future dates can legitimately include earlier clock times.
@@ -328,9 +336,26 @@ function setup(){
   hint.textContent='Jusqu’à '+limit+' arrivées conseillées sur une heure, pour '+max+' places. Au-delà, confirmation manuelle et suggestions de créneaux.';
  }
  slider.addEventListener('input',show);
- slider.addEventListener('change',()=>{
-  localStorage.setItem(KEY,JSON.stringify({percent:Number(slider.value)}));
-  show();window.dispatchEvent(new Event('restomanager:v3-change'));
+ slider.addEventListener('change',async()=>{
+  const percent=Number(slider.value);
+  if(Array.isArray(window.RestoSharedReservations)){
+   slider.disabled=true;
+   try{
+    if(!window.RestoSupabaseReady||typeof window.RestoSaveSharedArrivalLimit!=='function')throw Error('Synchronisation indisponible.');
+    await window.RestoSaveSharedArrivalLimit(percent);
+   }catch(error){
+    slider.value=String(settings().percent);
+    hint.textContent='Réglage non enregistré pour l’équipe. Vérifiez la synchronisation puis réessayez.';
+    window.RestoErrors?.diagnostic?.('arrival-limit',error);
+   }finally{slider.disabled=false}
+  }else{
+   localStorage.setItem(KEY,JSON.stringify({percent}));
+   window.dispatchEvent(new Event('restomanager:v3-change'));
+  }
+  show();
+ });
+ window.addEventListener('restomanager:supabase-snapshot',()=>{
+  slider.value=String(settings().percent);show();
  });
  show();box.append(header,p,label,slider,markers,hint);section.append(box);
 }
@@ -941,7 +966,21 @@ $('bookingForm').addEventListener('submit',async event=>{
 });
 function applyTableSnapshot(){plan=TableStore.get();syncServiceDay();bookings=readReservations().filter(r=>r.date===date);const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;render();refreshAvailability()}
 window.addEventListener('restomanager:v3-tables',applyTableSnapshot);
-window.addEventListener('restomanager:supabase-snapshot',applyTableSnapshot);
+let checkedBookingDefaultAfterSnapshot=false;
+window.addEventListener('restomanager:supabase-snapshot',()=>{
+ applyTableSnapshot();
+ if(checkedBookingDefaultAfterSnapshot||!window.RestoSharedDataLoaded)return;
+ checkedBookingDefaultAfterSnapshot=true;
+ // Before shared hours arrive, a new reservation may default to a closed lunch.
+ // Correct only an untouched new booking, never a guest's completed form.
+ const d=$('bookingDate'),t=$('bookingTime');
+ const untouched=!$('bookingClient')?.value?.trim()&&!$('bookingHotelRoom')?.value?.trim()&&Number($('bookingGuests')?.value||1)===1;
+ if(untouched&&d?.value&&t?.value&&!ReservationEngine.isServiceOpen(d.value,t.value)){
+  const arrival=bookingArrivalDefault(d.value);
+  d.value=arrival.date;t.value=arrival.time;
+  t.dispatchEvent(new Event('change',{bubbles:true}));
+ }
+});
 window.addEventListener('restomanager:connection-state',()=>{if(window.RestoSharedDataLoaded)applyTableSnapshot();else{render();refreshAvailability()}});
 window.addEventListener('restomanager:v3-change',()=>{try{syncServiceDay();bookings=readReservations().filter(r=>r.date===date);render();refreshAvailability()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});
