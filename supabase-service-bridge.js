@@ -32,7 +32,7 @@ export async function loadSharedService(){
 // a disconnected/replaced realtime channel. No local reservation writes.
 export async function subscribeSharedService(onSnapshot,onError=console.error,onConnection=()=>{}){
  await requireStaff();
- let stopped=false,busy=false,dirty=false,generation=0,connectionState='connecting';
+ let stopped=false,busy=false,dirty=false,generation=0,connectionState='connecting',lastSnapshotAt=0;
  let channel=null,retryTimer=null,retryAttempt=0,snapshotFailed=false;
  const retryDelays=[1000,2000,4000];
  function clearRetry(){if(retryTimer!==null){clearTimeout(retryTimer);retryTimer=null}}
@@ -54,7 +54,7 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
     dirty=false;
     const snapshot=await loadSharedService();
     if(!stopped&&navigator.onLine&&connectionState==='connected'&&requestGeneration===generation){
-     onSnapshot(snapshot);snapshotFailed=false;retryAttempt=0;clearRetry();
+     onSnapshot(snapshot);lastSnapshotAt=Date.now();snapshotFailed=false;retryAttempt=0;clearRetry();
     }
    }while(dirty&&!stopped&&requestGeneration===generation);
   }catch(error){
@@ -105,6 +105,8 @@ export async function subscribeSharedService(onSnapshot,onError=console.error,on
   if(stopped||!navigator.onLine)return;
   if(connectionState!=='connected')startChannel();
   else if(snapshotFailed&&!busy&&retryTimer===null){retryAttempt=0;void refresh()}
+  // Recover missed Realtime events after a desktop PC sleeps or changes tab.
+  else if(!busy&&document.visibilityState==='visible'&&Date.now()-lastSnapshotAt>=30000)void refresh();
  },15000);
  startChannel();
  return ()=>{

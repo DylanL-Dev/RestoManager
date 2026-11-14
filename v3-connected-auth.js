@@ -1,4 +1,4 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261114-rm010-sync-poll1';
 import {installFeedback} from './service-v3-feedback.js?v=20261108-bug01-1';
 import {installTutorial} from './service-v3-tutorial.js?v=20261108-onboarding1';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261114-rm009-shared-threshold1';
@@ -362,8 +362,11 @@ try{
   const {data,error}=await supabase.from('restaurant_hours')
    .update({arrival_limit_percent:value}).eq('restaurant_id',profile.restaurant_id)
    .select('id,arrival_limit_percent').single();
-  if(error||Number(data?.arrival_limit_percent)!==value)throw Error('Enregistrement du seuil non confirmé.');
-  await window.RestoRefreshSharedService();
+  if(error||Number(data?.arrival_limit_percent)!==value)throw Error('Enregistrement du seuil non confirmé dans Supabase.');
+  const snapshot=await window.RestoRefreshSharedService();
+  if(Number(snapshot?.hours?.arrival_limit_percent)!==value)
+   throw Error('Valeur modifiée, mais lecture du seuil partagé non confirmée.');
+  return value;
  };
  window.RestoSaveSharedHours=async(shifts,duration,weekend,weeklySchedule)=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
