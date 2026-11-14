@@ -29,6 +29,7 @@ const shapes={
 'check-check':'<path d="m18 6-7 7-3-3"/><path d="m22 10-7 7-3-3M2 12l5 5"/>',
 'chart-no-axes-column':'<line x1="18" x2="18" y1="20" y2="10"/><line x1="12" x2="12" y1="20" y2="4"/><line x1="6" x2="6" y1="20" y2="14"/>',
 'chevron-down':'<path d="m6 9 6 6 6-6"/>',
+'chevron-up':'<path d="m18 15-6-6-6 6"/>',
 'ellipsis':'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>', 'arrow-up-down':'<path d="m3 16 4 4 4-4M7 20V4M21 8l-4-4-4 4M17 4v16"/>', 'sun':'<circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42"/>', 'moon':'<path d="M20.985 12.486A9 9 0 0 1 11.514 3.015 9 9 0 1 0 20.985 12.486Z"/>', 'monitor':'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/>',
 'check-circle-2':'<circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/>',
 'trash-2':'<path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M6 6l1 15h10l1-15M10 11v6M14 11v6"/>',
@@ -55,13 +56,17 @@ const shapes={
 /* RM-005: complete local Lucide glyphs needed by the reservation table.
    All icons remain offline/PWA capable; no CDN or external font dependency. */
 Object.assign(shapes,{
+  'zap':'<path d="m13 2-3 8h7l-6 12 1-8H5l8-12Z"/>',
+  'utensils':'<path d="M4 3v7a3 3 0 0 0 6 0V3M7 3v19M20 3c-4 3-5 7-5 11h5V3Zm0 11v8"/>',
  'bed-double':'<rect x="2" y="5" width="20" height="15" rx="2"/><path d="M2 10h20M2 17h20M6 10v7M6 13h5a2 2 0 0 1 2 2v2M15 10v3h7"/>',
  'user-round':'<circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 0 0-16 0"/>',
  'users-round':'<path d="M16 20v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 20v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
  'triangle-alert':'<path d="m10.3 3.9-8.2 14.2A2 2 0 0 0 3.8 21h16.4a2 2 0 0 0 1.7-2.9L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/>',
+ 'link-2':'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
  'layers':'<path d="m12 2 9 5-9 5-9-5 9-5ZM3 12l9 5 9-5M3 17l9 5 9-5"/>',
  'notebook-pen':'<path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M4 8h4M4 13h4M4 18h4M12 8h3"/><path d="m14 13 5.5-5.5a2 2 0 0 1 3 3L17 16l-4 1 1-4Z"/>',
- 'clock-alert':'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2M18 17h.01"/>',
+ 'copy':'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16H3a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1"/>',
+'clock-alert':'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l3 2M18 17h.01"/>',
  'x-circle':'<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/>',
  'pencil':'<path d="m15 5 4 4M4 20l4.8-1.2L21 6.6a2.83 2.83 0 0 0-4-4L4.8 14.8 4 20Z"/>',
  'arrow-up':'<path d="m5 12 7-7 7 7M12 19V5"/>',
