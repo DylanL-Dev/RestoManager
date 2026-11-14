@@ -67,6 +67,13 @@ jobs:
           db_cmd -d rm005_rpc_test -c 'SET check_function_bodies = off;' \
             -f supabase/release-prep/rm005_weekly_phase_b_rpc_candidate_NOT_APPLIED.sql \
             -f tests/sql/rm005_weekly_phase_b_prod_rpc_assertions.sql
+          {
+            echo '### RM-005 - tests SQL PostgreSQL 17'
+            echo '- Planning 7 jours : OK (donnees fictives)'
+            echo '- Helper horaire Paris/week-end/DST : OK (donnees fictives)'
+            echo '- Substitution des 6 definitions de RPC PROD : OK (schéma synthétique)'
+            echo '- Aucune connexion a Supabase PROD dans ce job'
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Aucun chemin vers Supabase PROD / aucun fichier de donnees
         shell: bash
         run: |
