@@ -40,7 +40,7 @@ Une seconde base PostgreSQL 17 éphémère a été ajoutée au workflow `RM-005 
 - un essai complet du candidat Phase B et des assertions de maintien des propriétaires, droits et contrôles de rôle ;
 - validation désactivée des dépendances métier absentes de cette base fictive (`check_function_bodies = off`) : même en cas de PASS, il faudra une restauration de vrai schéma pour tester le comportement métier complet.
 
-Les premiers essais ont détecté **deux erreurs de fixture**, corrigées sur la branche de préparation : rôles PostgreSQL recréés dans la deuxième base (rôles globaux au cluster) et absence de points-virgules après les définitions `pg_get_functiondef`. **Le résultat final de ce test étendu reste à vérifier sur la dernière exécution CI**. Ne pas confondre un PASS des tests du helper seul avec un PASS de toutes les RPC.
+Les premiers essais ont détecté **deux erreurs de fixture**, corrigées sur la branche de préparation : rôles PostgreSQL recréés dans la deuxième base (rôles globaux au cluster) et absence de points-virgules après les définitions `pg_get_functiondef`. **Résultat confirmé : workflow GitHub Actions #43564800230, étape SQL isolée PASS sur les deux bases PostgreSQL 17 fictives, y compris substitution complète des six définitions de fonctions PROD et maintien des privilèges.** Ne pas confondre un PASS des tests du helper seul avec un PASS de toutes les RPC.
 
 ## Décision opérationnelle samedi
 
