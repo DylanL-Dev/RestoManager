@@ -1,5 +1,6 @@
 -- RM-005 PostgreSQL 17 TEST ONLY — synthetic baseline, no real RestoManager data.
 CREATE SCHEMA private;
+CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
 CREATE ROLE resto_service_writer NOLOGIN;
 
