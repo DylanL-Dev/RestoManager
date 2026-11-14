@@ -181,9 +181,9 @@ BEGIN
   SELECT count(*) INTO invalid_rows FROM public.restaurant_hours h
   WHERE h.weekly_schedule IS NULL
      OR (SELECT count(*) FROM jsonb_object_keys(h.weekly_schedule))<>7
-     OR h.weekly_schedule #>> '{saturday,lunch,enabled}'
+     OR (h.weekly_schedule #>> '{saturday,lunch,enabled}')
         IS DISTINCT FROM to_jsonb(h.lunch_enabled)::text
-     OR h.weekly_schedule #>> '{sunday,lunch,enabled}'
+     OR (h.weekly_schedule #>> '{sunday,lunch,enabled}')
         IS DISTINCT FROM to_jsonb(h.lunch_enabled)::text;
   IF invalid_rows<>0 THEN
     RAISE EXCEPTION 'RM-005: % weekly schedule rows failed neutral seeding',invalid_rows;
