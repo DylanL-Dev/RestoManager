@@ -17,7 +17,7 @@ const flatten=e=>[e,...(e.children||[]).flatMap(flatten)];
 test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 seated',()=>{
  const target=elem('section');
  const doc={createElement:elem,getElementById:id=>id==='rushDashboard'?target:null,addEventListener(){}};
- const win={};
+ const win={addEventListener(){}}; // RM-007 refreshes the dashboard when service hours change.
  const engine={getShifts:()=>({lunch:{enabled:true,start:'00:00',end:'23:30'}}),
   isBlocking:r=>['reserved','confirmed','late','arrived','seated'].includes(r.status),
   getDefaultDuration:()=>90,rankedTableChoices:()=>[]};
