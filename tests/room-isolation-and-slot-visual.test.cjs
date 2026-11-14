@@ -11,7 +11,7 @@ test('choosing Salle Prestige displays ONLY tables assigned to that room',()=>{
  assert.match(room,/Aucune table dans /);
  assert.match(room,/\$\('tableAdminRoom'\)\.addEventListener\('change'/);
  assert.match(room,/\$\('tableAdminRoom'\)\.value=roomId/);
- assert.match(html,/service-v3-table-admin\.js\?v=20261113-room-filter1/);
+ assert.match(html,/service-v3-table-admin\.js\?v=20261114-room-rename1/);
 });
 test('removing rooms requires an empty room, keeps historical references',()=>{
  assert.match(room,/if\(next\.tables\.some\(t=>t\.roomId===room\.id\)\)/);

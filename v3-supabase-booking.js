@@ -163,6 +163,25 @@ export async function createRestaurantRoomShared(name){
  if(error)throw error;
  return data;
 }
+export async function renameRestaurantRoomShared(id,name){
+ const profile=await roomAdminClient();
+ const label=String(name||'').trim();
+ if(!id)throw window.RestoErrors?.business('Salle introuvable.')||Error('Salle introuvable.');
+ if(!label||label.length>60)throw window.RestoErrors?.business('Indiquez un nom de salle de 1 à 60 caractères.')||Error('Nom invalide.');
+ const {data:rooms,error:readError}=await supabase.from('restaurant_rooms').select('id,name').eq('restaurant_id',profile.restaurant_id).eq('active',true);
+ if(readError)throw readError;
+ const current=(rooms||[]).find(room=>room.id===id);
+ if(!current)throw window.RestoErrors?.business('Cette salle n’est plus disponible. Actualisez la liste.')||Error('Salle introuvable.');
+ if((rooms||[]).some(room=>room.id!==id&&room.name.trim().toLocaleLowerCase('fr')===label.toLocaleLowerCase('fr')))
+  throw window.RestoErrors?.business('Une autre salle porte déjà ce nom.')||Error('Salle existante.');
+ if(current.name===label)return {id,name:label};
+ // The row identity and table assignments stay unchanged; only the label is updated.
+ const {data,error}=await supabase.from('restaurant_rooms').update({name:label}).eq('restaurant_id',profile.restaurant_id).eq('id',id).eq('active',true).select('id,name').single();
+ if(error)throw error;
+ return data;
+}
+window.RestoRenameRestaurantRoom=renameRestaurantRoomShared;
+
 export async function deactivateRestaurantRoomShared(id){
  const profile=await roomAdminClient();
  if(!id)throw Error('Salle introuvable.');
