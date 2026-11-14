@@ -1,0 +1,26 @@
+name: RM-005 Rooms - isolated browser validation
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+    paths:
+      - 'service-v3-table-admin.js'
+      - 'v3-supabase-booking.js'
+      - 'v3-connected.html'
+      - 'tests/browser/rm005-room-management.cjs'
+      - '.github/workflows/rm005-rooms-browser.yml'
+permissions:
+  contents: read
+jobs:
+  room-management:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Rename, room isolation, empty rooms and deletion at 390/800/1440px
+        run: node tests/browser/rm005-room-management.cjs
