@@ -342,7 +342,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    }
    pass(role+' '+viewport.width+'px responsive service identity and naturally wrapping heading');
    // Each indicator stays data-driven; only the Lucide presentation changes.
-   const kpiTitles=['Clients présents','Clients attendus','Tables occupées','Places sur tables libres'];
+   const kpiTitles=['Clients installés','Clients attendus','Tables occupées','Places sur tables libres'];
    const iconChecks=await view.page.locator('#kpis .kpi').evaluateAll(cards=>cards.map(card=>({
     title:card.querySelector('.kpiLabel')?.textContent,
     svg:!!card.querySelector('.kpiHead svg'),
