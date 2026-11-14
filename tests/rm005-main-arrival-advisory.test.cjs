@@ -49,7 +49,7 @@ function init(){
 
 test('RM-005 MAIN loads only advisory resources, not the weekly editor',()=>{
  assert.match(html,/service-v3-arrival-preview\.css\?v=20261114-main-advisory1/);
- assert.match(html,/service-v3-arrival-preview\.js\?v=20261114-main-advisory1/);
+ assert.match(html,/service-v3-arrival-preview\.js\?v=20261114-(?:main-advisory1|rm008-closed1)/);
  // The complete RM-005 preview is staged after backend compatibility checks.
  if(html.includes('service-v3-weekly-schedule.js')){
   assert.match(html,/service-v3-weekly-schedule\.css/);
