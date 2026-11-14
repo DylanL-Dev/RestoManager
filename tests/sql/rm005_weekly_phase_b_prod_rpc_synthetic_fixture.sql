@@ -33,7 +33,7 @@ begin
  perform public.change_reservation_status_v3(booking,'reserved','seated');
  update public.reservations set walkin_type=p_type where id=booking;
  return booking;
-end $function$
+end $function$;
 
 ALTER FUNCTION private.install_walkin_v3(uuid,integer,text,text) OWNER TO resto_service_writer;
 REVOKE ALL ON FUNCTION private.install_walkin_v3(uuid,integer,text,text) FROM PUBLIC, anon, authenticated;
@@ -129,7 +129,7 @@ begin
  end if;
  select array_agg(id order by id) into held from public.table_holds where held_by=auth.uid() and owner_token=d.lock_token;
  return jsonb_build_object('tables',d.ids,'holds',held,'seconds',greatest(0,extract(epoch from deadline-clock_timestamp())));
-end $function$
+end $function$;
 
 ALTER FUNCTION public.booking_draft_v3(uuid,text,timestamptz,timestamptz,integer,uuid[],text,text,text) OWNER TO resto_service_writer;
 REVOKE ALL ON FUNCTION public.booking_draft_v3(uuid,text,timestamptz,timestamptz,integer,uuid[],text,text,text) FROM PUBLIC, anon, authenticated;
@@ -169,7 +169,7 @@ begin
  perform public.change_reservation_status_v3(booking,'reserved','seated');
  update public.reservations set walkin_type=p_type where id=booking;
  return booking;
-end $function$
+end $function$;
 
 ALTER FUNCTION public.install_walkin_group_v3(uuid[],integer,text,text) OWNER TO resto_service_writer;
 REVOKE ALL ON FUNCTION public.install_walkin_group_v3(uuid[],integer,text,text) FROM PUBLIC, anon, authenticated;
@@ -216,7 +216,7 @@ begin
  perform public.change_reservation_status_v3(booking,'reserved','seated');
  update public.reservations set walkin_type=p_type where id=booking;
  return booking;
-end $function$
+end $function$;
 
 REVOKE ALL ON FUNCTION public.install_walkin_group_v4(uuid[],integer,text,text,boolean) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.install_walkin_group_v4(uuid[],integer,text,text,boolean) TO authenticated;
@@ -261,7 +261,7 @@ begin
    end;
  end loop;
  raise exception 'Aucune table disponible pour ce créneau et ce nombre de couverts.';
-end $function$
+end $function$;
 
 ALTER FUNCTION public.reception_booking_v3(uuid,text,text,integer,timestamptz,timestamptz,text) OWNER TO resto_service_writer;
 REVOKE ALL ON FUNCTION public.reception_booking_v3(uuid,text,text,integer,timestamptz,timestamptz,text) FROM PUBLIC, anon, authenticated;
@@ -306,7 +306,7 @@ begin
   end;
  end loop;
  raise exception 'Aucune table disponible pour ce créneau et ce nombre de couverts.' using errcode='23P01',detail='NO_COMPATIBLE_TABLE';
-end $function$
+end $function$;
 
 ALTER FUNCTION public.reception_update_reservation_v4(uuid,uuid,text,text,integer,timestamptz,timestamptz,text) OWNER TO resto_service_writer;
 REVOKE ALL ON FUNCTION public.reception_update_reservation_v4(uuid,uuid,text,text,integer,timestamptz,timestamptz,text) FROM PUBLIC, anon, authenticated;
