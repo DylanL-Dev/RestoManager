@@ -117,7 +117,8 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    forcedError=null;records[0].status='cancelled';records[0].edit_version=uuid();await push(view.page);await view.page.locator('#editReviewCurrent').click();await view.page.locator('#editReloadCurrent').click();await view.page.getByRole('button',{name:'Remplacer ma saisie',exact:true}).click();await message(view.page,'terminée ou annulée');assert.equal(await view.page.locator('#editNotes').inputValue(),'Saisie non enregistrée');pass(role+' safe error and cancellation cannot restore stale reservation');await clean(view);
   }
   reset();const management=await open(browser,origin,'fb_admin');
-  await management.page.evaluate(()=>window.RestoScreens.show('administration'));await management.page.locator('#manageTables > summary').click();await management.page.locator('#administration > summary').click();
+  await management.page.evaluate(()=>{window.RestoScreens.show('administration');window.RestoManagementCategories?.open('manageTables')});
+  await management.page.locator('#tableAdminList').waitFor({state:'visible'});
   sharedChanges={lunchStart:'11:30:00',duration:120,firstTableSeats:8,fusionLinks:[{table_a:'table-3',table_b:'table-4'}]};await push(management.page);
   await management.page.waitForFunction(()=>document.getElementById('shift-lunch-start').value==='11:30');
   assert.equal(await management.page.locator('#restaurantDefaultDuration').inputValue(),'120');assert.match(await management.page.locator('#tableAdminList').innerText(),/Table 1 · 1–8 places/);
