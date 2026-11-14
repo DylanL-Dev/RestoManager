@@ -329,7 +329,17 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     refresh:document.getElementById('refreshAppBtn').getBoundingClientRect().toJSON()
    }));
    assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Header must not overflow viewport');
-   assert.ok(headerLayout.refresh.width>=42,'Refresh button must keep its touch target');
+   if(viewport.width<=700){
+    // RM-005 deliberately moves the refresh action into the compact mobile account menu.
+    await view.page.locator('#mobileAccountToggle').click();
+    const refreshItem=await view.page.locator('#mobileAccountRefresh');
+    await refreshItem.waitFor({state:'visible'});
+    const mobileRefresh=await refreshItem.evaluate(el=>el.getBoundingClientRect().toJSON());
+    assert.ok(mobileRefresh.width>=42&&mobileRefresh.height>=42,'Mobile account refresh must retain a usable touch target');
+    await view.page.locator('#mobileAccountToggle').click();
+   }else{
+    assert.ok(headerLayout.refresh.width>=42,'Desktop/tablet refresh must retain a usable touch target');
+   }
    pass(role+' '+viewport.width+'px responsive service identity and naturally wrapping heading');
    // Each indicator stays data-driven; only the Lucide presentation changes.
    const kpiTitles=['Clients présents','Clients attendus','Tables occupées','Places sur tables libres'];
