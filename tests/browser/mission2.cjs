@@ -30,7 +30,7 @@ async function rpc(role,name,args){
  if(lostResponse){lostResponse=false;return {data:null,error:{code:'NETWORK',message:'Response lost after commit'}}}
  return {data:role==='reception'?{tables:['table-'+(records.indexOf(r)+1)],edit_version:r.edit_version}:r.edit_version,error:null};
 }
-async function open(browser,url,role,viewport={width:390,height:844}){
+async function open(browser,url,role,viewport={width:390,height:844},fixedTime=null){
  const context=await browser.newContext({viewport,isMobile:viewport.width<768,hasTouch:viewport.width<=768,serviceWorkers:'block'});
  await context.addInitScript(role=>{window.__mission2Role=role},role);
  await context.exposeFunction('__mission2Snapshot',snapshot);
@@ -41,7 +41,11 @@ async function open(browser,url,role,viewport={width:390,height:844}){
   if(u.pathname==='/supabase-service-bridge.js')return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'mission2-bridge.mjs'),'utf8')});
   return route.continue();
  });
- const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await context.newPage();
+ // In passage-availability tests, fix the wall clock before loading app scripts;
+ // setFixedTime leaves timers running, so UI waits and realtime checks still work.
+ if(fixedTime)await page.clock.setFixedTime(fixedTime);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(url+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
  // Dismiss the existing first-visit tour before interacting with reservations.
  const welcome=page.locator('#restoTourWelcome');
@@ -140,8 +144,9 @@ const server=http.createServer((req,response)=>{
   }
   // Responsive RM-005 Passage UI: verify real browser layout and manual table picker,
   // without making a reservation or calling installation RPCs.
+  const passageNoon=new Date();passageNoon.setUTCHours(12,0,0,0);
   for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
-   reset();const {context,page,errors}=await open(browser,url,'fb_admin',viewport);
+   reset();const {context,page,errors}=await open(browser,url,'fb_admin',viewport,passageNoon);
    await page.evaluate(()=>window.RestoScreens.show('passages'));
    const stats=await page.evaluate(()=>{
     const recommended=document.querySelector('#walkinRecommendedCards');
