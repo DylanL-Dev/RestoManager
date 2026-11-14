@@ -194,7 +194,12 @@ BEGIN
  END LOOP;
  RETURN v_count;
 END $rm005_fusion$;
+-- Supabase postgres is not a superuser. The target owner requires CREATE
+-- in public for ALTER OWNER; grant it only inside this migration transaction
+-- and revoke immediately after ownership transfer.
+GRANT CREATE ON SCHEMA public TO resto_service_writer;
 ALTER FUNCTION public.create_fusion_chain_v1(uuid[]) OWNER TO resto_service_writer;
+REVOKE CREATE ON SCHEMA public FROM resto_service_writer;
 REVOKE ALL ON FUNCTION public.create_fusion_chain_v1(uuid[]) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.create_fusion_chain_v1(uuid[]) TO authenticated;
 
