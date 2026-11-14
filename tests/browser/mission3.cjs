@@ -384,17 +384,17 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.equal(overview.progress,1,'Reception service pressure meter must remain intact');
     assert.ok(overview.width<=overview.viewport+1,'Reception overview must not overflow horizontally');
    }else{
-    await view.page.waitForFunction(()=>document.querySelectorAll('.rushArrivalBreakdownItem').length===3);
-    await view.page.waitForFunction(()=>document.querySelectorAll('.rushBreakdownLabel svg').length===3);
+    await view.page.waitForFunction(()=>document.querySelectorAll('.rushArrivalBreakdownItem').length===2);
+    await view.page.waitForFunction(()=>document.querySelectorAll('.rushArrivalBreakdownItem .rmMetricIcon').length===2);
     const section=await view.page.locator('#rushDashboard').evaluate(root=>({
      heading:!!root.querySelector('.rushDashHead .serviceIconHeading svg'),
      limit:!!root.querySelector('.rushLoadLabel svg'),
-     statusIcons:[...root.querySelectorAll('.rushBreakdownLabel')].map(x=>!!x.querySelector('svg')),
-     statusLabels:[...root.querySelectorAll('.rushBreakdownLabel')].map(x=>x.textContent),
+     statusIcons:[...root.querySelectorAll('.rushArrivalBreakdownItem')].map(x=>!!x.querySelector('.rmMetricIcon')),
+     statusLabels:[...root.querySelectorAll('.rushArrivalBreakdownItem .rmForecastMetricText span')].map(x=>x.textContent),
      progress:root.querySelectorAll('[role="progressbar"]').length
     }));
-    assert.ok(section.heading&&section.limit&&section.statusIcons.every(Boolean));
-    assert.deepEqual(section.statusLabels,['Encore à venir','Heure prévue dépassée','Déjà arrivés / installés']);
+    assert.ok(section.heading&&section.limit&&section.statusIcons.length===2&&section.statusIcons.every(Boolean));
+    assert.deepEqual(section.statusLabels,['Encore attendus sur ce créneau','Encore installés de ce créneau (passages inclus)']);
     assert.ok(section.progress>=1,'Arrival load progressbar must remain present');
     assert.ok(await view.page.locator('#tables .panelHead h1 svg').count());
     assert.ok(await view.page.locator('#upcoming').locator('xpath=..').locator('h2 svg').count());
