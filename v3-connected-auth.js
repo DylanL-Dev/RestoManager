@@ -349,6 +349,18 @@ try{
  document.addEventListener('click',forbidden,true);
  // The native reservation list now consumes the shared snapshot directly.
  // No duplicate prototype panel or independent local reservation list.
+ window.RestoSaveSharedArrivalLimit=async(percent)=>{
+  const value=Number(percent);
+  if(!Number.isInteger(value)||value<40||value>90||value%5!==0)throw Error('Seuil conseillé invalide.');
+  if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))
+   throw Object.assign(Error('Synchronisation indisponible.'),{code:'CAPABILITY_REQUIRED'});
+  if(profile.role!=='fb_admin')throw Error('Le réglage des arrivées est réservé au Restaurant.');
+  const {data,error}=await supabase.from('restaurant_hours')
+   .update({arrival_limit_percent:value}).eq('restaurant_id',profile.restaurant_id)
+   .select('id,arrival_limit_percent').single();
+  if(error||Number(data?.arrival_limit_percent)!==value)throw Error('Enregistrement du seuil non confirmé.');
+  await window.RestoRefreshSharedService();
+ };
  window.RestoSaveSharedHours=async(shifts,duration,weekend,weeklySchedule)=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   if(profile.role!=='fb_admin')throw Error('La modification des horaires est réservée au responsable.');
