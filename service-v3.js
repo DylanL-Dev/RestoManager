@@ -97,7 +97,8 @@ function dashboard(date,all){
  const target=$('rushDashboard');if(!target)return;
  lastRushDashboard={date,all};
  target.replaceChildren();
- const shifts=Object.entries(ReservationEngine.getShifts()).filter(([,s])=>s.enabled);
+ // Use the actual restaurant schedule for the selected date, not generic opening hours.
+ const shifts=Object.entries(ReservationEngine.getShiftsForDate(date)).filter(([,s])=>s.enabled);
  const heading=document.createElement('div');heading.className='rushDashHead';
  heading.innerHTML='<div><span class="rushSectionEyebrow">EN DIRECT · RESTAURANT</span><h2 class="serviceIconHeading"><i data-lucide="activity" aria-hidden="true"></i><span>Suivi des arrivées</span></h2></div>';
  const help=rushNode('button','rmArrivalHelpButton');help.type='button';help.setAttribute('aria-label','Comprendre le suivi des arrivées');
@@ -156,11 +157,25 @@ function dashboard(date,all){
  const windows=[];
  for(const [name,s] of shifts){
   for(let at=mins(s.start);at<=mins(s.end);at+=60){
+   // Includes weekly closures and legacy Saturday/Sunday lunch closure flags.
+   if(!ReservationEngine.isServiceOpen(date,clock(at)))continue;
    const end=Math.min(at+60,mins(s.end)+1);
    if(end>at)windows.push({start:at,end,name});
   }
  }
- if(!windows.length){target.append('Aucun service ouvert.');return}
+ if(!windows.length){
+  target.append(rushNode('p','rushHint','Restaurant fermé : aucun service ouvert à cette date.'));
+  const occupancy=$('currentOccupancy');
+  if(occupancy){
+   let panel=$('rmImmediateAvailability');
+   if(!panel){panel=rushNode('section','rmImmediateAvailability');panel.id='rmImmediateAvailability';occupancy.insertAdjacentElement('afterend',panel);}
+   panel.replaceChildren(
+    rushNode('span','rushSectionEyebrow','DISPONIBILITÉ · NOUVELLE RÉSERVATION'),
+    rushNode('h2','serviceIconHeading','Restaurant fermé'),
+    rushNode('p','','Aucune réservation possible : tous les services de cette date sont fermés.'));
+  }
+  return;
+ }
  windows.sort((a,b)=>a.start-b.start);
  const current=currentMinutes();
  let preferred=windows.findIndex(w=>current>=w.start&&current<w.end);
@@ -234,8 +249,10 @@ function dashboard(date,all){
  }
  const isCurrentDay=date===rushLocalDate(),nowClock=currentMinutes();
  const queryMinutes=isCurrentDay?Math.max(w.start,nowClock+1):w.start;
- const canQuoteAvailability=!isCurrentDay||queryMinutes<w.end;
  const queryTime=clock(queryMinutes);
+ const canQuoteAvailability=(!isCurrentDay||queryMinutes<w.end)&&ReservationEngine.isServiceOpen(date,queryTime);
+ const noMoreToday=isCurrentDay&&nowClock>=windows[windows.length-1].end;
+ const immediate=isCurrentDay&&nowClock>=currentWindow.start&&nowClock<currentWindow.end;
  // This simulation is a separate operational block, not part of arrival forecasts.
  const occupancy=$('currentOccupancy');
  if(occupancy){
@@ -248,15 +265,22 @@ function dashboard(date,all){
   }
   const heading=rushNode('div','rmImmediateHeading'),title=rushNode('h2','serviceIconHeading');
   const icon=rushNode('i');icon.dataset.lucide='zap';icon.setAttribute('aria-hidden','true');
-  title.append(icon,rushNode('span','','Disponibilité immédiate'));
+  title.append(icon,rushNode('span','',noMoreToday?'Service terminé pour aujourd’hui':immediate?'Disponibilité immédiate':'Prochain service ouvert'));
   heading.append(rushNode('span','rushSectionEyebrow','DISPONIBILITÉ · NOUVELLE RÉSERVATION'),title,
     rushNode('p','','Tables compatibles pour une nouvelle réservation, indépendamment des indicateurs d’activité.'));
+  if(!immediate&&canQuoteAvailability){
+   const dayHours=ReservationEngine.getShiftsForDate(date);
+   const lunchClosed=dayHours?.lunch&&(!dayHours.lunch.enabled||!ReservationEngine.isServiceOpen(date,dayHours.lunch.start));
+   heading.append(rushNode('p','',lunchClosed&&currentWindow.name==='dinner'
+    ?'Service du midi fermé · prochain service ouvert à '+queryTime
+    :'Prochain créneau ouvert à '+queryTime));
+  }
   const state=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
   const answer=rushNode('div','rmImmediateResult'),question=rushNode('div','rmImmediateQuestion');
   const people=rushNode('i');people.dataset.lucide='users';people.setAttribute('aria-hidden','true');
-  question.append(people,rushNode('span','','Pour 2 couverts à '+(canQuoteAvailability?queryTime:'un prochain créneau')));
+  question.append(people,rushNode('span','',canQuoteAvailability?'Pour 2 couverts à '+queryTime:noMoreToday?'Aucun autre service ouvert aujourd’hui':'Aucun créneau ouvert à cette heure'));
   const remaining=state?.valid?state.remaining:null;
-  const count=remaining===null?'Disponibilités à vérifier sur un créneau ouvert':remaining===0?'Aucune table compatible disponible':remaining+' table'+(remaining>1?'s':'')+' compatible'+(remaining>1?'s':'')+' disponible'+(remaining>1?'s':'');
+  const count=remaining===null?(noMoreToday?'Choisissez une autre date.':'Disponibilités à vérifier sur un créneau ouvert'):remaining===0?'Aucune table compatible disponible':remaining+' table'+(remaining>1?'s':'')+' compatible'+(remaining>1?'s':'')+' disponible'+(remaining>1?'s':'');
   const resultBox=rushNode('div','rmImmediateAnswer'+(remaining===0?' rmImmediateFull':''));
   const grid=rushNode('i');grid.dataset.lucide='layout-grid';grid.setAttribute('aria-hidden','true');
   resultBox.append(grid,rushNode('strong','rmImmediateCount',count));
@@ -268,6 +292,7 @@ function dashboard(date,all){
  }update()}
 setInterval(()=>{if(lastRushDashboard&&document.visibilityState!=='hidden')dashboard(lastRushDashboard.date,lastRushDashboard.all)},60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&lastRushDashboard)dashboard(lastRushDashboard.date,lastRushDashboard.all)});
+window.addEventListener('restomanager:hours',()=>{if(lastRushDashboard)dashboard(lastRushDashboard.date,lastRushDashboard.all)});
 function confirm(candidate,all,ignoreId){const data=evaluate(candidate,all,ignoreId);if(!data.blocked)return Promise.resolve(true);return new Promise(resolve=>{const overlay=document.createElement('div');overlay.className='rushOverlay';const card=document.createElement('section');card.className='rushModal';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Confirmation du créneau chargé');const title=document.createElement('h2');title.textContent='Forte affluence à '+candidate.time;const intro=document.createElement('p');intro.textContent='Le seuil conseillé des arrivées est dépassé sur ce créneau. Ce seuil aide à répartir l’accueil, mais ce n’est pas la capacité maximale de la salle. Proposez si possible un autre horaire ; une confirmation exceptionnelle est possible si une table compatible reste libre.';const figures=document.createElement('div');figures.className='rushFigures';const first=document.createElement('div'),second=document.createElement('div');first.innerHTML='<strong>'+data.current+'</strong><span>Couverts déjà attendus entre '+data.range+'</span>';second.innerHTML='<strong>'+data.limit+'</strong><span>Seuil conseillé d’arrivées sur une heure</span>';figures.append(first,second);const next=document.createElement('p');next.className='rushAfter';next.textContent='Avec cette réservation : '+data.after+' couverts sur cette période.';const alternatives=document.createElement('div');alternatives.className='rushAlternatives';const heading=document.createElement('strong');heading.textContent='Horaires moins chargés à proposer';alternatives.append(heading);const list=suggestions(candidate,all,ignoreId);if(list.length){for(const item of list){
  const button=document.createElement('button');
  button.type='button';button.className='rushAlternativeChoice';
