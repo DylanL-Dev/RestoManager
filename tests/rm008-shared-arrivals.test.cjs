@@ -15,8 +15,8 @@ const baseShifts = {
   dinner: { enabled: true, start: '19:00', end: '21:30' },
 };
 const copy = obj => JSON.parse(JSON.stringify(obj));
-function sandbox(weekly, sharedPercent=45, storedPercent=60) {
-  const win = { addEventListener(){} };
+function sandbox(weekly, sharedPercent=45, storedPercent=60, connected=false) {
+  const win = { addEventListener(){}, ...(connected ? {location:{pathname:'/RestoManager/v3-connected.html'}} : {}) };
   const context = vm.createContext({
     window: win,
     document: {getElementById(){return null},addEventListener(){},visibilityState:'visible'},
@@ -87,4 +87,23 @@ test('RM-008: instantané Supabase expose le pourcentage partagé',()=>{
  },rooms:[{id:'main',name:'Salle',active:true}],tables:[],reservations:[],assignments:[],holds:[],fusionLinks:[],revision:'1',capabilities:{}};
  const result=ctx.prepareServiceSnapshot(snapshot,()=>({notes:'',allergies:'',type:'hotel'}));
  assert.equal(result.values.RestoSharedHours.arrivalLimitPercent,45);
+});
+
+test('RM-009: connecté, une ancienne valeur locale 60% ne doit jamais se substituer au seuil Supabase',()=>{
+ const {rush,context}=sandbox(weekly,null,60,true);
+ assert.equal(rush.settings().percent,null);
+ assert.equal(rush.settings().source,'waiting');
+ const missing=rush.evaluate({date:'2026-11-14',time:'19:00',guests:0},[]);
+ assert.equal(missing.invalid,true);
+ assert.equal(missing.blocked,true);
+ assert.equal(missing.reason,'shared_limit_pending');
+ context.RestoSharedHours.arrivalLimitPercent=45;
+ assert.equal(rush.settings().percent,45);
+ assert.equal(rush.settings().source,'shared');
+ assert.equal(rush.evaluate({date:'2026-11-14',time:'19:00',guests:0},[]).limit,25);
+});
+test('RM-009: mode autonome garde le réglage local sans se prétendre synchronisé',()=>{
+ const {rush}=sandbox(weekly,null,60,false);
+ assert.equal(rush.settings().percent,60);
+ assert.equal(rush.settings().source,'standalone');
 });

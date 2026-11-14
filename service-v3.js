@@ -43,20 +43,29 @@ function rushArrivalBreakdown(date,start,end,all,nowMinutes=currentMinutes(),tod
 const mins=s=>Number(String(s).slice(0,2))*60+Number(String(s).slice(3,5));
 const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
 function validPercent(v){return v!==null&&v!==undefined&&v!==''&&Number.isInteger(Number(v))&&Number(v)>=40&&Number(v)<=90&&Number(v)%5===0}
+// Connected staff screens must NEVER use a browser-specific legacy threshold.
+function expectsSharedThreshold(){
+ return /(?:^|\/)v3-connected\.html$/i.test(String(window.location?.pathname||''))
+  ||window.RestoSharedDataLoaded===true
+  ||Array.isArray(window.RestoSharedReservations);
+}
 function settings(){
  const shared=globalThis.RestoSharedHours?.arrivalLimitPercent;
- if(validPercent(shared))return {percent:Number(shared),window:60,step:15};
+ if(validPercent(shared))return {percent:Number(shared),window:60,step:15,source:'shared'};
+ // If Supabase has not delivered the setting, display an unknown state,
+ // never the old 60 % local setting as if it were authoritative.
+ if(expectsSharedThreshold())return {percent:null,window:60,step:15,source:'waiting'};
  try{
   const stored=JSON.parse(localStorage.getItem(KEY)||'{}');
-  return {percent:validPercent(stored.percent)?Number(stored.percent):DEFAULT.percent,window:60,step:15};
- }catch(_){return {...DEFAULT}}
+  return {percent:validPercent(stored.percent)?Number(stored.percent):DEFAULT.percent,window:60,step:15,source:'standalone'};
+ }catch(_){return {...DEFAULT,source:'standalone'}}
 }
 function capacity(){return TableStore.get().tables.reduce((sum,t)=>sum+Number(t.capacity||0),0)}
 function service(date,time){const m=mins(time);if(!ReservationEngine.isServiceOpen(date,time))return null;return Object.values(ReservationEngine.getShiftsForDate(date)).find(s=>s.enabled&&m>=mins(s.start)&&m<=mins(s.end))||null}
 function relevant(r,date){return isActualArrival(r,date)}
 function windowFor(date,time){const shift=service(date,time);if(!shift)return null;const start=Math.max(mins(shift.start),Math.floor(mins(time)/60)*60),end=Math.min(mins(shift.end)+1,start+settings().window);return {start,end,shift}}
 function count(date,start,end,all,ignoreId){return all.filter(r=>r.id!==ignoreId&&relevant(r,date)&&arrivalMinute(r,date)>=start&&arrivalMinute(r,date)<end).reduce((n,r)=>n+Math.max(0,Number(r.guests)||0),0)}
-function evaluate(candidate,all,ignoreId){const win=windowFor(candidate.date,candidate.time);if(!win)return {blocked:false,invalid:true};const max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100));const current=count(candidate.date,win.start,win.end,all,ignoreId),after=current+Number(candidate.guests||0);return {blocked:after>limit,current,after,limit,max,start:win.start,end:win.end,range:clock(win.start)+' – '+clock(win.end),percent:max?Math.round(after/max*100):0}}
+function evaluate(candidate,all,ignoreId){const win=windowFor(candidate.date,candidate.time);if(!win)return {blocked:false,invalid:true};const percent=settings().percent;if(!validPercent(percent))return {blocked:true,invalid:true,reason:'shared_limit_pending'};const max=capacity(),limit=Math.max(1,Math.ceil(max*percent/100));const current=count(candidate.date,win.start,win.end,all,ignoreId),after=current+Number(candidate.guests||0);return {blocked:after>limit,current,after,limit,max,start:win.start,end:win.end,range:clock(win.start)+' – '+clock(win.end),percent:max?Math.round(after/max*100):0}}
 function suggestions(candidate,all,ignoreId){
  const shift=service(candidate.date,candidate.time);if(!shift)return [];
  const low=mins(shift.start),high=mins(shift.end),base=mins(candidate.time),list=[];
@@ -200,7 +209,12 @@ function dashboard(date,all){
  const automatic=document.createElement('span');automatic.className='rushAutomaticTag';automatic.textContent='Automatique';
  label.append(automatic);target.append(label);
  const result=document.createElement('div');result.className='rushDashContent';target.append(result);
- function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
+ function update(){const w=currentWindow,max=capacity(),percent=settings().percent;result.replaceChildren();
+ if(!validPercent(percent)){
+  result.append(rushNode('p','rushHint','Seuil d’arrivées en attente de synchronisation avec le restaurant. Actualisez après rétablissement de la connexion.'));
+  return;
+ }
+ const limit=Math.max(1,Math.ceil(max*percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};const summary=document.createElement('div');summary.className='rushLoadSummary';
  const numbers=document.createElement('div');numbers.className='rushLoadNumbers';
  const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Arrivées actives '+clock(w.start)+' – '+clock(w.end)+' · Seuil conseillé : '+limit+' couverts'));numbers.append(rushNode('strong','rmSlotArrivalsValue',covers+' / '+limit),loadLabel);
  const level=covers>limit?'Pic d’arrivées · vigilance':covers===limit?'Seuil d’arrivées atteint':covers>=limit*.8?'Arrivées nombreuses':covers===0?'Aucune arrivée active sur ce créneau':'Arrivées sous le seuil';
@@ -304,7 +318,7 @@ function dashboard(date,all){
 setInterval(()=>{if(lastRushDashboard&&document.visibilityState!=='hidden')dashboard(lastRushDashboard.date,lastRushDashboard.all)},60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&lastRushDashboard)dashboard(lastRushDashboard.date,lastRushDashboard.all)});
 window.addEventListener('restomanager:hours',()=>{if(lastRushDashboard)dashboard(lastRushDashboard.date,lastRushDashboard.all)});
-function confirm(candidate,all,ignoreId){const data=evaluate(candidate,all,ignoreId);if(!data.blocked)return Promise.resolve(true);return new Promise(resolve=>{const overlay=document.createElement('div');overlay.className='rushOverlay';const card=document.createElement('section');card.className='rushModal';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Confirmation du créneau chargé');const title=document.createElement('h2');title.textContent='Forte affluence à '+candidate.time;const intro=document.createElement('p');intro.textContent='Le seuil conseillé des arrivées est dépassé sur ce créneau. Ce seuil aide à répartir l’accueil, mais ce n’est pas la capacité maximale de la salle. Proposez si possible un autre horaire ; une confirmation exceptionnelle est possible si une table compatible reste libre.';const figures=document.createElement('div');figures.className='rushFigures';const first=document.createElement('div'),second=document.createElement('div');first.innerHTML='<strong>'+data.current+'</strong><span>Couverts déjà attendus entre '+data.range+'</span>';second.innerHTML='<strong>'+data.limit+'</strong><span>Seuil conseillé d’arrivées sur une heure</span>';figures.append(first,second);const next=document.createElement('p');next.className='rushAfter';next.textContent='Avec cette réservation : '+data.after+' couverts sur cette période.';const alternatives=document.createElement('div');alternatives.className='rushAlternatives';const heading=document.createElement('strong');heading.textContent='Horaires moins chargés à proposer';alternatives.append(heading);const list=suggestions(candidate,all,ignoreId);if(list.length){for(const item of list){
+function confirm(candidate,all,ignoreId){const data=evaluate(candidate,all,ignoreId);if(data.invalid)return Promise.resolve(false);if(!data.blocked)return Promise.resolve(true);return new Promise(resolve=>{const overlay=document.createElement('div');overlay.className='rushOverlay';const card=document.createElement('section');card.className='rushModal';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Confirmation du créneau chargé');const title=document.createElement('h2');title.textContent='Forte affluence à '+candidate.time;const intro=document.createElement('p');intro.textContent='Le seuil conseillé des arrivées est dépassé sur ce créneau. Ce seuil aide à répartir l’accueil, mais ce n’est pas la capacité maximale de la salle. Proposez si possible un autre horaire ; une confirmation exceptionnelle est possible si une table compatible reste libre.';const figures=document.createElement('div');figures.className='rushFigures';const first=document.createElement('div'),second=document.createElement('div');first.innerHTML='<strong>'+data.current+'</strong><span>Couverts déjà attendus entre '+data.range+'</span>';second.innerHTML='<strong>'+data.limit+'</strong><span>Seuil conseillé d’arrivées sur une heure</span>';figures.append(first,second);const next=document.createElement('p');next.className='rushAfter';next.textContent='Avec cette réservation : '+data.after+' couverts sur cette période.';const alternatives=document.createElement('div');alternatives.className='rushAlternatives';const heading=document.createElement('strong');heading.textContent='Horaires moins chargés à proposer';alternatives.append(heading);const list=suggestions(candidate,all,ignoreId);if(list.length){for(const item of list){
  const button=document.createElement('button');
  button.type='button';button.className='rushAlternativeChoice';
  const time=document.createElement('strong');time.textContent=item.at;
@@ -324,12 +338,18 @@ function setup(){
  const p=rushNode('p','','Définissez le nombre d’arrivées conseillé sur une heure. Au-delà, RestoManager demande une confirmation et suggère des horaires moins chargés.');
  const label=rushNode('label','rushSettingsLabel','Limite conseillée par heure');label.htmlFor='rushArrivalPercent';
  const slider=rushNode('input','rushPercentSlider');slider.id='rushArrivalPercent';slider.type='range';
- slider.min='40';slider.max='90';slider.step='5';slider.value=String(settings().percent);
+ slider.min='40';slider.max='90';slider.step='5';slider.value=String(settings().percent??DEFAULT.percent);
  slider.setAttribute('aria-describedby','rushArrivalHint');
  const markers=rushNode('div','rushSliderMarkers');
  markers.append(rushNode('span','','40 %'),rushNode('span','','90 %'));
  const hint=rushNode('p','rushHint rushSettingsHint');hint.id='rushArrivalHint';
  function show(){
+  if(!validPercent(settings().percent)&&expectsSharedThreshold()){
+   slider.disabled=true;current.textContent='Synchronisation…';
+   hint.textContent='Le seuil commun du restaurant n’est pas encore chargé. Aucun ancien réglage local ne sera utilisé.';
+   return;
+  }
+  slider.disabled=false;
   const percent=Number(slider.value),max=capacity(),limit=Math.max(1,Math.ceil(max*percent/100));
   current.value=percent+' %';current.textContent=percent+' %';
   slider.style.setProperty('--rush-slider-progress',((percent-40)/50*100)+'%');
@@ -355,7 +375,7 @@ function setup(){
   show();
  });
  window.addEventListener('restomanager:supabase-snapshot',()=>{
-  slider.value=String(settings().percent);show();
+  slider.value=String(settings().percent??DEFAULT.percent);show();
  });
  show();box.append(header,p,label,slider,markers,hint);section.append(box);
 }
