@@ -34,7 +34,7 @@
  function statusBox(target,date,time){
   if(!target)return;
   // A missing date or time cannot be interpreted as an empty service.
-  if(!date||!/^(?:[01]\\d|2[0-3]):[0-5]\\d$/.test(String(time||''))){
+  if(!date||!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(time||''))){
    target.section.dataset.level='unknown';
    target.body.textContent='Choisissez un créneau pour consulter les arrivées.';
    return;
