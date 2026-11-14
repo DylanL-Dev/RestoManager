@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Assistance & administration · RestoManager</title>
 <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
-<link rel="stylesheet" href="creator-console.css?v=20261108-rootconsole1">
+<link rel="stylesheet" href="creator-console.css?v=20261114-rm006-root1">
 </head>
 <body>
 <section id="loginPanel" class="loginSurface">
@@ -27,8 +27,9 @@
  </main>
 </section>
 <div id="ownerPanel" class="ownerShell" hidden>
- <aside class="ownerSidebar" id="ownerSidebar">
-  <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div>
+ <button id="ownerNavBackdrop" class="ownerNavBackdrop" type="button" aria-label="Fermer le menu de navigation" hidden></button>
+ <aside class="ownerSidebar" id="ownerSidebar" aria-label="Menu de navigation administration">
+  <div class="ownerSidebarHeader"><div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div><button id="ownerNavClose" class="ownerNavClose" type="button" aria-label="Fermer le menu">×</button></div>
   <span class="ownerSidebarCaption">PLATEFORME</span>
   <nav class="ownerNavigation" aria-label="Navigation Root">
    <button type="button" data-owner-nav="dashboard" class="active">▦ <span>Vue générale</span></button>
@@ -49,8 +50,8 @@
     <div class="ownerHeadline"><div><span class="ownerEyebrow">CONSOLE DE CONTRÔLE</span><h1>Vue générale</h1><p>Suivez l’activité de la plateforme et les demandes d’assistance, sans intervenir dans les réservations.</p></div><button id="ownerRefreshOverview" class="secondary" type="button">↻ Actualiser</button></div>
     <div class="ownerMetrics">
      <article class="ownerMetric"><small>Établissements</small><strong id="ownerTotalRestaurants">—</strong><span>Enregistrés sur la plateforme</span></article>
-     <article class="ownerMetric"><small>Signalements reçus</small><strong id="ownerTotalReports">—</strong><span>1000 derniers au maximum</span></article>
-     <article class="ownerMetric"><small>À traiter</small><strong id="ownerOpenReports">—</strong><span>Nouveaux et en cours</span></article>
+     <article class="ownerMetric"><small>Nouveaux signalements</small><strong id="ownerNewReports">—</strong><span>Demandes à examiner</span></article>
+     <article class="ownerMetric"><small>En cours de traitement</small><strong id="ownerReviewingReports">—</strong><span>Demandes prises en charge</span></article>
      <article class="ownerMetric"><small>Urgences ouvertes</small><strong id="ownerUrgentReports">—</strong><span>Signalements urgents non résolus</span></article>
     </div>
     <div class="ownerDashboardGrid">
@@ -81,6 +82,6 @@
  </div>
 </div>
 <p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
-<script type="module" src="creator-auth.js?v=20261108-rootconsole1"></script>
+<script type="module" src="creator-auth.js?v=20261114-rm006-root1"></script>
 </body>
 </html>
