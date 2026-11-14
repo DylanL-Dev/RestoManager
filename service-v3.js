@@ -335,49 +335,67 @@ function setup(){
  const h=rushNode('h3','','Répartition des arrivées');
  const current=rushNode('output','rushSettingsValue');current.id='rushArrivalValue';current.htmlFor='rushArrivalPercent';
  header.append(h,current);
- const p=rushNode('p','','Définissez le nombre d’arrivées conseillé sur une heure. Au-delà, RestoManager demande une confirmation et suggère des horaires moins chargés.');
+ const p=rushNode('p','','Définissez le nombre d’arrivées conseillé par heure. La modification ne s’applique à l’équipe qu’après confirmation Supabase.');
  const label=rushNode('label','rushSettingsLabel','Limite conseillée par heure');label.htmlFor='rushArrivalPercent';
  const slider=rushNode('input','rushPercentSlider');slider.id='rushArrivalPercent';slider.type='range';
  slider.min='40';slider.max='90';slider.step='5';slider.value=String(settings().percent??DEFAULT.percent);
- slider.setAttribute('aria-describedby','rushArrivalHint');
+ slider.setAttribute('aria-describedby','rushArrivalHint rushArrivalSaveStatus');
  const markers=rushNode('div','rushSliderMarkers');
  markers.append(rushNode('span','','40 %'),rushNode('span','','90 %'));
  const hint=rushNode('p','rushHint rushSettingsHint');hint.id='rushArrivalHint';
+ const status=rushNode('p','rushHint');status.id='rushArrivalSaveStatus';status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+ let saving=false;
+ const report=(message,error=false)=>{status.textContent=message;status.style.color=error?'#a42b2b':'inherit'};
  function show(){
-  if(!validPercent(settings().percent)&&expectsSharedThreshold()){
+  const confirmed=settings().percent;
+  if(expectsSharedThreshold()&&!validPercent(confirmed)){
    slider.disabled=true;current.textContent='Synchronisation…';
-   hint.textContent='Le seuil commun du restaurant n’est pas encore chargé. Aucun ancien réglage local ne sera utilisé.';
+   hint.textContent='Seuil partagé indisponible. Aucun ancien réglage local ne sera utilisé.';
    return;
   }
-  slider.disabled=false;
+  slider.disabled=saving;
   const percent=Number(slider.value),max=capacity(),limit=Math.max(1,Math.ceil(max*percent/100));
   current.value=percent+' %';current.textContent=percent+' %';
   slider.style.setProperty('--rush-slider-progress',((percent-40)/50*100)+'%');
-  hint.textContent='Jusqu’à '+limit+' arrivées conseillées sur une heure, pour '+max+' places. Au-delà, confirmation manuelle et suggestions de créneaux.';
+  hint.textContent=(percent===confirmed?'Seuil actuellement enregistré : ':'Aperçu non encore enregistré : ')+limit+' arrivées conseillées sur une heure, pour '+max+' places.';
  }
- slider.addEventListener('input',show);
+ slider.addEventListener('input',()=>{
+  show();
+  if(expectsSharedThreshold())report('Aperçu uniquement : le nouveau seuil n’est pas encore partagé.');
+ });
  slider.addEventListener('change',async()=>{
+  if(saving)return;
   const percent=Number(slider.value);
-  if(Array.isArray(window.RestoSharedReservations)){
-   slider.disabled=true;
+  if(expectsSharedThreshold()){
+   if(!window.RestoSharedDataLoaded||!window.RestoSupabaseReady||settings().source!=='shared'||typeof window.RestoSaveSharedArrivalLimit!=='function'){
+    slider.value=String(settings().percent??DEFAULT.percent);show();
+    report('Impossible d’enregistrer : attendez la synchronisation Supabase, puis réessayez.',true);
+    return;
+   }
+   saving=true;show();report('Enregistrement du seuil commun en cours…');
    try{
-    if(!window.RestoSupabaseReady||typeof window.RestoSaveSharedArrivalLimit!=='function')throw Error('Synchronisation indisponible.');
-    await window.RestoSaveSharedArrivalLimit(percent);
+    const confirmed=await window.RestoSaveSharedArrivalLimit(percent);
+    if(confirmed!==percent||settings().percent!==percent)throw Error('Confirmation partagée incomplète.');
+    slider.value=String(percent);
+    report('Seuil enregistré pour le Restaurant et la Réception : '+percent+' % ('+Math.ceil(capacity()*percent/100)+' couverts par heure).');
    }catch(error){
-    slider.value=String(settings().percent);
-    hint.textContent='Réglage non enregistré pour l’équipe. Vérifiez la synchronisation puis réessayez.';
+    slider.value=String(settings().percent??DEFAULT.percent);
+    report('Réglage non confirmé pour l’équipe. Seuil précédent conservé. Vérifiez la synchronisation et réessayez.',true);
     window.RestoErrors?.diagnostic?.('arrival-limit',error);
-   }finally{slider.disabled=false}
+   }finally{saving=false;show()}
   }else{
+   // Standalone mode only: never claim local settings are shared with the Reception.
    localStorage.setItem(KEY,JSON.stringify({percent}));
    window.dispatchEvent(new Event('restomanager:v3-change'));
+   report('Réglage local uniquement : non partagé avec la Réception.');
+   show();
   }
-  show();
  });
  window.addEventListener('restomanager:supabase-snapshot',()=>{
+  if(saving)return;
   slider.value=String(settings().percent??DEFAULT.percent);show();
  });
- show();box.append(header,p,label,slider,markers,hint);section.append(box);
+ show();box.append(header,p,label,slider,markers,hint,status);section.append(box);
 }
 window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count,windowFor};setup();
 })();
