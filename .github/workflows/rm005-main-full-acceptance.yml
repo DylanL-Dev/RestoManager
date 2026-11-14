@@ -41,6 +41,7 @@ jobs:
       - name: Recette navigateur complète Mission 3 sur donnees fictives
         run: npm run test:mission3:browser
       - name: Affichage tableaux et Receptions / Restaurant
+        if: ${{ always() }}
         run: npm run test:display
       - name: Rapport navigateurs
         run: |
