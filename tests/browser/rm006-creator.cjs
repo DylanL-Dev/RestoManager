@@ -76,7 +76,9 @@ async function runCase(browser,width,height){
   assert.equal(await page.locator('.ownerReport').count(),2);
   await page.locator('#ownerStatus_r1').selectOption('resolved');
   await page.waitForFunction(()=>document.querySelectorAll('.ownerReport').length===1);
-  await page.locator('[data-owner-nav="dashboard"]').click();
+  // Navigating to Assistance closes the mobile drawer; reopen it before returning.
+  if(width<=760)await page.locator('#ownerNavToggle').click();
+  await page.locator('.ownerNavigation [data-owner-nav="dashboard"]').click();
   await page.waitForFunction(()=>document.getElementById('ownerNewReports').textContent==='0');
   assert.equal(await page.locator('#ownerReviewingReports').innerText(),'1');
   const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
