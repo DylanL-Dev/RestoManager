@@ -1,5 +1,7 @@
 # RestoManager — RM-005 : audit de préparation PROD (13 novembre 2026)
 
+> **Actualisation du 14/11/2026 :** la correction RLS ciblée `restaurant_hours` a depuis été **appliquée et vérifiée sur Supabase PROD** (migration `rm005_prod_hours_rls_role_guard_20261114` ; cf. [rapport](RM005_SECURITY_HOURS_RLS_APPLIED_20261114.md)). Les constats de politique RLS ci-dessous décrivent **l'état initial du 13/11**, et non l'état actuel. Aucun autre SQL RM-005 n'a été appliqué sur PROD. La phase A de planning est préparée et validée sur PostgreSQL 17 synthétique ; voir [audit complémentaire](RM005_WEEKLY_PHASE_A_AND_RPC_AUDIT_20261114.md).
+
 **Statut : NON AUTORISÉ À PUBLIER (NO-GO de déploiement), préparation technique engagée.**
 Cette note est une **analyse en lecture seule** des bases et une proposition d'ordre de migration, **pas** une autorisation d'exécuter un script en production.
 
@@ -98,4 +100,4 @@ Le fichier `supabase/release-prep/rm005_prod_readonly_preflight.sql` est **exclu
 - Obtenir la décision métier sur les fermetures week-end, la durée des tables et l'heure de dernière réservation.
 - Fixer le plan réel de sauvegarde/restauration et la fenêtre de mise en service.
 
-**Conclusion : RM-005 prête en DEV, pas encore démontrée prête à être migrée sans risque vers PROD. Aucune intervention en production effectuée.**
+**Conclusion actualisée : RM-005 validée sur DEV, préparation partielle testée sur SQL synthétique ; la correction RLS des horaires a été appliquée séparément en PROD le 14/11. Les autres migrations RM-005 et la publication MAIN/V3 restent bloquées jusqu'à sauvegarde restaurable, essai isolé et autorisation explicite.**
