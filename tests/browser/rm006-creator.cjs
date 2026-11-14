@@ -71,7 +71,7 @@ async function runCase(browser,width,height){
    assert.equal(await page.locator('#ownerNavToggle').getAttribute('aria-expanded'),'false');
    await page.locator('#ownerNavToggle').click();
   }
-  await page.locator('[data-owner-nav="reports"]').click();
+  await page.locator('.ownerNavigation [data-owner-nav="reports"]').click();
   await page.locator('.ownerReport').first().waitFor();
   assert.equal(await page.locator('.ownerReport').count(),2);
   await page.locator('#ownerStatus_r1').selectOption('resolved');
