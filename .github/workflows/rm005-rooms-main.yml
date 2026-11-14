@@ -3,9 +3,11 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'v3-connected-auth.js'
       - 'service-v3-table-admin.js'
       - 'v3-supabase-booking.js'
       - 'v3-connected.html'
+      - 'tests/rm005-room-form-gate.test.cjs'
       - 'tests/rm005-room-renaming.test.cjs'
       - 'tests/browser/rm005-room-management.cjs'
       - '.github/workflows/rm005-rooms-main.yml'
