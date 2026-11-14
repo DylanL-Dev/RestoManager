@@ -15,7 +15,7 @@ function reset({historical=false,overdue=false}={}){
  if(overdue)records=[10,12].map((party_size,i)=>({id:'overdue-'+i,guest_name:'Fictif '+i,hotel_room:null,party_size,starts_at:'2032-11-07T10:'+String(i*30).padStart(2,'0')+':00Z',ends_at:'2032-11-07T12:30:00Z',status:'reserved',notes:'[RESTOMANAGER:EXTERIEUR]',edit_version:uuid()}));
 }
 function snapshot(){return {syncSequence:++sequence,revision:String(sequence),serverTime:new Date().toISOString(),capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
- hours:{lunch_enabled:true,lunch_start:sharedChanges.lunchStart||'11:00:00',lunch_end:'15:00:00',dinner_enabled:true,dinner_start:'18:00:00',dinner_end:'23:00:00',duration:sharedChanges.duration||90},
+ hours:{lunch_enabled:true,lunch_start:sharedChanges.lunchStart||'11:00:00',lunch_end:'15:00:00',dinner_enabled:true,dinner_start:'18:00:00',dinner_end:'23:00:00',duration:sharedChanges.duration||90,arrival_limit_percent:45},
  rooms:[{id:'fictional-room',name:'Salle fictive',active:true,sort_order:0}],
  tables:Array.from({length:8},(_,i)=>({id:'table-'+(i+1),label:String(i+1),seats:i===0?(sharedChanges.firstTableSeats||6):i===7?12:6,active:true,room_id:'fictional-room'})),
  reservations:structuredClone(records),assignments:records.map((r,i)=>({reservation_id:r.id,table_id:r.assignedTableId||'table-'+(i+1)})),holds:[],fusionLinks:sharedChanges.fusionLinks||[{table_a:'table-3',table_b:'table-4'},{table_a:'table-4',table_b:'table-5'}]}}
