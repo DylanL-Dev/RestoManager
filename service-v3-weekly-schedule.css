@@ -1,0 +1,152 @@
+/* RM-JOHN-02 — responsive per-day restaurant hours, DEV only */
+#restaurantShiftForm.rmWeeklyMode .shiftSettingsGrid{display:none!important}
+#restaurantShiftForm.rmWeeklyMode .rmWeeklySchedule{display:block!important}
+.rmWeeklySchedule{grid-column:1/-1;margin:16px 0 20px;padding:22px;border:1px solid #dce9e2;border-radius:20px;background:#fff;color:#193f33;box-shadow:0 7px 28px #10382c0b}
+.rmWeeklySchedule[hidden]{display:none!important}
+.rmWeeklyHeader{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.rmWeeklyEyebrow{font-size:11px;font-weight:800;letter-spacing:.12em;color:#168060}
+.rmWeeklyHeader h3{display:flex;gap:10px;align-items:center;margin:7px 0;color:#164938;font-size:25px}
+.rmWeeklyHeader h3 svg{width:24px;height:24px}
+.rmWeeklyHeader p{margin:0;color:#657d73;font-size:14px}
+.rmWeeklyLegend{display:flex;gap:10px;align-items:center}
+.rmWeeklyLegend span{display:flex;gap:7px;align-items:center;padding:9px 14px;border-radius:12px;background:#f1f7f4;font-weight:750}
+.rmWeeklyLegend svg{width:17px;height:17px}
+.rmWeeklyRows{display:grid;gap:9px}
+.rmWeeklyRow{border:1px solid #e1ebe6;background:#f8faf9;border-radius:14px;overflow:hidden}
+.rmWeeklyRow[open]{background:#fff}
+.rmWeeklyDayHead{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;list-style:none}
+.rmWeeklyDayHead::-webkit-details-marker{display:none}
+.rmWeeklyDayHead strong{font-weight:800;font-size:16px}
+.rmWeeklyDayStatus{font-size:12px;color:#658075}
+.rmWeeklyChevron{margin-left:auto;display:flex}
+.rmWeeklyChevron svg{width:18px;height:18px;transition:transform .18s}
+.rmWeeklyRow[open] .rmWeeklyChevron svg{transform:rotate(180deg)}
+.rmWeeklyRowBody{display:grid;grid-template-columns:1fr 1fr auto;align-items:center;gap:12px;padding:0 14px 14px}
+.rmWeeklyService{padding:12px;border-radius:12px;border:1px solid #e0e9e4;background:#f8fbf9;min-width:0}
+.rmWeeklyServiceHeading{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-bottom:9px}
+.rmWeeklyToggle{display:flex;align-items:center;gap:9px;font-weight:750;cursor:pointer}
+.rmWeeklyToggle input{appearance:none;width:35px;height:21px;background:#b2c0ba;border-radius:12px;position:relative;cursor:pointer;flex:0 0 auto;transition:background .2s}
+.rmWeeklyToggle input:before{content:"";position:absolute;width:15px;height:15px;left:3px;top:3px;border-radius:50%;background:white;transition:transform .2s}
+.rmWeeklyToggle input:checked{background:#07835d}
+.rmWeeklyToggle input:checked:before{transform:translateX(14px)}
+.rmWeeklyToggle input:focus-visible{outline:3px solid #55b695;outline-offset:3px}
+.rmWeeklyServiceStatus{font-weight:650;color:#087b5a}
+.rmWeeklyClosed{background:#fff6f5;border-color:#f6ddd8}
+.rmWeeklyClosed .rmWeeklyServiceStatus{color:#b13f3f}
+.rmWeeklyTimes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.rmWeeklyTimeField{display:grid;gap:5px;min-width:0}
+.rmWeeklyTimeField span{font-size:11px;color:#59776a}
+.rmWeeklyTimeField input{height:42px;width:100%;min-width:0;max-width:100%;box-sizing:border-box;text-align:center;font:750 14px system-ui;color:#184d3b;border:1px solid #d3e1da;border-radius:10px;background:white;padding:7px 5px}
+.rmWeeklyTimeField input:disabled{opacity:.5}
+.rmWeeklyActions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.rmWeeklyCopy,.rmWeeklyCopyAll{background:#eaf5ee;color:#136f51;border:1px solid #cce6d5;border-radius:10px;font-weight:750;font-size:12px;padding:11px;cursor:pointer}
+.rmWeeklyCopy svg{width:16px;height:16px;vertical-align:middle}
+.rmWeeklyCopyTarget{min-width:114px;max-width:145px;border:1px solid #cedfd6;padding:10px;border-radius:10px;background:white;font-size:12px}
+.rmWeeklyCopyTarget[hidden]{display:none!important}
+.rmWeeklyFooter{display:flex;align-items:center;gap:15px;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
+.rmWeeklyFooter p{display:flex;align-items:center;gap:7px;max-width:600px;color:#557064;font-size:13px;line-height:1.5;margin:0}
+.rmWeeklyFooter svg{width:18px;height:18px;flex:0 0 auto}
+.rmWeeklyCopyAll{padding:12px}
+.rmWeeklyRow:focus-within{border-color:#69b999}
+@media(min-width:1050px){
+ .rmWeeklySchedule{padding:26px}
+ .rmWeeklyRows{gap:5px}
+ .rmWeeklyRow{display:grid;grid-template-columns:125px minmax(0,1fr);align-items:center}
+ .rmWeeklyDayHead{padding:14px}
+ .rmWeeklyDayStatus,.rmWeeklyChevron{display:none}
+ .rmWeeklyRowBody{padding:7px 10px 7px 0;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px}
+ .rmWeeklyService{display:grid;grid-template-columns:minmax(75px,95px) 1fr;align-items:center;gap:9px;padding:9px 10px}
+ .rmWeeklyServiceHeading{margin:0}
+ .rmWeeklyServiceStatus{display:none}
+ .rmWeeklyTimes{gap:7px}
+ .rmWeeklyTimeField span{font-size:10px}
+}
+@media(min-width:701px) and (max-width:1049px){
+ .rmWeeklySchedule{padding:16px}
+ .rmWeeklyDayStatus,.rmWeeklyChevron{display:none}
+ .rmWeeklyRowBody{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px}
+ .rmWeeklyActions{grid-column:1/-1;justify-content:flex-end}
+ .rmWeeklyTimeField input{font-size:13px}
+}
+@media(max-width:700px){
+ .rmWeeklySchedule{padding:12px;border-radius:16px}
+ .rmWeeklyHeader{margin-bottom:12px}
+ .rmWeeklyHeader h3{font-size:21px}
+ .rmWeeklyLegend{width:100%;justify-content:flex-start}
+ .rmWeeklyRowBody{grid-template-columns:1fr;gap:9px;padding:0 10px 12px}
+ .rmWeeklyDayHead{padding:16px 12px;flex-wrap:wrap}
+ .rmWeeklyDayStatus{flex:1 1 100%;order:3;font-size:12px}
+ .rmWeeklyChevron{order:2}
+ .rmWeeklyService{padding:12px}
+ .rmWeeklyActions{justify-content:flex-end}
+ .rmWeeklyFooter{align-items:stretch}
+ .rmWeeklyCopyAll{width:100%}
+ .rmWeeklyTimes{grid-template-columns:1fr 1fr}
+}
+
+/* Reception: read-only weekly hours; editing remains restricted by existing Auth/RLS. */
+.rmReceptionWeeklyReadonly{padding:20px;margin:0 0 18px;border:1px solid #dbeae1;background:#fff;border-radius:18px;color:#194638;box-shadow:0 4px 18px #10382c0a}
+.rmReceptionWeeklyHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.rmReceptionWeeklyHeading h2{margin:0;font-size:21px}
+.rmReceptionReadonlyBadge{display:inline-flex;padding:6px 10px;background:#e8f5ec;color:#176544;border-radius:999px;font-weight:750;font-size:12px}
+.rmReceptionWeeklyHint{margin:10px 0 17px;color:#60766b;font-size:13px;line-height:1.5}
+.rmReceptionWeeklyGrid{display:grid;gap:7px}
+.rmReceptionWeeklyDay{display:grid;grid-template-columns:125px minmax(0,1fr) minmax(0,1fr);align-items:center;gap:8px;padding:11px 12px;border:1px solid #e5ede8;border-radius:12px;background:#f8fbf9;min-width:0}
+.rmReceptionWeeklyDay>strong{font-size:14px}
+.rmReceptionWeeklyService{display:flex;align-items:center;gap:10px;justify-content:space-between;min-width:0}
+.rmReceptionWeeklyService small{font-weight:650;color:#5f7569}
+.rmReceptionWeeklyService span{font-weight:750;font-size:13px;white-space:nowrap}
+.rmReceptionWeeklyOpen{color:#176544}
+.rmReceptionWeeklyClosed{color:#b44747}
+@media(max-width:700px){
+ .rmReceptionWeeklyReadonly{padding:14px;margin:0 0 15px;border-radius:16px}
+ .rmReceptionWeeklyDay{grid-template-columns:1fr 1fr;padding:12px;row-gap:10px}
+ .rmReceptionWeeklyDay>strong{grid-column:1/-1}
+ .rmReceptionWeeklyService{flex-direction:column;align-items:flex-start;gap:4px}
+ .rmReceptionWeeklyService span{font-size:13px}
+}
+
+
+/* RM-JOHN-02 — tablette étroite : composant autonome dimensionné selon sa propre largeur,
+   PAS selon le viewport (le menu Gestion et la sidebar réduisent fortement l'espace). */
+.rmWeeklySchedule{container-type:inline-size;width:100%;max-width:100%;box-sizing:border-box;min-width:0}
+.rmWeeklyRows,.rmWeeklyRow,.rmWeeklyRowBody,.rmWeeklyService,.rmWeeklyTimes,.rmWeeklyActions{min-width:0;max-width:100%;box-sizing:border-box}
+.rmWeeklyRow{display:block!important}
+.rmWeeklyDayHead{min-width:0}
+.rmWeeklyRowBody{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important;align-items:stretch!important;padding:0 12px 12px!important}
+.rmWeeklyService{display:flex!important;flex-direction:column!important;gap:10px!important;min-width:0!important;width:100%!important;padding:12px!important;overflow:hidden}
+.rmWeeklyServiceHeading{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;margin:0!important}
+.rmWeeklyToggle{display:inline-flex!important;align-items:center!important;flex:0 0 auto!important;gap:8px!important;width:auto!important}
+.rmWeeklyToggle input[type=checkbox]{width:35px!important;height:21px!important;min-width:35px!important;max-width:35px!important;margin:0!important;padding:0!important;border:0!important;box-shadow:none!important}
+.rmWeeklyServiceTitle{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.rmWeeklyServiceTitle svg{display:block!important;width:16px!important;height:16px!important;min-width:16px!important;max-width:16px!important;flex:0 0 16px!important;stroke-width:1.9}
+.rmWeeklyServiceStatus{display:inline-block!important;white-space:nowrap}
+.rmWeeklyTimes{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;align-items:end!important}
+.rmWeeklyTimeField{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:5px!important;width:100%!important;min-width:0!important;margin:0!important;padding:0!important}
+.rmWeeklyTimeField span{display:block!important;max-width:100%;font-size:11px!important;line-height:1.35!important;overflow-wrap:anywhere}
+.rmWeeklyTimeField input[type=time]{display:block!important;position:static!important;float:none!important;grid-column:auto!important;grid-row:auto!important;inset:auto!important;transform:none!important;width:100%!important;min-width:0!important;max-width:100%!important;height:42px!important;min-height:42px!important;margin:0!important;padding:6px 4px!important;font-size:13px!important;line-height:1.2!important;box-sizing:border-box!important;opacity:1}
+.rmWeeklyTimeField input[type=time]:disabled{opacity:.48}
+.rmWeeklyActions{grid-column:1/-1!important;display:flex!important;justify-content:flex-end!important;align-items:center!important;gap:8px!important;padding:0!important}
+.rmWeeklyCopy{display:inline-flex!important;align-items:center!important;gap:7px!important;white-space:nowrap!important;width:auto!important;max-width:100%;min-height:42px!important;margin:0!important;padding:8px 12px!important}
+.rmWeeklyCopy svg,.rmWeeklyFooter svg,.rmWeeklyLegend svg,.rmWeeklyChevron svg,.rmWeeklyHeader h3 svg{
+ display:inline-block!important;width:18px!important;height:18px!important;min-width:18px!important;max-width:18px!important;flex:0 0 18px!important;stroke-width:1.9!important
+}
+.rmWeeklyCopyTarget{width:auto!important;max-width:160px!important;min-width:120px!important}
+@container(max-width:690px){
+ .rmWeeklyRowBody{grid-template-columns:minmax(0,1fr)!important}
+ .rmWeeklyService{padding:12px!important}
+ .rmWeeklyTimes{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .rmWeeklyActions{grid-column:1!important;justify-content:flex-end!important}
+ .rmWeeklyDayStatus{display:inline!important}
+}
+@container(min-width:691px) and (max-width:1080px){
+ .rmWeeklyRowBody{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .rmWeeklyActions{grid-column:1/-1!important}
+}
+@container(min-width:1081px){
+ .rmWeeklyRow{display:grid!important;grid-template-columns:135px minmax(0,1fr)!important;align-items:center}
+ .rmWeeklyDayStatus,.rmWeeklyChevron{display:none!important}
+ .rmWeeklyRowBody{padding:8px 12px 8px 0!important;grid-template-columns:repeat(2,minmax(0,1fr)) auto!important;align-items:center!important}
+ .rmWeeklyActions{grid-column:3!important}
+}
+@media(max-width:700px){.rmWeeklyRowBody{grid-template-columns:minmax(0,1fr)!important}}
