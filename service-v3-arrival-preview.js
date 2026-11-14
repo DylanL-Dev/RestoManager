@@ -39,6 +39,12 @@
    target.body.textContent='Choisissez un créneau pour consulter les arrivées.';
    return;
   }
+  const engine=window.ReservationEngine;
+  if(engine&&typeof engine.isServiceOpen==='function'&&!engine.isServiceOpen(date,time)){
+   target.section.dataset.level='closed';
+   target.body.textContent='Service fermé à '+time+' : choisissez un créneau ouvert pour consulter les arrivées.';
+   return;
+  }
   const rush=window.RestoRush;
   const list=window.RestoSharedReservations;
   if(!rush||!Array.isArray(list)||!window.RestoSharedDataLoaded||navigator.onLine===false||window.RestoSyncState==='error'){
