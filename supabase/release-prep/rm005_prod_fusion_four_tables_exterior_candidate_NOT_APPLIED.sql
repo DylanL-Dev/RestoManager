@@ -5,6 +5,14 @@
 BEGIN;
 DO $baseline$
 BEGIN
+  IF to_regprocedure('private.restaurant_service_open_at_v1(uuid,timestamptz)') IS NULL THEN
+    RAISE EXCEPTION 'RM-005: weekly Phase B missing, refusing Phase C';
+  END IF;
+  IF (SELECT count(*) FROM information_schema.columns WHERE table_schema='public'
+      AND table_name='restaurant_hours'
+      AND column_name IN ('weekly_schedule','saturday_lunch_closed','sunday_lunch_closed'))<>3 THEN
+    RAISE EXCEPTION 'RM-005: weekly Phase A missing, refusing Phase C';
+  END IF;
   IF NOT (SELECT relrowsecurity FROM pg_class WHERE oid='public.table_fusion_links'::regclass) THEN
     RAISE EXCEPTION 'RM-005: fusion RLS not enabled';
   END IF;
