@@ -1,0 +1,33 @@
+name: RM-005 Rooms - MAIN isolated release verification
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'service-v3-table-admin.js'
+      - 'v3-supabase-booking.js'
+      - 'v3-connected.html'
+      - 'tests/rm005-room-renaming.test.cjs'
+      - 'tests/browser/rm005-room-management.cjs'
+      - '.github/workflows/rm005-rooms-main.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  room-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Source integrity and syntax
+        run: npm run test:syntax
+      - name: Room rename role guard, room isolation and concurrency regressions
+        run: npm test
+      - name: Browser prerequisites
+        run: npx playwright install --with-deps chromium
+      - name: Room CRUD isolated browser on mobile, tablet and desktop
+        run: node tests/browser/rm005-room-management.cjs

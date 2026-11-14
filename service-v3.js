@@ -3,7 +3,22 @@
 const KEY='restomanager_rush_v1',RES='restomanager_reservations',DEFAULT={percent:60,window:60,step:15};
 const $=id=>document.getElementById(id);
 const rushNode=(tag,className,content)=>{const element=document.createElement(tag);if(className)element.className=className;if(content!==undefined)element.textContent=String(content);return element};
-const rushStatuses={waiting:new Set(['reserved','confirmed','late']),arrived:new Set(['arrived','seated'])};
+const rushStatuses={waiting:new Set(['reserved','confirmed','late','arrived']),arrived:new Set(['seated'])};
+function isActualArrival(r,date){
+ return !!r&&r.date===date&&typeof r.time==='string'&&
+  ReservationEngine.isBlocking(r);
+}
+const actualParisParts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+function arrivalMinute(r,date){
+ if(r&&rushStatuses.arrived.has(r.status)&&r.seatedAt){
+  const value=new Date(r.seatedAt);
+  if(Number.isFinite(value.getTime())){
+   const parts=Object.fromEntries(actualParisParts.formatToParts(value).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+   if(parts.year+'-'+parts.month+'-'+parts.day===date)return Number(parts.hour)*60+Number(parts.minute);
+  }
+ }
+ return mins(r?.time);
+}
 function rushLocalDate(){
  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
  const values=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
@@ -12,7 +27,7 @@ function rushLocalDate(){
 function rushArrivalBreakdown(date,start,end,all,nowMinutes=currentMinutes(),today=rushLocalDate()){
  const tally={planned:0,upcoming:0,late:0,arrived:0};
  for(const r of all){
-  const scheduled=mins(r.time);
+  const scheduled=arrivalMinute(r,date);
   if(!relevant(r,date)||!Number.isFinite(scheduled)||scheduled<start||scheduled>=end)continue;
   const guests=Math.max(0,Number(r.guests)||0);
   if(rushStatuses.arrived.has(r.status))tally.arrived+=guests;
@@ -27,15 +42,23 @@ function rushArrivalBreakdown(date,start,end,all,nowMinutes=currentMinutes(),tod
 }
 const mins=s=>Number(String(s).slice(0,2))*60+Number(String(s).slice(3,5));
 const clock=n=>String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
-function settings(){try{const v=JSON.parse(localStorage.getItem(KEY)||'{}');return {percent:Number.isInteger(Number(v.percent))&&Number(v.percent)>=40&&Number(v.percent)<=90&&Number(v.percent)%5===0?Number(v.percent):60,window:60,step:15}}catch(_){return {...DEFAULT}}}
+function validPercent(v){return v!==null&&v!==undefined&&v!==''&&Number.isInteger(Number(v))&&Number(v)>=40&&Number(v)<=90&&Number(v)%5===0}
+function settings(){
+ const shared=globalThis.RestoSharedHours?.arrivalLimitPercent;
+ if(validPercent(shared))return {percent:Number(shared),window:60,step:15};
+ try{
+  const stored=JSON.parse(localStorage.getItem(KEY)||'{}');
+  return {percent:validPercent(stored.percent)?Number(stored.percent):DEFAULT.percent,window:60,step:15};
+ }catch(_){return {...DEFAULT}}
+}
 function capacity(){return TableStore.get().tables.reduce((sum,t)=>sum+Number(t.capacity||0),0)}
-function service(time){const m=mins(time);return Object.values(ReservationEngine.getShifts()).find(s=>s.enabled&&m>=mins(s.start)&&m<=mins(s.end))||null}
-function relevant(r,date){return r.date===date&&ReservationEngine.isBlocking(r)&&!r.walkIn&&typeof r.time==='string'}
-function windowFor(time){const shift=service(time);if(!shift)return null;const start=Math.max(mins(shift.start),Math.floor(mins(time)/60)*60),end=Math.min(mins(shift.end)+1,start+settings().window);return {start,end,shift}}
-function count(date,start,end,all,ignoreId){return all.filter(r=>r.id!==ignoreId&&relevant(r,date)&&mins(r.time)>=start&&mins(r.time)<end).reduce((n,r)=>n+Number(r.guests||0),0)}
-function evaluate(candidate,all,ignoreId){const win=windowFor(candidate.time);if(!win)return {blocked:false,invalid:true};const max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100));const current=count(candidate.date,win.start,win.end,all,ignoreId),after=current+Number(candidate.guests||0);return {blocked:after>limit,current,after,limit,max,start:win.start,end:win.end,range:clock(win.start)+' – '+clock(win.end),percent:max?Math.round(after/max*100):0}}
+function service(date,time){const m=mins(time);if(!ReservationEngine.isServiceOpen(date,time))return null;return Object.values(ReservationEngine.getShiftsForDate(date)).find(s=>s.enabled&&m>=mins(s.start)&&m<=mins(s.end))||null}
+function relevant(r,date){return isActualArrival(r,date)}
+function windowFor(date,time){const shift=service(date,time);if(!shift)return null;const start=Math.max(mins(shift.start),Math.floor(mins(time)/60)*60),end=Math.min(mins(shift.end)+1,start+settings().window);return {start,end,shift}}
+function count(date,start,end,all,ignoreId){return all.filter(r=>r.id!==ignoreId&&relevant(r,date)&&arrivalMinute(r,date)>=start&&arrivalMinute(r,date)<end).reduce((n,r)=>n+Math.max(0,Number(r.guests)||0),0)}
+function evaluate(candidate,all,ignoreId){const win=windowFor(candidate.date,candidate.time);if(!win)return {blocked:false,invalid:true};const max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100));const current=count(candidate.date,win.start,win.end,all,ignoreId),after=current+Number(candidate.guests||0);return {blocked:after>limit,current,after,limit,max,start:win.start,end:win.end,range:clock(win.start)+' – '+clock(win.end),percent:max?Math.round(after/max*100):0}}
 function suggestions(candidate,all,ignoreId){
- const shift=service(candidate.time);if(!shift)return [];
+ const shift=service(candidate.date,candidate.time);if(!shift)return [];
  const low=mins(shift.start),high=mins(shift.end),base=mins(candidate.time),list=[];
  // Exclude past alternatives only for the current restaurant-local date.
  // Future dates can legitimately include earlier clock times.
@@ -77,13 +100,23 @@ function progress(data){
 const parisClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 const currentMinutes=()=>{const parts=parisClock.formatToParts(new Date());const h=parts.find(p=>p.type==='hour')?.value||'0';const m=parts.find(p=>p.type==='minute')?.value||'0';return Number(h)*60+Number(m)};
 let lastRushDashboard=null;
+let rushHelpExpanded=false;
 function dashboard(date,all){
  const target=$('rushDashboard');if(!target)return;
  lastRushDashboard={date,all};
+ // The immediate booking simulation is a Restaurant-only operational block.
+ const isReception=Boolean(window.RestoReception||document.documentElement.classList.contains('reception'));
+ if(isReception)$('rmImmediateAvailability')?.remove();
  target.replaceChildren();
- const shifts=Object.entries(ReservationEngine.getShifts()).filter(([,s])=>s.enabled);
+ // Use the actual restaurant schedule for the selected date, not generic opening hours.
+ const shifts=Object.entries(ReservationEngine.getShiftsForDate(date)).filter(([,s])=>s.enabled);
  const heading=document.createElement('div');heading.className='rushDashHead';
- heading.innerHTML='<div><span class="rushSectionEyebrow">PRÉVISIONS · ARRIVÉES À VENIR</span><h2 class="serviceIconHeading"><i data-lucide="activity" aria-hidden="true"></i><span>Charge des arrivées</span></h2><p>Suivi du créneau : clients encore à venir, arrivées en retard et clients déjà installés.</p></div>';
+ heading.innerHTML='<div><span class="rushSectionEyebrow">EN DIRECT · RESTAURANT</span><h2 class="serviceIconHeading"><i data-lucide="activity" aria-hidden="true"></i><span>Suivi des arrivées</span></h2></div>';
+ const help=rushNode('button','rmArrivalHelpButton');help.type='button';help.setAttribute('aria-label','Comprendre le suivi des arrivées');
+ help.setAttribute('aria-expanded',String(rushHelpExpanded));help.title='À quoi sert le suivi des arrivées ?';
+ const helpIcon=rushNode('i');helpIcon.dataset.lucide='info';helpIcon.setAttribute('aria-hidden','true');
+ help.append(helpIcon);heading.append(help);
+ help.addEventListener('click',()=>{rushHelpExpanded=!rushHelpExpanded;dashboard(date,all)});
  if(!window.RestoReception){
   const gear=rushNode('button','rushSettingsShortcut');gear.type='button';
   gear.setAttribute('aria-label','Régler la limite des arrivées');
@@ -101,15 +134,59 @@ function dashboard(date,all){
   heading.append(gear);
  }
  target.append(heading);
+ if(rushHelpExpanded){
+  const explanation=rushNode('div','rmArrivalHelpText');explanation.setAttribute('role','note');
+  explanation.append(
+   rushNode('strong','','À quoi sert le suivi des arrivées ?'),
+   rushNode('p','','Anticipez les arrivées et pilotez votre service en temps réel. Cet outil compare les clients attendus aux clients déjà installés pour faciliter l’organisation de l’accueil et de la salle.')
+  );
+  const benefits=rushNode('div','rmArrivalHelpBenefits');
+  const items=[
+   ['calendar-clock','Anticiper les arrivées','Préparer l’accueil et le placement des clients.'],
+   ['activity','Suivre l’affluence','Identifier les périodes de forte activité.'],
+   ['users','Adapter le service','Organiser les équipes selon les réservations et l’occupation réelle.'],
+   ['clock-alert','Repérer les retards','Garder une vue sur les clients encore attendus.']
+  ];
+  for(const [iconName,label,description] of items){
+   const line=rushNode('p','rmArrivalHelpBenefit');
+   const icon=rushNode('i','rmArrivalHelpIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
+   const content=rushNode('span');content.append(rushNode('strong','',label+' — '),document.createTextNode(description));
+   line.append(icon,content);benefits.append(line);
+  }
+  explanation.append(benefits,
+   rushNode('p','','Les informations évoluent avec les réservations, les installations et les départs enregistrés.'),
+   rushNode('p','','Objectif : mieux coordonner la réception et le restaurant, fluidifier l’accueil et améliorer la qualité du service.'));
+  target.append(explanation);
+  window.lucide?.createIcons?.({nodes:[explanation]});
+  // Local Lucide replaces <i> with <svg>; enforce fixed dimensions after rendering.
+  explanation.querySelectorAll('.rmArrivalHelpIcon').forEach(svg=>{
+   svg.setAttribute('width','18');svg.setAttribute('height','18');
+   svg.style.cssText='width:18px!important;height:18px!important;min-width:18px;max-width:18px;flex:0 0 18px;display:block;align-self:flex-start;margin-top:2px;color:#20765b';
+  });
+ }
  if(window.lucide?.createIcons)window.lucide.createIcons({nodes:[heading]});
  const windows=[];
  for(const [name,s] of shifts){
   for(let at=mins(s.start);at<=mins(s.end);at+=60){
+   // Includes weekly closures and legacy Saturday/Sunday lunch closure flags.
+   if(!ReservationEngine.isServiceOpen(date,clock(at)))continue;
    const end=Math.min(at+60,mins(s.end)+1);
    if(end>at)windows.push({start:at,end,name});
   }
  }
- if(!windows.length){target.append('Aucun service ouvert.');return}
+ if(!windows.length){
+  target.append(rushNode('p','rushHint','Restaurant fermé : aucun service ouvert à cette date.'));
+  const occupancy=isReception?null:$('currentOccupancy');
+  if(occupancy){
+   let panel=$('rmImmediateAvailability');
+   if(!panel){panel=rushNode('section','rmImmediateAvailability');panel.id='rmImmediateAvailability';occupancy.insertAdjacentElement('afterend',panel);}
+   panel.replaceChildren(
+    rushNode('span','rushSectionEyebrow','DISPONIBILITÉ · NOUVELLE RÉSERVATION'),
+    rushNode('h2','serviceIconHeading','Restaurant fermé'),
+    rushNode('p','','Aucune réservation possible : tous les services de cette date sont fermés.'));
+  }
+  return;
+ }
  windows.sort((a,b)=>a.start-b.start);
  const current=currentMinutes();
  let preferred=windows.findIndex(w=>current>=w.start&&current<w.end);
@@ -125,25 +202,42 @@ function dashboard(date,all){
  const result=document.createElement('div');result.className='rushDashContent';target.append(result);
  function update(){const w=currentWindow,max=capacity(),limit=Math.max(1,Math.ceil(max*settings().percent/100)),breakdown=rushArrivalBreakdown(date,w.start,w.end,all),covers=breakdown.planned,data={max,limit,after:covers,blocked:covers>=limit};result.replaceChildren();const summary=document.createElement('div');summary.className='rushLoadSummary';
  const numbers=document.createElement('div');numbers.className='rushLoadNumbers';
- const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Arrivées prévues / limite conseillée'));numbers.append(rushNode('strong','',covers+' / '+limit),loadLabel);
- const level=covers>limit?'Limite dépassée':covers===limit?'Seuil atteint':covers>=limit*.8?'Presque au seuil':'Flux maîtrisé';
+ const loadLabel=rushNode('span','rushLoadLabel');const loadIcon=rushNode('i','serviceInlineIcon');loadIcon.dataset.lucide='activity';loadIcon.setAttribute('aria-hidden','true');loadLabel.append(loadIcon,rushNode('span','', 'Arrivées actives '+clock(w.start)+' – '+clock(w.end)+' · Seuil conseillé : '+limit+' couverts'));numbers.append(rushNode('strong','rmSlotArrivalsValue',covers+' / '+limit),loadLabel);
+ const level=covers>limit?'Pic d’arrivées · vigilance':covers===limit?'Seuil d’arrivées atteint':covers>=limit*.8?'Arrivées nombreuses':covers===0?'Aucune arrivée active sur ce créneau':'Arrivées sous le seuil';
  const status=rushNode('span','rushLoadStatus'+(covers>=limit?' full':covers>=limit*.8?' busy':''),level);
  summary.append(numbers,status);
  function rushBreakdownLabel(iconName,label){const line=rushNode('span','rushBreakdownLabel');const icon=rushNode('i','serviceInlineIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');line.append(icon,rushNode('span','',label));return line;}
- const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown';
- const upcoming=rushNode('div','rushArrivalBreakdownItem');
- upcoming.append(rushNode('strong','',breakdown.upcoming),rushBreakdownLabel('calendar-clock','Encore à venir'));
- const late=rushNode('div','rushArrivalBreakdownItem rushArrivalLate'+(breakdown.late?' isLate':''));
- late.append(rushNode('strong','',breakdown.late),rushBreakdownLabel('alert-triangle','Heure prévue dépassée'));
- const welcomed=rushNode('div','rushArrivalBreakdownItem');
- welcomed.append(rushNode('strong','',breakdown.arrived),rushBreakdownLabel('users','Déjà arrivés / installés'));
- arrivalDetails.append(upcoming,late,welcomed);
- result.append(summary,arrivalDetails,progress(data));
+ const arrivalDetails=document.createElement('div');arrivalDetails.className='rushArrivalBreakdown rmForecastTwoStatuses';
+ function metric(value,label,iconName){
+  const item=rushNode('div','rushArrivalBreakdownItem');
+  const icon=rushNode('i','rmMetricIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
+  const words=rushNode('div','rmForecastMetricText');
+  words.append(rushNode('strong','',value),rushNode('span','',label));
+  item.append(icon,words);return item;
+ }
+ arrivalDetails.append(metric(breakdown.waiting,'Encore attendus sur ce créneau','calendar-clock'),metric(breakdown.arrived,'Encore installés de ce créneau (passages inclus)','armchair'));
+ result.append(summary,arrivalDetails,progress(data));window.lucide?.createIcons?.({nodes:[result]});
+  // Clarify the distinction between the selected hour and all reservations for the day.
+  const daily=all.filter(r=>relevant(r,date));
+  const dailyGuests=daily.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  const periodLabel=rushNode('p','rushHint rushArrivalsHint',
+   'Arrivées actives '+clock(w.start)+' – '+clock(w.end)+' : '+covers+' couvert(s), passages inclus, clients déjà partis exclus. Total des couverts encore attendus ou installés du jour : '+dailyGuests+'.');
+  result.append(periodLabel);
+  // Live service load includes walk-ins and reservations installed at other times.
+  const installedNow=all.filter(r=>r.date===date&&r.status==='seated');
+  const installedCovers=installedNow.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  const installedTables=new Set(installedNow.flatMap(r=>Array.isArray(r.tables)?r.tables:[]));
+  const waitingNow=all.filter(r=>r.date===date&&rushStatuses.waiting.has(r.status)).reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  const isToday=date===rushLocalDate(),nowMinute=currentMinutes();
+  const waitingSoon=all.filter(r=>r.date===date&&rushStatuses.waiting.has(r.status)&&
+   (isToday?mins(r.time)<=nowMinute+60:mins(r.time)>=w.start&&mins(r.time)<w.end))
+   .reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
+  const toHandle=installedCovers+waitingSoon;
  const hint=rushNode('p','rushHint rushArrivalsHint',breakdown.late
-  ?breakdown.late+' couvert(s) dont l’heure prévue est passée restent à accueillir. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
+  ?breakdown.late+' couvert(s) en retard, déjà inclus dans les attendus. '+(covers>=limit?'Le seuil d’arrivées de cette heure est atteint.':'Vérifiez leur statut avec l’équipe.')
   :covers>=limit?'Limite conseillée atteinte : privilégiez un autre horaire, même si des tables restent libres.'
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
-  :'Arrivées réparties : ce créneau reste sous la limite conseillée.');
+  :'Les passages encore installés sur ce créneau sont inclus. Une table libérée retire immédiatement ses couverts ; le seuil conseillé n’est pas la capacité du restaurant.');
  result.append(hint);
  // An hour change must not hide guests who are still awaiting arrival.
  // Keep this operational warning separate from the current hour's forecast.
@@ -151,36 +245,66 @@ function dashboard(date,all){
   const overdue=all.filter(r=>relevant(r,date)&&rushStatuses.waiting.has(r.status)&&mins(r.time)<currentMinutes()&&mins(r.time)<w.start);
   const overdueCovers=overdue.reduce((total,r)=>total+Math.max(0,Number(r.guests)||0),0);
   if(overdueCovers){
-   const carried=rushNode('p','rushHint rushArrivalsHint','⚠ '+overdueCovers+' couvert(s) attendus sur les créneaux précédents restent à accueillir. Le créneau actuel ne les inclut pas : vérifiez les réservations en retard avant d’accepter de nouvelles arrivées.');
-   carried.setAttribute('role','status');
+   const carried=rushNode('div','rmArrivalOverdueAlert');carried.setAttribute('role','alert');
+   const warnIcon=rushNode('i');warnIcon.dataset.lucide='alert-triangle';warnIcon.setAttribute('aria-hidden','true');
+   const words=rushNode('div','rmArrivalOverdueWords');
+   words.append(rushNode('strong','','Retards à traiter · '+overdueCovers+' couvert'+(overdueCovers>1?'s':'')),
+    rushNode('p','','Des réservations des créneaux précédents restent attendues. Vérifiez leur statut avant de nouvelles arrivées.'));
+   carried.append(warnIcon,words);
+   const action=rushNode('button','rmArrivalOverdueAction','Voir les réservations');
+   action.type='button';action.addEventListener('click',()=>{window.RestoScreens?.request?.('reservations');});
+   carried.append(action);
    result.append(carried);
+   window.lucide?.createIcons?.({nodes:[carried]});
   }
  }
  const isCurrentDay=date===rushLocalDate(),nowClock=currentMinutes();
  const queryMinutes=isCurrentDay?Math.max(w.start,nowClock+1):w.start;
- const canQuoteAvailability=!isCurrentDay||queryMinutes<w.end;
  const queryTime=clock(queryMinutes);
- const tableState=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
- if(tableState?.valid){
-  const critical=tableState.remaining<=3;
-  const note=document.createElement('div');note.className='rushTablePressure'+(critical?' rushTablePressureCritical':'')+(covers>=limit?' rushLimitReached':'');
-  if(critical){
-   note.setAttribute('role','status');
-   const head=document.createElement('div');head.className='rushTablePressureHead';
-   const symbol=document.createElement('span');symbol.className='rushTablePressureSymbol';symbol.textContent=tableState.remaining===0?'!':'!';
-   symbol.setAttribute('aria-hidden','true');
-   const heading=document.createElement('strong');heading.textContent=tableState.remaining===0?'Créneau complet pour 2 personnes':'Attention · Peu de tables disponibles';
-   head.append(symbol,heading);note.append(head);
+ const canQuoteAvailability=(!isCurrentDay||queryMinutes<w.end)&&ReservationEngine.isServiceOpen(date,queryTime);
+ const noMoreToday=isCurrentDay&&nowClock>=windows[windows.length-1].end;
+ const immediate=isCurrentDay&&nowClock>=currentWindow.start&&nowClock<currentWindow.end;
+ // This simulation is a separate operational block, not part of arrival forecasts.
+ const occupancy=isReception?null:$('currentOccupancy');
+ if(occupancy){
+  let panel=$('rmImmediateAvailability');
+  if(!panel){
+   panel=rushNode('section','rmImmediateAvailability');
+   panel.id='rmImmediateAvailability';
+   panel.setAttribute('aria-label','Disponibilité calculée pour une nouvelle réservation');
+   occupancy.insertAdjacentElement('afterend',panel);
   }
-  const message=document.createElement('p');
-  message.textContent=tableState.remaining===0?'Aucune table compatible encore disponible pour 2 couverts à '+queryTime+'. Proposez un autre horaire.':critical?'Seulement '+tableState.remaining+' table'+(tableState.remaining>1?'s':'')+' compatible'+(tableState.remaining>1?'s':'')+' encore réservable'+(tableState.remaining>1?'s':'')+' pour 2 couverts à '+queryTime+'. Vérifiez les disponibilités avant de confirmer.':tableState.remaining+' tables compatibles encore réservables pour 2 couverts à '+queryTime+'.';
-  if(covers>=limit)message.textContent+=' Attention : le seuil conseillé d’arrivées est déjà atteint pour cette heure.';
-  note.append(message);result.append(note);
+  const heading=rushNode('div','rmImmediateHeading'),title=rushNode('h2','serviceIconHeading');
+  const icon=rushNode('i');icon.dataset.lucide='zap';icon.setAttribute('aria-hidden','true');
+  title.append(icon,rushNode('span','',noMoreToday?'Service terminé pour aujourd’hui':immediate?'Disponibilité immédiate':'Prochain service ouvert'));
+  heading.append(rushNode('span','rushSectionEyebrow','DISPONIBILITÉ · NOUVELLE RÉSERVATION'),title,
+    rushNode('p','','Tables compatibles pour une nouvelle réservation, indépendamment des indicateurs d’activité.'));
+  if(!immediate&&canQuoteAvailability){
+   const dayHours=ReservationEngine.getShiftsForDate(date);
+   const lunchClosed=dayHours?.lunch&&(!dayHours.lunch.enabled||!ReservationEngine.isServiceOpen(date,dayHours.lunch.start));
+   heading.append(rushNode('p','',lunchClosed&&currentWindow.name==='dinner'
+    ?'Service du midi fermé · prochain service ouvert à '+queryTime
+    :'Prochain créneau ouvert à '+queryTime));
+  }
+  const state=canQuoteAvailability?window.RestoTablePressure?.availability({date,time:queryTime,guests:2,duration:90,tables:TableStore.get().tables,reservations:all,holds:window.RestoDraftHolds||[]}):null;
+  const answer=rushNode('div','rmImmediateResult'),question=rushNode('div','rmImmediateQuestion');
+  const people=rushNode('i');people.dataset.lucide='users';people.setAttribute('aria-hidden','true');
+  question.append(people,rushNode('span','',canQuoteAvailability?'Pour 2 couverts à '+queryTime:noMoreToday?'Aucun autre service ouvert aujourd’hui':'Aucun créneau ouvert à cette heure'));
+  const remaining=state?.valid?state.remaining:null;
+  const count=remaining===null?(noMoreToday?'Choisissez une autre date.':'Disponibilités à vérifier sur un créneau ouvert'):remaining===0?'Aucune table compatible disponible':remaining+' table'+(remaining>1?'s':'')+' compatible'+(remaining>1?'s':'')+' disponible'+(remaining>1?'s':'');
+  const resultBox=rushNode('div','rmImmediateAnswer'+(remaining===0?' rmImmediateFull':''));
+  const grid=rushNode('i');grid.dataset.lucide='layout-grid';grid.setAttribute('aria-hidden','true');
+  resultBox.append(grid,rushNode('strong','rmImmediateCount',count));
+  answer.append(question,resultBox);
+  panel.replaceChildren(heading,answer);
+  window.lucide?.createIcons?.({nodes:[panel]});
  }
+
  }update()}
 setInterval(()=>{if(lastRushDashboard&&document.visibilityState!=='hidden')dashboard(lastRushDashboard.date,lastRushDashboard.all)},60000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&lastRushDashboard)dashboard(lastRushDashboard.date,lastRushDashboard.all)});
-function confirm(candidate,all,ignoreId){const data=evaluate(candidate,all,ignoreId);if(!data.blocked)return Promise.resolve(true);return new Promise(resolve=>{const overlay=document.createElement('div');overlay.className='rushOverlay';const card=document.createElement('section');card.className='rushModal';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Confirmation du créneau chargé');const title=document.createElement('h2');title.textContent='Forte affluence à '+candidate.time;const intro=document.createElement('p');intro.textContent='De nombreux clients sont attendus sur cette période. Proposez si possible un autre horaire.';const figures=document.createElement('div');figures.className='rushFigures';const first=document.createElement('div'),second=document.createElement('div');first.innerHTML='<strong>'+data.current+'</strong><span>Couverts déjà attendus entre '+data.range+'</span>';second.innerHTML='<strong>'+data.limit+'</strong><span>Couverts conseillés au maximum</span>';figures.append(first,second);const next=document.createElement('p');next.className='rushAfter';next.textContent='Avec cette réservation : '+data.after+' couverts sur cette période.';const alternatives=document.createElement('div');alternatives.className='rushAlternatives';const heading=document.createElement('strong');heading.textContent='Horaires moins chargés à proposer';alternatives.append(heading);const list=suggestions(candidate,all,ignoreId);if(list.length){for(const item of list){
+window.addEventListener('restomanager:hours',()=>{if(lastRushDashboard)dashboard(lastRushDashboard.date,lastRushDashboard.all)});
+function confirm(candidate,all,ignoreId){const data=evaluate(candidate,all,ignoreId);if(!data.blocked)return Promise.resolve(true);return new Promise(resolve=>{const overlay=document.createElement('div');overlay.className='rushOverlay';const card=document.createElement('section');card.className='rushModal';card.setAttribute('role','alertdialog');card.setAttribute('aria-modal','true');card.setAttribute('aria-label','Confirmation du créneau chargé');const title=document.createElement('h2');title.textContent='Forte affluence à '+candidate.time;const intro=document.createElement('p');intro.textContent='Le seuil conseillé des arrivées est dépassé sur ce créneau. Ce seuil aide à répartir l’accueil, mais ce n’est pas la capacité maximale de la salle. Proposez si possible un autre horaire ; une confirmation exceptionnelle est possible si une table compatible reste libre.';const figures=document.createElement('div');figures.className='rushFigures';const first=document.createElement('div'),second=document.createElement('div');first.innerHTML='<strong>'+data.current+'</strong><span>Couverts déjà attendus entre '+data.range+'</span>';second.innerHTML='<strong>'+data.limit+'</strong><span>Seuil conseillé d’arrivées sur une heure</span>';figures.append(first,second);const next=document.createElement('p');next.className='rushAfter';next.textContent='Avec cette réservation : '+data.after+' couverts sur cette période.';const alternatives=document.createElement('div');alternatives.className='rushAlternatives';const heading=document.createElement('strong');heading.textContent='Horaires moins chargés à proposer';alternatives.append(heading);const list=suggestions(candidate,all,ignoreId);if(list.length){for(const item of list){
  const button=document.createElement('button');
  button.type='button';button.className='rushAlternativeChoice';
  const time=document.createElement('strong');time.textContent=item.at;
@@ -212,9 +336,26 @@ function setup(){
   hint.textContent='Jusqu’à '+limit+' arrivées conseillées sur une heure, pour '+max+' places. Au-delà, confirmation manuelle et suggestions de créneaux.';
  }
  slider.addEventListener('input',show);
- slider.addEventListener('change',()=>{
-  localStorage.setItem(KEY,JSON.stringify({percent:Number(slider.value)}));
-  show();window.dispatchEvent(new Event('restomanager:v3-change'));
+ slider.addEventListener('change',async()=>{
+  const percent=Number(slider.value);
+  if(Array.isArray(window.RestoSharedReservations)){
+   slider.disabled=true;
+   try{
+    if(!window.RestoSupabaseReady||typeof window.RestoSaveSharedArrivalLimit!=='function')throw Error('Synchronisation indisponible.');
+    await window.RestoSaveSharedArrivalLimit(percent);
+   }catch(error){
+    slider.value=String(settings().percent);
+    hint.textContent='Réglage non enregistré pour l’équipe. Vérifiez la synchronisation puis réessayez.';
+    window.RestoErrors?.diagnostic?.('arrival-limit',error);
+   }finally{slider.disabled=false}
+  }else{
+   localStorage.setItem(KEY,JSON.stringify({percent}));
+   window.dispatchEvent(new Event('restomanager:v3-change'));
+  }
+  show();
+ });
+ window.addEventListener('restomanager:supabase-snapshot',()=>{
+  slider.value=String(settings().percent);show();
  });
  show();box.append(header,p,label,slider,markers,hint);section.append(box);
 }
@@ -224,8 +365,8 @@ window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count
 'use strict';
 (function(){
 const $=id=>document.getElementById(id);
-// Restaurant-local service date. Until 01:00 the previous service day remains
-// active; new bookings always use the current Paris calendar date.
+// Restaurant-local service date: tables and reservations use the same Paris
+// calendar day from midnight. Do not reintroduce the previous-day 01:00 offset.
 const bookingToday=()=>{const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));return p.year+'-'+p.month+'-'+p.day};
 const today=()=>bookingToday();
 const bookingNowTime=()=>new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date()).replace(/\s/g,'');
@@ -236,18 +377,21 @@ const nextBookingDate=date=>{const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.
 // never the clock time at which staff are entering the reservation.
 function bookingArrivalDefault(date=bookingToday()){
  const nowDate=bookingToday(),nowMinute=bookingMinuteOf(bookingNowTime());
- const shifts=Object.values(ReservationEngine.getShifts())
-  .filter(shift=>shift.enabled&&Number.isFinite(bookingMinuteOf(shift.start))&&Number.isFinite(bookingMinuteOf(shift.end)))
-  .map(shift=>({start:bookingMinuteOf(shift.start),end:bookingMinuteOf(shift.end)}))
-  .filter(shift=>shift.end>=shift.start).sort((a,b)=>a.start-b.start);
- if(!shifts.length)return {date,time:'19:00'};
- // Advance to the next quarter hour to avoid suggesting a time in the past.
- const earliest=date>nowDate?0:(Math.ceil(nowMinute/15)*15);
- for(const shift of shifts){
-  const candidate=Math.max(shift.start,earliest);
-  if(candidate<=shift.end&&candidate<24*60)return {date,time:bookingClock(candidate)};
+// Find the next arrival in a genuinely open service, including weekend rules.
+ let target=date<nowDate?nowDate:date;
+ for(let attempt=0;attempt<8;attempt++,target=nextBookingDate(target)){
+  const shifts=Object.values(ReservationEngine.getShiftsForDate(target))
+   .filter(shift=>shift.enabled&&Number.isFinite(bookingMinuteOf(shift.start))&&Number.isFinite(bookingMinuteOf(shift.end)))
+   .map(shift=>({start:bookingMinuteOf(shift.start),end:bookingMinuteOf(shift.end)}))
+   .filter(shift=>shift.end>=shift.start).sort((a,b)=>a.start-b.start);
+  const earliest=target===nowDate?Math.ceil(nowMinute/15)*15:0;
+  for(const shift of shifts){
+   const candidate=Math.ceil(Math.max(shift.start,earliest)/15)*15;
+   if(candidate<=shift.end&&candidate<24*60&&ReservationEngine.isServiceOpen(target,bookingClock(candidate)))
+    return {date:target,time:bookingClock(candidate)};
+  }
  }
- return {date:date>nowDate?date:nextBookingDate(nowDate),time:bookingClock(shifts[0].start)};
+ return {date:target,time:'19:00'};
 }
 
 let date=today();
@@ -383,8 +527,8 @@ function serviceDisplayReady(){
  $('kpis').replaceChildren(node('p','muted',placeholder));$('currentOccupancy')?.replaceChildren(node('p','muted',placeholder));$('rushDashboard')?.replaceChildren(node('p','muted',placeholder));
  return false;
 }
-function render(){if(!serviceDisplayReady())return;const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),node('span','status',s.label),node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);if(!cards.length)$('tableGrid').append(node('p','muted',visible.length?'Aucune table pour ce filtre.':'Aucune table active dans cette salle.'));
-const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients présents',seated.reduce((n,r)=>n+r.guests,0),'users'],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0),'calendar-clock'],['Tables occupées',occupiedNumbers.size,'armchair'],['Places sur tables libres',free,'layout-grid']];const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.tables?.length?' · Table '+r.tables.join(' + '):'')+(r.status==='confirmed'?' · Confirmé, non installé':'');
+function render(){if(!serviceDisplayReady())return;const visible=plan.tables.filter(t=>t.roomId===$('roomFilter').value);const states=visible.map(t=>({t,s:state(t)}));const shown=states.filter(x=>filter==='all'||x.s.key===filter);const order={present:0,expected:1,free:2};shown.sort((a,b)=>{switch(tableSort.value){case 'number-desc':return b.t.number-a.t.number;case 'capacity-asc':return a.t.capacity-b.t.capacity||a.t.number-b.t.number;case 'capacity-desc':return b.t.capacity-a.t.capacity||a.t.number-b.t.number;case 'status':return (order[a.s.key]??9)-(order[b.s.key]??9)||a.t.number-b.t.number;default:return a.t.number-b.t.number}});const seen=new Set();const cards=[];for(const {t,s} of shown){const r=s.booking;const fused=r&&r.tables.length>1;if(fused){if(seen.has(r.id))continue;seen.add(r.id)}const numbers=fused?r.tables:[t.number];const total=fused?numbers.reduce((sum,n)=>sum+(plan.tables.find(x=>x.number===n)?.capacity||0),0):t.capacity;const b=node('button','tableCard '+s.key+(fused?' groupedFusionCard':''));b.type='button';const statusBadge=node('span','status');const statusIcon=node('i','rmTableStateIcon');statusIcon.dataset.lucide=s.key==='free'?'check-circle-2':s.key==='expected'?'calendar-clock':'armchair';statusIcon.setAttribute('aria-hidden','true');statusBadge.append(statusIcon,document.createTextNode(s.label));b.append(node('span','num',fused?'Tables '+numbers.join(' + '):'Table '+t.number),statusBadge,node('span','info',fused?r.time+' · '+r.guests+' couvert(s)':s.detail),node('span','capacity',fused?total+' places réunies':(t.capacityMin||1)+' – '+t.capacity+' places'));if(fused&&total>r.guests)b.append(node('span','fusionCoverHint','Retirer '+(total-r.guests)+' couvert(s)'));b.addEventListener('click',()=>openTable(t,s,b));cards.push(b)}$('tableGrid').replaceChildren(...cards);window.lucide?.createIcons?.({nodes:[$('tableGrid')]});if(!cards.length)$('tableGrid').append(node('p','muted',visible.length?'Aucune table pour ce filtre.':'Aucune table active dans cette salle.'));
+const all=plan.tables.map(t=>({t,s:state(t)}));const seated=bookings.filter(r=>r.status==='seated');const waiting=bookings.filter(r=>['reserved','confirmed','late','arrived'].includes(r.status));const occupiedNumbers=new Set(seated.flatMap(r=>r.tables));const free=all.filter(x=>!occupiedNumbers.has(x.t.number)).reduce((n,x)=>n+(x.t.capacity||0),0);window.RestoRush?.dashboard(date,bookings);const kpis=[['Clients installés',seated.reduce((n,r)=>n+r.guests,0),'users'],['Clients attendus',waiting.reduce((n,r)=>n+r.guests,0),'calendar-clock'],['Tables occupées',occupiedNumbers.size,'armchair'],['Places sur tables libres',free,'layout-grid']];const reservationLine=r=>(r.time||'—')+' · '+(r.client||'Client')+' · '+Number(r.guests||0)+' couvert(s)'+(r.tables?.length?' · Table '+r.tables.join(' + '):'')+(r.status==='confirmed'?' · Confirmé, non installé':'');
 const kpiLists=[
  seated.map(reservationLine),
  waiting.map(reservationLine),
@@ -418,18 +562,34 @@ function progressRow(label,count,total,percent){
  rail.append(bar);group.append(head,rail);return group;
 }
 const occupancyTitle=node('div','occupancyHead');
-const occupancyHeading=node('div','occupancyHeadingBlock');const occupancyH2=node('h2','occupancyTitleText');const occupancyIcon=node('i','occupancyTitleIcon');occupancyIcon.dataset.lucide='activity';occupancyIcon.setAttribute('aria-hidden','true');occupancyH2.append(occupancyIcon,node('span','', 'Occupation actuelle'));occupancyHeading.append(node('span','occupancySectionEyebrow','EN DIRECT · CLIENTS INSTALLÉS'),occupancyH2);occupancyTitle.append(occupancyHeading);
-const occupancyState=noFreeTables?'Complet':tablesPercent>=85?'Presque complet':tablesPercent>=60?'Service chargé':'Places disponibles';
+const occupancyHeading=node('div','occupancyHeadingBlock');
+const occupancyH2=node('h2','occupancyTitleText');
+const occupancyIcon=node('i','occupancyTitleIcon');occupancyIcon.dataset.lucide='armchair';occupancyIcon.setAttribute('aria-hidden','true');
+occupancyH2.append(occupancyIcon,node('span','','Occupation actuelle'));
+occupancyHeading.append(node('span','occupancySectionEyebrow','EN DIRECT · SALLE'),occupancyH2,node('p','rmOccupationSubtitle','Tables réellement occupées par des clients installés maintenant, hors réservations futures.'));
+occupancyTitle.append(occupancyHeading);
+const occupancyState=noFreeTables?'Toutes les tables occupées':tablesPercent>=85?'Presque complet':tablesPercent>=60?'Service chargé':'Places disponibles';
 occupancyTitle.append(node('span','occupancyState'+(noFreeTables?' isFull':tablesPercent>=85?' isBusy':''),occupancyState));
-const occupancyNote=node('p','occupancyHelp',noFreeTables
- ?'Toutes les tables sont occupées. Des places peuvent rester libres sur des tables déjà installées.'
- :totalTables-occupiedTables+' table(s) actuellement non occupée(s).');
-occupancy.replaceChildren(
- occupancyTitle,
- progressRow('Tables occupées',occupiedTables,totalTables,tablesPercent),
- progressRow('Clients présents / capacité totale',guestsPresent,totalSeats,seatsPercent),
- occupancyNote
+const occupancyMetrics=node('div','rmOccupancyMetrics');
+function occupancyTile(iconName,value,label){
+ const item=node('div','rmOccupancyMetric');
+ const icon=node('i','rmOccupancyMetricIcon');icon.dataset.lucide=iconName;icon.setAttribute('aria-hidden','true');
+ const words=node('div','rmOccupancyMetricWords');words.append(node('strong','',value),node('span','',label));
+ item.append(icon,words);return item;
+}
+occupancyMetrics.append(
+ occupancyTile('users',guestsPresent,'Couverts installés'),
+ occupancyTile('armchair',occupiedTables,'Tables occupées'),
+ occupancyTile('check-circle-2',totalTables-occupiedTables,'Tables libres'),
+ occupancyTile('layout-grid',totalTables,'Tables au total')
 );
+occupancy.replaceChildren(
+ occupancyTitle,occupancyMetrics,
+ progressRow('Tables occupées / tables actives',occupiedTables,totalTables,tablesPercent),
+ node('p','rmOccupationCapacity',guestsPresent+' couverts installés sur '+totalSeats+' places ('+seatsPercent+' % des places).'),
+ node('p','occupancyHelp','Une table réservée pour plus tard reste libre tant qu’aucun client n’y est installé. Les tables fusionnées sont comptées individuellement.')
+);
+window.lucide?.createIcons?.({nodes:[occupancy]});
 
 $('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{const c=node('div','arrival');c.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));return c}));if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
 function occupationProgress(r){
@@ -613,9 +773,9 @@ function refreshAvailability(){
  // Explain a closed booking slot instead of pretending that every table is occupied.
  const bookingMinutes=value=>Number(String(value).slice(0,2))*60+Number(String(value).slice(3,5));
  const allowedShifts=Object.values(ReservationEngine.getShifts()).filter(shift=>shift.enabled);
- const inBookingHours=allowedShifts.some(shift=>bookingMinutes(time)>=bookingMinutes(shift.start)&&bookingMinutes(time)<=bookingMinutes(shift.end));
+ const inBookingHours=ReservationEngine.isServiceOpen(dateValue,time);
  if(!inBookingHours){
-  if(insight)insight.append(node('p','availabilityWarning','L’heure d’arrivée choisie ('+time+') est hors service. Vous pouvez saisir une réservation à toute heure ; choisissez une heure d’arrivée pendant le service : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
+  if(insight)insight.append(node('p','availabilityWarning','L’heure d’arrivée choisie ('+time+') n’est pas réservable : '+(ReservationEngine.closedWeekendLunch(dateValue,time)?'restaurant fermé le samedi et dimanche midi. ':'aucun service ouvert à cet horaire. ')+'Choisissez un horaire parmi les services réellement ouverts : '+(allowedShifts.map(shift=>shift.start+'–'+shift.end).join(' et ')||'aucun service configuré')+'. Modifiez l’heure ou les horaires dans Gestion.'));
   select.dataset.availabilityState='out_of_service';select.dataset.availabilityMessage='Horaire hors service';
   window.RestoTableChoices?.refresh('bookingTable');
   return;
@@ -652,7 +812,7 @@ function refreshAvailability(){
   if(held?.length)insight.append(node('p','availabilityWarning','Saisie sur un autre appareil : '+held.map(h=>'table '+h.number+' · '+h.team).join(', ')+'.'));
  }
  if(best)insight.append(node('p','availabilitySummary',best.label+' recommandée'+(best.numbers.length>1?'s':'')+' · '+best.capacity+' places pour '+guests+' couvert(s).'));
- if(previewTables.length&&window.RestoRush){const preview=candidate(time,previewTables),rush=window.RestoRush.evaluate(preview,reservationsAll);insight.append(node('p','rushAvailabilityHint','Charge des arrivées : '+rush.current+' / '+rush.limit+' déjà attendus entre '+rush.range+'.'));if(rush.blocked){insight.append(node('p','availabilityWarning','Forte affluence : des horaires alternatifs vous seront proposés à la validation.'))}}
+ if(previewTables.length&&window.RestoRush){const preview=candidate(time,previewTables),rush=window.RestoRush.evaluate(preview,reservationsAll);insight.append(node('p','rushAvailabilityHint','Charge des arrivées : '+rush.current+' / '+rush.limit+' déjà attendus entre '+rush.range+'.'));if(rush.blocked){insight.append(node('p','availabilityWarning','Seuil conseillé d’arrivées dépassé : ce n’est pas une fermeture du service. Une explication et des horaires alternatifs seront proposés à la validation.'))}}
  if(!total){
   insight.append(node('p','availabilityWarning',evaluated.message));
   const current=Number(time.slice(0,2))*60+Number(time.slice(3,5)),alternatives=[];
@@ -746,11 +906,17 @@ syncHotelRoomField();
 $('bookingForm').addEventListener('submit',async event=>{
  event.preventDefault();const feedback=$('bookingFeedback');feedback.textContent='';
  try{
+ if(window.RestoExternalNameGuard&&!window.RestoExternalNameGuard.validateField())return;
+ const slotState=window.RestoBookingSlotResult?.($('bookingTime').value);
+ if(slotState&&slotState.state!=='unknown'&&!slotState.compatible){
+  window.RestoShowSlotHelp?.('Aucune table compatible pour '+$('bookingGuests').value+' couvert(s) à '+$('bookingTime').value+'. Choisissez un autre créneau.','error');return;
+ }
  if(window.RestoBookingAvailabilityError)throw (window.RestoErrors?.business||Error)('Les disponibilités ne peuvent pas être vérifiées. Réessayez avant d’enregistrer.');
  if(window.RestoSharedReservations&&!window.RestoSupabaseReady)throw (window.RestoErrors?.business||Error)('Synchronisation en cours. Réessayez dans un instant.');
  const existing=readReservations(),numbers=$('bookingTable').value.split(',').map(Number),guests=Number($('bookingGuests').value);
  if($('bookingDate').value<bookingToday())throw (window.RestoErrors?.business||Error)('Impossible de créer une réservation à une date passée.');
- const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim()||($('bookingType').value==='hotel'?('Chambre '+$('bookingHotelRoom').value.trim()):'Client extérieur'),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
+ if($('bookingDate').value===bookingToday()&&$('bookingTime').value<bookingNowTime())throw (window.RestoErrors?.business||Error)('Impossible de réserver une heure déjà passée aujourd’hui. Choisissez un créneau futur.');
+ const fusion=numbers.length>1?numbers:null;const candidate={id:'v3-'+Date.now()+'-'+Math.random().toString(36).slice(2),type:$('bookingType').value,client:$('bookingClient').value.trim()||($('bookingType').value==='hotel'?('Chambre '+$('bookingHotelRoom').value.trim()):''),hotelRoom:$('bookingType').value==='hotel'?$('bookingHotelRoom').value.trim():'',date:$('bookingDate').value,time:$('bookingTime').value,guests,notes:$('bookingNotes').value.trim(),allergies:$('bookingAllergies').value.trim(),duration:ReservationEngine.getDefaultDuration(),tables:numbers,status:'reserved'};
  if(candidate.notes.length>1000||candidate.allergies.length>500)throw (window.RestoErrors?.business||Error)('Les notes ou allergies dépassent la longueur autorisée. Raccourcissez votre saisie.');
  if(fusion&&(!window.RestoFusion||!window.RestoFusion.pairs().some(p=>p.slice().sort().join(':')===fusion.slice().sort().join(':'))))throw (window.RestoErrors?.business||Error)('Fusion non autorisée.');
  const result=ReservationEngine.validate(candidate,existing);
@@ -800,7 +966,21 @@ $('bookingForm').addEventListener('submit',async event=>{
 });
 function applyTableSnapshot(){plan=TableStore.get();syncServiceDay();bookings=readReservations().filter(r=>r.date===date);const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;render();refreshAvailability()}
 window.addEventListener('restomanager:v3-tables',applyTableSnapshot);
-window.addEventListener('restomanager:supabase-snapshot',applyTableSnapshot);
+let checkedBookingDefaultAfterSnapshot=false;
+window.addEventListener('restomanager:supabase-snapshot',()=>{
+ applyTableSnapshot();
+ if(checkedBookingDefaultAfterSnapshot||!window.RestoSharedDataLoaded)return;
+ checkedBookingDefaultAfterSnapshot=true;
+ // Before shared hours arrive, a new reservation may default to a closed lunch.
+ // Correct only an untouched new booking, never a guest's completed form.
+ const d=$('bookingDate'),t=$('bookingTime');
+ const untouched=!$('bookingClient')?.value?.trim()&&!$('bookingHotelRoom')?.value?.trim()&&Number($('bookingGuests')?.value||1)===1;
+ if(untouched&&d?.value&&t?.value&&!ReservationEngine.isServiceOpen(d.value,t.value)){
+  const arrival=bookingArrivalDefault(d.value);
+  d.value=arrival.date;t.value=arrival.time;
+  t.dispatchEvent(new Event('change',{bubbles:true}));
+ }
+});
 window.addEventListener('restomanager:connection-state',()=>{if(window.RestoSharedDataLoaded)applyTableSnapshot();else{render();refreshAvailability()}});
 window.addEventListener('restomanager:v3-change',()=>{try{syncServiceDay();bookings=readReservations().filter(r=>r.date===date);render();refreshAvailability()}catch(e){$('bookingFeedback').textContent=e.message}});
 $('roomFilter').addEventListener('change',render);$('filters').addEventListener('click',e=>{const b=e.target.closest('button[data-filter]');if(!b)return;filter=b.dataset.filter;$('filters').querySelectorAll('button').forEach(x=>x.classList.toggle('active',x===b));render()});window.addEventListener('storage',e=>{if(e.key==='restomanager_reservations'||e.key==='restomanager_floor_plan_v1')location.reload()});

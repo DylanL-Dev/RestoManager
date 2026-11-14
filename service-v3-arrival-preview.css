@@ -1,0 +1,10 @@
+/* RM-JOHN-07: live, cover-independent arrival pressure in reservation and passage forms */
+.rmArrivalPreview{box-sizing:border-box;min-width:0;max-width:100%;padding:13px 15px;border:1px solid #c9dfd3;border-radius:14px;background:#f1f8f4;color:#18533d;margin:10px 0;grid-column:1/-1}
+.rmArrivalPreviewHead{display:flex;align-items:center;gap:9px;margin-bottom:5px;font-weight:800;font-size:14px}
+.rmArrivalPreviewHead svg{display:block!important;width:19px!important;height:19px!important;min-width:19px!important;max-width:19px!important;flex:0 0 19px!important}
+.rmArrivalPreviewText{margin:0 0 4px!important;font-weight:750;font-size:13px;line-height:1.5}
+.rmArrivalPreview small{font-size:11px;line-height:1.45;color:#536f60}
+.rmArrivalPreview[data-level="busy"]{background:#fff8ed;border-color:#efc588;color:#8c550f}
+.rmArrivalPreview[data-level="saturated"]{background:#fff1ed;border-color:#edaba5;color:#9f372b}
+.rmArrivalPreview[data-level="unknown"]{background:#f3f6f8;border-color:#d5dee2;color:#546c77}
+@media(min-width:700px){.rmArrivalPreview{padding:13px 18px}.rmArrivalPreviewText{font-size:14px}}

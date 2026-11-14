@@ -1,0 +1,64 @@
+name: RM-005 MAIN - recette etendue (sans PROD)
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  unit-and-integrity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Syntaxe JavaScript
+        run: npm run test:syntax
+      - name: Tests unitaires RM-005 et verifications d'import
+        run: npm test
+      - name: Rapport unitaire
+        run: |
+          echo "Syntaxe, modules, droits UI et unitaires : PASS" >> "$GITHUB_STEP_SUMMARY"
+
+  browsers:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Recette navigateur complète Mission 3 sur donnees fictives
+        run: npm run test:mission3:browser
+      - name: Affichage tableaux et Receptions / Restaurant
+        if: ${{ always() }}
+        run: npm run test:display
+      - name: Rapport navigateurs
+        run: |
+          echo "Mission 3 navigateur, presentation et tables : PASS (donnees fictives)" >> "$GITHUB_STEP_SUMMARY"
+
+  postgres-isolated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Test PostgreSQL 17 isole, aucun acces Supabase PROD
+        run: npm run test:mission3:postgres
+      - name: Rapport PostgreSQL
+        run: |
+          echo "Regressions Postgres Mission 3 : PASS (container ephemere)" >> "$GITHUB_STEP_SUMMARY"
