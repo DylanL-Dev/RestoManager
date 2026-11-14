@@ -56,14 +56,14 @@ Les signatures des six fonctions préexistantes sont cohérentes entre DEV et PR
 
 ## Pipeline et limites du GO
 
-- Le workflow d'audit SQL synthétique et le garde-fou `RestoManager - validation avant publication` sont PASS.
-- Une première exécution du test navigateur a échoué sur une assertion `Up to three table recommendations` dans `tests/browser/mission2.cjs`, malgré l'absence de modification du frontend dans cette PR. Une relance ciblée est en cours. **Ne pas déclarer la validation navigateur complète avant résultat vert.**
+- **Trois workflows sur trois PASS au commit `988ca1d0`** : audit SQL PostgreSQL 17 synthétique, garde-fou `RestoManager - validation avant publication`, et vérification navigateur avec horloge fixe.
+- Une exécution initiale du test navigateur a échoué tôt le matin : son scénario de passage dépendait de l'heure réelle du runner et était hors service. **Le test seul** a été corrigé pour simuler midi avec `page.clock.setFixedTime`, sans changer le comportement de l'application. La nouvelle exécution #43562944900 est **PASS**.
 - **Sauvegarde de la base PROD et restauration testée : NON DISPONIBLES.** Les sauvegardes GitHub ne couvrent pas les réservations.
 - **Aucune publication de RM-005, aucune migration phase A/B, aucune fusion MAIN/V3.** PR #121 doit rester en brouillon. RM-006 reste un lot distinct.
 
 ## Prochaines validations
 
-1. Obtenir trois workflows PASS sans ignorer un échec navigateur ou expliquer/réparer sa cause.
+1. **Terminé :** trois workflows PASS ; le faux échec navigateur lié à l'heure du runner a été corrigé dans les tests.
 2. Préparer un candidat Phase B ciblé à partir des signatures/corps **actuels** de PROD (ne pas copier DEV globalement).
 3. Répéter les tests sur clone représentatif du schéma PROD et vérifier sécurité RLS / RPC.
 4. Disposer d'une sauvegarde **restaurable** des données et d'un plan de rollback.
