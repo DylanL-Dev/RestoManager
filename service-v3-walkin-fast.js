@@ -17,11 +17,7 @@ function showInstallNotice(message,isError=false){
 }
 let installing=false;
 const roomConflictOnly=result=>Boolean(result.roomConflict)&&!result.conflict&&result.errors.length===1&&result.errors[0].includes('possède déjà une réservation');
-function roomConflict(all){
- const hotel=document.querySelector('input[name="walkinType"]:checked')?.value!=='exterieur';
- const room=String($('walkinRoom').value||'').trim();
- return hotel&&room?E.findRoomConflict(draft(1),all):null;
-}
+function roomConflict(all){const value=String($('walkinRoom').value||'').trim();if(!value||document.querySelector('input[name="walkinType"]:checked')?.value==='exterieur')return null;return E.findRoomConflict(draft(1),all)}
 const roomNotice=document.createElement('div');
 roomNotice.id='walkinSameRoomNotice';roomNotice.className='walkinSameRoomNotice';
 roomNotice.setAttribute('role','status');roomNotice.hidden=true;
@@ -37,11 +33,39 @@ function choices(all){const n=Number($('walkinGuests').value);if(!Number.isInteg
   return validation.valid||roomConflictOnly(validation);
  })}
 
-function noAvailabilityReason(all){const tables=TableStore.get().tables;const n=Number($('walkinGuests').value);const suitable=tables.filter(t=>n>=Number(t.capacityMin||1)&&n<=Number(t.capacity));const result=E.validate(draft(suitable[0]?.number||1),all);const hours=result.errors.find(e=>e.includes('Horaire hors des services'));if(hours)return 'Service fermé à cette heure. Vérifiez les horaires du midi et du soir dans Gestion du restaurant.';return 'Aucune table libre pour '+n+' personne(s) à cette heure. Vérifiez les réservations et les tables occupées.'}
+function noAvailabilityReason(all){
+ const n=Number($('walkinGuests').value);
+ if(!Number.isInteger(n)||n<1)return 'Indiquez un nombre de personnes valide.';
+ // A pre-existing booking for the same hotel room must not masquerade as
+ // every table being occupied. Keep normal duplicate-room protection.
+ const hotelRoom=String($('walkinRoom').value||'').trim();
+ if(document.querySelector('input[name="walkinType"]:checked')?.value!=='exterieur'&&hotelRoom){
+  const duplicate=E.findRoomConflict(draft(1),all);
+  if(duplicate)return 'Chambre '+hotelRoom+' : une réservation existe déjà sur ce créneau. Consultez-la dans Réservations avant de créer un nouveau passage. Ce blocage ne signifie pas que toutes les tables sont occupées.';
+ }
+ const ranked=E.rankedTableChoices(TableStore.get().tables,window.RestoFusion?.pairs()||[],n);
+ if(!ranked.length)return 'Aucune table ni fusion adaptée à '+n+' personne(s). Vérifiez les capacités dans Gestion.';
+ if(n>=5&&!ranked.some(candidate=>candidate.numbers.length>1)){
+  return 'Aucune fusion autorisée pour '+n+' personnes. Dans Gestion > Fusions, associez des tables voisines de la même salle. Les groupes de 3 ou 4 tables seront proposés automatiquement.';
+ }
+ const result=E.validate(draft(ranked[0].numbers),all);
+ if(result.errors.some(error=>error.includes('Horaire hors des services')))return 'Service fermé à cette heure. Vérifiez les jours et créneaux ouverts dans Gestion → Planning hebdomadaire.';
+ return 'Aucune table libre pour '+n+' personne(s) pendant '+E.getDefaultDuration()+' minutes. Vérifiez les arrivées à venir et les tables encore occupées.';
+}
+function recommendationMessage(best,available,guests){
+ if(!best)return '';
+ const spare=best.capacity-guests;
+ const fit=spare===0?'capacité exacte':spare===1?'1 place restante':spare+' places restantes';
+ const fusion=best.numbers.length>1?'fusion de '+best.numbers.length+' tables':'table individuelle';
+ const alternatives=available.length-1;
+ return '✓ Recommandation : '+best.label+' · '+fit+' · '+fusion+
+  (alternatives>0?' · '+alternatives+' autre'+(alternatives>1?'s':'')+' possibilité'+(alternatives>1?'s':''):'');
+}
 function refresh(){updateGuestControls();try{
+ // On the connected service, never offer a table while the shared snapshot is stale.
+ // A local fallback would give the impression that a passage can be installed offline.
  if(document.getElementById('integrationGate')&&window.RestoSupabaseReady!==true){
   const select=$('walkinTable');select.replaceChildren();select.dataset.manual='';
-  roomNotice.hidden=true;
   $('walkinRecommendation').textContent='Synchronisation en cours ou connexion interrompue. Réessayez après le retour de la connexion.';
   $('walkinForm').querySelector('button[type=submit]').disabled=true;
   window.RestoTableChoices?.refresh('walkinTable');
@@ -50,7 +74,7 @@ function refresh(){updateGuestControls();try{
  const all=load(),existingRoom=roomConflict(all);
  roomNotice.hidden=!existingRoom;
  roomNotice.textContent=existingRoom?'Chambre '+String($('walkinRoom').value).trim()+' : une réservation existe déjà. Si une autre personne de cette chambre souhaite dîner séparément, choisissez sa table et confirmez « Autre occupant » avant installation.':'';
- const available=choices(all),sel=$('walkinTable'),best=(sel.dataset.manual===String($('walkinGuests').value)&&available.find(c=>c.value===sel.value))||available[0];sel.replaceChildren();for(const t of available){const o=document.createElement('option');o.value=t.value;o.textContent=t.label+' · '+t.capacity+' places';sel.append(o)}if(best)sel.value=best.value;window.RestoTableChoices?.refresh('walkinTable');$('walkinRecommendation').textContent=best?'✓ '+best.label+' disponible · '+best.capacity+' places':noAvailabilityReason(load());$('walkinForm').querySelector('button[type=submit]').disabled=installing||!best;document.querySelectorAll('[data-walkin-pax]').forEach(b=>b.classList.toggle('selected',b.dataset.walkinPax===$('walkinGuests').value))}catch(e){$('walkinRecommendation').textContent='Disponibilités indisponibles : '+e.message;$('walkinForm').querySelector('button[type=submit]').disabled=true}}
+ const available=choices(all),sel=$('walkinTable'),best=(sel.dataset.manual===String($('walkinGuests').value)&&available.find(c=>c.value===sel.value))||available[0];sel.replaceChildren();for(const t of available){const o=document.createElement('option');o.value=t.value;o.textContent=t.label+' · '+t.capacity+' places';sel.append(o)}if(best)sel.value=best.value;window.RestoTableChoices?.refresh('walkinTable');$('walkinRecommendation').textContent=best?recommendationMessage(best,available,Number($('walkinGuests').value)):noAvailabilityReason(load());$('walkinForm').querySelector('button[type=submit]').disabled=installing||!best;document.querySelectorAll('[data-walkin-pax]').forEach(b=>b.classList.toggle('selected',b.dataset.walkinPax===$('walkinGuests').value))}catch(e){$('walkinRecommendation').textContent='Disponibilités indisponibles : '+e.message;$('walkinForm').querySelector('button[type=submit]').disabled=true}}
 function updateGuestControls(){
  const input=$('walkinGuests'),value=Number(input.value);
  const valid=Number.isInteger(value)&&value>=1;
@@ -80,7 +104,8 @@ updateClientType();
 document.querySelectorAll('[data-walkin-pax]').forEach(b=>b.addEventListener('click',()=>{$('walkinGuests').value=b.dataset.walkinPax;refresh()}));
 $('walkinTable').addEventListener('change',()=>{$('walkinTable').dataset.manual=$('walkinGuests').value});
 $('walkinGuests').addEventListener('input',refresh);$('walkinRoom').addEventListener('input',refresh);document.querySelectorAll('input[name="walkinType"]').forEach(input=>input.addEventListener('change',refresh));
-$('walkinForm').addEventListener('submit',async e=>{e.preventDefault();if(installing)return;installing=true;const submit=$('walkinForm').querySelector('button[type=submit]');submit.disabled=true;try{if(document.getElementById('integrationGate')&&window.RestoSupabaseReady!==true)throw Error('Synchronisation indisponible. Attendez la reconnexion avant d’installer un client.');const all=load(),best=choices(all).find(c=>c.value===$('walkinTable').value);if(!best)throw Error('Aucune table disponible.');const r={...draft(best.numbers),id:'walkin-'+Date.now()+'-'+Math.random().toString(36).slice(2),seatedAt:now().toISOString(),createdAt:now().toISOString()};const validation=E.validate(r,all);if(!validation.valid&&!roomConflictOnly(validation))throw Error(validation.errors.join(' '));
+$('walkinForm').addEventListener('submit',async e=>{e.preventDefault();if(installing)return;installing=true;const submit=$('walkinForm').querySelector('button[type=submit]');submit.disabled=true;try{if(document.getElementById('integrationGate')&&window.RestoSupabaseReady!==true)throw Error('Synchronisation indisponible. Attendez la reconnexion avant d’installer un client.');const all=load(),best=choices(all).find(c=>c.value===$('walkinTable').value);if(!best)throw Error('Aucune table disponible.');const r={...draft(best.numbers),id:'walkin-'+Date.now()+'-'+Math.random().toString(36).slice(2),seatedAt:now().toISOString(),createdAt:now().toISOString()};const validation=E.validate(r,all);
+ if(!validation.valid&&!roomConflictOnly(validation))throw Error(validation.errors.join(' '));
  let allowSameRoom=false;
  if(roomConflictOnly(validation)){
   if(!window.RestoSharedReservations)throw Error('Le passage d’un second occupant doit être validé sur le service connecté.');
