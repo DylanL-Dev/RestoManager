@@ -32,6 +32,16 @@ Toutes les signatures et empreintes correspondent encore à PROD lors de la rele
 - **Tests frontend navigateur** : exécutés sur une interface fictive sans données externes ; résultat PASS sur le dernier commit vérifié.
 - **GitHub Actions** : workflow `RM-005 - planning et RPC SQL isoles`, pipeline syntaxe/unitaire et navigateur ; vérification globale de la PR requise après toute modification des fichiers de préparation.
 
+## Test complémentaire : six définitions RPC PROD sur PostgreSQL fictif
+
+Une seconde base PostgreSQL 17 éphémère a été ajoutée au workflow `RM-005 - planning et RPC SQL isoles`, avec :
+- le planning Phase A et deux établissements fictifs ;
+- les **corps SQL exacts** des six fonctions de production (exportées en lecture seule), **aucune donnée client** ;
+- un essai complet du candidat Phase B et des assertions de maintien des propriétaires, droits et contrôles de rôle ;
+- validation désactivée des dépendances métier absentes de cette base fictive (`check_function_bodies = off`) : même en cas de PASS, il faudra une restauration de vrai schéma pour tester le comportement métier complet.
+
+Les premiers essais ont détecté **deux erreurs de fixture**, corrigées sur la branche de préparation : rôles PostgreSQL recréés dans la deuxième base (rôles globaux au cluster) et absence de points-virgules après les définitions `pg_get_functiondef`. **Le résultat final de ce test étendu reste à vérifier sur la dernière exécution CI**. Ne pas confondre un PASS des tests du helper seul avec un PASS de toutes les RPC.
+
 ## Décision opérationnelle samedi
 
 L'utilisateur a indiqué que le restaurant n'a **pas de service samedi midi avant l'ouverture du soir**. Cette information ne constitue pas une demande de fermeture récurrente de tous les samedis. **La phase A préserve donc les horaires PROD historiques, même si ceux-ci déclarent aujourd'hui un midi ouvert**. Toute fermeture hebdomadaire doit être validée séparément, sans affecter les autres jours.
