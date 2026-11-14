@@ -184,6 +184,39 @@
         return result;
     }
 
+    const WEEKDAYS=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+    // Weekday keys are stored per restaurant in Supabase; fall back to legacy
+    // shared shifts only when the weekly schedule does not exist.
+    function getShiftsForDate(date) {
+        const schedule=globalThis.RestoSharedHours?.weeklySchedule;
+        if (!validDate(date) || !schedule || typeof schedule!=='object') return getShifts();
+        const day=WEEKDAYS[new Date(date+'T12:00:00Z').getUTCDay()];
+        const entry=schedule[day];
+        if (!entry || !entry.lunch || !entry.dinner) return getShifts();
+        const result={};
+        for (const key of ['lunch','dinner']){
+            const raw=entry[key];
+            result[key]={enabled:raw.enabled===true,start:String(raw.start||''),
+                end:String(raw.end||'')};
+        }
+        return result;
+    }
+
+    // The per-restaurant weekly closure is synchronized from Supabase DEV.
+    function closedWeekendLunch(date,time) {
+        if (!validDate(date) || !Number.isFinite(minutes(time))) return false;
+        const weekday=new Date(date+'T12:00:00Z').getUTCDay();
+        if (globalThis.RestoSharedHours?.weeklySchedule) return false;
+        const weekend=globalThis.RestoSharedHours?.weekend;
+        if (!weekend?.supported || !(weekday===6&&weekend.saturdayLunchClosed || weekday===0&&weekend.sundayLunchClosed)) return false;
+        const lunch=getShifts().lunch;
+        return minutes(time)>=minutes(lunch.start)&&minutes(time)<=minutes(lunch.end);
+    }
+    function isServiceOpen(date,time) {
+        if (!validDate(date) || !Number.isFinite(minutes(time)) || closedWeekendLunch(date,time)) return false;
+        return Object.values(getShiftsForDate(date)).some(shift=>shift.enabled && minutes(time)>=minutes(shift.start) && minutes(time)<=minutes(shift.end));
+    }
+
     function validate(candidate, reservations, ignoredId) {
         const errors = [];
         if (!candidate || typeof candidate !== 'object') return {valid:false,errors:['Réservation invalide.'],conflict:null,roomConflict:null};
@@ -210,10 +243,9 @@
             errors.push('La capacité des tables sélectionnées est insuffisante.');
         }
         if (Number.isFinite(minutes(candidate.time))) {
-            const arrival = minutes(candidate.time);
-            const shifts = getShifts();
-            const allowed = Object.values(shifts).some(shift => shift.enabled && arrival >= minutes(shift.start) && arrival <= minutes(shift.end));
-            if (!allowed) errors.push('Horaire hors des services ouverts. Vérifiez les horaires dans Gestion du restaurant.');
+            if (!isServiceOpen(candidate.date,candidate.time)) errors.push(closedWeekendLunch(candidate.date,candidate.time)
+                ? 'Restaurant fermé le samedi et le dimanche midi : choisissez un autre service.'
+                : 'Horaire hors des services ouverts. Vérifiez les horaires dans Gestion du restaurant.');
         }
         if (errors.length) return { valid: false, errors: errors, conflict: null, roomConflict: null };
         const conflict = normalizeReservations(reservations).find(function (other) {
@@ -301,6 +333,9 @@
         normalizeReservations: normalizeReservations,
         validate: validate,
         getShifts: getShifts,
+        getShiftsForDate: getShiftsForDate,
+        isServiceOpen: isServiceOpen,
+        closedWeekendLunch: closedWeekendLunch,
         seatingWarnings: seatingWarnings,
         transition: transition,
         extend: extend,

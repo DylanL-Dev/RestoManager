@@ -1,7 +1,7 @@
-import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261109-supabase119';
+import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
 import {installFeedback} from './service-v3-feedback.js?v=20261108-bug01-1';
 import {installTutorial} from './service-v3-tutorial.js?v=20261108-onboarding1';
-import {prepareServiceSnapshot} from './service-snapshot.js?v=20261108-tables-display';
+import {prepareServiceSnapshot} from './service-snapshot.js?v=20261114-rm008-shared1';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 const style=document.getElementById('integrationGate');
@@ -69,20 +69,65 @@ try{
    bookingSelect.value='hotel';
    bookingSelect.dispatchEvent(new Event('change',{bubbles:true}));
   }
-  document.querySelector('#editTable').required=false;
+  // Reception can view automatically assigned tables but must never choose or change one.
+  // Update the custom picker as soon as the authenticated role is known.
   window.RestoTableChoices?.refreshAll?.();
-  // Only Reception: hide the full table field, including its caption and generated picker.
+  // Remove the non-editable table input and its entire caption from Reception forms.
   for(const id of ['bookingTable','editTable']){
    const select=document.getElementById(id);
-   const label=select?.closest('label');
-   if(label){label.hidden=true;label.style.setProperty('display','none','important');}
-   const custom=select?.parentElement?.querySelector('.tableChoice');
-   if(custom){custom.hidden=true;custom.style.setProperty('display','none','important');}
+   const field=select?.closest('label');
+   if(field){field.hidden=true;field.style.setProperty('display','none','important');}
+   const picker=select?.parentElement?.querySelector('.tableChoice');
+   if(picker){picker.hidden=true;picker.style.setProperty('display','none','important');}
   }
-  // The unified form already includes #bookingAutoTableInfo in the third column.
-  // Do not insert a separate paragraph: it shifts the modern automatic table card
-  // to a third row in Reception and breaks Restaurant/Reception alignment.
   document.querySelector('.managementIntro').textContent='Gestion · Réception';
+  // Réception can consult the shared weekly schedule, never edit it.
+  const receptionManagement=document.querySelector('[data-screen="administration"]');
+  const receptionCategories=receptionManagement?.querySelector('.rmManagementCategoryContent');
+  if(receptionCategories&&!document.getElementById('receptionWeeklyReadOnly')){
+   const card=document.createElement('section');
+   card.id='receptionWeeklyReadOnly';
+   card.className='rmReceptionWeeklyReadonly';
+   card.setAttribute('aria-label','Horaires du restaurant en lecture seule');
+   const heading=document.createElement('div');heading.className='rmReceptionWeeklyHeading';
+   const h=document.createElement('h2');h.textContent='Horaires du restaurant';
+   const badge=document.createElement('span');badge.className='rmReceptionReadonlyBadge';badge.textContent='Lecture seule';
+   heading.append(h,badge);
+   const hint=document.createElement('p');hint.className='rmReceptionWeeklyHint';hint.textContent='Planning partagé avec le Restaurant. Les horaires sont modifiables uniquement par le responsable du Restaurant.';
+   const grid=document.createElement('div');grid.className='rmReceptionWeeklyGrid';
+   grid.setAttribute('role','list');
+   card.append(heading,hint,grid);
+   receptionCategories.prepend(card);
+   const days=[['monday','Lundi'],['tuesday','Mardi'],['wednesday','Mercredi'],['thursday','Jeudi'],['friday','Vendredi'],['saturday','Samedi'],['sunday','Dimanche']];
+   const update=()=>{
+    const schedule=window.RestoSharedHours?.weeklySchedule;
+    grid.replaceChildren();
+    if(!schedule){
+     const status=document.createElement('p');status.className='muted';status.textContent='Chargement des horaires partagés…';
+     grid.append(status);return;
+    }
+    for(const [key,label] of days){
+     const row=document.createElement('div');row.className='rmReceptionWeeklyDay';row.setAttribute('role','listitem');
+     const dayName=document.createElement('strong');dayName.textContent=label;
+     row.append(dayName);
+     for(const [service,title] of [['lunch','Midi'],['dinner','Soir']]){
+      const part=schedule[key]?.[service];
+      const item=document.createElement('div');item.className='rmReceptionWeeklyService';
+      const caption=document.createElement('small');caption.textContent=title;
+      const val=document.createElement('span');
+      const open=part?.enabled===true;
+      val.textContent=open?String(part.start)+' – '+String(part.end):'Fermé';
+      val.className=open?'rmReceptionWeeklyOpen':'rmReceptionWeeklyClosed';
+      item.append(caption,val);row.append(item);
+     }
+     grid.append(row);
+    }
+   };
+   window.addEventListener('restomanager:hours',update);
+   window.addEventListener('restomanager:supabase-snapshot',update);
+   update();
+  }
+
   // The five menu destinations keep the same hierarchy on both staff roles.
   // Reception sees the read-only service overview, never restaurant passage actions.
   const reservationHeading=document.querySelector('#reservationForm .actionPanelBody h2');
@@ -304,12 +349,30 @@ try{
  document.addEventListener('click',forbidden,true);
  // The native reservation list now consumes the shared snapshot directly.
  // No duplicate prototype panel or independent local reservation list.
- window.RestoSaveSharedHours=async(shifts,duration)=>{
+ window.RestoSaveSharedArrivalLimit=async(percent)=>{
+  const value=Number(percent);
+  if(!Number.isInteger(value)||value<40||value>90||value%5!==0)throw Error('Seuil conseillé invalide.');
+  if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))
+   throw Object.assign(Error('Synchronisation indisponible.'),{code:'CAPABILITY_REQUIRED'});
+  if(profile.role!=='fb_admin')throw Error('Le réglage des arrivées est réservé au Restaurant.');
+  const {data,error}=await supabase.from('restaurant_hours')
+   .update({arrival_limit_percent:value}).eq('restaurant_id',profile.restaurant_id)
+   .select('id,arrival_limit_percent').single();
+  if(error||Number(data?.arrival_limit_percent)!==value)throw Error('Enregistrement du seuil non confirmé.');
+  await window.RestoRefreshSharedService();
+ };
+ window.RestoSaveSharedHours=async(shifts,duration,weekend,weeklySchedule)=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   if(profile.role!=='fb_admin')throw Error('La modification des horaires est réservée au responsable.');
   const values={duration};
   for(const key of ['lunch','dinner']){
    for(const field of ['enabled','start','end'])values[key+'_'+field]=shifts[key][field];
+  }
+  if(weeklySchedule&&window.RestoSharedHours?.weeklySchedule)values.weekly_schedule=weeklySchedule;
+  // Backward compatible with schemas where weekly closure columns are not deployed.
+  if(weekend&&window.RestoSharedHours?.weekend?.supported){
+   values.saturday_lunch_closed=weekend.saturdayLunchClosed===true;
+   values.sunday_lunch_closed=weekend.sundayLunchClosed===true;
   }
   const {error}=await supabase.from('restaurant_hours').update(values).eq('id',1).select('id').single();
   if(error)throw Error('Impossible d’enregistrer les horaires. Vérifiez votre connexion et réessayez.');
@@ -320,15 +383,31 @@ try{
   if(!t)throw Error('Table introuvable.');
   return t.id;
  });
+ window.RestoCreateFusionChain=async numbers=>{
+  if(window.RestoReception)throw Error('Action réservée à l’équipe Restaurant.');
+  if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))
+   throw Object.assign(Error('Synchronisation requise avant de créer une fusion.'),{code:'CAPABILITY_REQUIRED'});
+  if(!Array.isArray(numbers)||numbers.length<2||numbers.length>4||new Set(numbers).size!==numbers.length)
+   throw Error('Sélectionnez entre 2 et 4 tables différentes.');
+  const {data,error}=await supabase.rpc('create_fusion_chain_v1',{p_tables:idsFor(numbers)});
+  if(error)throw window.RestoErrors?.business(window.RestoErrors.message(error))||error;
+  await window.RestoRefreshSharedService();
+  return data;
+ };
  window.RestoChangeFusion=async(oldPair,newPair)=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
   const {error}=await supabase.rpc('change_fusion_link_v3',{p_old:oldPair?idsFor(oldPair):null,p_new:newPair?idsFor(newPair):null});
   if(error)throw window.RestoErrors?.business(error.code==='23505'?'Cette association existe déjà.':window.RestoErrors.message(error))||error;
   await window.RestoRefreshSharedService();
  };
- window.RestoInstallWalkin=async r=>{
+ window.RestoInstallWalkin=async(r,options={})=>{
   if(!window.RestoSupabaseReady||!canWrite(window.RestoServiceCapabilities))throw Object.assign(Error('Mise à jour ou synchronisation requise.'),{code:'CAPABILITY_REQUIRED'});
-  const {error}=await supabase.rpc('install_walkin_group_v3',{p_tables:idsFor(r.tables),p_guests:r.guests,p_name:r.client,p_type:r.type});
+  const params={p_tables:idsFor(r.tables),p_guests:r.guests,p_name:r.client,p_type:r.type};
+  const confirmedSecondOccupant=options.allowSameRoom===true;
+  if(confirmedSecondOccupant&&r.type!=='hotel')throw Error('Second occupant réservé aux clients de l’hôtel.');
+  const {error}=confirmedSecondOccupant
+   ?await supabase.rpc('install_walkin_group_v4',{...params,p_allow_second_occupant:true})
+   :await supabase.rpc('install_walkin_group_v3',params);
   if(error)throw error;
   await window.RestoRefreshSharedService();
  };

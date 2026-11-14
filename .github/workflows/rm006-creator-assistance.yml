@@ -1,0 +1,38 @@
+name: RM-006 Creator Assistance - isolated validation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'creator.html'
+      - 'creator-auth.js'
+      - 'creator-console.js'
+      - 'creator-console.css'
+      - 'creator-admin.js'
+      - 'tests/rm006-creator-assistance.test.cjs'
+      - 'tests/browser/rm006-creator.cjs'
+      - '.github/workflows/rm006-creator-assistance.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  creator-isolated:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Static and state-update assertions
+        run: node --test tests/rm006-creator-assistance.test.cjs
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Creator root dashboard on mobile, tablet and desktop
+        run: node tests/browser/rm006-creator.cjs
+      - name: Report
+        run: |
+          echo "RM-006 Creator: counters, report resolution, mobile menu, PROD environment unchanged: PASS" >> "$GITHUB_STEP_SUMMARY"

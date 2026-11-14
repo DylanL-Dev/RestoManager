@@ -4,7 +4,7 @@ export function installOwnerInbox({client}){
  const root=document.getElementById('ownerInbox');
  if(!root)return;
  const $=(tag,klass,text)=>{const n=document.createElement(tag);if(klass)n.className=klass;if(text!==undefined)n.textContent=text;return n;};
- let busy=false,filter='all';
+ let busy=false,filter='open';
  root.replaceChildren();
  const top=$('div','ownerInboxHead');
  const title=$('h2','', 'Signalements des établissements');
@@ -13,7 +13,7 @@ export function installOwnerInbox({client}){
  top.append(title,refresh);
  const summary=$('p','muted','Liste privée des messages transmis depuis Gestion.');
  const filters=$('div','ownerReportFilters');
- const chips=[['all','Tous'],['new','Nouveaux'],['reviewing','En cours'],['resolved','Résolus']];
+ const chips=[['open','À traiter'],['all','Tous'],['new','Nouveaux'],['reviewing','En cours'],['resolved','Résolus']];
  const buttons=new Map();
  const list=$('div','ownerReportList');
  const feedback=$('p','muted','');feedback.id='ownerReportsFeedback';feedback.setAttribute('role','status');
@@ -36,9 +36,9 @@ export function installOwnerInbox({client}){
    const {data:restaurants,error:restaurantError}=await client.from('restaurants').select('id,name');
    if(restaurantError)throw restaurantError;
    const names=new Map((restaurants||[]).map(r=>[r.id,r.name]));
-   const visible=(reports||[]).filter(r=>filter==='all'||r.status===filter);
-   feedback.textContent=(reports||[]).length+' signalement(s) enregistré(s) · '+visible.length+' affiché(s).';
-   if(!visible.length)list.append($('p','ownerReportEmpty','Aucun signalement dans cette catégorie.'));
+   const visible=(reports||[]).filter(r=>filter==='all'||(filter==='open'?r.status!=='resolved':r.status===filter));
+   feedback.textContent=(reports||[]).length+' signalement(s) dans l’historique · '+visible.length+' affiché(s) · '+(reports||[]).filter(r=>r.status==='resolved').length+' résolu(s).';
+   if(!visible.length)list.append($('p','ownerReportEmpty',filter==='open'?'Aucun signalement à traiter.':'Aucun signalement dans cette catégorie.'));
    for(const item of visible){
     const article=$('article','ownerReport');
     const row=$('div','ownerReportTop');
@@ -66,6 +66,8 @@ export function installOwnerInbox({client}){
       const {error}=await client.from('platform_reports').update({status:selector.value}).eq('id',item.id);
       if(error)throw error;
       item.status=selector.value;saveState.textContent='Statut enregistré';
+      window.dispatchEvent(new Event('restomanager:root-reports-updated'));
+      if(filter==='open'&&item.status==='resolved')void refreshReports();
      }catch{
       selector.value=old;saveState.textContent='Impossible de modifier ce statut.';
      }finally{selector.disabled=false}

@@ -1,8 +1,8 @@
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 // Native V3 -> Supabase reservation creation. No direct table inserts or local writes.
-import {setupBookingDraft} from './booking-draft.js?v=20261110-clone-midnight2';
+import {setupBookingDraft} from './booking-draft.js?v=20261113-exterior-required1';
 import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
-import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-supabase119';
+import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
 
 function requireWrite(){
  if(navigator.onLine===false||!window.RestoSupabaseReady)throw window.RestoErrors?.business('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.')||Error('Connexion interrompue.');
@@ -22,17 +22,37 @@ function parisDateTime(date,time){
  if(actual!==date+'T'+time)throw Error('Horaire inexistant lors du changement d’heure');
  return utc.toISOString();
 }
-async function saveReceptionBooking(candidate,id){
+async function saveReceptionBooking(candidate,id,{explicitTableChoice=false}={}){
+ if(explicitTableChoice)throw Error('Seule l’équipe Restaurant peut choisir ou modifier une table.');
  requireWrite();
  const {supabase}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  const start=parisDateTime(candidate.date,candidate.time);
- const name=candidate.client.trim();
+ const name=String(candidate.client||'').trim()||(candidate.type==='hotel'?'Chambre '+String(candidate.hotelRoom||'').trim():'');
+ if(candidate.type==='exterieur'&&(!name||/^(client[ ]+ext[eé]rieur|sans[ ]+nom|anonyme)$/i.test(name)))throw window.RestoErrors?.business('Le nom du client extérieur est obligatoire.')||Error('Nom du client extérieur obligatoire');
  const notes=encodeBookingDetails(candidate);
- const {data,error}=await supabase.rpc('reception_update_reservation_v4',{
+ const args={
   p_reservation_id:id,p_expected_version:window.ReservationEdit.requireVersion(candidate.editVersion),
   p_guest_name:name,p_hotel_room:candidate.type==='hotel'?(candidate.hotelRoom?.trim()||null):null,
-  p_party_size:Number(candidate.guests),p_starts_at:start,p_ends_at:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),p_notes:notes
- });
+  p_party_size:Number(candidate.guests),p_starts_at:start,
+  p_ends_at:new Date(Date.parse(start)+candidate.duration*60000).toISOString(),
+  p_notes:notes
+ };
+ // Reception keeps automatic table assignment unless the user explicitly
+ // selected another table during an edit. This endpoint validates the same
+ // version, tenant, status, capacity and conflicts as the F&B editor.
+ if(explicitTableChoice){
+  const snapshot=await loadSharedService();
+  const byNumber=new Map(snapshot.tables.filter(t=>t.active)
+   .map(t=>[Number(String(t.label).trim().replace(/^table\s*/i,'')),t.id]));
+  args.p_table_ids=candidate.tables.map(number=>{
+   const tableId=byNumber.get(Number(number));
+   if(!tableId)throw window.RestoErrors?.business('Table non disponible. Actualisez les propositions.')||Error('Table indisponible');
+   return tableId;
+  });
+ }
+ const {data,error}=await supabase.rpc(explicitTableChoice
+  ?'reception_update_reservation_with_table_v1'
+  :'reception_update_reservation_v4',args);
  if(error)throw editError(error);
  const tables=TableStore.get().tables;
  candidate.tables=data.tables.map(id=>tables.find(t=>t.id===id)?.number).filter(n=>n!=null);
@@ -70,11 +90,11 @@ export async function deleteCancelledSharedBooking(id){
 }
 window.RestoDeleteCancelledSharedBooking=deleteCancelledSharedBooking;
 
-export async function updateSharedBooking(candidate){
+export async function updateSharedBooking(candidate,{explicitTableChoice=false}={}){
  requireWrite();
  if(navigator.onLine===false||!window.RestoSupabaseReady)throw Error('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.');
  window.ReservationEdit.requireVersion(candidate.editVersion);
- if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id);
+ if(window.RestoReception)return saveReceptionBooking(candidate,candidate.id,{explicitTableChoice:false});
  const {supabase,requireStaff,loadSharedService}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
  await requireStaff();
  const snapshot=await loadSharedService();
@@ -122,6 +142,59 @@ export async function setRestaurantTableActiveShared(id,active){
  if(error)throw error;
  return data;
 }
+
+async function roomAdminClient(){
+ requireWrite();
+ const {requireStaff}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
+ const {profile}=await requireStaff();
+ if(profile.role!=='fb_admin')throw window.RestoErrors?.business('Seul le compte Restaurant peut gérer les salles.')||Error('Accès refusé.');
+ return profile;
+}
+export async function createRestaurantRoomShared(name){
+ const profile=await roomAdminClient();
+ const label=String(name||'').trim();
+ if(!label||label.length>60)throw window.RestoErrors?.business('Indiquez un nom de salle de 1 à 60 caractères.')||Error('Nom invalide.');
+ const {data:existing,error:readError}=await supabase.from('restaurant_rooms').select('name,sort_order').eq('restaurant_id',profile.restaurant_id).eq('active',true);
+ if(readError)throw readError;
+ if((existing||[]).some(r=>r.name.trim().toLocaleLowerCase('fr')===label.toLocaleLowerCase('fr')))
+  throw window.RestoErrors?.business('Cette salle existe déjà.')||Error('Salle existante.');
+ const order=Math.max(0,...(existing||[]).map(r=>Number(r.sort_order)||0))+1;
+ const {data,error}=await supabase.from('restaurant_rooms').insert({restaurant_id:profile.restaurant_id,name:label,active:true,sort_order:order}).select('id,name').single();
+ if(error)throw error;
+ return data;
+}
+export async function renameRestaurantRoomShared(id,name){
+ const profile=await roomAdminClient();
+ const label=String(name||'').trim();
+ if(!id)throw window.RestoErrors?.business('Salle introuvable.')||Error('Salle introuvable.');
+ if(!label||label.length>60)throw window.RestoErrors?.business('Indiquez un nom de salle de 1 à 60 caractères.')||Error('Nom invalide.');
+ const {data:rooms,error:readError}=await supabase.from('restaurant_rooms').select('id,name').eq('restaurant_id',profile.restaurant_id).eq('active',true);
+ if(readError)throw readError;
+ const current=(rooms||[]).find(room=>room.id===id);
+ if(!current)throw window.RestoErrors?.business('Cette salle n’est plus disponible. Actualisez la liste.')||Error('Salle introuvable.');
+ if((rooms||[]).some(room=>room.id!==id&&room.name.trim().toLocaleLowerCase('fr')===label.toLocaleLowerCase('fr')))
+  throw window.RestoErrors?.business('Une autre salle porte déjà ce nom.')||Error('Salle existante.');
+ if(current.name===label)return {id,name:label};
+ // The row identity and table assignments stay unchanged; only the label is updated.
+ const {data,error}=await supabase.from('restaurant_rooms').update({name:label}).eq('restaurant_id',profile.restaurant_id).eq('id',id).eq('active',true).select('id,name').single();
+ if(error)throw error;
+ return data;
+}
+window.RestoRenameRestaurantRoom=renameRestaurantRoomShared;
+
+export async function deactivateRestaurantRoomShared(id){
+ const profile=await roomAdminClient();
+ if(!id)throw Error('Salle introuvable.');
+ const {data:tables,error:tableError}=await supabase.from('restaurant_tables').select('id').eq('restaurant_id',profile.restaurant_id).eq('room_id',id).limit(1);
+ if(tableError)throw tableError;
+ if(tables?.length)throw window.RestoErrors?.business('Cette salle contient des tables, même désactivées. Déplacez-les avant de désactiver la salle.')||Error('Salle non vide.');
+ const {data,error}=await supabase.from('restaurant_rooms').update({active:false}).eq('restaurant_id',profile.restaurant_id).eq('id',id).eq('active',true).select('id').single();
+ if(error)throw error;
+ return data;
+}
+window.RestoCreateRestaurantRoom=createRestaurantRoomShared;
+window.RestoDeactivateRestaurantRoom=deactivateRestaurantRoomShared;
+
 window.RestoCreateRestaurantTable=createRestaurantTableShared;
 window.RestoSetRestaurantTableActive=setRestaurantTableActiveShared;
 

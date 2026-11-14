@@ -16,13 +16,28 @@ const receptionService=document.createElement('section');receptionService.id='re
 const management=screens.get('administration');
 if(management){
  const hours=document.getElementById('restaurantShifts'),tables=document.getElementById('administration'),reports=document.getElementById('historyStats'),closure=document.getElementById('serviceClosure');
- const intro=document.createElement('header');intro.className='managementIntro';intro.innerHTML='<span class="managementEyebrow">ESPACE DE GESTION</span><h1>Gestion du restaurant</h1><p>Retrouvez les réglages et les bilans de votre établissement.</p>';
+ const intro=document.createElement('header');intro.className='managementIntro';intro.innerHTML='<span class="managementEyebrow">ESPACE DE GESTION</span><h1>Gestion du restaurant</h1><p>Choisissez une rubrique pour gérer votre établissement.</p>';
  management.prepend(intro);
+ const workspace=document.createElement('div');workspace.className='rmManagementWorkspace';
+ const categoryNav=document.createElement('nav');categoryNav.className='rmManagementCategoryNav';categoryNav.setAttribute('aria-label','Rubriques de gestion');
+ const categoryContent=document.createElement('div');categoryContent.className='rmManagementCategoryContent';
+ workspace.append(categoryNav,categoryContent);management.append(workspace);
+ const categoryGroups=[];
+ function activateCategory(id,{focus=false}={}){
+  for(const entry of categoryGroups){
+   const active=entry.id===id;
+   entry.wrapper.classList.toggle('rmManagementCategoryActive',active);
+   entry.wrapper.open=active;
+   entry.button.classList.toggle('active',active);
+   if(active)entry.button.setAttribute('aria-current','page');else entry.button.removeAttribute('aria-current');
+  }
+  if(focus&&window.matchMedia('(max-width: 900px)').matches)categoryContent.scrollIntoView({behavior:'smooth',block:'start'});
+ }
  function group(id,symbol,title,description,element,opened){
   if(!element)return;
   const wrapper=document.createElement('details');wrapper.className='managementGroup';wrapper.id=id;wrapper.open=!!opened;
   const summary=document.createElement('summary');summary.className='managementGroupHead';
-  const badge=document.createElement('span');badge.className='managementGroupIcon';const iconNames={clock:'clock-3',tables:'layout-grid',check:'check-check',report:'chart-no-axes-column'};
+  const badge=document.createElement('span');badge.className='managementGroupIcon';const iconNames={clock:'clock-3',tables:'layout-grid',fusion:'link-2',check:'check-check',report:'chart-no-axes-column'};
   badge.innerHTML='<i data-lucide="'+(iconNames[symbol]||'settings')+'"></i>';badge.setAttribute('aria-hidden','true');
   const words=document.createElement('span');words.className='managementGroupWords';
   const strong=document.createElement('strong');strong.textContent=title;
@@ -31,13 +46,30 @@ if(management){
   const chevron=document.createElement('span');chevron.className='managementChevron';chevron.innerHTML='<i data-lucide="chevron-down"></i>';chevron.setAttribute('aria-hidden','true');
   summary.append(badge,words,chevron);
   const body=document.createElement('div');body.className='managementGroupBody';body.append(element);
-  wrapper.append(summary,body);management.append(wrapper);
+  wrapper.append(summary,body);categoryContent.append(wrapper);
+  const button=document.createElement('button');button.type='button';button.className='rmManagementCategoryButton';
+  const symbolIcon=document.createElement('i');symbolIcon.dataset.lucide=iconNames[symbol]||'settings';symbolIcon.setAttribute('aria-hidden','true');
+  const navWords=document.createElement('span');navWords.className='rmManagementCategoryWords';
+  const label=document.createElement('strong');label.textContent=title;
+  const hint=document.createElement('small');hint.textContent=description;
+  navWords.append(label,hint);button.append(symbolIcon,navWords);
+  button.dataset.category=id;
+  button.addEventListener('click',()=>activateCategory(id,{focus:true}));
+  categoryNav.append(button);
+  categoryGroups.push({id,wrapper,button});
+  summary.addEventListener('click',event=>{event.preventDefault();activateCategory(id)});
   return wrapper;
  }
- group('manageHours','clock','Restaurant & horaires','Services du midi et du soir',hours,true);
- if(tables){tables.open=false;group('manageTables','tables','Tables & salle','Ajouter et organiser les tables',tables,false)}
- group('manageClosure','check','Clôture du service','Clôture et archives du service',closure,false);
- group('manageReports','report','Rapports & statistiques','Historique, couverts et PDF',reports,false);
+ const fusions=tables?.querySelector('.fusionAdmin');
+ if(fusions)fusions.remove();
+ group('manageHours','clock','Salles & horaires','Salles et services',hours,true);
+ if(tables){tables.open=true;group('manageTables','tables','Tables','Capacité et configuration',tables,false)}
+ group('manageFusions','fusion','Tables fusionnables','Groupes de 2 à 4 tables',fusions,false);
+ group('manageClosure','check','Clôture du service','Fermeture et archives',closure,false);
+ group('manageReports','report','Rapports & statistiques','Historique et PDF',reports,false);
+ const initialCategory=location.hash==='#manageFusions'?'manageFusions':'manageHours';
+ activateCategory(initialCategory);
+ window.RestoManagementCategories={open:id=>{if(categoryGroups.some(group=>group.id===id))activateCategory(id,{focus:true})}};
 }
 const links=[...document.querySelectorAll('.mobileNavItem')],sidebar=[...document.querySelectorAll('.sidebar a[href^="#"]')];
 const titles={tables:'Votre service',reservations:'Réservations',reservationForm:'Ajouter un client',passages:'Suivi du service',administration:'Gestion'};
@@ -63,7 +95,7 @@ function bookingDirty(){const form=document.getElementById('bookingForm');return
 function walkinDirty(){const form=document.getElementById('walkinForm');return current==='passages'&&walkinBaseline!==null&&form&&!window.RestoReception&&walkinBaseline!==captureForm(form)}
 function updateBack(){
  const editor=editForm();
- // The home screen never needs an in-app Back button, even with history entries.
+ // Home has no contextual Back action, even when navigation history has depth.
  const visible=!!editor||current!=='tables';
  toolbar.hidden=!visible;
  context.textContent=editor?'Modifier une réservation':titles[current]||'RestoManager';

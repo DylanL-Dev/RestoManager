@@ -23,6 +23,11 @@ async function rpc(role,name,args){
  calls.push({role,name,args:structuredClone(args)});
  if(forcedError)return {data:null,error:forcedError};
  if(name==='booking_draft_v3')return {data:{tables:[],holds:[],seconds:180},error:null};
+ if(name==='install_walkin_group_v4'){
+  assert.equal(role,'fb_admin','Second room occupant requires F&B privileges');
+  assert.equal(args.p_allow_second_occupant,true,'Server must see explicit second-occupant confirmation');
+  return {data:uuid(),error:null};
+ }
  const record=records.find(r=>r.id===args.p_reservation_id);
  if(!record)return {data:null,error:{code:'P0002',message:'internal private SQL object'}};
  if(name==='cancel_reservation_v3'){record.status='cancelled';record.edit_version=uuid();return {data:null,error:null}}
@@ -53,12 +58,21 @@ async function open(browser,origin,role,viewport={width:390,height:844},timezone
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.clock.install({time:new Date(clock)});
  await page.goto(origin+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
+ // The tutorial is part of the real first-visit UI. Close it through its
+ // accessible action before checking the underlying service controls.
+ const welcome=page.locator('#restoTourWelcome');
+ await welcome.waitFor({state:'visible',timeout:1500}).catch(()=>{});
+ if(await welcome.isVisible()){
+  await welcome.locator('.restoTourLater').click();
+  await welcome.waitFor({state:'hidden'});
+ }
  return {context,page,errors};
 }
 async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();assert.match(await page.locator('#reservationDate').locator('..').innerText(),/Choisir une date/);await page.locator('[data-reservation-action=edit]').first().click();await page.locator('#editForm').waitFor({state:'visible'})}
 async function submit(page){await page.locator('#editForm button[type=submit]').click()}
 async function saved(page){await page.waitForFunction(()=>document.getElementById('editForm').hidden)}
 async function message(page,match){await page.waitForFunction(value=>document.getElementById('reservationMessage').textContent.includes(value),match)}
+async function successToast(page,match){await page.waitForFunction(value=>{const toast=document.getElementById('editSuccessToast');return !toast.hidden&&toast.textContent.includes(value)&&!document.getElementById('reservationMessage').textContent.includes(value)},match)}
 async function push(page){await page.evaluate(()=>window.dispatchEvent(new Event('mission3:push')));await page.waitForFunction(()=>window.RestoSupabaseReady===true)}
 async function clean(view){assert.deepEqual(view.errors,[]);await view.context.close()}
 function pass(name){passed++;console.log('PASS mock UI '+name)}
@@ -71,7 +85,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    reset({historical:true});const view=await open(browser,origin,role);await edit(view.page);
    const before=records[0].notes;assert.ok((await view.page.locator('#editNotes').inputValue()).length>1000);assert.ok((await view.page.locator('#editAllergies').inputValue()).length>500);
    await view.page.locator('#editHotelRoom').fill('202');await submit(view.page);await saved(view.page);
-   assert.equal(records[0].notes,before);assert.equal(records[0].hotel_room,'202');pass(role+' historical long notes/allergies preserved on room edit');
+   assert.equal(records[0].notes,before);assert.equal(records[0].hotel_room,'202');await successToast(view.page,'Réservation modifiée.');pass(role+' historical long notes/allergies preserved on room edit');
    await edit(view.page);const count=calls.length;await view.page.locator('#editNotes').fill('X'.repeat(1001));await submit(view.page);
    assert.equal(calls.length,count);assert.equal((await view.page.locator('#editNotes').inputValue()).length,1001);assert.equal(await view.page.locator('#editNotes').getAttribute('aria-invalid'),'true');
    assert.equal(records[0].notes,before);await view.page.locator('#editNotes').fill('Note raccourcie');await view.page.locator('#editAllergies').fill('Noix');await submit(view.page);await saved(view.page);pass(role+' explicit changed text limits preserve draft');await clean(view);
@@ -79,11 +93,11 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   // Simulated server reallocation; real selection logic is tested in isolated PostgreSQL.
   reset();autoRightSize=true;const resized=await open(browser,origin,'reception');await edit(resized.page);
   await resized.page.locator('#editGuests').fill('10');await submit(resized.page);await saved(resized.page);
-  await message(resized.page,'table 8');
+  await successToast(resized.page,'table 8');
   assert.equal(records[0].assignedTableId,'table-8');
   await resized.page.waitForFunction(()=>window.RestoSharedReservations?.find(r=>r.id==='fictional-hotel')?.tables?.includes(8));
   await edit(resized.page);await resized.page.locator('#editGuests').fill('2');
-  await submit(resized.page);await saved(resized.page);await message(resized.page,'table 3');
+  await submit(resized.page);await saved(resized.page);await successToast(resized.page,'table 3');
   assert.equal(records[0].assignedTableId,'table-3');
   pass('Reception 2→10→2 automatically reassigned table is shown in confirmation');await clean(resized);
 
@@ -110,13 +124,53 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    forcedError=null;records[0].status='cancelled';records[0].edit_version=uuid();await push(view.page);await view.page.locator('#editReviewCurrent').click();await view.page.locator('#editReloadCurrent').click();await view.page.getByRole('button',{name:'Remplacer ma saisie',exact:true}).click();await message(view.page,'terminée ou annulée');assert.equal(await view.page.locator('#editNotes').inputValue(),'Saisie non enregistrée');pass(role+' safe error and cancellation cannot restore stale reservation');await clean(view);
   }
   reset();const management=await open(browser,origin,'fb_admin');
-  await management.page.evaluate(()=>window.RestoScreens.show('administration'));await management.page.locator('#manageTables > summary').click();await management.page.locator('#administration > summary').click();
+  await management.page.evaluate(()=>window.RestoScreens.show('administration'));await management.page.locator('.rmManagementCategoryButton[data-category="manageTables"]').click();
   sharedChanges={lunchStart:'11:30:00',duration:120,firstTableSeats:8,fusionLinks:[{table_a:'table-3',table_b:'table-4'}]};await push(management.page);
   await management.page.waitForFunction(()=>document.getElementById('shift-lunch-start').value==='11:30');
   assert.equal(await management.page.locator('#restaurantDefaultDuration').inputValue(),'120');assert.match(await management.page.locator('#tableAdminList').innerText(),/Table 1 · 1–8 places/);
   assert.deepEqual(await management.page.evaluate(()=>window.RestoFusion.pairs()),[[3,4]]);
+  // RM-005: a chain of authorised neighbouring pairs enables 6- and 8-cover fusions.
+  sharedChanges.fusionLinks=[
+   {table_a:'table-3',table_b:'table-4'},
+   {table_a:'table-4',table_b:'table-5'},
+   {table_a:'table-5',table_b:'table-6'}
+  ];await push(management.page);
+  const fusionGroups=await management.page.evaluate(()=>window.RestoFusion.pairs());
+  assert.ok(fusionGroups.some(group=>group.join(',')==='3,4,5'),'Three 2-seat tables can form 6 places');
+  assert.ok(fusionGroups.some(group=>group.join(',')==='3,4,5,6'),'Four linked 2-seat tables can form 8 places');
+  assert.ok(fusionGroups.every(group=>group.length<=4),'Only safe 2-, 3- and 4-table combinations are generated');
+  sharedChanges.fusionLinks=[{table_a:'table-3',table_b:'table-4'}];await push(management.page);
   await management.page.evaluate(()=>{const input=document.getElementById('shift-lunch-start');input.value='11:45';input.dispatchEvent(new Event('input',{bubbles:true}))});await push(management.page);
   assert.equal(await management.page.locator('#shift-lunch-start').inputValue(),'11:45');pass('atomic snapshot refreshes hours, tables and fusions without resetting an unrelated unsaved hours draft');await clean(management);
+  // RM-005 responsive Gestion categories and visual organization, isolated mocked data.
+  for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
+   reset();const ui=await open(browser,origin,'fb_admin',viewport);
+   await ui.page.evaluate(()=>window.RestoScreens.show('administration'));
+   await ui.page.locator('.rmManagementCategoryButton[data-category="manageFusions"]').click();
+   assert.equal(await ui.page.locator('#manageFusions').isVisible(),true,'Fusion category is visible');
+   assert.equal(await ui.page.locator('#manageTables').isVisible(),false,'Unrelated category is hidden');
+   assert.equal(await ui.page.locator('.rmFusionTableHead').isVisible(),viewport.width>1050,'Desktop shows detailed fusion table header');
+   const tableCount=await ui.page.locator('.rmFusionTableCard').count();
+   assert.ok(tableCount>=3,'At least three selectable fusion cards');
+   await ui.page.locator('.rmFusionTableCard').nth(0).click();
+   await ui.page.locator('.rmFusionTableCard').nth(1).click();
+   await ui.page.locator('.rmFusionTableCard').nth(2).click();
+   assert.match(await ui.page.locator('.rmFusionPreviewTitle').innerText(),/3 tables/);
+   await ui.page.waitForFunction(()=>document.querySelectorAll('.rmFusionPreviewIllustration .rmFusionIllustratedTable svg').length===3,null,{timeout:5000});
+   assert.equal(await ui.page.locator('.rmFusionPreviewIllustration .rmFusionIllustratedTable svg').count(),3);
+   const metrics=await ui.page.evaluate(()=>({
+    overflow:Math.max(0,document.documentElement.scrollWidth-innerWidth),
+    categoryButtons:document.querySelectorAll('.rmManagementCategoryButton').length,
+    filters:document.querySelectorAll('.rmFusionGroupFilter').length,
+    hiddenOther:!document.getElementById('manageTables').classList.contains('rmManagementCategoryActive'),
+    selected:document.querySelectorAll('.rmFusionTableCard.isSelected').length,
+    previewIcons:document.querySelectorAll('.rmFusionCheckRow svg').length
+   }));
+   assert.ok(metrics.overflow<=3,'No page-level horizontal overflow at '+viewport.width+'px');
+   assert.ok(metrics.categoryButtons>=5&&metrics.filters===4&&metrics.hiddenOther&&metrics.selected===3&&metrics.previewIcons===3);
+   assert.deepEqual(ui.errors,[]);await clean(ui);
+   pass('Fusion Gestion categories responsive '+viewport.width+'px');
+  }
   for(const role of ['fb_admin','reception'])for(const viewport of [{width:390,height:844},{width:768,height:1024},{width:1440,height:900}]){
    reset();const view=await open(browser,origin,role,viewport);
    // Navigation is identical in order and destination on both profiles;
@@ -159,11 +213,9 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await appLink('reservations');
    await view.page.goBack({waitUntil:'domcontentloaded'});
    await view.page.waitForFunction(()=>window.RestoScreens.current()==='tables');
-   // Regression: returning home through navigation must hide Back even if depth > 0.
    await appLink('reservations');
    await appLink('tables');
-   assert.equal(await view.page.evaluate(()=>window.RestoScreens.current()),'tables');
-   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false,'Back must not appear on home after multiple navigations');
+   assert.equal(await view.page.locator('#navBackBtn').isVisible(),false,'Back must be hidden on home even after navigation history');
    await appLink('reservationForm');
    if(role==='fb_admin'){
     await view.page.locator('.restoAddChoiceOverlay').waitFor({state:'visible'});
@@ -234,7 +286,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
      windowHeight:innerHeight};
    });
    assert.equal(sidebarInfo.footerRole,role==='reception'?'Espace Réception':'Espace Restaurant');
-   assert.equal(sidebarInfo.footerName,'À l’Épicerie');
+   assert.equal(sidebarInfo.footerName,'À l’Épicerie — Mercure Rouen Centre Champ-de-Mars');
    assert.equal(sidebarInfo.footerIcon,true,'Sidebar establishment icon must render locally');
    if(viewport.width>900){
     assert.equal(sidebarInfo.position,'sticky');
@@ -288,7 +340,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await view.page.evaluate(()=>window.RestoScreens.show('tables'));
    pass(role+' '+viewport.width+'px staff private report form without owner data access');
    assert.equal(await view.page.locator('#teamSpace span').innerText(),role==='reception'?'Espace Réception':'Espace Restaurant');
-   assert.equal(await view.page.locator('#teamVenue').innerText(),'À l’Épicerie');
+   assert.equal(await view.page.locator('#teamVenue').innerText(),establishmentFull);
    assert.equal(await view.page.locator('#teamVenue').getAttribute('title'),establishmentFull);
    assert.ok(await view.page.locator('#teamSpace svg').count(),'Role identity must have a Lucide icon');
    assert.ok(await view.page.locator('.serviceVenue svg').count(),'Establishment must have a Lucide icon');
@@ -318,13 +370,22 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    assert.ok(presentation.width<=presentation.viewport+1,'Intro must not create horizontal overflow');
    const headerLayout=await view.page.evaluate(()=>({
     viewport:innerWidth,scrollWidth:document.documentElement.scrollWidth,
-    refresh:document.getElementById('refreshAppBtn').getBoundingClientRect().toJSON()
+    refresh:document.getElementById('refreshAppBtn').getBoundingClientRect().toJSON(),
+    refreshDisplay:getComputedStyle(document.getElementById('refreshAppBtn')).display,
+    profile:document.getElementById('mobileAccountToggle').getBoundingClientRect().toJSON(),
+    mobileRefreshPresent:!!document.getElementById('mobileAccountRefresh')
    }));
    assert.ok(headerLayout.scrollWidth<=headerLayout.viewport+1,'Header must not overflow viewport');
-   assert.ok(headerLayout.refresh.width>=42,'Refresh button must keep its touch target');
+   if(viewport.width<=900){
+    assert.equal(headerLayout.refreshDisplay,'none','Compact header must hide the desktop refresh button');
+    assert.ok(headerLayout.profile.width>=42,'Account menu trigger must keep its touch target');
+    assert.equal(headerLayout.mobileRefreshPresent,true,'Refresh action must remain available in the account menu');
+   }else{
+    assert.ok(headerLayout.refresh.width>=42,'Desktop refresh button must keep its touch target');
+   }
    pass(role+' '+viewport.width+'px responsive service identity and naturally wrapping heading');
    // Each indicator stays data-driven; only the Lucide presentation changes.
-   const kpiTitles=['Clients présents','Clients attendus','Tables occupées','Places sur tables libres'];
+   const kpiTitles=['Clients installés','Clients attendus','Tables occupées','Places sur tables libres'];
    const iconChecks=await view.page.locator('#kpis .kpi').evaluateAll(cards=>cards.map(card=>({
     title:card.querySelector('.kpiLabel')?.textContent,
     svg:!!card.querySelector('.kpiHead svg'),
@@ -341,7 +402,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    }));
    assert.equal(current.title,'Occupation actuelle');
    assert.equal(current.icon,true,'Occupation actuelle must use an offline Lucide icon');
-   assert.equal(current.count,2,'Occupation chart must retain its existing two progress indicators');
+   assert.equal(current.count,1,'Approved compact Occupation actuelle chart shows one active occupancy indicator');
    pass(role+' '+viewport.width+'px four KPI and occupancy icons displayed with unchanged values');
    // All service subsections use local Lucide without changing business metrics.
    if(role==='reception'){
@@ -366,17 +427,17 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.equal(overview.progress,1,'Reception service pressure meter must remain intact');
     assert.ok(overview.width<=overview.viewport+1,'Reception overview must not overflow horizontally');
    }else{
-    await view.page.waitForFunction(()=>document.querySelectorAll('.rushArrivalBreakdownItem').length===3);
-    await view.page.waitForFunction(()=>document.querySelectorAll('.rushBreakdownLabel svg').length===3);
+    await view.page.waitForFunction(()=>document.querySelectorAll('.rushArrivalBreakdownItem').length===2);
+    await view.page.waitForFunction(()=>document.querySelectorAll('.rushArrivalBreakdownItem svg').length===2);
     const section=await view.page.locator('#rushDashboard').evaluate(root=>({
      heading:!!root.querySelector('.rushDashHead .serviceIconHeading svg'),
      limit:!!root.querySelector('.rushLoadLabel svg'),
-     statusIcons:[...root.querySelectorAll('.rushBreakdownLabel')].map(x=>!!x.querySelector('svg')),
-     statusLabels:[...root.querySelectorAll('.rushBreakdownLabel')].map(x=>x.textContent),
+     statusIcons:[...root.querySelectorAll('.rushArrivalBreakdownItem')].map(x=>!!x.querySelector('svg')),
+     statusLabels:[...root.querySelectorAll('.rushArrivalBreakdownItem .rmForecastMetricText span')].map(x=>x.textContent),
      progress:root.querySelectorAll('[role="progressbar"]').length
     }));
     assert.ok(section.heading&&section.limit&&section.statusIcons.every(Boolean));
-    assert.deepEqual(section.statusLabels,['Encore à venir','Heure prévue dépassée','Déjà arrivés / installés']);
+    assert.deepEqual(section.statusLabels,['Encore attendus sur ce créneau','Encore installés de ce créneau (passages inclus)']);
     assert.ok(section.progress>=1,'Arrival load progressbar must remain present');
     assert.ok(await view.page.locator('#tables .panelHead h1 svg').count());
     assert.ok(await view.page.locator('#upcoming').locator('xpath=..').locator('h2 svg').count());
@@ -425,6 +486,134 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     }));
     assert.equal(state.n,2);
     assert.ok(state.text.length>0,'Existing table recommendation still updates');
+    // RM-005 visual cards mirror the real table-availability select (single source of truth).
+    const deck=await form.evaluate(el=>{
+     const options=[...el.querySelectorAll('#walkinTable option')].filter(o=>o.value&&!o.disabled);
+     const cards=[...el.querySelectorAll('#walkinTableDeck .walkinTableCard')];
+     return {
+      options:options.map(o=>o.value),
+      cards:cards.map(o=>o.getAttribute('aria-label')),
+      selected:cards.filter(o=>o.getAttribute('aria-pressed')==='true').length,
+      summary:el.querySelector('#walkinSelectedText')?.textContent,
+      heading:el.querySelector('.walkinDeckHeading h3')?.textContent
+     };
+    });
+    assert.ok(deck.heading?.includes('Tables disponibles maintenant'),'Passage card deck must have a clear heading');
+    const flexLayout=await form.evaluate(el=>{
+     const recommended=el.querySelector('#walkinRecommendedCards');
+     const other=el.querySelector('#walkinOtherCards');
+     const cards=[...recommended.querySelectorAll('.walkinTableCard')];
+     const rects=cards.map(card=>card.getBoundingClientRect());
+     return {
+      display:getComputedStyle(recommended).display,
+      direction:getComputedStyle(recommended).flexDirection,
+      otherDisplay:getComputedStyle(other).display,
+      otherWrap:getComputedStyle(other).flexWrap,
+      sameRow:rects.length<2||rects.every(rect=>Math.abs(rect.top-rects[0].top)<2),
+      documentOverflow:document.documentElement.scrollWidth-innerWidth
+     };
+    });
+    assert.equal(flexLayout.display,'flex','Recommended cards must render as flex');
+    assert.equal(flexLayout.direction,'row','Recommended cards must stay horizontal');
+    assert.equal(flexLayout.otherDisplay,'flex','Other available cards must render as flex');
+    assert.equal(flexLayout.otherWrap,'wrap','Other tables should wrap within viewport');
+    assert.ok(flexLayout.sameRow,'Recommended table cards must remain on one row');
+    assert.ok(flexLayout.documentOverflow<=2,'Flex Row must not create horizontal page overflow');
+    const shortlist=await form.evaluate(el=>({
+     recommended:el.querySelectorAll('#walkinRecommendedCards .walkinTableCard').length,
+     others:el.querySelectorAll('#walkinOtherCards .walkinTableCard').length,
+     manual:!!el.querySelector('#walkinManualTable'),
+     icon:!!el.querySelector('#walkinManualTable svg'),
+     selected:el.querySelectorAll('#walkinTableDeck .walkinTableCard[aria-pressed="true"]').length
+    }));
+    assert.ok(shortlist.recommended<=3,'Maximum three recommendations');
+    assert.ok(shortlist.others<=(viewport.width>=700?3:2),'Responsive other-table limit');
+    assert.ok(shortlist.manual,'Full manual table picker must be available');
+    assert.ok(shortlist.icon,'Manual picker must use Lucide icon');
+    assert.ok(deck.cards.length<=(viewport.width>=700?6:5),'Responsive shortlist maximum');
+    const duplicateBanner=await form.evaluate(el=>({
+     options:el.querySelectorAll('#walkinTable option[value]:not([value=""]):not([disabled])').length,
+     hidden:el.querySelector('#walkinRecommendation').hidden,
+     statusText:el.querySelector('#walkinRecommendation').textContent,
+     noCardsHidden:el.querySelector('#walkinNoCards').hidden
+    }));
+    assert.equal(duplicateBanner.hidden,duplicateBanner.options>0,
+     'Recommendation banner should be hidden when selectable cards already explain the choice');
+    assert.ok(duplicateBanner.noCardsHidden,'Avoid duplicate no-availability explanation');
+    assert.ok(duplicateBanner.statusText.length>0,'Retain status text for unavailable/offline state');
+    assert.equal(deck.selected,deck.options.length?1:0,'Exactly one table must be selected if available');
+    assert.ok(deck.summary,'Chosen table summary must remain visible');
+    const actualRooms=await form.locator('.walkinTableCard .walkinCardDetail').allTextContents();
+    if(actualRooms.length)assert.ok(actualRooms.some(text=>text.includes('Salle fictive')),
+     'Table cards must show the configured room name, not a hard-coded Salle principale');
+    const visibleOtherCount=await form.locator('#walkinOtherCards .walkinTableCard').count();
+    assert.ok(visibleOtherCount<=(viewport.width>=700?3:2),
+     'Tablet and desktop show 3 other tables, mobile shows 2');
+    if(deck.options.length){
+     await form.locator('#walkinManualTable').click();
+     assert.equal(await view.page.locator('.tablePickerOverlay:not([hidden])').count(),1,
+      'Manual button must open all table choices');
+     assert.equal(await view.page.locator('.tablePickerGrid .tablePickerCard').count(),deck.options.length,
+      'Manual picker must offer every available choice');
+     await view.page.locator('.tablePickerClose').click();
+    }
+    if(deck.options.length>1){
+     const other= form.locator('#walkinTableDeck .walkinTableCard[aria-pressed="false"]').first();
+     await other.click();
+     assert.equal(await form.locator('#walkinTableDeck .walkinTableCard[aria-pressed="true"]').count(),1);
+    }
+    // RM-005 incident: hotel room already booked must not masquerade as zero free tables.
+    await view.page.evaluate(()=>{
+     window.__rm005PriorReservations=window.RestoSharedReservations;
+     const now=new Date(),pad=v=>String(v).padStart(2,'0');
+     const date=[now.getFullYear(),pad(now.getMonth()+1),pad(now.getDate())].join('-');
+     const time=pad(now.getHours())+':'+pad(now.getMinutes());
+     const duplicate={id:'room-conflict-fixture',type:'hotel',client:'571',hotelRoom:'571',
+      date,time,duration:90,guests:1,tables:[7],status:'reserved'};
+     window.RestoSharedReservations=[...window.RestoSharedReservations,duplicate];
+     window.dispatchEvent(new Event('restomanager:v3-change'));
+    });
+    await form.locator('#walkinRoom').fill('572');
+    const baselineAvailable=await form.locator('#walkinTable option').count();
+    await form.locator('#walkinRoom').fill('571');
+    assert.match(await form.locator('#walkinSameRoomNotice').innerText(),/Chambre 571 : une réservation existe déjà/);
+    assert.equal(await form.locator('#walkinTable option').count(),baselineAvailable,
+      'Same hotel room must not make otherwise available tables disappear');
+    if(baselineAvailable){
+     assert.equal(await form.locator('button[type=submit]').isDisabled(),false);
+     const writesBefore=calls.filter(call=>call.name==='install_walkin_group_v3'||call.name==='install_walkin_group_v4').length;
+     await form.locator('button[type=submit]').click();
+     const confirmation=view.page.locator('.rmNoticeOverlay');
+     await confirmation.waitFor({state:'visible'});
+     assert.match(await confirmation.innerText(),/AUTRE personne/);
+     await confirmation.getByRole('button',{name:'Annuler'}).click();
+     assert.equal(calls.filter(call=>call.name==='install_walkin_group_v3'||call.name==='install_walkin_group_v4').length,writesBefore,
+      'Cancelling separate-occupant confirmation must not write reservations');
+     await form.locator('button[type=submit]').click();
+     await confirmation.waitFor({state:'visible'});
+     await confirmation.getByRole('button',{name:'Installer cet autre occupant'}).click();
+     await view.page.waitForFunction(()=>document.querySelector('#walkinFeedback')?.textContent.includes('Installation réussie'));
+     assert.equal(calls.filter(call=>call.name==='install_walkin_group_v4').length,1,
+      'Explicit confirmation calls the dedicated server RPC exactly once');
+    }
+    await view.page.evaluate(()=>{
+     window.RestoSharedReservations=window.__rm005PriorReservations;
+     delete window.__rm005PriorReservations;
+     window.dispatchEvent(new Event('restomanager:v3-change'));
+    });
+    await form.locator('#walkinRoom').fill('');
+    // RM-005: never offer installation from a stale connected snapshot.
+    await view.page.evaluate(()=>{window.RestoSupabaseReady=false;window.dispatchEvent(new Event('restomanager:connection-state'))});
+    assert.equal(await form.locator('button[type=submit]').isDisabled(),true);
+    assert.match(await view.page.locator('#walkinRecommendation').innerText(),/Synchronisation en cours ou connexion interrompue/);
+    assert.equal(await view.page.locator('#walkinTable option').count(),0);
+    // RM-005: the same sync guard must protect one-click table release.
+    const releaseButtons=view.page.locator('#quickReleaseList .quickReleaseButton');
+    if(await releaseButtons.count())assert.equal(await releaseButtons.first().isDisabled(),true,
+     'Offline connected service must block one-click release');
+    assert.equal(await view.page.locator('#quickReleaseFeedback').count(),1);
+    await view.page.evaluate(()=>{window.RestoSupabaseReady=true;window.dispatchEvent(new Event('restomanager:connection-state'))});
+    assert.doesNotMatch(await view.page.locator('#walkinRecommendation').innerText(),/connexion interrompue/);
     assert.ok(state.buttons,'Stepper touch targets must remain accessible');
     assert.ok(state.width<=state.clientWidth+2,'Walk-in form must fit responsive viewport');
     pass(role+' '+viewport.width+'px clearer client selection, guest stepper and recommendation kept');
@@ -441,9 +630,133 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    // placing install/edit/change-table/options together on wide viewports.
    await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
    await view.page.locator('#reservationShowAll').click();
+   // RM-005-REG-01: legacy 'active' notifications must open a real filter,
+   // preserving the targeted booking even when a different date was selected.
+   await view.page.evaluate(()=>{
+    document.getElementById('reservationDate').value='2031-01-01';
+    window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{detail:{view:'active',reservationId:'fictional-hotel'}}));
+   });
+   assert.equal(await view.page.locator('#reservationDate').inputValue(),day);
+   assert.equal(await view.page.locator('.reservationViewTab.isActive').innerText().then(s=>s.includes('À venir')),true);
+   assert.equal(await view.page.locator('.reservationExpanded').count(),1);
+   pass(role+' '+viewport.width+'px legacy active notification opens targeted upcoming booking');
+   // The compact layout checks below expect a collapsed card, not its expanded detail.
+   await view.page.locator('.rmBookingOpen').first().click();
+   assert.equal(await view.page.locator('.reservationExpanded').count(),0);
+   await view.page.locator('#reservationQuery').fill('');
    // Wait for the 230ms appScreenActive translateY entrance animation to finish.
    // Otherwise sequential boundingBox() calls capture different animation frames.
    await view.page.clock.runFor(330);
+   // The user's reference requires Lucide's actual `hotel` glyph for
+   // hotel customers, not the older bed-double substitute. Check the local
+   // SVG path on real DOM elements in both role views.
+   if(viewport.width===390){
+    const icons=await view.page.evaluate(()=>{
+     const hotel=document.querySelector('.rmBookingCard[data-type="hotel"] .rmBookingClient svg');
+     const exterior=document.querySelector('.rmBookingCard[data-type="external"] .rmBookingClient svg')
+       ||document.querySelector('.rmBookingCard[data-type="exterior"] .rmBookingClient svg');
+     return {hotel:hotel?[...hotel.querySelectorAll('path')].map(p=>p.getAttribute('d')):null,
+      exterior:exterior?[...exterior.querySelectorAll('path')].map(p=>p.getAttribute('d')):null};
+    });
+    assert.ok(icons.hotel?.includes('M10 22v-6.57'),
+      'Hotel reservations must display the authentic local Lucide hotel icon');
+    if(icons.exterior)assert.ok(!icons.exterior.includes('M10 22v-6.57'),
+      'External customers must keep the person icon');
+    pass(role+' mobile booking hotel guests display genuine Lucide hotel SVG');
+   }
+   // RM-005 screenshot regression: four filters in a true 2x2 grid and
+   // phone cards aligned in three readable rows, without overlapping controls.
+   if(viewport.width===390){
+    const mobile=await view.page.evaluate(()=>{
+     const rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height,centerY:r.y+r.height/2}};
+     const tabs=[...document.querySelectorAll('#rmReservationFilters .reservationViewTab')].map(rect);
+     const date=document.querySelector('#reservationDate').closest('label');
+     const query=document.querySelector('#reservationQuery').closest('label');
+     const allDates=document.querySelector('#reservationShowAll');
+     const card=document.querySelector('.rmBookingCard');
+     const grid=card?.querySelector('.rmBookingGrid');
+     const chevron=card?.querySelector('.rmBookingMobileChevron');
+     const toolRail=card?.querySelector('.reservationActionTools');
+     const primary=card?.querySelector('.reservationPrimaryActions');
+     return {tabs,date:rect(date),query:rect(query),allDates:rect(allDates),
+      cells:grid?[...grid.children].map(rect):[],gridWidth:grid?.clientWidth,scrollWidth:grid?.scrollWidth,
+      cardHeight:card?rect(card).height:null,
+      chevron:chevron?rect(chevron):null,toolRail:toolRail?rect(toolRail):null,
+      buttons:toolRail?[...toolRail.querySelectorAll('button')].map(rect):[],
+      primary:primary?rect(primary):null,hasPrimaryAction:!!primary,
+      hasIndicators:!!card?.querySelector('.rmBookingFlag')};
+    });
+    assert.equal(mobile.tabs.length,4,'Four reservation filter buttons must be present');
+    assert.ok(Math.abs(mobile.tabs[0].y-mobile.tabs[1].y)<=2,'Mobile filters 1 and 2 must align');
+    assert.ok(Math.abs(mobile.tabs[2].y-mobile.tabs[3].y)<=2,'Mobile filters 3 and 4 must align');
+    assert.ok(mobile.tabs[2].y>mobile.tabs[0].y+24,'Mobile filter second row must follow first');
+    assert.ok(Math.abs(mobile.tabs[0].width-mobile.tabs[3].width)<=3,'Mobile filters have equal column widths');
+    assert.ok(Math.abs(mobile.date.y+mobile.date.height-(mobile.allDates.y+mobile.allDates.height))<=5,
+     'Date and Toutes les dates buttons must align at the bottom');
+    assert.ok(mobile.query.y>mobile.date.y+mobile.date.height-2,
+     'Search belongs below the date controls on a phone');
+    assert.equal(mobile.cells.length,8,'Mobile reservation card keeps all eight fields in DOM');
+    assert.ok(mobile.scrollWidth<=mobile.gridWidth+2,'Mobile reservation grid must not overflow');
+    assert.ok(mobile.cardHeight<=(mobile.hasPrimaryAction?245:195),
+     'Compact mobile card must avoid the oversized vertical action rail');
+    const cy=i=>mobile.cells[i].centerY;
+    assert.ok(Math.abs(cy(1)-cy(0))<=14,
+     'Phone header: time and client share the center of the first band');
+    assert.ok(Math.abs(cy(2)-cy(0))<=28,
+     'Phone covers stay inside the upper band, stacked over the table');
+    assert.ok(mobile.cells[3].y>mobile.cells[2].y+mobile.cells[2].height-3,
+     'Phone table stays below covers within the SAME upper band');
+    assert.ok(mobile.cells[5].y>=mobile.cells[0].y+mobile.cells[0].height-2,
+     'Phone lower band begins after the booking identity');
+    assert.ok(mobile.chevron&&mobile.chevron.width>=43&&mobile.chevron.height>=43,
+     'Phone booking detail chevron has a 44px accessible target');
+    assert.ok(Math.abs(mobile.chevron.centerY-mobile.cells[0].centerY)<=14,
+     'Phone chevron belongs to the compact upper band');
+    assert.ok(mobile.toolRail&&mobile.toolRail.width>=90,
+     'Phone actions share a single compact lower row');
+    assert.ok(Math.abs(mobile.toolRail.centerY-mobile.cells[5].centerY)<=11,
+     'Phone action row and status badge must align vertically');
+    assert.ok(mobile.buttons.length>=2,'Edit and overflow must both remain accessible');
+    for(const b of mobile.buttons)assert.ok(b.width>=43&&b.height>=43,
+     'Touch action targets remain 44px');
+    assert.ok(Math.abs(mobile.buttons[0].y-mobile.buttons[1].y)<=2,
+     'Edit and overflow buttons are now HORIZONTAL on the bottom row');
+    assert.ok(mobile.buttons[0].x+mobile.buttons[0].width<=mobile.buttons[1].x+2,
+     'Buttons must not overlap one another');
+    if(mobile.hasIndicators){
+     assert.ok(mobile.cells[6].y>=mobile.cells[5].y+mobile.cells[5].height-2,
+      'Notes/allergies go below the status only when they exist');
+    }else{
+     assert.ok(mobile.cells[6].height<1,'Empty notes row should be collapsed entirely');
+    }
+    if(mobile.hasPrimaryAction){
+     assert.ok(mobile.primary.y>=mobile.cells[5].y+mobile.cells[5].height-1,
+      'Reception confirmation stays visible after the action/status line');
+    }
+    pass(role+' 390px compact two-band card, horizontal actions and conditional indicators');
+   }
+   // RM-005: sort arrow stays inside its own header (Couverts/Table(s)).
+   if(viewport.width>=768){
+    const columns=await view.page.evaluate(()=>{
+     const heading=document.querySelector('#reservationList .rmBookingColumns');
+     if(!heading)return null;
+     return [...heading.children].map(col=>{
+      const a=col.getBoundingClientRect();
+      const arrow=col.querySelector('.rmBookingSort svg');
+      const b=arrow?.getBoundingClientRect();
+      return {x:a.x,right:a.right,visible:!!b&&b.width>0&&b.height>0,
+       arrow:b?{x:b.x,right:b.right}:null};
+     });
+    });
+    assert.equal(columns?.length,8,'Eight booking header columns must render on tablet/desktop');
+    for(const index of [0,1,2,3]){
+     const cell=columns[index];
+     if(!cell.visible)continue;
+     assert.ok(cell.arrow.x>=cell.x-1&&cell.arrow.right<=cell.right+1,
+      'Sort arrow must remain inside column '+index+' without overlapping another heading');
+    }
+    pass(role+' '+viewport.width+'px reservation heading sort arrows contained');
+   }
    const toolbar=view.page.locator('.reservationItem').first().locator('.reservationActionsModern');
    const modify=toolbar.getByRole('button',{name:'Modifier',exact:true});
    const more=toolbar.getByRole('button',{name:/Plus d.actions pour/});
@@ -458,7 +771,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     return {
      editBox:bounds(root.querySelector('[data-reservation-action="edit"]')),
      moreBox:bounds(root.querySelector('.reservationMoreTrigger')),
-     installBox:bounds(root.querySelector('.reservationActionMain')),
+     installBox:bounds(root.querySelector('[data-reservation-action="seated"]')),
      changeBox:bounds(root.querySelector('.reservationChangeTable')),
      cardBox:bounds(root.closest('.reservationItem'))
     };
@@ -468,25 +781,78 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
     assert.ok(rect.x>=cardBox.x-1&&rect.x+rect.width<=cardBox.x+cardBox.width+1,
      'Action must fit inside the reservation card');
    }
-   if(role==='fb_admin'){
-    assert.ok(installBox&&changeBox,'Restaurant install/change actions must be present');
-    if(viewport.width>=750){
-     for(const rect of [editBox,changeBox,moreBox])
-      assert.ok(Math.abs(rect.y-installBox.y)<=2,JSON.stringify({message:'Tablet/desktop action misalignment',role,viewport,installBox,editBox,changeBox,moreBox}));
-     assert.ok(installBox.x<editBox.x&&editBox.x<changeBox.x&&changeBox.x<moreBox.x,
-      'Actions must follow install, edit, change table, extra order');
+   // Current compact UI keeps edit and overflow on the reservation card;
+   // installing/seating or changing a table stays in the Restaurant-only menu.
+   assert.equal(installBox,null,'Install action is not a separate toolbar button');
+   assert.equal(changeBox,null,'Table-change action is not a separate toolbar button');
+   // RM-005 Full HD: desktop action buttons should be visually accessible
+   // and not rendered as tiny controls in the far-right table column.
+   if(viewport.width>=1440){
+    assert.ok(editBox.width>=43&&editBox.height>=43&&moreBox.width>=43&&moreBox.height>=43,
+     'Full HD edit and overflow actions must have >=44px targets');
+    const targetPlacement=await toolbar.evaluate(root=>{
+     const panel=root.closest('.rmBookingGrid'),cell=panel.children[7],actions=root;
+     const c=cell.getBoundingClientRect(),r=actions.getBoundingClientRect();
+     return {cellCenter:c.x+c.width/2,actionsCenter:r.x+r.width/2};
+    });
+    assert.ok(Math.abs(targetPlacement.cellCenter-targetPlacement.actionsCenter)<12,
+     'Full HD actions should be centered inside their table column');
+    pass(role+' Full HD reservation actions sized and aligned');
+   }
+   if(viewport.width>=750){
+    assert.ok(Math.abs(editBox.y-moreBox.y)<=2,
+     'Tablet/desktop edit and overflow controls must align');
+    assert.ok(editBox.x<moreBox.x,'Edit must precede the overflow menu');
+   }
+   if(role==='reception'){
+    assert.equal(await toolbar.locator('[data-reservation-action="confirm"]').count(),1,
+     'Reception can still confirm a pending booking without managing the room');
+   }
+   // RM-005: verify the adaptive UI from the *actual available list width*.
+   // On a tablet with a fixed sidebar, the list can be phone-card width;
+   // on a wide tablet, the entire reservation is aligned in one row.
+   if(viewport.width===768){
+    const layout=await toolbar.evaluate(root=>{
+     const grid=root.closest('.rmBookingGrid');
+     const rc=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height}};
+     const rects=[...grid.children].map(rc);
+     return {contentWidth:grid.parentElement.clientWidth,gridWidth:grid.clientWidth,scrollWidth:grid.scrollWidth,
+      rects,cardHeight:grid.closest('.reservationItem').getBoundingClientRect().height};
+    });
+    assert.equal(layout.rects.length,8,'All eight reservation cells must remain mounted');
+    assert.ok(layout.scrollWidth<=layout.gridWidth+2,'Reservation content must not overflow its grid');
+    assert.ok(layout.cardHeight<=195,'Compact tablet reservation must not have a large blank band');
+    const rowY=i=>layout.rects[i].y;
+    const centerY=i=>layout.rects[i].y+layout.rects[i].height/2;
+    if(layout.contentWidth>=660){
+     assert.ok([1,2,3,4,5,6,7].every(i=>Math.abs(centerY(i)-centerY(0))<6),
+      'Wide tablet: all eight columns occupy one aligned row: '+JSON.stringify(layout));
+    }else if(layout.contentWidth>=475){
+     assert.ok([1,2,3,5].every(i=>Math.abs(centerY(i)-centerY(0))<10),
+      'Narrow tablet: time, guest, covers, table, status occupy first row: '+JSON.stringify(layout));
+     assert.ok(rowY(6)>rowY(0)&&rowY(7)>rowY(0),'Narrow tablet: flags and actions belong below primary row');
     }else{
-     assert.ok(installBox.y+installBox.height<=editBox.y+2,
-      'Mobile keeps main action above secondary actions');
+     assert.ok(Math.abs(rowY(1)-rowY(2))<24,'Compact tablet: guest and covers share the top band');
+     assert.ok(rowY(6)>rowY(0)&&rowY(7)>rowY(0),'Compact tablet: alerts and actions remain in the bottom band');
     }
-   }else{
-    assert.equal(installBox,null,'Reception must not show install button');
-    assert.equal(changeBox,null,'Reception must not show table-change button');
-    assert.ok(await toolbar.locator('.reservationPrimaryActions').count()===0,
-     'Reception must not keep an empty primary column');
+    if(artifacts){fs.mkdirSync(artifacts,{recursive:true});
+     await view.page.screenshot({path:path.join(artifacts,'rm005-reservations-tablet-'+role+'.png'),fullPage:true})}
+    pass(role+' 768px responsive reservation grid fits available panel width');
    }
    await more.click();
-   await view.page.getByRole('dialog',{name:'Actions de la réservation'}).waitFor();
+   const menu=view.page.getByRole('dialog',{name:'Actions de la réservation'});
+   await menu.waitFor();
+   if(role==='fb_admin'){
+    assert.equal(await menu.getByRole('button',{name:'Installer à table'}).count(),1,
+     'Restaurant must retain seat action in its overflow menu');
+    assert.equal(await menu.getByRole('button',{name:'Changer la table'}).count(),1,
+     'Restaurant must retain table reassignment in its overflow menu');
+   }else{
+    assert.equal(await menu.getByRole('button',{name:'Installer à table'}).count(),0,
+     'Reception cannot seat customers');
+    assert.equal(await menu.getByRole('button',{name:'Changer la table'}).count(),0,
+     'Reception cannot manually change a table');
+   }
    await view.page.getByRole('button',{name:'Fermer les actions'}).click();
    await view.page.clock.runFor(240);
    await view.page.waitForFunction(()=>!document.querySelector('.reservationMenuOverlay'));
@@ -499,7 +865,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   for(const role of ['fb_admin','reception']){
    reset({overdue:true});const view=await open(browser,origin,role);await view.page.evaluate(()=>window.RestoScreens.show('tables'));
    await view.page.waitForFunction(()=>document.getElementById('rushDashboard').textContent.includes('22 /'));
-   await view.page.clock.fastForward(120000);const text=await view.page.locator('#rushDashboard').innerText();assert.match(text,/12:00.*13:00/s);assert.match(text,/22 couvert\(s\) attendus sur les créneaux précédents/);assert.match(text,/0 \/ /);
+   await view.page.clock.fastForward(120000);const text=await view.page.locator('#rushDashboard').innerText();assert.match(text,/12:00.*13:00/s);assert.match(text,/Retards à traiter · 22 couverts/);assert.match(text,/0 \/ /);
    assert.equal(await view.page.locator('#currentOccupancy').innerText().then(text=>/22/.test(text)),false);pass(role+' clock-controlled 11:59→12:01 keeps 22 overdue visible with zero current arrivals');await clean(view);
   }
   reset({overdue:true});const foreignClock=await open(browser,origin,'fb_admin',{width:390,height:844},'America/New_York');

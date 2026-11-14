@@ -50,8 +50,10 @@ test('suggestions exclude temporarily held and occupied tables',()=>{
  assert.ok(available.every(s=>Array.isArray(s.tables)&&s.tables.length));
 });
 test('forecast and live occupancy remain different sections',()=>{
- assert.match(source,/EN DIRECT · CLIENTS INSTALLÉS/);
- assert.match(source,/PRÉVISIONS · ARRIVÉES À VENIR/);
+ assert.match(source,/EN DIRECT · RESTAURANT/);
+ assert.match(source,/rmForecastTwoStatuses/,'Expected and seated hourly metrics remain separate');
+ assert.match(source,/const installedNow=all\.filter/,'Live seated count is calculated independently');
+ assert.match(source,/rmImmediateAvailability/,'Availability stays separate from the forecast');
  assert.match(source,/Charge des arrivées/);
  assert.match(source,/RestoTablePressure\?\.availability/);
 });
