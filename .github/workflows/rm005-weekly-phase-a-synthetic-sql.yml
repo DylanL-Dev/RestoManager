@@ -1,4 +1,4 @@
-name: RM-005 - planning 7 jours SQL isole
+name: RM-005 - planning et RPC SQL isoles
 
 on:
   pull_request:
@@ -7,6 +7,9 @@ on:
       - 'supabase/release-prep/rm005_weekly_phase_a_candidate_NOT_APPLIED.sql'
       - 'tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql'
       - 'tests/sql/rm005_weekly_phase_a_assertions.sql'
+      - 'supabase/release-prep/rm005_weekly_phase_b_rpc_candidate_NOT_APPLIED.sql'
+      - 'tests/sql/rm005_weekly_phase_b_helper_synthetic.sql'
+      - 'tests/sql/rm005_weekly_phase_b_helper_assertions.sql'
       - '.github/workflows/rm005-weekly-phase-a-synthetic-sql.yml'
 
 permissions:
@@ -49,13 +52,17 @@ jobs:
           db_cmd -f tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql
           db_cmd -f supabase/release-prep/rm005_weekly_phase_a_candidate_NOT_APPLIED.sql
           db_cmd -f tests/sql/rm005_weekly_phase_a_assertions.sql
+          db_cmd -f tests/sql/rm005_weekly_phase_b_helper_synthetic.sql
+          db_cmd -f tests/sql/rm005_weekly_phase_b_helper_assertions.sql
       - name: Aucun chemin vers Supabase PROD / aucun fichier de donnees
         shell: bash
         run: |
           set -euo pipefail
           if grep -E 'tnsrkargogckgtsxipwd|RM_SUPABASE_PROD_DB_URL|pg_dump|service_role' \
             tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql \
-            tests/sql/rm005_weekly_phase_a_assertions.sql; then
+            tests/sql/rm005_weekly_phase_a_assertions.sql \
+            tests/sql/rm005_weekly_phase_b_helper_synthetic.sql \
+            tests/sql/rm005_weekly_phase_b_helper_assertions.sql; then
             echo 'Le scenario SQL contient une reference PROD interdite.'
             exit 1
           fi
