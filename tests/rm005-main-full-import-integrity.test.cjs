@@ -28,7 +28,7 @@ test('RM-005 MAIN: keep PROD login and existing Reception/second-occupant protec
  assert.match(html,/rm005SecondOccupantNotice/);
  assert.match(html,/receptionTableCaptionFix/);
  assert.match(html,/html\.reception label:has\(#bookingTable\)/);
- assert.match(html,/service-v3-arrival-preview\.js\?v=20261114-main-advisory1/);
+ assert.match(html,/service-v3-arrival-preview\.js\?v=20261114-(?:main-advisory1|rm008-closed1)/);
  assert.match(script('v3-connected-auth.js'),/install_walkin_group_v4/);
  assert.match(script('v3-connected-auth.js'),/create_fusion_chain_v1/);
 });
