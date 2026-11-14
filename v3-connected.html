@@ -1049,4 +1049,17 @@ html.reception #bookingForm label:has(#bookingTable) .tableChoice {
   display:none!important;
   visibility:hidden!important;
 }
+</style><style id="rm005SecondOccupantNotice">
+#walkinSameRoomNotice:not([hidden]){display:block;margin:6px 0 12px;padding:12px 14px;border-radius:12px;background:#fff5e4;border:1px solid #e7c687;color:#79551b;font-size:13px;font-weight:650;line-height:1.45}
+:is(html[data-theme="dark"],body.dark,html.dark) #walkinSameRoomNotice:not([hidden]){background:#503d24;border-color:#aa8b50;color:#fff0c1}
+</style>
+<style id="receptionTableCaptionFix">
+/* Reception only: override the compact editor's display:grid!important label rules. */
+html.reception #editForm.editFormModern > label:has(#editTable),
+html.reception #bookingForm label:has(#bookingTable),
+html.reception #editForm.editFormModern > label:has(#editTable) .tableChoice,
+html.reception #bookingForm label:has(#bookingTable) .tableChoice {
+  display:none!important;
+  visibility:hidden!important;
+}
 </style></body></html>
