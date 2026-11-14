@@ -8,7 +8,10 @@ const $=id=>document.getElementById(id),collator=new Intl.Collator('fr',{numeric
 function read(){if(window.RestoSharedReservations)return ReservationEngine.normalizeReservations(window.RestoSharedReservations);try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}}
 function serviceDay(){const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
 let lastUndo=null;
-function room(r){return String(r.room||r.roomNumber||r.chambre||r.chambreNumber||'').trim()}
+const pendingReleases=new Set();
+const connectedService=()=>Boolean(document.getElementById('integrationGate'));
+const canRelease=()=>!connectedService()||window.RestoSupabaseReady===true;
+function room(r){return String(r.hotelRoom||r.room||r.roomNumber||r.chambre||r.chambreNumber||'').trim()}
 function el(tag,cls,content){const e=document.createElement(tag);if(cls)e.className=cls;if(content!=null)e.textContent=content;return e}
 function render(){
  const q=$('quickReleaseSearch').value.trim().toLocaleLowerCase('fr'),sort=$('quickReleaseSort').value;
@@ -29,6 +32,8 @@ function render(){
   const overdue=end&&Date.now()>end.getTime();
   const state=el('span','quickReleaseStatus '+(overdue?'quickReleaseStatusOverdue':'quickReleaseStatusOccupied'),overdue?'Fin prévue dépassée':'Occupée');
   info.append(top,sub,timing,state);const btn=el('button','quickReleaseButton','Libérer');btn.type='button';btn.setAttribute('aria-label','Libérer la table '+(r.tables||[]).join(' et ')+' de '+r.client);
+  btn.disabled=pendingReleases.has(r.id)||!canRelease();
+  if(!canRelease())btn.title='Synchronisation indisponible : libération momentanément bloquée';
   btn.addEventListener('click',()=>release(r.id));
   const edit=el('button','quickReleaseEdit','Modifier');edit.type='button';edit.setAttribute('aria-label','Modifier la table et la durée de '+r.client);
   edit.addEventListener('click',()=>openQuickEdit(r.id));
@@ -79,6 +84,10 @@ function openQuickEdit(id){
  controls.append(cancel,save);panel.append(heading,subtitle,tableLabel,durationLabel,hint,error,controls);overlay.append(panel);document.body.append(overlay);tableSelect.focus();
 }
 async function release(id){
+ if(pendingReleases.has(id))return;
+ if(!canRelease()){$('quickReleaseFeedback').textContent='Synchronisation indisponible. Attendez la reconnexion avant de libérer cette table.';render();return}
+ pendingReleases.add(id);render();
+ try{
  const all=read(),index=all.findIndex(r=>r.id===id&&r.status==='seated'&&r.date===serviceDay());if(index<0){render();return}
  const previous=all[index],transition=ReservationEngine.transition(previous,'released',new Date().toISOString(),all);
  if(!transition.valid){$('quickReleaseFeedback').textContent=transition.error;return}
@@ -104,7 +113,8 @@ async function release(id){
  });undo.append(msg,button);
  $('quickReleaseFeedback').textContent='';
  window.dispatchEvent(new Event('restomanager:v3-change'));render();
+ }finally{pendingReleases.delete(id);render();}
 }
 $('quickReleaseSearch').addEventListener('input',render);$('quickReleaseSort').addEventListener('change',render);
-window.addEventListener('restomanager:v3-change',render);window.addEventListener('storage',event=>{if(event.key===KEY)render()});render();
+window.addEventListener('restomanager:v3-change',render);window.addEventListener('restomanager:connection-state',render);window.addEventListener('storage',event=>{if(event.key===KEY)render()});render();
 })();
