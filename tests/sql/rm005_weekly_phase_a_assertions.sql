@@ -51,9 +51,9 @@ VALUES
 
 DO $new_restaurant$
 BEGIN
-  IF (SELECT count(*) FROM jsonb_object_keys(weekly_schedule)
-      FROM public.restaurant_hours
-      WHERE restaurant_id='10000000-0000-4000-8000-000000000003') <> 7 THEN
+  IF (SELECT count(*) FROM public.restaurant_hours h
+      CROSS JOIN LATERAL jsonb_object_keys(h.weekly_schedule) AS d(day_key)
+      WHERE h.restaurant_id='10000000-0000-4000-8000-000000000003') <> 7 THEN
     RAISE EXCEPTION 'A new restaurant has a missing or incomplete calendar';
   END IF;
   IF (SELECT weekly_schedule #>> '{sunday,lunch,enabled}'
