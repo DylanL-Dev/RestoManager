@@ -1,0 +1,104 @@
+name: RM-005 - planning et RPC SQL isoles
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'supabase/release-prep/rm005_weekly_phase_a_candidate_NOT_APPLIED.sql'
+      - 'tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql'
+      - 'tests/sql/rm005_weekly_phase_a_assertions.sql'
+      - 'supabase/release-prep/rm005_weekly_phase_b_rpc_candidate_NOT_APPLIED.sql'
+      - 'tests/sql/rm005_weekly_phase_b_helper_synthetic.sql'
+      - 'tests/sql/rm005_weekly_phase_b_helper_assertions.sql'
+      - 'tests/sql/rm005_weekly_phase_b_prod_rpc_synthetic_fixture.sql'
+      - 'tests/sql/rm005_weekly_phase_b_prod_rpc_assertions.sql'
+      - 'supabase/release-prep/rm005_prod_fusion_four_tables_exterior_candidate_NOT_APPLIED.sql'
+      - 'tests/sql/rm005_phase_c_prod_confirm_rpc_fixture.sql'
+      - 'tests/sql/rm005_phase_c_prod_schema_fixture.sql'
+      - 'tests/sql/rm005_phase_c_fusion_exterior_assertions.sql'
+      - '.github/workflows/rm005-weekly-phase-a-synthetic-sql.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-postgres:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic-ci-only
+          POSTGRES_DB: rm005_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d rm005_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verifier migration candidate sur schema entierement synthetique
+        shell: bash
+        env:
+          PGPASSWORD: synthetic-ci-only
+        run: |
+          set -euo pipefail
+          db_cmd() {
+            docker run --rm --network host \
+              -e PGPASSWORD \
+              -v "$GITHUB_WORKSPACE:/app:ro" -w /app \
+              postgres:17-alpine psql -X -v ON_ERROR_STOP=1 \
+                -h 127.0.0.1 -p 5432 -U postgres -d rm005_test "$@"
+          }
+          db_cmd -f tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql
+          db_cmd -f supabase/release-prep/rm005_weekly_phase_a_candidate_NOT_APPLIED.sql
+          db_cmd -f tests/sql/rm005_weekly_phase_a_assertions.sql
+          db_cmd -f tests/sql/rm005_weekly_phase_b_helper_synthetic.sql
+          db_cmd -f tests/sql/rm005_weekly_phase_b_helper_assertions.sql
+
+          # Separate clean PG17 DB: exact PROD function definitions, but no PROD data.
+          db_cmd -c 'CREATE DATABASE rm005_rpc_test'
+          db_cmd -d rm005_rpc_test -f tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql
+          db_cmd -d rm005_rpc_test -f supabase/release-prep/rm005_weekly_phase_a_candidate_NOT_APPLIED.sql
+          db_cmd -d rm005_rpc_test -f tests/sql/rm005_weekly_phase_b_prod_rpc_synthetic_fixture.sql
+          # Unrelated PROD tables are intentionally absent: suppress PL/pgSQL
+          # validation of uncalled business code; check real RPC DDL shape and grants.
+          db_cmd -d rm005_rpc_test -c 'SET check_function_bodies = off;' \
+            -f supabase/release-prep/rm005_weekly_phase_b_rpc_candidate_NOT_APPLIED.sql \
+            -f tests/sql/rm005_weekly_phase_b_prod_rpc_assertions.sql
+          db_cmd -d rm005_rpc_test -f tests/sql/rm005_phase_c_prod_confirm_rpc_fixture.sql
+          db_cmd -d rm005_rpc_test -f tests/sql/rm005_phase_c_prod_schema_fixture.sql
+          db_cmd -d rm005_rpc_test -c 'SET check_function_bodies = off;' \
+            -f supabase/release-prep/rm005_prod_fusion_four_tables_exterior_candidate_NOT_APPLIED.sql \
+            -f tests/sql/rm005_phase_c_fusion_exterior_assertions.sql
+          {
+            echo '### RM-005 - tests SQL PostgreSQL 17'
+            echo '- Planning 7 jours : OK (donnees fictives)'
+            echo '- Helper horaire Paris/week-end/DST : OK (donnees fictives)'
+            echo '- Substitution des 6 definitions de RPC PROD : OK (schéma synthétique)'
+            echo '- Fusion 2-4 tables, isolation/roles et nom extérieur : OK (schéma synthétique)'
+            echo '- Aucune connexion a Supabase PROD dans ce job'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Aucun chemin vers Supabase PROD / aucun fichier de donnees
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -E 'tnsrkargogckgtsxipwd|RM_SUPABASE_PROD_DB_URL|pg_dump|service_role' \
+            tests/sql/rm005_weekly_phase_a_synthetic_fixture.sql \
+            tests/sql/rm005_weekly_phase_a_assertions.sql \
+            tests/sql/rm005_weekly_phase_b_helper_synthetic.sql \
+            tests/sql/rm005_weekly_phase_b_helper_assertions.sql \
+            tests/sql/rm005_weekly_phase_b_prod_rpc_synthetic_fixture.sql \
+            tests/sql/rm005_weekly_phase_b_prod_rpc_assertions.sql \
+            tests/sql/rm005_phase_c_prod_confirm_rpc_fixture.sql \
+            tests/sql/rm005_phase_c_prod_schema_fixture.sql \
+            tests/sql/rm005_phase_c_fusion_exterior_assertions.sql; then
+            echo 'Le scenario SQL contient une reference PROD interdite.'
+            exit 1
+          fi
+          echo "Test isole confirme, sans acces Supabase reel."
