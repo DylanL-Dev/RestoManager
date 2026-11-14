@@ -23,6 +23,7 @@
  };
  function category(error){const detail=String(error?.details||'').trim();return Object.hasOwn(messages,detail)?detail:String(error?.code||'')}
  function message(error,fallback='Cette opération n’a pas pu être confirmée. Vérifiez la connexion et réessayez.'){
+  if(/Le restaurant est fermé le (samedi|dimanche) midi/i.test(String(error?.message||'')))return 'Restaurant fermé le samedi ou dimanche midi. Choisissez un créneau ouvert.';
   return error?.business===true?String(error.message):messages[category(error)]||fallback;
  }
  function business(text,code='INVALID_INPUT'){return Object.assign(new Error(text),{code,business:true})}
