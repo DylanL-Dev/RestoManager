@@ -24,6 +24,6 @@ test('future-day reservations are upcoming, not overdue',()=>{
 });
 test('availability check no longer quotes window start for an active slot',()=>{
  assert.match(source,/queryMinutes=isCurrentDay\?Math\.max\(w\.start,nowClock\+1\):w\.start/);
- assert.match(source,/canQuoteAvailability=!isCurrentDay\|\|queryMinutes<w\.end/);
+ assert.match(source,/canQuoteAvailability=\(!isCurrentDay\|\|queryMinutes<w\.end\)&&ReservationEngine\.isServiceOpen\(date,queryTime\)/);
  assert.match(source,/time:queryTime,guests:2/);
 });
