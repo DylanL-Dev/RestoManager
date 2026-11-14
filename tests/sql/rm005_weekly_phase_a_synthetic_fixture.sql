@@ -1,8 +1,18 @@
 -- RM-005 PostgreSQL 17 TEST ONLY — synthetic baseline, no real RestoManager data.
 CREATE SCHEMA private;
-CREATE ROLE anon NOLOGIN;
-CREATE ROLE authenticated NOLOGIN;
-CREATE ROLE resto_service_writer NOLOGIN;
+-- PostgreSQL roles are cluster-wide: the second isolated database reuses them.
+DO $roles$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN
+    CREATE ROLE anon NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN
+    CREATE ROLE authenticated NOLOGIN;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='resto_service_writer') THEN
+    CREATE ROLE resto_service_writer NOLOGIN;
+  END IF;
+END $roles$;
 
 CREATE OR REPLACE FUNCTION private.staff_restaurant() RETURNS uuid
 LANGUAGE sql STABLE AS $$ SELECT NULL::uuid $$;
