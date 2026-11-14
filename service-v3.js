@@ -96,6 +96,9 @@ let rushHelpExpanded=false;
 function dashboard(date,all){
  const target=$('rushDashboard');if(!target)return;
  lastRushDashboard={date,all};
+ // The immediate booking simulation is a Restaurant-only operational block.
+ const isReception=Boolean(window.RestoReception||document.documentElement.classList.contains('reception'));
+ if(isReception)$('rmImmediateAvailability')?.remove();
  target.replaceChildren();
  // Use the actual restaurant schedule for the selected date, not generic opening hours.
  const shifts=Object.entries(ReservationEngine.getShiftsForDate(date)).filter(([,s])=>s.enabled);
@@ -165,7 +168,7 @@ function dashboard(date,all){
  }
  if(!windows.length){
   target.append(rushNode('p','rushHint','Restaurant fermé : aucun service ouvert à cette date.'));
-  const occupancy=$('currentOccupancy');
+  const occupancy=isReception?null:$('currentOccupancy');
   if(occupancy){
    let panel=$('rmImmediateAvailability');
    if(!panel){panel=rushNode('section','rmImmediateAvailability');panel.id='rmImmediateAvailability';occupancy.insertAdjacentElement('afterend',panel);}
@@ -254,7 +257,7 @@ function dashboard(date,all){
  const noMoreToday=isCurrentDay&&nowClock>=windows[windows.length-1].end;
  const immediate=isCurrentDay&&nowClock>=currentWindow.start&&nowClock<currentWindow.end;
  // This simulation is a separate operational block, not part of arrival forecasts.
- const occupancy=$('currentOccupancy');
+ const occupancy=isReception?null:$('currentOccupancy');
  if(occupancy){
   let panel=$('rmImmediateAvailability');
   if(!panel){
