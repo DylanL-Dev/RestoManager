@@ -85,7 +85,7 @@ DECLARE
   v_old text;
   v_new text;
 BEGIN
-  v_oid:=to_regprocedure($sig0$private.install_walkin_v3(p_table uuid, p_guests integer, p_name text, p_type text)$sig0$);
+  v_oid:=to_regprocedure($sig0$private.install_walkin_v3(uuid,integer,text,text)$sig0$);
   IF v_oid IS NULL THEN RAISE EXCEPTION 'RM-005: expected function private.install_walkin_v3 missing'; END IF;
   SELECT pg_get_functiondef(v_oid) INTO v_def;
   IF md5(v_def) <> '478f71977a87c62e1b6776c769160978' THEN RAISE EXCEPTION 'RM-005: private.install_walkin_v3 definition drift, abort'; END IF;
@@ -123,7 +123,7 @@ DECLARE
   v_old text;
   v_new text;
 BEGIN
-  v_oid:=to_regprocedure($sig1$public.booking_draft_v3(p_key uuid, p_action text, p_start timestamp with time zone, p_end timestamp with time zone, p_guests integer, p_tables uuid[], p_name text, p_room text, p_notes text)$sig1$);
+  v_oid:=to_regprocedure($sig1$public.booking_draft_v3(uuid,text,timestamptz,timestamptz,integer,uuid[],text,text,text)$sig1$);
   IF v_oid IS NULL THEN RAISE EXCEPTION 'RM-005: expected function public.booking_draft_v3 missing'; END IF;
   SELECT pg_get_functiondef(v_oid) INTO v_def;
   IF md5(v_def) <> '27fd30e7a1751dcce495b957ba518375' THEN RAISE EXCEPTION 'RM-005: public.booking_draft_v3 definition drift, abort'; END IF;
@@ -156,7 +156,7 @@ DECLARE
   v_old text;
   v_new text;
 BEGIN
-  v_oid:=to_regprocedure($sig2$public.install_walkin_group_v3(p_tables uuid[], p_guests integer, p_name text, p_type text)$sig2$);
+  v_oid:=to_regprocedure($sig2$public.install_walkin_group_v3(uuid[],integer,text,text)$sig2$);
   IF v_oid IS NULL THEN RAISE EXCEPTION 'RM-005: expected function public.install_walkin_group_v3 missing'; END IF;
   SELECT pg_get_functiondef(v_oid) INTO v_def;
   IF md5(v_def) <> 'acee84610fb8420b9dba6f1942a62d44' THEN RAISE EXCEPTION 'RM-005: public.install_walkin_group_v3 definition drift, abort'; END IF;
@@ -188,7 +188,7 @@ DECLARE
   v_old text;
   v_new text;
 BEGIN
-  v_oid:=to_regprocedure($sig3$public.install_walkin_group_v4(p_tables uuid[], p_guests integer, p_name text, p_type text, p_allow_second_occupant boolean)$sig3$);
+  v_oid:=to_regprocedure($sig3$public.install_walkin_group_v4(uuid[],integer,text,text,boolean)$sig3$);
   IF v_oid IS NULL THEN RAISE EXCEPTION 'RM-005: expected function public.install_walkin_group_v4 missing'; END IF;
   SELECT pg_get_functiondef(v_oid) INTO v_def;
   IF md5(v_def) <> 'ad2462b3184e637fa1ed27ad59a1b6d3' THEN RAISE EXCEPTION 'RM-005: public.install_walkin_group_v4 definition drift, abort'; END IF;
@@ -220,7 +220,7 @@ DECLARE
   v_old text;
   v_new text;
 BEGIN
-  v_oid:=to_regprocedure($sig4$public.reception_booking_v3(p_reservation uuid, p_name text, p_room text, p_guests integer, p_start timestamp with time zone, p_end timestamp with time zone, p_notes text)$sig4$);
+  v_oid:=to_regprocedure($sig4$public.reception_booking_v3(uuid,text,text,integer,timestamptz,timestamptz,text)$sig4$);
   IF v_oid IS NULL THEN RAISE EXCEPTION 'RM-005: expected function public.reception_booking_v3 missing'; END IF;
   SELECT pg_get_functiondef(v_oid) INTO v_def;
   IF md5(v_def) <> '2c2a26f4502a64c9e0abff57cb2799ac' THEN RAISE EXCEPTION 'RM-005: public.reception_booking_v3 definition drift, abort'; END IF;
@@ -255,7 +255,7 @@ DECLARE
   v_old text;
   v_new text;
 BEGIN
-  v_oid:=to_regprocedure($sig5$public.reception_update_reservation_v4(p_reservation_id uuid, p_expected_version uuid, p_guest_name text, p_hotel_room text, p_party_size integer, p_starts_at timestamp with time zone, p_ends_at timestamp with time zone, p_notes text)$sig5$);
+  v_oid:=to_regprocedure($sig5$public.reception_update_reservation_v4(uuid,uuid,text,text,integer,timestamptz,timestamptz,text)$sig5$);
   IF v_oid IS NULL THEN RAISE EXCEPTION 'RM-005: expected function public.reception_update_reservation_v4 missing'; END IF;
   SELECT pg_get_functiondef(v_oid) INTO v_def;
   IF md5(v_def) <> '6bf11a586b46b4eb68c9a656eefda59a' THEN RAISE EXCEPTION 'RM-005: public.reception_update_reservation_v4 definition drift, abort'; END IF;
