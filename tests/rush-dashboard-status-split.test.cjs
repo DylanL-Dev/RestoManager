@@ -16,9 +16,11 @@ function elem(tag){
 const flatten=e=>[e,...(e.children||[]).flatMap(flatten)];
 test('rush dashboard does not throw and splits 22 planned into 20 expected + 2 seated',()=>{
  const target=elem('section');
- const doc={createElement:elem,getElementById:id=>id==='rushDashboard'?target:null,addEventListener(){}};
- const win={};
+ const doc={createElement:elem,getElementById:id=>id==='rushDashboard'?target:null,addEventListener(){},documentElement:{classList:{contains(){return false}}}};
+ const win={addEventListener(){}};
  const engine={getShifts:()=>({lunch:{enabled:true,start:'00:00',end:'23:30'}}),
+  getShiftsForDate:()=>({lunch:{enabled:true,start:'00:00',end:'23:30'}}),
+  isServiceOpen:()=>true,
   isBlocking:r=>['reserved','confirmed','late','arrived','seated'].includes(r.status),
   getDefaultDuration:()=>90,rankedTableChoices:()=>[]};
  const tables={get:()=>({tables:[{number:1,capacity:4},{number:2,capacity:10},...Array.from({length:20},(_,i)=>({number:i+3,capacity:2}))]})};
