@@ -1,7 +1,7 @@
 import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 // Creator authentication shell. Never grants admin rights; Supabase RLS does.
-import {installOwnerInbox} from './creator-admin.js?v=20261109-reportcount1';
-import {installCreatorConsole} from './creator-console.js?v=20261109-reportcount1';
+import {installOwnerInbox} from './creator-admin.js?v=20261114-rm006-root1';
+import {installCreatorConsole} from './creator-console.js?v=20261114-rm006-root1';
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
 const client=createClient(
  supabaseEnvironment.url,

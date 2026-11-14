@@ -33,14 +33,34 @@
  const walkin=create(passages,'rmWalkinArrivalPreview','.walkinGuestsField','beforebegin');
  function statusBox(target,date,time){
   if(!target)return;
+  // A missing date or time cannot be interpreted as an empty service.
+  if(!date||!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(String(time||''))){
+   target.section.dataset.level='unknown';
+   target.body.textContent='Choisissez un créneau pour consulter les arrivées.';
+   return;
+  }
+  const engine=window.ReservationEngine;
+  if(engine&&typeof engine.isServiceOpen==='function'&&!engine.isServiceOpen(date,time)){
+   target.section.dataset.level='closed';
+   target.body.textContent='Service fermé à '+time+' : choisissez un créneau ouvert pour consulter les arrivées.';
+   return;
+  }
   const rush=window.RestoRush;
   const list=window.RestoSharedReservations;
   if(!rush||!Array.isArray(list)||!window.RestoSharedDataLoaded||navigator.onLine===false||window.RestoSyncState==='error'){
    target.section.dataset.level='unknown';target.body.textContent='Synchronisation des arrivées : informations à vérifier.';return;
   }
-  const normalized=window.ReservationEngine?.normalizeReservations?.(list)||list;
-  const data=rush.evaluate({date,time,guests:0},normalized);
-  if(!data||data.invalid||!Number.isFinite(data.limit)){
+  let data;
+  try {
+   const normalized=window.ReservationEngine?.normalizeReservations?.(list)||list;
+   if(typeof rush.evaluate!=='function')throw new Error('rush evaluator unavailable');
+   data=rush.evaluate({date,time,guests:0},normalized);
+  } catch(_){
+   target.section.dataset.level='unknown';
+   target.body.textContent='Synchronisation des arrivées : informations à vérifier.';
+   return;
+  }
+  if(!data||data.invalid||!Number.isFinite(data.limit)||!Number.isFinite(data.current)){
    target.section.dataset.level='unknown';
    target.body.textContent='Aucun service ouvert à cette heure : le suivi des arrivées ne peut pas être calculé.';return;
   }
@@ -50,11 +70,18 @@
   const label=saturated?'Seuil conseillé atteint':high?'Arrivées nombreuses':'Arrivées fluides';
   target.body.textContent=time+' · '+data.current+'/'+data.limit+' couverts attendus sur cette heure — '+label+'.';
  }
+ function parisNowTime(){
+  const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+  const p=Object.fromEntries(parts.filter(x=>x.type!=='literal').map(x=>[x.type,x.value]));
+  return p.hour+':'+p.minute;
+ }
  function refresh(){
   const d=document.getElementById('bookingDate')?.value;
   const t=document.getElementById('bookingTime')?.value;
   if(booking)statusBox(booking,d,t);
-  if(walkin)statusBox(walkin,parisToday(),document.getElementById('walkinTime')?.value||'');
+  // Walk-in has no walkinTime input in MAIN: use actual Paris time instead of
+  // showing a false "service closed" result for an empty time string.
+  if(walkin)statusBox(walkin,parisToday(),document.getElementById('walkinTime')?.value||parisNowTime());
  }
  for(const id of ['bookingDate','bookingTime','walkinTime']){
   const input=document.getElementById(id);

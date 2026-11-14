@@ -14,7 +14,8 @@ assert.match(js,/RestoScreens\?\.request\?\.\('administration'\)/,'Shortcut must
 assert.match(js,/if\(!window\.RestoReception\)/,'Reception must not show Restaurant setting shortcut');
 assert.match(js,/slider\.type='range'/,'Threshold uses a native accessible range control');
 assert.match(js,/slider\.min='40';slider\.max='90';slider\.step='5'/,'Slider preserves configured 40–90% bounds');
-assert.match(js,/localStorage\.setItem\(KEY,JSON\.stringify\(\{percent:Number\(slider\.value\)\}\)\)/,'Threshold value must persist');
+assert.match(js,/RestoSaveSharedArrivalLimit\(percent\)/,'Connected Restaurant must persist the shared threshold');
+assert.match(js,/RestoSharedHours\?\.arrivalLimitPercent/,'Shared threshold must override local values');
 assert.match(css,/rushPercentSlider::-webkit-slider-thumb/,'Touch slider has a visible thumb');
 assert.match(html,/<script[^>]+src="service-v3\.js\?v=[^"\s]+"/,'Versioned JS entrypoint must be present');
 assert.match(html,/service-v3\.css\?v=20261108-rush-subtle1/,'CSS cache key must change');

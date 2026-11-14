@@ -16,6 +16,6 @@ assert.match(inboxJs,/let busy=false,filter='open'/);
 assert.match(inboxJs,/filter==='open'\?r\.status!=='resolved'/);
 assert.match(inboxJs,/restomanager:root-reports-updated/);
 assert.match(consoleJs,/restomanager:root-reports-updated/);
-assert.match(authJs,/creator-console\.js\?v=20261109-reportcount1/);
-assert.match(authJs,/creator-admin\.js\?v=20261109-reportcount1/);
+assert.match(authJs,/creator-console\.js\?v=20261114-rm006-root1/);
+assert.match(authJs,/creator-admin\.js\?v=20261114-rm006-root1/);
 console.log('Root issue counters smoke tests passed');
