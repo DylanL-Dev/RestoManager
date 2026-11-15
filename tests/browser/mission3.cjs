@@ -235,6 +235,28 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await leaveWarning.getByRole('button',{name:'Quitter sans enregistrer'}).click();
    await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
    pass(role+' '+viewport.width+'px navigation browser/toolbar Back and protected booking draft');
+   // RM-011-A: Refresh must ask BEFORE clearing or releasing an unsaved booking.
+   await appLink('reservationForm');
+   if(role==='fb_admin'){
+    await view.page.locator('.restoAddChoiceOverlay').waitFor({state:'visible'});
+    await view.page.locator('.restoAddChoiceOption[data-choice="reservation"]').click();
+   }
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservationForm');
+   await view.page.locator('#bookingNotes').fill('Brouillon à préserver au rafraîchissement');
+   await view.page.evaluate(()=>{window.__rm011RefreshMarker=1;document.getElementById('refreshAppBtn').click()});
+   await leaveWarning.waitFor({state:'visible'});
+   assert.match(await leaveWarning.innerText(),/modifications non enregistrées/i);
+   await leaveWarning.getByRole('button',{name:'Annuler'}).click();
+   assert.equal(await view.page.locator('#bookingNotes').inputValue(),'Brouillon à préserver au rafraîchissement');
+   assert.equal(await view.page.evaluate(()=>window.__rm011RefreshMarker),1,'No page reload if refresh is cancelled');
+   pass(role+' '+viewport.width+'px refresh cancellation preserves unsaved notes and page');
+   // After a CONFIRMED save, the form is reset, the baseline becomes clean, and leaving is silent.
+   // The real save paths are asserted separately by RM-011-A unit tests.
+   await view.page.evaluate(()=>{window.RestoPrepareNewReservation();window.RestoScreens.markBookingSaved()});
+   await appLink('reservations');
+   await view.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
+   assert.equal(await leaveWarning.count(),0,'No abandoned-draft prompt after confirmed save/reset');
+   pass(role+' '+viewport.width+'px saved reservation leaves form without false confirmation');
    // Returning from an unsaved reservation editor must protect the local draft.
    await view.page.evaluate(()=>window.RestoScreens.show('reservations'));
    await view.page.locator('#reservationShowAll').click();

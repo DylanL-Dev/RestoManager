@@ -983,6 +983,7 @@ $('bookingForm').addEventListener('submit',async event=>{
   catch(syncError){feedback.textContent+=' Actualisation des réservations en attente.';window.RestoErrors?.diagnostic('booking-refresh',syncError);}
   window.RestoFusionSelected=null;
   prepareNewReservation();
+  window.RestoScreens?.markBookingSaved?.();
   showBookingSuccess(candidate);
   return;
  }
@@ -995,11 +996,11 @@ $('bookingForm').addEventListener('submit',async event=>{
   if(JSON.stringify(ReservationEngine.seatingWarnings(candidate,current))!==JSON.stringify(warnings)){feedback.textContent='La situation des tables a changé. Recommencez la confirmation.';refreshAvailability();return}
   candidate.seatingOverride={confirmedAt:new Date().toISOString(),warnings:warnings.map(w=>({id:w.id,client:w.client,plannedEnd:w.plannedEnd,gapMinutes:w.gapMinutes}))};
   localStorage.setItem('restomanager_reservations',JSON.stringify(current.concat(candidate)));
-  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;prepareNewReservation();render();showBookingSuccess(candidate);return;
+  bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;prepareNewReservation();render();window.RestoScreens?.markBookingSaved?.();showBookingSuccess(candidate);return;
  }
  const current=readReservations();if(!ReservationEngine.validate(candidate,current).valid){feedback.textContent='La disponibilité a changé. Réessayez.';refreshAvailability();return}
  localStorage.setItem('restomanager_reservations',JSON.stringify(current.concat(candidate)));
- bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;prepareNewReservation();render();showBookingSuccess(candidate);
+ bookings=readReservations().filter(r=>r.date===date);window.dispatchEvent(new Event('restomanager:v3-change'));feedback.textContent='✓ Réservation enregistrée : '+candidate.client+' · '+candidate.time+'.';window.RestoFusionSelected=null;prepareNewReservation();render();window.RestoScreens?.markBookingSaved?.();showBookingSuccess(candidate);
  }catch(error){window.RestoErrors?.diagnostic('booking-save',error);feedback.textContent=window.RestoErrors?.message(error,'Enregistrement non confirmé. Votre saisie est conservée ; vérifiez les informations et la connexion.')||error.message}
 });
 function applyTableSnapshot(){plan=TableStore.get();syncServiceDay();bookings=readReservations().filter(r=>r.date===date);const select=$('roomFilter'),previous=select.value;select.replaceChildren();plan.rooms.forEach(room=>{const option=document.createElement('option');option.value=room.id;option.textContent=room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;option.title=option.textContent;select.append(option)});if(plan.rooms.some(room=>room.id===previous))select.value=previous;render();refreshAvailability()}
