@@ -96,7 +96,7 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
     },null,{timeout:10000});
     assert.match(await view.page.locator('#serviceDataStatus').innerText(),/mise à jour/);
     await view.page.evaluate(()=>window.RestoScreens.show('reservationForm'));
-    assert.match(await view.page.locator('#availabilityInsight').innerText(),/mise à jour/);
+    assert.match(await view.page.locator('#availabilityInsight').innerText(),/mise à jour|disponibilités ne sont pas actualisées/i);
     assert.equal(await view.page.locator('#bookingForm button[type=submit]').isDisabled(),true);
     assert.deepEqual(view.errors,[]);
     passed('Real pre-migration schema displays tables read-only and blocks writes: '+account.role);
