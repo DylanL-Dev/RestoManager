@@ -205,7 +205,8 @@ window.addEventListener('hashchange',()=>{
 });
 window.addEventListener('restomanager:editor-open',updateBack);
 window.addEventListener('restomanager:editor-close',updateBack);
-window.RestoScreens={show:id=>commit(id),current:()=>current,back:goBack,request};
+window.RestoScreens={show:id=>commit(id),current:()=>current,back:goBack,request,
+ markBookingSaved:resetBookingBaseline,confirmLeaveForRefresh:mayLeave};
 const initial=screens.has(location.hash.slice(1))?location.hash.slice(1):'tables';
 if(history.state?.[navKey]&&screens.has(history.state.screen))depth=Math.max(0,Number(history.state.depth)||0);
 history.replaceState(stateFor(initial,depth),'','#'+initial);

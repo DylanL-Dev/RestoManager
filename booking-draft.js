@@ -304,7 +304,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  if(recovery){active=true;show('Vérification d’une confirmation précédente…',false);setSubmit();if(onlineReady())void recover()}
  return {
   close,
-  checking:()=>holding||recovering||!!recovery,
+  checking:()=>submitting||holding||recovering||!!recovery,
   recoveryState:()=>recovery?.phase||null,
   occupied(numbers,start,end){
    const rows=window.RestoDraftHolds||[];
