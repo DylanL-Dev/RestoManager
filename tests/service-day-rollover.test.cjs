@@ -35,6 +35,18 @@ test('background, minute timer and realtime refresh check service day',()=>{
  assert.match(source,/setInterval\(syncServiceDay,60000\)/);
  assert.match(source,/visibilitychange[^\n]+syncServiceDay\(\)/);
  assert.match(source,/restomanager:v3-change'[^\n]+syncServiceDay\(\)/);
- assert.match(source,/if\(changed\)\{date=next;bookings=readReservations\(\)\.filter\(r=>r\.date===date\);\}/);
+ assert.match(source,/if\(changed\)\{date=next;bookings=visibleServiceReservations\(readReservations\(\),date\);\}/);
  assert.match(source,/if\(changed\)render\(\)/);
+});
+
+test('midnight keeps previous-day seated parties visible on the live floor',()=>{
+ const a=source.indexOf('function visibleServiceReservations('),b=source.indexOf('let date=today();',a);
+ assert.ok(a>=0&&b>a);
+ const visible=new Function(source.slice(a,b)+'return visibleServiceReservations;')();
+ const rows=[{id:'previous',date:'2026-11-14',status:'seated'},
+  {id:'new',date:'2026-11-15',status:'seated'},
+  {id:'old-cancelled',date:'2026-11-14',status:'cancelled'},
+  {id:'old-expected',date:'2026-11-14',status:'reserved'}];
+ assert.deepEqual(visible(rows,'2026-11-15').map(x=>x.id),['previous','new']);
+ assert.deepEqual(visible(rows,'2026-11-16').map(x=>x.id),['previous','new']);
 });
