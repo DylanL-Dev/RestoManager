@@ -6,7 +6,14 @@ section.innerHTML='<div class="quickReleaseHeader"><div><h2><i data-lucide="uten
 host.parentNode.insertBefore(section,host);
 const $=id=>document.getElementById(id),collator=new Intl.Collator('fr',{numeric:true,sensitivity:'base'});
 function read(){if(window.RestoSharedReservations)return ReservationEngine.normalizeReservations(window.RestoSharedReservations);try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}}
-function serviceDay(){const d=new Date();if(d.getHours()<1)d.setDate(d.getDate()-1);return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')}
+// Never pin occupied tables to "yesterday" at 00:00–00:59. A party remains
+// installed until released, even when its reservation date is older than today.
+function occupiedRows(rows){return rows.filter(r=>r.status==='seated')}
+function parisDate(){
+ const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const d=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+ return d.year+'-'+d.month+'-'+d.day;
+}
 let lastUndo=null;
 const pendingReleases=new Set();
 const connectedService=()=>Boolean(document.getElementById('integrationGate'));
@@ -15,19 +22,19 @@ function room(r){return String(r.hotelRoom||r.room||r.roomNumber||r.chambre||r.c
 function el(tag,cls,content){const e=document.createElement(tag);if(cls)e.className=cls;if(content!=null)e.textContent=content;return e}
 function render(){
  const q=$('quickReleaseSearch').value.trim().toLocaleLowerCase('fr'),sort=$('quickReleaseSort').value;
- const list=read().filter(r=>r.status==='seated'&&r.date===serviceDay());
+ const list=occupiedRows(read());
  list.sort((a,b)=>sort==='room'?collator.compare(room(a)||'999999',room(b)||'999999')||collator.compare(a.client,b.client):sort==='name'?collator.compare(a.client,b.client):sort==='time'?collator.compare(a.seatedAt||a.time,b.seatedAt||b.time):collator.compare(String((a.tables||[])[0]||''),String((b.tables||[])[0]||'')));
  $('quickReleaseCount').textContent=list.length;
  const container=$('quickReleaseList');container.replaceChildren();
  const shown=list.filter(r=>[r.client,room(r),(r.tables||[]).join(' '),r.time].join(' ').toLocaleLowerCase('fr').includes(q));
  if(!shown.length){container.append(el('p','quickReleaseEmpty',list.length?'Aucun client ne correspond à la recherche.':'Aucune table occupée actuellement.'));return}
  for(const r of shown){
-  const row=el('article','quickReleaseRow'),info=el('div','quickReleaseInfo'),top=el('strong','', 'Table '+(r.tables||[]).join(' + ')),sub=el('span','',r.client+(room(r)?' · Chambre '+room(r):'')+' · '+r.guests+' pers. · '+r.time);
+  const row=el('article','quickReleaseRow'),info=el('div','quickReleaseInfo'),top=el('strong','', 'Table '+(r.tables||[]).join(' + ')),sub=el('span','',r.client+(room(r)?' · Chambre '+room(r):'')+' · '+r.guests+' pers. · '+r.time+(r.date!==parisDate()?' · Réservation du '+r.date.slice(8,10)+'/'+r.date.slice(5,7):''));
   const start=r.seatedAt?new Date(r.seatedAt):new Date(r.date+'T'+r.time+':00');
   const validStart=!Number.isNaN(start.getTime());
   const mins=Number(r.duration)||ReservationEngine.getDefaultDuration();
   const end=validStart?new Date(start.getTime()+mins*60000):null;
-  const format=d=>d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  const format=d=>d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
   const timing=el('span','quickReleaseTiming',validStart?'Installés à '+format(start)+' · Fin prévue '+format(end):'Horaire à vérifier');
   const overdue=end&&Date.now()>end.getTime();
   const state=el('span','quickReleaseStatus '+(overdue?'quickReleaseStatusOverdue':'quickReleaseStatusOccupied'),overdue?'Fin prévue dépassée':'Occupée');
@@ -75,7 +82,7 @@ function openQuickEdit(id){
   if(capacity<previous.guests){error.textContent='Capacité insuffisante pour '+previous.guests+' personne(s).';return}
   const validation=ReservationEngine.validate(candidate,all,id);
   if(!validation.valid){error.textContent=validation.errors.join(' ');return}
-  const occupied=all.find(r=>r.id!==id&&r.status==='seated'&&r.date===candidate.date&&r.tables.some(t=>tables.includes(t)));
+  const occupied=all.find(r=>r.id!==id&&r.status==='seated'&&r.tables.some(t=>tables.includes(t)));
   if(occupied){error.textContent='Cette table est encore occupée par '+occupied.client+'.';return}
   all[index]=candidate;
   try{localStorage.setItem(KEY,JSON.stringify(all))}catch(e){error.textContent='Enregistrement impossible : '+e.message;return}
@@ -88,7 +95,7 @@ async function release(id){
  if(!canRelease()){$('quickReleaseFeedback').textContent='Synchronisation indisponible. Attendez la reconnexion avant de libérer cette table.';render();return}
  pendingReleases.add(id);render();
  try{
- const all=read(),index=all.findIndex(r=>r.id===id&&r.status==='seated'&&r.date===serviceDay());if(index<0){render();return}
+ const all=read(),index=all.findIndex(r=>r.id===id&&r.status==='seated');if(index<0){render();return}
  const previous=all[index],transition=ReservationEngine.transition(previous,'released',new Date().toISOString(),all);
  if(!transition.valid){$('quickReleaseFeedback').textContent=transition.error;return}
  if(window.RestoSharedReservations){
@@ -107,7 +114,7 @@ async function release(id){
   if(!lastUndo||lastUndo.id!==id)return;
   const current=read(),i=current.findIndex(r=>r.id===id&&r.status==='released'&&r.updatedAt===lastUndo.releasedAt);
   if(i<0){undo.textContent='Annulation impossible : le passage a été modifié.';return}
-  const conflict=current.some(r=>r.id!==id&&r.date===lastUndo.previous.date&&r.status==='seated'&&r.tables.some(t=>lastUndo.previous.tables.includes(t)));
+  const conflict=current.some(r=>r.id!==id&&r.status==='seated'&&r.tables.some(t=>lastUndo.previous.tables.includes(t)));
   if(conflict){undo.textContent='Impossible : cette table a été réoccupée.';return}
   current[i]=lastUndo.previous;localStorage.setItem(KEY,JSON.stringify(current));lastUndo=null;undo.textContent='Libération annulée.';window.dispatchEvent(new Event('restomanager:v3-change'));render();
  });undo.append(msg,button);
@@ -116,5 +123,11 @@ async function release(id){
  }finally{pendingReleases.delete(id);render();}
 }
 $('quickReleaseSearch').addEventListener('input',render);$('quickReleaseSort').addEventListener('change',render);
-window.addEventListener('restomanager:v3-change',render);window.addEventListener('restomanager:connection-state',render);window.addEventListener('storage',event=>{if(event.key===KEY)render()});render();
+window.addEventListener('restomanager:v3-change',render);window.addEventListener('restomanager:connection-state',render);
+window.addEventListener('restomanager:supabase-snapshot',render);
+window.addEventListener('focus',render);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)render()});
+window.addEventListener('storage',event=>{if(event.key===KEY)render()});
+setInterval(render,60000);
+render();
 })();
