@@ -22,7 +22,7 @@ test('Authorized fusions are categorized and distinguished from underlying pair 
 });
 test('Layout offers desktop navigation and table, tablet/mobile navigation and cards',()=>{
  assert.match(html,/service-v3-management-categories\.css\?v=20261113-room-filter1/);
- assert.match(html,/service-v3-screens\.js\?v=20261112-management-layout1/);
+ assert.match(html,/service-v3-screens\.js\?v=20261115-rm011a-clean-form1/);
  assert.match(html,/service-v3-fusions\.js\?v=20261112-management-layout1/);
  assert.match(styles,/grid-template-columns:220px minmax\(0,1fr\)/);
  assert.match(styles,/\.rmFusionTableHead,\.rmFusionGroupRow/);
