@@ -62,7 +62,7 @@ function setup(){
   setInterval(fn,ms){timers.push({fn,ms})}};
  vm.runInNewContext(source,context,{filename:'service-v3-quick-release.js'});
  function rows(){
-  return ids.get('quickReleaseList').children.map(row=>({
+  return ids.get('quickReleaseList').children.filter(row=>row.className==='quickReleaseRow').map(row=>({
    name:row.children[0].children[1].textContent,
    button:row.children[1].children.at(-1)
   }));
