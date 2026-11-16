@@ -32,7 +32,7 @@ Prototype réel : [HTML isolé](maquettes/rm014.html), styles partagés avec le 
 
 ## État de livraison
 
-Les cinq lots sont réalisés dans la PR [#159](https://github.com/DylanL-Dev/RestoManager/pull/159), vers DEV exclusivement. Les preuves locales et leurs limites figurent ci-dessous. Les contrôles GitHub du dernier commit sont vérifiables dans la PR ; aucune fusion ni publication Render n’est effectuée par cette mission.
+Les cinq lots sont réalisés dans la PR [#159](https://github.com/DylanL-Dev/RestoManager/pull/159), fusionnée vers DEV exclusivement après demande du propriétaire pour prévisualisation. Render DEV est publié ; la version servie correspond au code testé. Les preuves locales et les limites de recette figurent ci-dessous. Aucune publication V3/MAIN.
 
 
 ## Lot 2 — Unification du service
@@ -122,7 +122,7 @@ Autres vues : [mobile sombre](preuves/rm014/after-fb_admin-390-dark.png), [table
 
 - Branche dédiée issue de DEV uniquement ; commits par lot. PR vers `feature/v3-supabase-full-clone` uniquement, sans fusion automatique.
 - V3 et MAIN ne sont pas modifiées ; Supabase DEV et PROD ne sont pas modifiées, aucune donnée réelle d’essai.
-- Le clone Render reste sur sa version actuelle tant que la PR n’est pas fusionnée et déployée. Les captures et parcours ci-dessus constituent une recette automatisée isolée du frontend DEV, **pas** une session authentifiée sur Render ni une validation sur appareils physiques.
+- Le clone Render affiche maintenant RM-014, après fusion autorisée de la PR #159. Les captures et parcours ci-dessus restent une recette automatisée isolée du frontend DEV, **pas** une session authentifiée sur Render ni une validation sur appareils physiques. La disponibilité du déploiement et ses fichiers sont contrôlés séparément ci-dessous.
 - Les marqueurs historiques `read_at` restent partagés selon les droits Restaurant existants ; la lecture/report des rappels et nouveautés est locale par compte/établissement. Une synchronisation serveur individuelle des rappels nécessiterait une mission et une autorisation distinctes ; aucun nouveau schéma n’est requis ici.
 - La liste de précache correspond aux dépendances de cette branche DEV. Une future livraison MAIN devra adapter le canal du manifeste/métadonnées, la clé de cache et la liste de dépendances réellement présentes sur MAIN, en préservant ses modules de connexion ; ne jamais copier le routage DEV.
 - Les contrôles automatiques de focus/ARIA/contraste sont ciblés ; ils ne constituent pas un audit WCAG exhaustif avec lecteur d’écran ni une recette Safari/iOS physique. La mise à jour reste volontaire ; aucune demande de permission push, aucun son, aucun popup automatique pendant le service.
@@ -150,4 +150,13 @@ Commit applicatif testé : `d08e8f6777f986c67bec79aead7fa6d8fcbbd915`. **212 tes
 | Gestion et Assistance RM-013 | [43896390878](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390878) |
 | Intégration Mission 3 : PostgreSQL, Auth/RLS/Realtime isolés et régressions navigateur | [43896390982](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390982) |
 
-Les commits documentaires de livraison conservent strictement les empreintes applicatives du manifeste. Les contrôles associés au dernier commit de PR restent visibles dans Checks. Validation utilisateur et essai authentifié du clone Render à réaliser après intégration/déploiement DEV autorisés ; aucune promotion vers V3 ou MAIN.
+Les commits documentaires de livraison conservent strictement les empreintes applicatives du manifeste. Les contrôles associés au dernier commit de PR restent visibles dans Checks. Le clone est maintenant déployé pour la validation visuelle et authentifiée du propriétaire ; aucune promotion vers V3 ou MAIN.
+
+
+### Prévisualisation Render DEV publiée (16/11/2026)
+
+À la demande « Pour que je puisse voir », la PR #159 a été intégrée **uniquement à DEV** (`3e3a08a807093b196648be1eb8da80e244b69f77`). Le service existant `restomanager-v3-supabase-integration` suit bien DEV ; son nom ne signifie pas une publication sur la branche V3.
+
+Déploiement `dep-dbticiei0phs73f0pd00` **LIVE**, version `2026.11.16-rm014`. Les treize ressources applicatives et quatre fichiers protégés répondent en HTTP 200 et correspondent aux empreintes enregistrées. L’entrée et le manifeste sans paramètre ont aussi été contrôlés : canal `dev`, version cohérente. [Preuve machine](preuves/rm014-render-20261116.json).
+
+[Ouvrir la prévisualisation](https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html?preview=rm014). Aucune écriture Supabase ni donnée fictive réelle créée ; V3 et MAIN inchangées. L’affichage authentifié doit encore être apprécié par le propriétaire sur ses appareils ; cette publication ne vaut pas validation utilisateur du clone.
