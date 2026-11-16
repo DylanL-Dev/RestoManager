@@ -47,14 +47,20 @@
    await window.RestoBookingDraft?.close();
    if(changed())return false;
    if(registration?.waiting){
-    await askWorker(registration.waiting,'RESTO_APPLY_UPDATE');
+    const waiting=registration.waiting;
+    await askWorker(waiting,'RESTO_APPLY_UPDATE');
+    if(waiting.state!=='activated')await new Promise((resolve,reject)=>{
+     const timer=setTimeout(()=>{waiting.removeEventListener('statechange',changed);reject(Error('Activation non confirmée.'))},4500);
+     function changed(){if(waiting.state==='activated'){clearTimeout(timer);waiting.removeEventListener('statechange',changed);resolve()}}
+     waiting.addEventListener('statechange',changed);changed();
+    });
     if(changed())return false;
    }
    const url=new URL(window.location.href);url.searchParams.set('refresh',String(Date.now()));
    window.location.replace(url.href);return true;
   }catch(error){
    window.RestoErrors?.diagnostic('app-update',error);
-   await tell('La mise à jour n’a pas été appliquée. Une autre fenêtre peut contenir une saisie ou une opération en cours. Fermez les fenêtres inutilisées puis réessayez.');return false;
+   await tell('La mise à jour n’a pas été appliquée. Vérifiez la connexion. Si une autre fenêtre contient une saisie, terminez-la puis réessayez.');return false;
   }finally{busy=false;if(button)button.disabled=false}
  }
  button?.addEventListener('click',()=>void request());

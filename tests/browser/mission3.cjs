@@ -892,7 +892,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   }
   reset({overdue:true});const foreignClock=await open(browser,origin,'fb_admin',{width:390,height:844},'America/New_York');
   await foreignClock.page.clock.fastForward(120000);await foreignClock.page.locator('.serviceBell').click();
-  assert.match(await foreignClock.page.locator('.serviceReminderPanel').innerText(),/Client en retard/);pass('Paris overdue notifications remain correct in a browser configured for New York');await clean(foreignClock);
+  assert.match(await foreignClock.page.locator('#serviceReminderPanel').innerText(),/Arrivée à vérifier/);pass('Paris overdue notifications remain correct in a browser configured for New York');await clean(foreignClock);
   console.log(JSON.stringify({passed,failed:0,backend:'in-memory mock, external requests blocked; Auth/RLS/Realtime NOT validated',viewports:['390x844','768x1024','1440x900']}));
  }finally{await browser?.close();await new Promise(resolve=>server.close(resolve))}
 })().catch(error=>{console.error(error);process.exitCode=1});

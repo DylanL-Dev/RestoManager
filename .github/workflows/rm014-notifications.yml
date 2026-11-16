@@ -1,0 +1,38 @@
+name: RM-014 Notifications - isolated lifecycle and PWA
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  notifications:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:syntax
+      - run: npm test
+      - name: Before screenshots from the actual DEV base
+        env:
+          RM013_BASE_REF: e3a5daa626007f7a8d67e173cbbfe7eafd6b5969
+          BROWSER_ARTIFACTS: test-results/rm014-before
+        run: npm run test:notifications:browser -- --baseline
+      - name: Two roles, seven widths, light/dark, keyboard and notification state
+        run: npm run test:notifications:browser
+      - name: Tenant filtering, release proof, dirty drafts and future source fixture
+        run: npm run test:notifications:lifecycle
+      - name: Real service worker, two tabs, waiting activation and offline shell
+        run: npm run test:notifications:pwa
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm014-notifications-responsive-and-pwa
+          path: test-results/rm014*/

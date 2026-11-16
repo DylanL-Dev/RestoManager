@@ -62,3 +62,12 @@ html[data-theme="dark"] .rmNcCard.is-important{border-left-color:#e5ad70}
 html[data-theme="dark"] .is-important .rmNcGlyph{color:#f4c28c;background:#493b29}
 html[data-theme="dark"] .serviceBell{background:#254b3b;color:#b7f2d1;border-color:#5b806e}
 @media(prefers-reduced-motion:reduce){.rmNotificationCenter,.rmNotificationCenter *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+/* Override the legacy global dark button selector at equal specificity. */
+.rmNotificationCenter .rmNcTitle:focus{outline:none}
+html[data-theme="dark"] dialog.rmNotificationCenter{background:var(--nc-bg);color:var(--nc-text);border-color:var(--nc-line)}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcPrimary{background:#146c55;color:#fff;border-color:#61bd95}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcTextButton{background:transparent;color:var(--nc-accent);border-color:transparent}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcFilter{background:var(--nc-soft);color:var(--nc-text);border-color:var(--nc-line)}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcFilter[aria-pressed="true"]{background:var(--nc-tint);color:var(--nc-accent);border-color:var(--nc-accent)}
+
+.rmNotificationCenter .rmNcCardTitle{overflow-wrap:anywhere}

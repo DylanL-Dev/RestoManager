@@ -58,3 +58,72 @@ Le SW utilise sa racine effective (Render `/`, Pages `/RestoManager/`), préchar
 Seuls des états réels de synchronisation/consultation et les anomalies actuellement calculées alimentent le canal prioritaire. Ni compteur fictif, ni communication d’exploitation inventée, ni nouvelle règle de clôture. Les données disponibles restent visibles avec une mise en garde lors d’une panne ; l’état disparaît après rétablissement. Le chargement des événements Réception est suivi séparément de la synchronisation des réservations ; un succès efface l’ancienne erreur.
 
 L’API `RestoNotifications.registerSource` et son [contrat détaillé](RM014_SOURCE_CONTRACT.md) préparent RM-012, sans l’activer. Rôles, établissement, identité stable, état résolu et expiration sont filtrés. Le seul exemple de service à régulariser utilisé à l’exécution est dans le harnais fictif. Aucun schéma supplémentaire n’est nécessaire : pas de migration proposée ni appliquée, aucune modification de RLS.
+
+## Lot 5 — Vérifications et corrections de régression
+
+Les harnais servent le **vrai HTML/CSS/JS et le vrai garde d’authentification** ; seuls Auth, les snapshots et les écritures `read_at`/RPC sont remplacés par une frontière en mémoire. Les requêtes HTTP externes et WebSocket sont bloquées. Pour tester les PWA, le faux bridge est servi aussi aux requêtes du véritable service worker sur le serveur loopback. Aucun compte, réservation, message d’assistance ou clôture n’est créé dans une base distante.
+
+Défauts détectés puis corrigés pendant la mission :
+
+- tri lu/non lu correctement booléen, y compris pour une source sans état initial ; pas de faux nouveau compteur après refresh ;
+- erreur de synchronisation Réception distinguée de son absence de source Restaurant ; message de consultation seule exact ;
+- acquittement serveur confirmé et absence de droits/compte changé traitée sans conserver les notifications confidentielles accessibles ;
+- cycle de focus clavier, réouverture après l’historique, positions de défilement et déverrouillage du fond avant un dialogue de brouillon ;
+- retour explicite de la navigation acceptée/refusée, notamment si la réservation est déjà en cours d’édition sur le même écran ;
+- glyphes Lucide manquants ajoutés au bundle local, sans CDN ; [licence ISC](../../asset/licenses/lucide.txt) conservée ;
+- styles des boutons sombres protégés contre les anciens sélecteurs globaux ; contrastes des textes calculés sur les couleurs réellement rendues ;
+- échec de libération du maintien ou apparition d’une saisie pendant une attente : aucun rechargement silencieux.
+
+Les réservations et leurs allergies/notes, RM-011-B (occupation physique après minuit), les horaires, Gestion RM-013 et l’Assistance restent dans leurs parcours existants. Aucun RPC, schéma, RLS, projet Supabase, module de connexion, lockfile ou dépendance n’est modifié. Le seul ajout à `package.json` concerne trois commandes de test.
+
+### Résultats locaux
+
+| Validation | Résultat |
+| --- | --- |
+| Syntaxe JS | 141 fichiers, 0 erreur |
+| Tests Node | 53 fichiers de tests réussis ; dont 14 cas de projection RM-014 et 11 cas de protection de mise à jour |
+| Interface RM-014 | 14 combinaisons : Restaurant + Réception × 360/390/430/768/1024/1440/1920, clavier/tactile, ARIA, focus, thème clair/sombre, contraste texte ≥4,5:1 sur les éléments contrôlés, cibles et absence de débordement |
+| Cycle de vie RM-014 | Sources dédupliquées, erreur/rétablissement, marqueurs, annulation, navigation réelle, lecture persistée, report/expiration, exemple RM-012 isolé, publication candidate/incohérente/autre canal rejetée, version publiée acceptée, notes/allergies préservées, sauvegarde en cours bloquante, historique hors ligne |
+| PWA réelle | 12 groupes : racines `/` et `/RestoManager/`, précache, deux fenêtres, blocage de la saisie de l’autre onglet, worker installé en attente, activation explicite sans reload des autres fenêtres, shell hors ligne sans fausse mise à jour |
+| Réservations Mission 2 | 13 scénarios réussis |
+| Réservations / Service Mission 3 | 110 scénarios réussis, dont horloge contrôlée et navigateur configuré pour New York avec date Paris |
+| Gestion RM-013 | 14 combinaisons réussies, permissions et parcours conservés |
+| Assistance | 14 combinaisons réussies, envoi privé fictif et échec/reprise |
+| Planning hebdomadaire | 1440 / 800 / 390, parcours réussis |
+| Affichage des tables | 14 scénarios réussis, consultation seule et panne/rétablissement inclus |
+
+Les résultats et captures définitifs sont conservés sous `preuves/rm014/` ; les suites GitHub contrôlent à nouveau le paquet final. Le workflow dédié `rm014-notifications.yml` produit aussi les captures avant depuis le commit DEV de base, puis les tests de cycle de vie et de vrai service worker. Les workflows existants restent activés, dont PostgreSQL et Auth/RLS/Realtime **isolés**.
+
+### Comparaison avant / après
+
+Horloge et données contrôlées identiques : lundi 08/11/2032, deux rappels de service et une nouvelle réservation fictive. Les notices de version du harnais sont datées sur son horloge pour tester leur affichage ; le manifeste réellement livré reste daté du 16/11/2026. Les captures sont celles du **viewport**, pas de pages déroulées : les menus restent à leur véritable position d’écran.
+
+| Format | Avant | Après |
+| --- | --- | --- |
+| Mobile 390 × 844 | [Ancien panneau](preuves/rm014/before-390.png) | [Centre plein écran](preuves/rm014/after-fb_admin-390.png) |
+| Tablette 768 × 1024 | [Ancien panneau](preuves/rm014/before-768.png) | [Tiroir tablette](preuves/rm014/after-fb_admin-768.png) |
+| PC 1440 × 900 | [Ancien panneau](preuves/rm014/before-1440.png) | [Tiroir contextuel](preuves/rm014/after-fb_admin-1440.png) |
+
+| Critère | Avant | Après |
+| --- | --- | --- |
+| Lecture du service | Liste plate et recréée, nombreuses actions | Groupes sobres, contexte court, priorité et action principale unique |
+| Lu / non lu | Événements lus retirés, rappels sans lecture | Compteur d’identités non lues ; lecture explicite ; rappel important retrouvé tant qu’actif |
+| Modifications répétées | Création et changements empilés | Dernier contexte regroupé, références conservées pour l’acquittement |
+| Fin de repas à minuit | Rappel filtré par la date du jour | Rappel conservé jusqu’à libération réelle |
+| Panne de source | Risque d’état vide trompeur | Avertissement précis et dernières informations disponibles |
+| Nouveautés | Aucun historique unifié | Carte discrète et historique depuis Gestion ou la cloche |
+| Mise à jour | Cache vidé globalement, échec de maintien pouvant recharger | Garde partagé, saisie préservée, vérification multi-fenêtres, activation explicite |
+| Accessibilité | Région flottante, focus non contenu | Dialogue nommé, retour du focus, Échap/Tab, 44 px, contraste contrôlé, thème sombre et réduction des animations |
+
+Autres vues : [mobile sombre](preuves/rm014/after-fb_admin-390-dark.png), [tablette sombre](preuves/rm014/after-fb_admin-768-dark.png), [PC sombre](preuves/rm014/after-fb_admin-1440-dark.png), [Réception mobile](preuves/rm014/after-reception-390.png), [historique mobile](preuves/rm014/history-reception-390.png), [historique tablette](preuves/rm014/history-reception-768.png), [historique PC](preuves/rm014/history-reception-1440.png).
+
+### Livraison et limites de preuve
+
+- Branche dédiée issue de DEV uniquement ; commits par lot. PR vers `feature/v3-supabase-full-clone` uniquement, sans fusion automatique.
+- V3 et MAIN ne sont pas modifiées ; Supabase DEV et PROD ne sont pas modifiées, aucune donnée réelle d’essai.
+- Le clone Render reste sur sa version actuelle tant que la PR n’est pas fusionnée et déployée. Les captures et parcours ci-dessus constituent une recette automatisée isolée du frontend DEV, **pas** une session authentifiée sur Render ni une validation sur appareils physiques.
+- Les marqueurs historiques `read_at` restent partagés selon les droits Restaurant existants ; la lecture/report des rappels et nouveautés est locale par compte/établissement. Une synchronisation serveur individuelle des rappels nécessiterait une mission et une autorisation distinctes ; aucun nouveau schéma n’est requis ici.
+- La liste de précache correspond aux dépendances de cette branche DEV. Une future livraison MAIN devra adapter le canal du manifeste/métadonnées, la clé de cache et la liste de dépendances réellement présentes sur MAIN, en préservant ses modules de connexion ; ne jamais copier le routage DEV.
+- Les contrôles automatiques de focus/ARIA/contraste sont ciblés ; ils ne constituent pas un audit WCAG exhaustif avec lecteur d’écran ni une recette Safari/iOS physique. La mise à jour reste volontaire ; aucune demande de permission push, aucun son, aucun popup automatique pendant le service.
+
+La CI du paquet final et ses références seront enregistrées ci-dessous avant livraison à l’utilisateur.

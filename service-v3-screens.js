@@ -168,17 +168,18 @@ async function mayLeave(options={}){
  return true;
 }
 async function request(id,{scrollTables=false}={}){
- if(navigationBusy||!screens.has(id))return;
+ if(navigationBusy||!screens.has(id))return false;
  if(id===current&&!editForm()){
   if(scrollTables)document.getElementById('tables')?.scrollIntoView({behavior:'smooth',block:'start'});
-  return;
+  return true;
  }
  navigationBusy=true;
  try{
-  if(!await mayLeave())return;
+  if(!await mayLeave())return false;
   if(id!==current)commit(id);
   updateBack();
   if(scrollTables)document.getElementById('tables')?.scrollIntoView({behavior:'smooth',block:'start'});
+  return true;
  }finally{navigationBusy=false}
 }
 async function goBack(){

@@ -16,7 +16,7 @@
    const common={group:'service',reservationId:r.id,source:'reminder',context:'Service',action:'reservation',snoozable:true,read:false};
    if(['reserved','confirmed','late'].includes(r.status)&&r.date===day(now)){
     const delay=Math.floor((now-expected)/60000);if(delay<10)continue;
-    result.push({...common,id:'late:'+r.id,type:'late',priority:delay>=20?'high':'normal',icon:'clock-3',title:'Arrivée à vérifier',body:who(r)+' · '+r.guests+' couvert(s)'+(r.tables?.length?' · Table '+r.tables.join(' + '):'')+'. Attendu à '+r.time+', il y a '+delay+' min.',createdAt:expected+600000});
+    result.push({...common,id:'late:'+r.id,type:'late',priority:delay>=20?'high':'normal',icon:'clock-3',title:'Arrivée à vérifier',body:who(r)+' · '+r.guests+' couvert'+(r.guests>1?'s':'')+(r.tables?.length?' · Table '+r.tables.join(' + '):'')+'. Attendu à '+r.time+', il y a '+delay+' min.',createdAt:expected+600000});
    }
    // Occupancy is physical: a seated table from yesterday is still occupied today.
    if(r.status==='seated'){
@@ -54,7 +54,7 @@
     if(fields.includes('client'))details.push('Nom du client modifié');
     if(fields.includes('consignes'))details.push('Consignes ou allergies modifiées : consultez la réservation');
    }
-   result.push({id:'event:'+id,type:a.event_type,source:'event',group:'service',priority:cancel?'high':'normal',icon:cancel?'calendar-x':modified?'calendar-clock':'calendar-plus',title:cancel?'Réservation annulée':modified?'Réservation modifiée':'Nouvelle réservation',body:(room?'Chambre '+room:name)+' · '+(r?.guests||a.party_size)+' couvert(s) · '+(r?r.date.split('-').reverse().join('/')+' '+r.time:dateTime(a.starts_at))+(details.length?'. '+details.join('. '):''),createdAt:Date.parse(a.created_at)||0,read:rows.every(r=>Boolean(r.read_at)),revision:rows.map(r=>r.source+':'+r.id).sort().join('|'),refs:rows.map(r=>({source:r.source,id:r.id})),reservationId:id,action:'reservation',context:'Réception',event:a,groupedCount:rows.length,snoozable:false});
+   result.push({id:'event:'+id,type:a.event_type,source:'event',group:'service',priority:cancel?'high':'normal',icon:cancel?'calendar-x':modified?'calendar-clock':'calendar-plus',title:cancel?'Réservation annulée':modified?'Réservation modifiée':'Nouvelle réservation',body:(room?'Chambre '+room:name)+' · '+(r?.guests||a.party_size)+' couvert'+((r?.guests||a.party_size)>1?'s':'')+' · '+(r?r.date.split('-').reverse().join('/')+' '+r.time:dateTime(a.starts_at))+(details.length?'. '+details.join('. '):''),createdAt:Date.parse(a.created_at)||0,read:rows.every(r=>Boolean(r.read_at)),revision:rows.map(r=>r.source+':'+r.id).sort().join('|'),refs:rows.map(r=>({source:r.source,id:r.id})),reservationId:id,action:'reservation',context:'Réception',event:a,groupedCount:rows.length,snoozable:false});
   }
   return result;
  }

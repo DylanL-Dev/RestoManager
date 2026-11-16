@@ -13,7 +13,7 @@
  async function client(){
   const bridge=await import('./supabase-service-bridge.js?v=20261108-tables-display');
   const {user,profile}=await bridge.requireStaff(),ctx=context();
-  if(!ctx||user.id!==ctx.userId||profile.role!=='fb_admin'||profile.restaurant_id!==ctx.restaurantId)throw Error('Accès réservé au Restaurant de cet établissement.');
+  if(!ctx||user.id!==ctx.userId||profile.role!=='fb_admin'||profile.restaurant_id!==ctx.restaurantId)throw Object.assign(Error('Accès réservé au Restaurant de cet établissement.'),{code:'NOTIFICATION_ACCESS'});
   return bridge.supabase;
  }
  async function refresh(force=false){
@@ -33,7 +33,8 @@
    window.RestoFbReservationAlerts=bookings.data||[];window.RestoFbChangeAlerts=changes.data||[];
    window.RestoFbAlertsError=null;window.RestoFbAlertsStatus='ready';lastFetch=Date.now();emit();
   }catch(error){
-   if(key===scope()){window.RestoErrors?.diagnostic('notification-sync',error);window.RestoFbAlertsError='Les notifications de la Réception ne sont pas synchronisées.';window.RestoFbAlertsStatus='error';emit()}
+   if(key===scope()&&['NOTIFICATION_ACCESS','42501','PGRST301'].includes(error.code)){window.RestoNotificationContext=null;clear();window.dispatchEvent(new Event('restomanager:notification-context'))}
+   else if(key===scope()){window.RestoErrors?.diagnostic('notification-sync',error);window.RestoFbAlertsError='Les notifications de la Réception ne sont pas synchronisées.';window.RestoFbAlertsStatus='error';emit()}
   }finally{loading=false;if(again){again=false;void refresh(true)}}
  }
  async function mark(refs){
@@ -42,14 +43,17 @@
   for(const source of ['booking','change']){
    const ids=[...new Set(refs.filter(ref=>ref.source===source).map(ref=>String(ref.id)))];if(!ids.length)continue;
    const table=source==='booking'?'fb_reservation_alerts':'reservation_change_alerts';
-   const {error}=await supabase.from(table).update({read_at:new Date().toISOString()}).eq('restaurant_id',venue).in('id',ids).is('read_at',null);
+   const {data,error}=await supabase.from(table).update({read_at:new Date().toISOString()}).eq('restaurant_id',venue).in('id',ids).is('read_at',null).select('id,read_at');
    if(error)throw error;
    if(key!==scope())throw Error('Le compte connecté a changé.');
    const list=source==='booking'?window.RestoFbReservationAlerts:window.RestoFbChangeAlerts;
-   for(const a of list)if(ids.includes(String(a.id)))a.read_at=new Date().toISOString();
+   const confirmed=new Set((data||[]).filter(row=>row.read_at).map(row=>String(row.id)));
+   for(const a of list)if(confirmed.has(String(a.id)))a.read_at=new Date().toISOString();
    emit();
   }
   await refresh(true);
+  if(key!==scope()||window.RestoFbAlertsStatus!=='ready')throw Error('Lecture non confirmée.');
+  for(const ref of refs){const list=ref.source==='booking'?window.RestoFbReservationAlerts:window.RestoFbChangeAlerts;if(list.some(row=>String(row.id)===String(ref.id)&&!row.read_at))throw Error('Lecture non confirmée.')}
  }
  window.RestoMarkFbNotificationsRead=mark;
  window.RestoMarkFbAlertRead=id=>mark([{source:'booking',id}]);

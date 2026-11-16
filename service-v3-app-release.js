@@ -41,13 +41,14 @@
  function notification(){
   if(!onlineVerified||!verified)return null;
   const release=verified.releases[0],update=verified.releases.findIndex(r=>r.version===current)>0;
+  if(!update&&release.version!==current)return null;
   if(!update&&Date.now()-Date.parse(release.date)>30*86400000)return null;
   return {id:'release:'+release.version,source:'release',type:'release',group:'news',priority:'low',title:update?'Nouvelle version disponible':release.title,body:update?'Une nouvelle version de RestoManager est publiée. Installez-la quand votre saisie est terminée.':'Découvrez les améliorations de cette version.',createdAt:Date.parse(release.date+'T12:00:00Z'),version:release.version,update,context:'RestoManager',release};
  }
  function card(item,{mark,history}){
   const article=node('article','rmNcCard rmNcRelease'+(!item.read?' is-unread':''));article.dataset.notificationId=item.id;
   const top=node('div','rmNcCardTop'),glyph=node('span','rmNcGlyph'),i=node('i');i.dataset.lucide='sparkles';i.setAttribute('aria-hidden','true');glyph.append(i);
-  const words=node('div','rmNcWords');words.append(node('h3','rmNcCardTitle',item.title),node('p','rmNcMeta',new Date(item.createdAt).toLocaleDateString('fr-FR')+' · '+(item.read?'Lue':'Non lue')));top.append(glyph,words);
+  const words=node('div','rmNcWords');words.append(node('h3','rmNcCardTitle',item.title),node('p','rmNcMeta',new Date(item.createdAt).toLocaleDateString('fr-FR',{timeZone:'Europe/Paris'})+' · '+(item.read?'Lue':'Non lue')));top.append(glyph,words);
   article.append(top,node('p','rmNcBody',item.body));const actions=node('div','rmNcActions');
   if(item.update)actions.append(button('Mettre à jour',async()=>{window.RestoNotifications?.close?.();await window.RestoAppRefresh?.request({kind:'update',expectedVersion:item.version})},'rmNcPrimary'));
   actions.append(button('Voir les nouveautés',()=>{mark();history()},item.update?'rmNcSecondary':'rmNcPrimary'));
@@ -55,6 +56,7 @@
   article.append(actions);return article;
  }
  function renderHistory(container){
+  const key=JSON.stringify([verified,onlineVerified,current]);if(container.dataset.releaseKey===key&&container.childElementCount)return;container.dataset.releaseKey=key;
   container.replaceChildren();
   if(!onlineVerified)container.append(node('p','rmNcHelp',verified?'Vous êtes hors ligne ou la publication ne peut pas être vérifiée. Voici les dernières nouveautés vérifiées sur cet appareil.':'Les nouveautés ne peuvent pas être vérifiées pour le moment. Réessayez après reconnexion.'));
   if(!onlineVerified)container.append(button('Vérifier les nouveautés',async()=>{await check();renderHistory(container)},'rmNcSecondary'));
