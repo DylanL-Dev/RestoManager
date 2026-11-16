@@ -302,3 +302,12 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Reproduction avant correction puis clics carte/pied/Gestion, filtres et allers-retours validés aux sept largeurs pour les deux rôles. Six workflows GitHub verts sur `7863f13` ; PR #161 fusionnée vers DEV `bb2ed4b`.
 - Render `dep-dbtj12ei0phs73dgbk10` **LIVE** à `16:34:36Z`, version `2026.11.16-rm014.1`, dix-sept ressources HTTP 200 / empreintes conformes ; HTML, manifeste et lien de prévisualisation également vérifiés sans cache obsolète. [Rapport et preuve](audits/RM014_NEWS_NAVIGATION_20261116.md).
 - À TESTER CLONE par le propriétaire ; aucune validation de terrain inventée. Aucun changement V3/MAIN, RLS, configuration ou base Supabase, aucune donnée d’essai réelle.
+
+
+### RM-014 — VALIDÉE CLONE, livraison V3 puis MAIN autorisée (16/11/2026)
+
+- Validation explicite propriétaire après le correctif « Voir les nouveautés » : « C’est parfait on valide on déploie sur V3 et main ».
+- Source validée : DEV `12ce881`, code correctif `7863f13`, PR #159 et #161 ; Render `dep-dbtj12ei0phs73dgbk10` LIVE, version `2026.11.16-rm014.1`.
+- Préparation d’une livraison ciblée sur branches filles de V3 et MAIN. Copier seulement notifications, navigation protégée, nouveautés/PWA et tests correspondants. Conserver les modules de connexion PROD, les dépendances existantes et les règles de données ; pas de fusion DEV globale.
+- Adapter le canal de publication à `main` et le précache aux fichiers réellement présents en production ; ne pas annoncer comme publiée une version uniquement DEV. Sauvegarder les deux branches, vérifier CI du paquet réel, fusionner V3 puis MAIN, puis contrôler GitHub Pages et les empreintes servies.
+- Supabase PROD reste hors autorisation de modification : aucune migration, RLS, écriture de réservation/clôture/message ou opération de données.
