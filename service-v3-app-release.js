@@ -40,10 +40,10 @@
  }
  function notification(){
   if(!onlineVerified||!verified)return null;
-  const release=verified.releases[0],update=verified.releases.findIndex(r=>r.version===current)>0;
-  if(!update&&release.version!==current)return null;
+  const release=verified.releases[0],newer=verified.releases.findIndex(r=>r.version===current)>0,update=newer&&release.requiresReload;
+  if(!newer&&release.version!==current)return null;
   if(!update&&Date.now()-Date.parse(release.date)>30*86400000)return null;
-  return {id:'release:'+release.version,source:'release',type:'release',group:'news',priority:'low',title:update?'Nouvelle version disponible':release.title,body:update?'Une nouvelle version de RestoManager est publiée. Installez-la quand votre saisie est terminée.':'Découvrez les améliorations de cette version.',createdAt:Date.parse(release.date+'T12:00:00Z'),version:release.version,update,context:'RestoManager',release};
+  return {id:'release:'+release.version,source:'release',type:'release',group:'news',priority:'low',title:update?'Nouvelle version disponible':release.title,body:update?'Une nouvelle version de RestoManager est publiée. Installez-la quand votre saisie est terminée.':release.requiresReload?'Découvrez les améliorations de cette version.':'Découvrez ces nouveautés. Aucune actualisation n’est nécessaire.',createdAt:Date.parse(release.date+'T12:00:00Z'),version:release.version,update,context:'RestoManager',release};
  }
  function card(item,{mark,history}){
   const article=node('article','rmNcCard rmNcRelease'+(!item.read?' is-unread':''));article.dataset.notificationId=item.id;
@@ -65,7 +65,8 @@
    const article=node('article','rmNcHistoryEntry'),time=node('time','',new Date(r.date+'T12:00:00Z').toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',day:'numeric',month:'long',year:'numeric'}));time.dateTime=r.date;
    article.append(time,node('h3','',r.title));const list=node('ul');for(const change of r.changes)list.append(node('li','',change));article.append(list,node('p','',r.impact));
    const installed=r.version===current;article.append(node('p','rmNcMeta',installed?'Version ouverte sur cet appareil':r.version===verified.currentVersion?'Version publiée':'Version précédente'));
-   if(r.version===verified.currentVersion&&!installed&&onlineVerified)article.append(button('Mettre à jour',async()=>{window.RestoNotifications?.close?.();await window.RestoAppRefresh?.request({kind:'update',expectedVersion:r.version})},'rmNcPrimary'));
+   if(!r.requiresReload)article.append(node('p','rmNcMeta','Aucune actualisation nécessaire'));
+   if(r.version===verified.currentVersion&&!installed&&onlineVerified&&r.requiresReload)article.append(button('Mettre à jour',async()=>{window.RestoNotifications?.close?.();await window.RestoAppRefresh?.request({kind:'update',expectedVersion:r.version})},'rmNcPrimary'));
    container.append(article);
   }
  }
@@ -76,7 +77,7 @@
   const body=node('div','managementGroupBody');body.append(node('p','muted','Retrouvez les évolutions de votre application et les informations de mise à jour.'),button('Voir les nouveautés',()=>window.RestoNotifications?.showHistory(),'roomManagerPrimary'));
   wrapper.append(summary,body);management.append(wrapper);
  }
- window.RestoAppRelease={check,notification,card,renderHistory,availableVersion:()=>onlineVerified&&verified?.releases.findIndex(r=>r.version===current)>0?verified?.currentVersion:null};
+ window.RestoAppRelease={check,notification,card,renderHistory,availableVersion:()=>onlineVerified&&verified?.releases.findIndex(r=>r.version===current)>0&&verified.releases[0].requiresReload?verified?.currentVersion:null};
  installHelp();
  if('serviceWorker' in navigator&&window.isSecureContext){navigator.serviceWorker.register('./sw.js',{scope:'./',updateViaCache:'none'}).catch(()=>{})}
  window.addEventListener('online',()=>void check());window.addEventListener('offline',()=>{onlineVerified=false;notify()});
