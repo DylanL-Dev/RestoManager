@@ -160,3 +160,14 @@ Les commits documentaires de livraison conservent strictement les empreintes app
 Déploiement `dep-dbticiei0phs73f0pd00` **LIVE**, version `2026.11.16-rm014`. Les treize ressources applicatives et quatre fichiers protégés répondent en HTTP 200 et correspondent aux empreintes enregistrées. L’entrée et le manifeste sans paramètre ont aussi été contrôlés : canal `dev`, version cohérente. [Preuve machine](preuves/rm014-render-20261116.json).
 
 [Ouvrir la prévisualisation](https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html?preview=rm014). Aucune écriture Supabase ni donnée fictive réelle créée ; V3 et MAIN inchangées. L’affichage authentifié doit encore être apprécié par le propriétaire sur ses appareils ; cette publication ne vaut pas validation utilisateur du clone.
+
+
+### Publication V3 puis MAIN autorisée et vérifiée (16/11/2026)
+
+Le propriétaire a validé le correctif et demandé la publication : « C’est parfait on valide on déploie sur V3 et main ». Les PR [#164 V3](https://github.com/DylanL-Dev/RestoManager/pull/164) puis [#165 MAIN](https://github.com/DylanL-Dev/RestoManager/pull/165) ont été fusionnées après respectivement trois et six workflows réussis. Les arbres de fichiers publiés sont identiques ; les configurations et dépendances propres à la production ont été conservées.
+
+La livraison est limitée à treize fichiers applicatifs et à leurs tests/documentation. Le canal devient `main`, l’historique mentionne RM-014.1 et RM-013-A réellement livrées, et le précache exclut le fichier de routage DEV absent de production. Le SDK npm 2.57.0, le lockfile et les modules de connexion PROD sont inchangés. Aucun changement Supabase PROD ou donnée d’essai réelle.
+
+GitHub Pages a terminé le [déploiement 43918618758](https://github.com/DylanL-Dev/RestoManager/actions/runs/43918618758) sur le commit `f17e6ea43f94452d3608eb778e218f350542e730`. Dix-huit ressources, dont les cinq fichiers protégés, répondent en HTTP 200 avec l’empreinte attendue ; HTML et manifeste canoniques et lien de version concordent. [Preuve de publication](preuves/rm014-publication-20261116.json).
+
+[Ouvrir la version publique](https://dylanl-dev.github.io/RestoManager/v3-connected.html?release=rm014.1). Statut : **PUBLIÉE V3 / PUBLIÉE MAIN** ; la confirmation sur les appareils réels par le propriétaire reste distincte.
