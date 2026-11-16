@@ -50,3 +50,19 @@ test('Existing unrelated forms keep their current access restrictions',()=>{
  assert.deepEqual(submit(reception,{id:'reportIssueForm'}),{prevented:false,stopped:false});
  assert.deepEqual(submit(guard('restaurant',{ready:false}),{id:'reportIssueForm'}),{prevented:false,stopped:false});
 });
+
+function click(fn,{id='',className=''}){
+ const changes={prevented:false,stopped:false};
+ const button={id,classList:{contains:name=>className.split(' ').includes(name)}};
+ fn({type:'click',target:{closest:selector=>selector==='button'?button:null},preventDefault(){changes.prevented=true},stopImmediatePropagation(){changes.stopped=true}});
+ return changes;
+}
+test('Management accordion navigation is not a closure mutation, for either role or connection state',()=>{
+ for(const role of ['restaurant','reception'])for(const ready of [true,false]){
+  const fn=guard(role,{ready});
+  assert.deepEqual(click(fn,{id:'manageClosureToggle',className:'rmManagementCategoryButton'}),{prevented:false,stopped:false});
+  const permittedClosure=role==='restaurant'&&ready;
+  assert.deepEqual(click(fn,{id:'closureManual'}),{prevented:!permittedClosure,stopped:!permittedClosure});
+  assert.deepEqual(click(fn,{id:'deleteReservation'}),{prevented:true,stopped:true});
+ }
+});

@@ -13,17 +13,17 @@ let state,sequence=0,calls=[];const results=[];
 function reset(){
  calls=[];
  state={revision:'10',capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
- hours:{id:1,lunch_enabled:true,lunch_start:'12:00',lunch_end:'14:30',dinner_enabled:true,dinner_start:'19:00',dinner_end:'21:30',duration:90,arrival_limit_percent:60,
+ hours:{id:1,lunch_enabled:true,lunch_start:'12:00',lunch_end:'14:30',dinner_enabled:true,dinner_start:'19:00',dinner_end:'21:30',duration:60,arrival_limit_percent:60,
  weekly_schedule:Object.fromEntries(days.map(day=>[day,{lunch:{enabled:!['saturday','sunday'].includes(day),start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'21:30'}}]))},
  rooms:[{id:id(1),name:'Salle principale',active:true,sort_order:0},{id:id(2),name:'Salle Prestige',active:true,sort_order:1},
  {id:id(3),name:'Salon panoramique des grandes réceptions et des événements privés',active:true,sort_order:2},
  {id:id(4),name:'Salle temporaire',active:true,sort_order:3}],
  tables:Array.from({length:22},(_,i)=>({id:id(100+i),label:'Table '+(i+1),seats:4,active:true,room_id:id(1)})),
- reservations:[],assignments:[],holds:[],fusionLinks:[{table_a:id(100),table_b:id(101)}]};
+ reservations:[],assignments:[],holds:[],serviceClosures:[],fusionLinks:[{table_a:id(100),table_b:id(101)}]};
 }
 const snapshot=()=>({...structuredClone(state),syncSequence:++sequence});
 function query({table,mode,values,filters,single}){
- let rows=table==='restaurants'?[{id:'fictional-venue',name:'Restaurant fictif RM-013-A'}]:table==='restaurant_rooms'?state.rooms:table==='restaurant_tables'?state.tables:table==='restaurant_hours'?[state.hours]:[];
+ let rows=table==='restaurants'?[{id:'fictional-venue',name:'Restaurant fictif RM-013-A'}]:table==='restaurant_rooms'?state.rooms:table==='restaurant_tables'?state.tables:table==='restaurant_hours'?[state.hours]:table==='service_closures'?state.serviceClosures:[];
  rows=rows.filter(row=>filters.every(([key,value])=>key==='restaurant_id'||row[key]===value));
  if(mode==='insert'){
   assert.equal(table,'restaurant_rooms');const row={...values,id:id(50+calls.length)};state.rooms.push(row);rows=[row];calls.push({table,mode,values});
@@ -40,6 +40,11 @@ function rpc(name,args){
  else if(name==='set_restaurant_table_active_v3')state.tables.find(t=>t.id===args.p_table_id).active=args.p_active;
  else if(name==='create_fusion_chain_v1')state.fusionLinks=args.p_tables.slice(1).map((t,i)=>({table_a:args.p_tables[i],table_b:t}));
  else if(name==='change_fusion_link_v3'){state.fusionLinks=state.fusionLinks.filter(link=>!args.p_old||![link.table_a,link.table_b].every(t=>args.p_old.includes(t)));if(args.p_new)state.fusionLinks.push({table_a:args.p_new[0],table_b:args.p_new[1]})}
+ else if(name==='close_service_v3'){
+  assert.equal(args.p_mode,'manual');assert.ok(args.p_date<'2032-11-08','Fixture closes only a past service');
+  assert.equal(state.reservations.filter(r=>r.starts_at.startsWith(args.p_date)&&!['departed','completed','cancelled','no_show'].includes(r.status)).length,0);
+  state.serviceClosures.push({service_date:args.p_date,close_mode:'manual',served_covers:0,served_groups:0,closed_at:'2032-11-08T10:00:00Z'});
+ }
  else throw Error('Unexpected fixture RPC '+name);
  return {data:id(999),error:null};
 }
@@ -73,7 +78,11 @@ async function capture(page,name){
  await page.clock.runFor(300);await page.evaluate(()=>scrollTo({top:0,left:0,behavior:'instant'}));
  await page.screenshot({path:path.join(out,name+'.png'),fullPage:true,animations:'disabled'});
 }
-async function openCategory(page,id){await page.evaluate(id=>window.RestoManagementCategories.open(id),id)}
+async function openCategory(page,id){
+ const button=page.locator('#'+id+'Toggle');
+ if(await button.getAttribute('aria-expanded')!=='true')await button.click();
+ await page.waitForFunction(id=>document.getElementById(id+'Toggle').getAttribute('aria-expanded')==='true',id);
+}
 async function feedback(page,id,text){await page.waitForFunction(({id,text})=>document.getElementById(id).textContent.includes(text),{id,text})}
 async function dialog(page,button){await page.getByRole('alertdialog').getByRole('button',{name:button,exact:true}).click()}
 async function chooseRoom(page,name){
@@ -142,7 +151,13 @@ async function exerciseRestaurant(page,width){
  await page.locator('#restaurantShiftForm button[type=submit]').click();await feedback(page,'shiftFeedback','enregistrés');
  assert.equal(state.hours.weekly_schedule.monday.lunch.start,'11:30');assert.equal(state.hours.weekly_schedule.monday.dinner.enabled,false);assert.deepEqual(state.hours.weekly_schedule.tuesday,state.hours.weekly_schedule.monday);
  await noOverflow(page,'hours '+width);if([390,768,1440].includes(width))await capture(page,'after-hours-'+width);
- await openCategory(page,'manageSettings');await page.locator('.durationSelectTrigger').click();
+ await openCategory(page,'manageSettings');
+ const setting=await page.locator('.restaurantDurationSetting').evaluate(box=>{const button=box.querySelector('.durationSelectTrigger'),label=box.querySelector('label');return {background:getComputedStyle(box).backgroundColor,border:getComputedStyle(box).borderTopWidth,button:button.getBoundingClientRect().toJSON(),label:label.getBoundingClientRect().toJSON()}});
+ assert.equal(setting.background,'rgba(0, 0, 0, 0)','Duration has no outer filled frame');assert.equal(setting.border,'0px');
+ assert.ok(setting.button.width<=180&&setting.button.height>=44,'Compact duration value with touch target');
+ assert.ok(setting.button.y>=setting.label.y&&setting.button.y+setting.button.height<=setting.label.y+setting.label.height+1,'Duration value stays in its label row');
+ if([390,768,1440].includes(width))await capture(page,'after-settings-'+width);
+ await page.locator('.durationSelectTrigger').click();
  await page.locator('.v3-picker-items button').filter({hasText:/^2 h$/}).click();await feedback(page,'manageSettingsPanel','Durée enregistrée');assert.equal(state.hours.duration,120);
  assert.equal(await page.locator('#restaurantDefaultDuration').evaluate(el=>el.form?.id),'restaurantShiftForm','Moved duration keeps form ownership');
  await noOverflow(page,'settings '+width);
@@ -154,9 +169,29 @@ async function exerciseRestaurant(page,width){
  await page.locator('.rmFusionTechnical summary').click();await page.locator('#fusionList .fusionRowActions button').filter({hasText:'Retirer'}).first().click();await dialog(page,'Retirer');await feedback(page,'fusionMessage','Association retirée');assert.equal(state.fusionLinks.length,1);
  await noOverflow(page,'fusions '+width);
  // Closeout policies are unchanged. The UI and archive still render after moving.
- await openCategory(page,'manageClosure');assert.equal(await page.locator('#closureManual').isVisible(),true);await page.locator('#serviceClosure details summary').click();assert.match(await page.locator('#closureArchive').innerText(),/Aucune clôture partagée/);
+ await openCategory(page,'manageClosure');
+ assert.equal(await page.locator('#manageClosurePanel').isVisible(),true,'Actual authenticated click opens closeout');
+ await page.locator('#manageClosureToggle').click();assert.equal(await page.locator('#manageClosurePanel').isVisible(),false,'Actual click folds closeout again');
+ await page.locator('#manageClosureToggle').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#manageClosurePanel').isVisible(),true,'Keyboard opens closeout');
+ if([390,768,1440].includes(width))await capture(page,'after-closure-'+width);
+ assert.equal(await page.locator('#closureManual').isVisible(),true);await page.locator('#serviceClosure details summary').click();assert.match(await page.locator('#closureArchive').innerText(),/Aucune clôture partagée/);
  const today='2032-11-08';await page.locator('.sharedClosureControls input').fill(today);await page.locator('.sharedClosureControls input').dispatchEvent('change');
  assert.equal(await page.locator('#closureManual').isDisabled(),true);assert.match(await page.locator('#closureStatus').innerText(),/23 h 30/);
+ assert.equal(calls.filter(call=>call.name==='close_service_v3').length,0,'No closeout before eligible time');
+ const closeDate=page.locator('.sharedClosureControls input');await closeDate.fill('2032-11-07');await closeDate.dispatchEvent('change');
+ assert.equal(await page.locator('#closureManual').isDisabled(),false);
+ await page.locator('#closureManual').click();await dialog(page,'Annuler');assert.equal(state.serviceClosures.length,0,'Cancelling never closes the service');
+ await page.locator('#closureManual').click();await dialog(page,'Clôturer');await feedback(page,'closureStatus','clôturé et archivé');
+ assert.equal(state.serviceClosures.length,1);assert.equal(state.serviceClosures[0].service_date,'2032-11-07');assert.equal(await page.locator('#closureManual').isDisabled(),true,'Archived service cannot be closed twice');
+ assert.match(await page.locator('#closureArchive').innerText(),/2032-11-07.*manuel/);
+ state.reservations=[{id:id(900),guest_name:'Client fictif non finalisé',hotel_room:null,party_size:2,starts_at:'2032-11-06T12:00:00Z',ends_at:'2032-11-06T13:00:00Z',status:'reserved',notes:'[RESTOMANAGER:EXTERIEUR]',edit_version:id(901)}];
+ state.assignments=[{reservation_id:id(900),table_id:id(100)}];await page.evaluate(()=>window.RestoRefreshSharedService());
+ await closeDate.fill('2032-11-06');await closeDate.dispatchEvent('change');assert.equal(await page.locator('#closureManual').isDisabled(),true);assert.match(await page.locator('#closureStatus').innerText(),/non finalisée/);
+ assert.equal(calls.filter(call=>call.name==='close_service_v3').length,1,'Unfinished reservations still prevent closeout');
+ state.reservations=[];state.assignments=[];await page.evaluate(()=>window.RestoRefreshSharedService());
+ await closeDate.fill('2032-11-07');await closeDate.dispatchEvent('change');
+ if([390,768,1440].includes(width))await capture(page,'after-closure-'+width);
+
  await openCategory(page,'manageReports');assert.equal(await page.locator('#historyPdf').isVisible(),true);await page.locator('#historyPeriod').selectOption('week');await page.locator('#historyDate').fill('2032-11-08');await noOverflow(page,'reports '+width);
  for(const module of ['manageEstablishment','manageFeedback','manageNetwork','restoTourHelp']){await openCategory(page,module);assert.equal(await page.locator('#'+module+'Toggle').getAttribute('aria-expanded'),'true');await noOverflow(page,module+' '+width)}
  // The sync badge's old native-details shortcut must open the integrated accordion.
