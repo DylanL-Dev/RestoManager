@@ -56,7 +56,7 @@
   article.append(actions);return article;
  }
  function renderHistory(container){
-  const key=JSON.stringify([verified,onlineVerified,current]);if(container.dataset.releaseKey===key&&container.childElementCount)return;container.dataset.releaseKey=key;
+  const key=JSON.stringify([verified,onlineVerified,current]);if(container.dataset.releaseView==='history'&&container.dataset.releaseKey===key&&container.childElementCount)return;container.dataset.releaseKey=key;container.dataset.releaseView='history';
   container.replaceChildren();
   if(!onlineVerified)container.append(node('p','rmNcHelp',verified?'Vous êtes hors ligne ou la publication ne peut pas être vérifiée. Voici les dernières nouveautés vérifiées sur cet appareil.':'Les nouveautés ne peuvent pas être vérifiées pour le moment. Réessayez après reconnexion.'));
   if(!onlineVerified)container.append(button('Vérifier les nouveautés',async()=>{await check();renderHistory(container)},'rmNcSecondary'));
