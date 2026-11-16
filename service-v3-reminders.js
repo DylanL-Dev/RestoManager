@@ -39,8 +39,8 @@
   const list=[...model.reminders(common),...model.events({...common,bookings:window.RestoFbReservationAlerts||[],changes:window.RestoFbChangeAlerts||[]}),...capacity()];
   const sync=window.RestoSyncState;
   if(navigator.onLine===false||sync&&sync!=='ok'||role==='fb_admin'&&window.RestoFbAlertsStatus!=='ready'){
-   const pending=navigator.onLine!==false&&(!sync||sync==='pending'||!window.RestoFbAlertsStatus||window.RestoFbAlertsStatus==='pending');
-   list.push({id:'important:sync',source:'sync',type:'sync',group:'important',priority:pending?'normal':'high',title:pending?'Vérification des notifications':'Synchronisation indisponible',body:pending?'Les informations du service sont en cours de vérification.':navigator.onLine===false?'Vous êtes hors ligne. Les informations affichées peuvent être anciennes. La reconnexion sera automatique.':role==='fb_admin'&&window.RestoFbAlertsStatus==='error'?'Les notifications de la Réception ne sont pas à jour. Les informations disponibles restent affichées.':'Les informations du service peuvent être anciennes. Vérifiez la connexion avant toute action.',createdAt:0,action:'sync',context:'Connexion'});
+   const pending=navigator.onLine!==false&&(!sync||sync==='pending'||role==='fb_admin'&&(!window.RestoFbAlertsStatus||window.RestoFbAlertsStatus==='pending'));
+   list.push({id:'important:sync',source:'sync',type:'sync',group:'important',priority:pending?'normal':'high',title:pending?'Vérification des notifications':sync==='readonly'?'Service en consultation seule':'Synchronisation indisponible',read:pending,body:pending?'Les informations du service sont en cours de vérification.':sync==='readonly'?'Les informations restent consultables. Contactez le responsable avant de reprendre les modifications.':navigator.onLine===false?'Vous êtes hors ligne. Les informations affichées peuvent être anciennes. La reconnexion sera automatique.':role==='fb_admin'&&window.RestoFbAlertsStatus==='error'?'Les notifications de la Réception ne sont pas à jour. Les informations disponibles restent affichées.':'Les informations du service peuvent être anciennes. Vérifiez la connexion avant toute action.',createdAt:0,action:'sync',context:'Connexion'});
   }
   const release=window.RestoAppRelease?.notification?.();if(release)list.push(release);
   for(const [name,source] of sourceRegistry){
@@ -72,7 +72,7 @@
  async function navigate(item){
   // Close the top-layer drawer before the existing draft confirmation can open.
   panel.close();
-  const destination=item.action==='capacity'?'reservationForm':item.action==='sync'?'administration':'reservations';
+  const destination=item.action==='capacity'?'reservationForm':item.action==='sync'||item.action==='source'&&item.targetScreen!=='reservations'?'administration':'reservations';
   await window.RestoScreens?.request(destination);
   if(window.RestoScreens?.current()!==destination)return;
   if(item.action==='sync'){window.RestoManagementCategories?.open('manageNetwork');return}
@@ -99,7 +99,7 @@
   if(item.action){const label=item.action==='capacity'?'Voir les disponibilités':item.action==='sync'?'Voir la connexion':item.action==='source'?item.actionLabel||'Voir le détail':'Voir la réservation';actions.append(button(label,()=>perform(()=>navigate(item)),'rmNcPrimary',item.action==='sync'?'wifi':'arrow-up-right'))}
   if(item.snoozable)actions.append(button(item.snoozed?'Réactiver le rappel':'Reporter 10 min',()=>{setLocal(item.id,{snoozedUntil:item.snoozed?0:Date.now()+600000});status.textContent=item.snoozed?'Rappel réactivé.':'Rappel reporté de 10 minutes.';update()},'rmNcSecondary',item.snoozed?'bell':'alarm-clock'));
   if(!item.read&&item.type!=='sync'){
-   const readButton=button('',()=>perform(()=>markItem(item),readButton),'rmNcIconButton','check');readButton.setAttribute('aria-label','Marquer comme lue : '+item.title);readButton.title='Marquer comme lue';actions.append(readButton);
+   const readButton=button('',()=>perform(()=>markItem(item),readButton),'rmNcIconButton','check');readButton.setAttribute('aria-label','Marquer comme lue : '+item.title);readButton.title='Marquer comme lue';top.append(readButton);
   }
   article.append(actions);return article;
  }
@@ -122,7 +122,13 @@
  }
  function update(){load();items=collect();const count=items.filter(n=>!n.read&&!n.snoozed).length;bell.hidden=!ready();badge.textContent=count>99?'99+':String(count);badge.hidden=!count;bell.setAttribute('aria-label',count?'Notifications, '+count+' non lues':'Notifications, aucune non lue');if(!ready()&&panel.open)panel.close();render()}
  function open(){if(!ready())return;returnFocus=document.activeElement;historyView=false;unreadOnly=false;showSnoozed=false;panel.showModal();bell.setAttribute('aria-expanded','true');document.body.style.overflow='hidden';update();title.focus({preventScroll:true})}
- function showHistory(){if(!panel.open){returnFocus=document.activeElement;panel.showModal();document.body.style.overflow='hidden';bell.setAttribute('aria-expanded','true')}historyView=true;title.textContent='Quoi de neuf ?';subtitle.textContent='Les évolutions de votre application';tools.hidden=true;history.textContent='Retour aux notifications';scroll.replaceChildren();window.RestoAppRelease?.renderHistory(scroll);title.focus({preventScroll:true})}
+ function showHistory(){const release=items.find(n=>n.source==='release');if(release&&!release.read)setLocal(release.id,{readAt:Date.now()});if(!panel.open){returnFocus=document.activeElement;panel.showModal();document.body.style.overflow='hidden';bell.setAttribute('aria-expanded','true')}historyView=true;title.textContent='Quoi de neuf ?';subtitle.textContent='Les évolutions de votre application';tools.hidden=true;history.textContent='Retour aux notifications';scroll.replaceChildren();window.RestoAppRelease?.renderHistory(scroll);title.focus({preventScroll:true})}
+ panel.addEventListener('keydown',event=>{
+  if(event.key!=='Tab')return;
+  const controls=[...panel.querySelectorAll('button,a[href],input,select,textarea')].filter(el=>!el.disabled&&el.getClientRects().length),first=controls[0],last=controls.at(-1);
+  if(event.shiftKey&&(document.activeElement===first||document.activeElement===title)){event.preventDefault();last?.focus()}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+ });
  panel.addEventListener('close',()=>{bell.setAttribute('aria-expanded','false');document.body.style.overflow='';returnFocus?.focus?.({preventScroll:true})});
  panel.addEventListener('click',e=>{if(e.target===panel){const r=panel.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)panel.close()}});
  for(const event of ['restomanager:notification-context','restomanager:v3-change','restomanager:supabase-snapshot','restomanager:fb-alerts','restomanager:connection-state','restomanager:app-release','online','offline'])window.addEventListener(event,update);

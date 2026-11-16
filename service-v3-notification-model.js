@@ -61,7 +61,7 @@
  function project(items,state={},now=Date.now()){
   const unique=new Map();for(const item of items){if(!item?.id)continue;const prev=unique.get(item.id);if(!prev||item.createdAt>prev.createdAt)unique.set(item.id,item)}
   const order={high:0,normal:1,low:2};
-  return [...unique.values()].map(n=>{const local=state[n.id]||{};return {...n,read:n.source==='event'?n.read:Boolean(local.readAt)||n.read,snoozed:n.snoozable&&Number(local.snoozedUntil)>now}}).sort((a,b)=>(order[a.priority]??1)-(order[b.priority]??1)||Number(a.read)-Number(b.read)||b.createdAt-a.createdAt||a.id.localeCompare(b.id));
+  return [...unique.values()].map(n=>{const local=state[n.id]||{};return {...n,read:n.source==='event'?n.read:Boolean(local.readAt)||Boolean(n.read),snoozed:n.snoozable&&Number(local.snoozedUntil)>now}}).sort((a,b)=>(order[a.priority]??1)-(order[b.priority]??1)||Number(a.read)-Number(b.read)||b.createdAt-a.createdAt||a.id.localeCompare(b.id));
  }
  return {scope,paris,day,dateTime,reminders,events,project};
 });
