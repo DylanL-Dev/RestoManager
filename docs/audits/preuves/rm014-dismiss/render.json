@@ -1,0 +1,216 @@
+{
+  "checkedAt": "2026-11-16T21:55:19.605294+00:00",
+  "version": "2026.11.16-rm014.2",
+  "channel": "dev",
+  "url": "https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html?preview=rm014.2",
+  "pr": 167,
+  "head": "b590cc6386867077d9f68eac4fa9dba3c517debf",
+  "merge": "3e89bf61c319d12ee43bf6df2a5f725db70443ce",
+  "deployId": "dep-dbtnn3mk1f9s7397811g",
+  "allMatched": true,
+  "resources": [
+    {
+      "resource": "v3-connected.html",
+      "status": 200,
+      "sha256": "2d9eebfd8004eee807f04c452148dcdebf26e13b8be2336ca3a5c9294291bf85",
+      "expectedSha256": "2d9eebfd8004eee807f04c452148dcdebf26e13b8be2336ca3a5c9294291bf85",
+      "matched": true
+    },
+    {
+      "resource": "app-release.json",
+      "status": 200,
+      "sha256": "2667ec761d3a34019ceef8f51bbdd7c3d65d81bef259ef14156b02e5a7f90e40",
+      "expectedSha256": "2667ec761d3a34019ceef8f51bbdd7c3d65d81bef259ef14156b02e5a7f90e40",
+      "matched": true
+    },
+    {
+      "resource": "service-v3-reminders.js?v=20261116-rm014-swipe1",
+      "status": 200,
+      "sha256": "b55e99158b142ad8abd7d0f816386dc1c365ba13fc3e99c0b91e1678289e1e0a",
+      "expectedSha256": "b55e99158b142ad8abd7d0f816386dc1c365ba13fc3e99c0b91e1678289e1e0a",
+      "matched": true
+    },
+    {
+      "resource": "service-v3-notification-model.js?v=20261116-rm014-swipe1",
+      "status": 200,
+      "sha256": "994d7e73eb259f82d1428cb540cc58ec82cb29365e4ff3367fab51bb7b2db70c",
+      "expectedSha256": "994d7e73eb259f82d1428cb540cc58ec82cb29365e4ff3367fab51bb7b2db70c",
+      "matched": true
+    },
+    {
+      "resource": "service-v3-notifications.css?v=20261116-rm014-swipe1",
+      "status": 200,
+      "sha256": "602730506451c46c291c3d9fbe599b03b3fe2c43708ae5ec342c76949f9949cd",
+      "expectedSha256": "602730506451c46c291c3d9fbe599b03b3fe2c43708ae5ec342c76949f9949cd",
+      "matched": true
+    },
+    {
+      "resource": "sw.js",
+      "status": 200,
+      "sha256": "71d8dc602186486388ae56747c120743081a9841f82988cf72b9879a1af626a9",
+      "expectedSha256": "71d8dc602186486388ae56747c120743081a9841f82988cf72b9879a1af626a9",
+      "matched": true
+    },
+    {
+      "resource": "service-v3-app-release.js?v=20261116-rm014-news1",
+      "status": 200,
+      "sha256": "972d7c81cfb0099fea8a8a78afb14f2c3b865b39510c91a9e75bf873375909c4",
+      "expectedSha256": "972d7c81cfb0099fea8a8a78afb14f2c3b865b39510c91a9e75bf873375909c4",
+      "matched": true
+    },
+    {
+      "resource": "service-v3-refresh.js?v=20261116-rm014",
+      "status": 200,
+      "sha256": "e122a897d334ece68c84ec4947d065e48c7091e490e0f8aa1cab1c4e2d584fd6",
+      "expectedSha256": "e122a897d334ece68c84ec4947d065e48c7091e490e0f8aa1cab1c4e2d584fd6",
+      "matched": true
+    },
+    {
+      "resource": "service-v3-fb-alerts.js?v=20261116-rm014",
+      "status": 200,
+      "sha256": "c9796fbe2094fc791cca8d6f51ccd3ef634e6f457d054d6512c750c9610c5f70",
+      "expectedSha256": "c9796fbe2094fc791cca8d6f51ccd3ef634e6f457d054d6512c750c9610c5f70",
+      "matched": true
+    },
+    {
+      "resource": "v3-connected-auth.js?v=20261116-rm014",
+      "status": 200,
+      "sha256": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870",
+      "expectedSha256": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870",
+      "matched": true
+    },
+    {
+      "resource": "supabase-service-bridge.js",
+      "status": 200,
+      "sha256": "7d077c8ae8617c3a6094ceef9469ffdf781bb86d75324f5eeff05705911a233d",
+      "expectedSha256": "7d077c8ae8617c3a6094ceef9469ffdf781bb86d75324f5eeff05705911a233d",
+      "matched": true
+    },
+    {
+      "resource": "supabase-login.js",
+      "status": 200,
+      "sha256": "a99ec664cf4be29eb955cde3fbfdcc41018b40e301edef156d5123a29841d607",
+      "expectedSha256": "a99ec664cf4be29eb955cde3fbfdcc41018b40e301edef156d5123a29841d607",
+      "matched": true
+    },
+    {
+      "resource": "restomanager-env.js",
+      "status": 200,
+      "sha256": "129f867cf86a670e69508b39be2721b0582031022848a9363d1f29ca7d75f4b0",
+      "expectedSha256": "129f867cf86a670e69508b39be2721b0582031022848a9363d1f29ca7d75f4b0",
+      "matched": true
+    },
+    {
+      "resource": "login.html",
+      "status": 200,
+      "sha256": "cd0a1060556b4ba9ffe741fc3d63b006680412303b88b058a3ed20a41c8be35a",
+      "expectedSha256": "cd0a1060556b4ba9ffe741fc3d63b006680412303b88b058a3ed20a41c8be35a",
+      "matched": true
+    },
+    {
+      "resource": "creator-auth.js",
+      "status": 200,
+      "sha256": "ce462430b072b9c9656c9f32dcb4857dd30de2040d5654e56f23bbf60372ff26",
+      "expectedSha256": "ce462430b072b9c9656c9f32dcb4857dd30de2040d5654e56f23bbf60372ff26",
+      "matched": true
+    },
+    {
+      "resource": "lucide-local.js?v=20261116-rm014",
+      "status": 200,
+      "sha256": "3b06c8c2d3769d35836a1b2a793231b6f4cfc04e97b073e05215207fa15e8c46",
+      "expectedSha256": "3b06c8c2d3769d35836a1b2a793231b6f4cfc04e97b073e05215207fa15e8c46",
+      "matched": true
+    }
+  ],
+  "preview": {
+    "status": 200,
+    "matched": true
+  },
+  "protectedFilesUnchanged": {
+    "supabase-service-bridge.js": true,
+    "supabase-login.js": true,
+    "restomanager-env.js": true,
+    "login.html": true,
+    "creator-auth.js": true,
+    "v3-connected-auth.js": true,
+    "package-lock.json": true
+  },
+  "productionBranches": {
+    "refs/heads/RestoManager-V3": "c5ef487813e27821c1435350cc44429dd719438d",
+    "refs/heads/main": "f17e6ea43f94452d3608eb778e218f350542e730"
+  },
+  "productionUntouched": true,
+  "hostedAuthenticatedFlowTested": false,
+  "agentDatabaseWrites": 0,
+  "schemaChanges": 0,
+  "userConfirmedClone": false,
+  "deployStatus": "live",
+  "deployFinishedAt": "2026-11-16T21:54:40.184364Z",
+  "ci": {
+    "head": "b590cc6386867077d9f68eac4fa9dba3c517debf",
+    "merge": "3e89bf61c319d12ee43bf6df2a5f725db70443ce",
+    "pr": 167,
+    "runs": [
+      {
+        "id": 43963960445,
+        "name": "DEV Clone - audit unit tests",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 436,
+        "jobs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960445/jobs",
+        "logs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960445/logs",
+        "workflow_id": 412747408
+      },
+      {
+        "id": 43963960100,
+        "name": "RM-005 Rooms - isolated browser validation",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 27,
+        "jobs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960100/jobs",
+        "logs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960100/logs",
+        "workflow_id": 418162062
+      },
+      {
+        "id": 43963960394,
+        "name": "DEV Clone - Playwright mock UI audit",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 163,
+        "jobs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960394/jobs",
+        "logs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960394/logs",
+        "workflow_id": 412753006
+      },
+      {
+        "id": 43963960297,
+        "name": "Mission 3 integration validation",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 235,
+        "jobs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960297/jobs",
+        "logs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960297/logs",
+        "workflow_id": 411075350
+      },
+      {
+        "id": 43963960104,
+        "name": "RM-013-A Management - isolated responsive validation",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 21,
+        "jobs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960104/jobs",
+        "logs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960104/logs",
+        "workflow_id": 419860147
+      },
+      {
+        "id": 43963960136,
+        "name": "RM-014 Notifications - isolated lifecycle and PWA",
+        "status": "completed",
+        "conclusion": "success",
+        "run_number": 13,
+        "jobs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960136/jobs",
+        "logs_url": "https://api.github.com/repos/DylanL-Dev/RestoManager/actions/runs/43963960136/logs",
+        "workflow_id": 420263803
+      }
+    ]
+  }
+}
