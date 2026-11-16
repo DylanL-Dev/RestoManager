@@ -37,7 +37,7 @@
   if(!ready())return [];
   const role=context().role,common={reservations:reservations(),role,interval:window.RestoBookingInterval,now:Date.now()};
   const list=[...model.reminders(common),...model.events({...common,bookings:window.RestoFbReservationAlerts||[],changes:window.RestoFbChangeAlerts||[]}),...capacity()];
-  const sync=window.RestoSyncState;
+  const sync=window.RestoSyncState||'pending';
   if(navigator.onLine===false||sync&&sync!=='ok'||role==='fb_admin'&&window.RestoFbAlertsStatus!=='ready'){
    const pending=navigator.onLine!==false&&(!sync||sync==='pending'||role==='fb_admin'&&(!window.RestoFbAlertsStatus||window.RestoFbAlertsStatus==='pending'));
    list.push({id:'important:sync',source:'sync',type:'sync',pending,group:'important',priority:pending?'normal':'high',title:pending?'Vérification des notifications':sync==='readonly'?'Service en consultation seule':'Synchronisation indisponible',read:pending,body:pending?'Les informations du service sont en cours de vérification.':sync==='readonly'?'Les informations restent consultables. Contactez le responsable avant de reprendre les modifications.':navigator.onLine===false?'Vous êtes hors ligne. Les informations affichées peuvent être anciennes. La reconnexion sera automatique.':role==='fb_admin'&&window.RestoFbAlertsStatus==='error'?'Les notifications de la Réception ne sont pas à jour. Les informations disponibles restent affichées.':'Les informations du service peuvent être anciennes. Vérifiez la connexion avant toute action.',createdAt:0,action:'sync',context:'Connexion'});
@@ -133,7 +133,7 @@
   if(event.shiftKey&&(document.activeElement===first||document.activeElement===title)){event.preventDefault();last?.focus()}
   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
  });
- panel.addEventListener('close',()=>{if(bodyLocked)finishClose()});
+ panel.addEventListener('close',()=>{if(bodyLocked&&!panel.open)finishClose()});
  panel.addEventListener('click',e=>{if(e.target===panel){const r=panel.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel()}});
  for(const event of ['restomanager:notification-context','restomanager:v3-change','restomanager:supabase-snapshot','restomanager:fb-alerts','restomanager:connection-state','restomanager:app-release','online','offline'])window.addEventListener(event,update);
  window.addEventListener('storage',event=>{if(event.key===storageKey){storageKey='';load();update()}});

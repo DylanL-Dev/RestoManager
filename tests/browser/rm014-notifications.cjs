@@ -41,6 +41,9 @@ async function noOverflow(page){
 }
 async function basic(page,role,width){
  const bell=page.locator('.serviceBell');assert.equal(await bell.count(),1);
+ await page.evaluate(()=>{window.__previousSync=window.RestoSyncState;delete window.RestoSyncState;window.dispatchEvent(new Event('restomanager:connection-state'))});
+ await bell.click();assert.match(await card(page,'important:sync').innerText(),/Vérification des notifications/);assert.match(await card(page,'important:sync').innerText(),/En cours/);assert.ok(!(await page.locator('#serviceReminderPanel').innerText()).includes('Aucune notification pour le moment'));
+ await close(page);await page.evaluate(()=>{window.RestoSyncState=window.__previousSync;window.dispatchEvent(new Event('restomanager:connection-state'))});
  await bell.focus();await page.keyboard.press('Enter');await page.locator('#serviceReminderPanel').waitFor({state:'visible'});
  assert.equal(await bell.getAttribute('aria-expanded'),'true');assert.equal(await page.evaluate(()=>document.activeElement.id),'rmNcTitle');
  assert.equal(await page.locator('#serviceReminderPanel').getAttribute('aria-labelledby'),'rmNcTitle');
