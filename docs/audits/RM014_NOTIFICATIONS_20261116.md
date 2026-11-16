@@ -33,3 +33,12 @@ Prototype réel : [HTML isolé](maquettes/rm014.html), styles partagés avec le 
 ## Validation finale
 
 En cours ; les résultats, captures et limites seront ajoutés après les cinq lots.
+
+
+## Lot 2 — Unification du service
+
+Projection pure `service-v3-notification-model.js` : identité, type, source, groupe, priorité, titre, aperçu, date, action, lecture, report, réservation liée et références serveur. Événements regroupés par réservation ; priorité maîtrisée ; rappels recalculés depuis le snapshot. Une table installée la veille reste signalée après minuit. Les créations de réservations déjà terminées/annulées cessent de polluer le service ; les annulations récentes restent consultables.
+
+Le dialogue natif remplace l’ancien petit panneau. Il conserve le focus pendant les rafraîchissements identiques ; une synchronisation ne marque rien comme lu. Le marqueur serveur est conservé pour Réception→Restaurant ; lectures et reports des rappels sont locaux, isolés par établissement, utilisateur et rôle. Les entrées locales expirent après 30 jours ; les événements non lus après 7 jours et lus après 48 h. Les états de chargement/erreur sont explicites ; une erreur de source n’est jamais transformée en « aucune notification ».
+
+Les mutations de réservation ont été retirées du centre au profit d’un lien vers le parcours existant. Les actions de retard et de libération restent disponibles dans leurs écrans métier. La navigation passe par `RestoScreens.request` (et non `show`) pour respecter les brouillons.

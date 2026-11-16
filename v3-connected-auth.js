@@ -24,6 +24,8 @@ banner.append(label,logout);
 try{
  const {user:authUser,profile}=await requireStaff();
  window.RestoReception=profile.role==='reception';
+ window.RestoNotificationContext=Object.freeze({userId:authUser.id,restaurantId:profile.restaurant_id,role:profile.role});
+ window.dispatchEvent(new Event('restomanager:notification-context'));
  // Keep the desktop rail aligned with the real responsive header height.
  // No polling or scroll handlers: ResizeObserver reacts only to actual header resizes.
  const appHeader=document.querySelector('body > header.top');
