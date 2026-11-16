@@ -1,44 +1,62 @@
 'use strict';
 (function(){
  const button=document.getElementById('refreshAppBtn');
- if(!button)return;
  let busy=false;
- button.addEventListener('click',async()=>{
-  if(busy)return;
-  busy=true;button.disabled=true;
-  try{
-   if(window.RestoBookingDraft?.checking?.()){
-    await window.RestoDialog?.alert?.('Une vérification ou un enregistrement de réservation est en cours. Attendez sa confirmation avant d’actualiser.',{title:'Réservation en cours'});
-    return;
-   }
-   // Protect the draft before releasing the table hold, clearing caches or reloading.
-   if(typeof window.RestoScreens?.confirmLeaveForRefresh!=='function'){
-    await window.RestoDialog?.alert?.('La protection des formulaires n’est pas disponible. Actualisation interrompue.',{title:'Actualisation indisponible'});
-    return;
-   }
-   if(!await window.RestoScreens.confirmLeaveForRefresh())return;
-   button.classList.add('is-refreshing');
-   button.setAttribute('aria-label','Actualisation en cours');
-   await window.RestoBookingDraft?.close();
-   if('serviceWorker' in navigator){
-    const registration=await navigator.serviceWorker.getRegistration('./');
-    if(registration)await registration.update();
-   }
-   if('caches' in window){
-    const keys=await caches.keys();
-    await Promise.all(keys.filter(key=>key.startsWith('restomanager-shell-')).map(key=>caches.delete(key)));
-   }
-  }catch(error){
-   console.warn('Actualisation du cache non disponible',error);
-   // If the booking hold could not be released, do not silently reload.
-   if(window.RestoBookingDraft?.checking?.())return;
-  }finally{
-   busy=false;button.disabled=false;
-   button.classList.remove('is-refreshing');
-   button.setAttribute('aria-label','Actualiser l’application');
-  }
-  const url=new URL(window.location.href);
-  url.searchParams.set('refresh',String(Date.now()));
-  window.location.replace(url.href);
+ const state=()=>({dirty:window.RestoScreens?.hasUnsavedChanges?.()??true,busy:Boolean(window.RestoBookingDraft?.checking?.()||window.RestoEditNavigation?.isBusy?.()||document.querySelector('form[aria-busy="true"]'))});
+ // A worker asks every open client immediately before activating an application update.
+ navigator.serviceWorker?.addEventListener('message',event=>{
+  if(event.data?.type==='RESTO_UPDATE_CHECK')event.ports?.[0]?.postMessage({type:'RESTO_UPDATE_STATE',...state()});
  });
+ async function tell(message,title='Mise à jour reportée'){
+  await window.RestoDialog?.alert?.(message,{title});
+ }
+ async function askWorker(worker,type){
+  if(!worker)throw Error('Le service de mise à jour est indisponible.');
+  return new Promise((resolve,reject)=>{
+   const channel=new MessageChannel(),timer=setTimeout(()=>{channel.port1.close();reject(Error('La vérification des autres fenêtres n’a pas abouti.'))},4500);
+   channel.port1.onmessage=event=>{clearTimeout(timer);channel.port1.close();event.data?.ok?resolve(event.data):reject(Error(event.data?.message||'Une autre fenêtre doit terminer sa saisie.'))};
+   worker.postMessage({type},[channel.port2]);
+  });
+ }
+ async function request({kind='refresh',expectedVersion}={}){
+  if(busy)return false;
+  busy=true;if(button)button.disabled=true;
+  try{
+   if(state().busy){await tell('Une vérification ou un enregistrement de réservation est en cours. Attendez sa confirmation avant d’actualiser.','Réservation en cours');return false}
+   if(typeof window.RestoScreens?.confirmLeaveForRefresh!=='function'){await tell('La protection des formulaires n’est pas disponible. Actualisation interrompue.','Actualisation indisponible');return false}
+   // Both entry points use RM-011-A. Application updates never offer to discard a draft.
+   if(!await window.RestoScreens.confirmLeaveForRefresh({preserveDraft:kind==='update'}))return false;
+   if(navigator.onLine===false){await tell('Vous êtes hors ligne. La mise à jour sera disponible après reconnexion.');return false}
+   if(kind==='update'&&expectedVersion){
+    await window.RestoAppRelease?.check?.();
+    if(window.RestoAppRelease?.availableVersion?.()!==expectedVersion){await tell('Cette version ne peut pas être confirmée. Réessayez après synchronisation.');return false}
+   }
+   // Recheck after every asynchronous boundary. A draft typed meanwhile must survive.
+   const changed=()=>state().busy||state().dirty;
+   if(changed())return false;
+   const registration='serviceWorker' in navigator?await navigator.serviceWorker.getRegistration('./'):null;
+   if(changed())return false;
+   if(registration){
+    await registration.update();
+    if(changed())return false;
+    // Includes other tabs even when still running the previous application version.
+    const worker=registration.waiting||registration.active;
+    if(worker){await askWorker(worker,'RESTO_CAN_UPDATE');if(changed())return false}
+   }
+   // No automatic cache purge: old clients may still depend on their exact asset versions.
+   await window.RestoBookingDraft?.close();
+   if(changed())return false;
+   if(registration?.waiting){
+    await askWorker(registration.waiting,'RESTO_APPLY_UPDATE');
+    if(changed())return false;
+   }
+   const url=new URL(window.location.href);url.searchParams.set('refresh',String(Date.now()));
+   window.location.replace(url.href);return true;
+  }catch(error){
+   window.RestoErrors?.diagnostic('app-update',error);
+   await tell('La mise à jour n’a pas été appliquée. Une autre fenêtre peut contenir une saisie ou une opération en cours. Fermez les fenêtres inutilisées puis réessayez.');return false;
+  }finally{busy=false;if(button)button.disabled=false}
+ }
+ button?.addEventListener('click',()=>void request());
+ window.RestoAppRefresh={request,state};
 })();

@@ -63,6 +63,7 @@ function closeNavigationEditor(){
  window.dispatchEvent(new Event('restomanager:editor-close'));
 }
 window.RestoEditNavigation={
+ isBusy:()=>savingEdit,
  isOpen:()=>!$('editForm').hidden,
  isDirty:()=>!$('editForm').hidden&&(savingEdit||navEditBaseline!==null&&navigationEditSnapshot()!==navEditBaseline),
  close:closeNavigationEditor
