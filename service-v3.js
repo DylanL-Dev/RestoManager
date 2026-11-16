@@ -135,7 +135,7 @@ function dashboard(date,all){
   gear.addEventListener('click',async()=>{
    await window.RestoScreens?.request?.('administration');
    if(window.RestoScreens?.current?.()!=='administration')return;
-   const group=$('manageHours');if(group)group.open=true;
+   window.RestoManagementCategories?.open('manageSettings');
    const target=$('rushArrivalSettings');if(!target)return;
    target.scrollIntoView({behavior:'smooth',block:'center'});
    const slider=$('rushArrivalPercent');if(slider)slider.focus({preventScroll:true});

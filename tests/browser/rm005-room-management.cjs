@@ -19,6 +19,7 @@ const guardCode=auth.slice(guardStart,guardEnd);
    const errors=[];
    page.on('pageerror',e=>errors.push(e.message));
    await page.setContent('<!doctype html><html lang="fr"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body><section style="max-width:900px;margin:auto"><div class="actionPanelBody"><button id="tableAdminNew" type="button">Nouvelle table</button><form id="tableAdminForm"><input id="tableAdminNumber" type="number"><input id="tableAdminMin" type="number" value="1"><input id="tableAdminMax" type="number" value="2"><select id="tableAdminRoom"></select><button id="tableAdminSubmit" type="submit">Ajouter la table</button></form><p id="tableAdminFeedback"></p><div id="tableAdminList"></div></div></section></body></html>');
+   await page.addStyleTag({content:fs.readFileSync(path.join(root,'service-v3-management-categories.css'),'utf8')});
    await page.evaluate(()=>{
     let plan={version:1,rooms:[{id:'main',name:'Salle principale'},{id:'p1',name:'Salle Prestige'},{id:'e1',name:'Salle temporaire'}],tables:[{id:'table-1',number:1,capacityMin:1,capacity:4,roomId:'main'},{id:'table-2',number:2,capacityMin:1,capacity:2,roomId:'main'}]};
     window.TableStore={get:()=>structuredClone(plan),save:next=>{plan=structuredClone(next)}};
@@ -67,13 +68,13 @@ const guardCode=auth.slice(guardStart,guardEnd);
    await page.addScriptTag({content:script});
    const manager=page.locator('.roomManager');
    assert.equal(await manager.locator('.roomManagerItem').count(),3);
-   assert.match(await manager.innerText(),/Salle principale · 2 tables/);
-   assert.match(await manager.innerText(),/Salle Prestige · 0 tables/);
+   assert.match(await manager.innerText(),/Salle principale\s+2 tables/);
+   assert.match(await manager.innerText(),/Salle Prestige\s+0 tables/);
    // A real click+submit must pass the capture-phase authorization gate.
    await manager.locator('#roomManagerName').fill('Salle supplémentaire');
    await manager.locator('#roomManagerForm button[type=submit]').click();
    await page.waitForFunction(()=>window.createdRooms.length===1);
-   assert.match(await manager.innerText(),/Salle supplémentaire · 0 tables/);
+   assert.match(await manager.innerText(),/Salle supplémentaire\s+0 tables/);
 
    await page.locator('#tableAdminRoom').selectOption('p1');
    assert.match(await page.locator('#tableAdminList').innerText(),/Aucune table dans Salle Prestige/);
@@ -88,7 +89,7 @@ const guardCode=auth.slice(guardStart,guardEnd);
    const result=await page.evaluate(()=>window.renameCalls);
    assert.equal(result[0].id,'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb');
    assert.equal(result[0].name,'Salon privé');
-   assert.match(await manager.innerText(),/Salon privé · 0 tables/);
+   assert.match(await manager.innerText(),/Salon privé\s+0 tables/);
    assert.match(await page.locator('#tableAdminList').innerText(),/Aucune table dans Salon privé/);
 
    await page.locator('#tableAdminNumber').fill('27');

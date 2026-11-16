@@ -80,7 +80,10 @@ try{
    const picker=select?.parentElement?.querySelector('.tableChoice');
    if(picker){picker.hidden=true;picker.style.setProperty('display','none','important');}
   }
-  document.querySelector('.managementIntro').textContent='Gestion · Réception';
+  document.querySelector('.managementIntro h1').textContent='Gestion · Réception';
+  document.querySelector('.managementIntro p').textContent='Consultez les horaires partagés et retrouvez vos réglages et l’aide.';
+  const receptionSettings=document.querySelector('#manageSettingsToggle .managementGroupWords');
+  if(receptionSettings){receptionSettings.querySelector('strong').textContent='Paramètres de l’application';receptionSettings.querySelector('small').textContent='Apparence sur cet appareil';}
   // Réception can consult the shared weekly schedule, never edit it.
   const receptionManagement=document.querySelector('[data-screen="administration"]');
   const receptionCategories=receptionManagement?.querySelector('.rmManagementCategoryContent');
