@@ -267,3 +267,11 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Critères : deux rôles × 360/390/430/768/1024/1440/1920 ; absence de fuite, de doublon, de données sensibles en aperçu ; résolution après arrivée/libération y compris après minuit Paris ; panne explicite ; clavier/focus/thème sombre ; aucune perte de brouillon.
 - Risques : événements persistants et rappels dynamiques ont des durées de vie différentes ; état local isolé par utilisateur/établissement ; PWA et multi-onglets ; aucune annonce avant preuve de publication effective.
 - Tests exclusivement sur harnais isolé et données en mémoire. Aucune migration ni écriture sur Supabase DEV/PROD, aucune réservation ou clôture dans les données réelles. PR vers DEV uniquement ; aucune modification V3/MAIN, aucune fusion automatique.
+
+
+### Livraison RM-014 — À TESTER CLONE après intégration (16/11/2026)
+
+- Les cinq lots de l’issue #158 sont réalisés sur `feature/rm014-notification-center`, depuis DEV `e3a5daa` : audit/prototype, centre unifié, nouveautés/mise à jour sécurisée, contrat RM-012 inactif, validations et corrections de régression. PR [#159](https://github.com/DylanL-Dev/RestoManager/pull/159) préparée vers DEV uniquement ; aucune fusion automatique ni publication Render dans cette mission.
+- Code testé `2bb1fd67924894ae142a92178f8fd46459e7c0ae` : **six workflows GitHub réussis / six**, 212 tests Node, syntaxe 141 fichiers, RM-014 14 combinaisons / 22 groupes de cycle de vie / 12 groupes PWA. Régressions Réservations, Gestion, Assistance, horaires, tables, PostgreSQL et Auth/RLS/Realtime isolés validées. [Rapport détaillé, captures avant/après et preuves](audits/RM014_NOTIFICATIONS_20261116.md).
+- Préservation : modules de connexion, configuration d’environnement et lockfile inchangés ; aucune migration ni écriture dans Supabase DEV/PROD, aucune réservation/clôture fictive dans les données réelles. V3 reste `e5e98ca`, MAIN `a8915f9`, DEV cible `e3a5daa` au contrôle de livraison.
+- État : **PR prête à relire, validation utilisateur du clone encore en attente**. Les captures sont celles du frontend DEV authentifié via frontière fictive, pas d’une session Render réelle. Cette fiche ne vaut ni validation visuelle de terrain ni autorisation de promotion V3/MAIN. Les ressources applicatives des preuves restent identiques lors de l’ajout documentaire final.

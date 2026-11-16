@@ -1,0 +1,51 @@
+{
+  "mission": "RM-014",
+  "commit": "2bb1fd67924894ae142a92178f8fd46459e7c0ae",
+  "pullRequest": 159,
+  "unitTestsPassed": 212,
+  "unitTestsFailed": 0,
+  "workflows": [
+    {
+      "id": 43893301845,
+      "name": "DEV Clone - audit unit tests",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301845"
+    },
+    {
+      "id": 43893302089,
+      "name": "RM-014 Notifications - isolated lifecycle and PWA",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/DylanL-Dev/RestoManager/actions/runs/43893302089"
+    },
+    {
+      "id": 43893301825,
+      "name": "RM-005 Rooms - isolated browser validation",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301825"
+    },
+    {
+      "id": 43893301839,
+      "name": "DEV Clone - Playwright mock UI audit",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301839"
+    },
+    {
+      "id": 43893301851,
+      "name": "RM-013-A Management - isolated responsive validation",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301851"
+    },
+    {
+      "id": 43893301852,
+      "name": "Mission 3 integration validation",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301852"
+    }
+  ]
+}

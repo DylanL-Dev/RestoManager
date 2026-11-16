@@ -1,0 +1,17 @@
+
+> restomanager@1.0.0 test:mission2:browser
+> node tests/browser/mission2.cjs
+
+PASS unread old notification resolves updated room for display and search
+PASS fb_admin: hotel room/search and exterior/notes/allergies
+PASS reception: hotel room/search and exterior/notes/allergies
+PASS fb_admin: response lost after commit, reconnect and retry preserve draft and refuse stale version
+PASS reception: response lost after commit, reconnect and retry preserve draft and refuse stale version
+PASS fb_admin / reception: conflict, reconnect preserving draft/version, explicit review/reload then save
+PASS reception / fb_admin: conflict, reconnect preserving draft/version, explicit review/reload then save
+{"passed":13,"failed":0,"backend":"in-memory mock; external network blocked","roles":["fb_admin","reception"]}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

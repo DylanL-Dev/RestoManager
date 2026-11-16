@@ -1,0 +1,31 @@
+
+> restomanager@1.0.0 test:notifications:lifecycle
+> node tests/browser/rm014-lifecycle.cjs
+
+PASS Tenant filtered for every select/update
+PASS Source error → stale data explicit → recovery clears error
+PASS Snooze expiry survives background clock catch-up
+PASS Scoped read state persists across reload without re-counting an active reminder
+PASS Created + modified grouped with confidential contents excluded
+PASS Cancellation supersedes creation and resolves arrival reminder
+PASS Real contextual navigation expands cancelled reservation
+PASS Same-screen contextual action respects refused editor navigation and preserves unsaved notes
+PASS fb_admin RM-012 fixture only, permission / venue / resolved / expiry, no closeout
+PASS fb_admin candidate-only publication is not announced
+PASS fb_admin DEV rejects MAIN channel manifest
+PASS fb_admin published update preserves actual dirty notes + allergies, offers later
+PASS Notification navigation cancellation preserves booking form
+PASS fb_admin application update blocked during booking submission/checking
+PASS fb_admin offline history available without fake update
+PASS Changed authenticated identity clears confidential notifications and closes access
+PASS reception RM-012 fixture only, permission / venue / resolved / expiry, no closeout
+PASS reception candidate-only publication is not announced
+PASS reception DEV rejects MAIN channel manifest
+PASS reception published update preserves actual dirty notes + allergies, offers later
+PASS reception application update blocked during booking submission/checking
+PASS reception offline history available without fake update
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
