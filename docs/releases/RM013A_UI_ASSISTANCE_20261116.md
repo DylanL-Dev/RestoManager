@@ -4,7 +4,7 @@
 
 L’utilisateur a validé les corrections du clone puis demandé : « Parfait je pense qu'on peut valider et mettre sur main sur V3 main juste avant » d’harmoniser le formulaire Assistance. Cet ajustement est réalisé et testé dans le même lot, avant publication V3 puis MAIN.
 
-Source DEV validée : PR #152 (accordéons/salles), PR #153 (clôture/durée), puis branche `feature/rm013a-assistance-form`, commit `9c57ae9cbce283edbfec7cc543817dfb1ce82f28` (Assistance). Dernier contrôle local du candidat : syntaxe 125 fichiers, 154 tests unitaires, 14 combinaisons Gestion et 14 combinaisons Assistance, toutes réussies. Les tests navigateur couvrent 360/390/430/768/1024/1440/1920, Restaurant et Réception, sur données fictives exclusivement.
+Source DEV validée : PR #152 (accordéons/salles), PR #153 (clôture/durée), puis branche `feature/rm013a-assistance-form`, commit `9c57ae9cbce283edbfec7cc543817dfb1ce82f28` (Assistance). Dernier contrôle local du candidat : syntaxe 126 fichiers, 154 tests unitaires, 14 combinaisons Gestion et 14 combinaisons Assistance, toutes réussies. Les tests navigateur couvrent 360/390/430/768/1024/1440/1920, Restaurant et Réception, sur données fictives exclusivement.
 
 ## Contenu livré
 
