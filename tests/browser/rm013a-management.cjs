@@ -260,4 +260,4 @@ if(require.main===module)(async()=>{let browser;try{
  fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({baseline,passed:results.length,failed:0,backend:'In-memory service boundary; real frontend and auth guard; external HTTP and WebSocket blocked',results},null,2));
 }finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}})().catch(e=>{console.error(e);process.exitCode=1});
 
-module.exports={open,server,failReports:value=>{reportsFailed=value},getReportRequests:()=>structuredClone(reportRequests)};
+module.exports={open,server,failReports:value=>{reportsFailed=value},getReportRequests:()=>structuredClone(reportRequests),configure:fn=>fn(state),getCalls:()=>structuredClone(calls)};

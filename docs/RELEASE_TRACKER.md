@@ -258,3 +258,12 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Aucun routage DEV, changement de dépendances PROD ni migration transmis. Modules de connexion PROD inchangés ; aucun message, réservation ou clôture de test écrit dans les données du restaurant.
 - Retour arrière : `backup/rm013a-v3-before-20261116` (`cc516a3`) et `backup/rm013a-main-before-20261116` (`2f0c2bc`).
 - Statut final technique : **PUBLIÉE V3 / PUBLIÉE MAIN**. La confirmation de l’utilisateur sur la production réelle reste distincte ; ne pas inscrire « CONFIRMÉE EN PRODUCTION » sans ce retour.
+
+
+## RM-014 — Centre de notifications — EN COURS DEV (16/11/2026)
+
+- Demande explicite : issue #158, tous les lots sur `feature/rm014-notification-center`, créée depuis DEV `e3a5daa`. La mission RM-013-A est publiée ; son historique n’est pas réécrit. RM-014 est la seule évolution engagée ici.
+- Périmètre : cloche unique, rappels et événements Réception réunis, lecture/priorités/report, nouveautés publiées et mise à jour protégée RM-011-A, adaptateur futur RM-012 inactif.
+- Critères : deux rôles × 360/390/430/768/1024/1440/1920 ; absence de fuite, de doublon, de données sensibles en aperçu ; résolution après arrivée/libération y compris après minuit Paris ; panne explicite ; clavier/focus/thème sombre ; aucune perte de brouillon.
+- Risques : événements persistants et rappels dynamiques ont des durées de vie différentes ; état local isolé par utilisateur/établissement ; PWA et multi-onglets ; aucune annonce avant preuve de publication effective.
+- Tests exclusivement sur harnais isolé et données en mémoire. Aucune migration ni écriture sur Supabase DEV/PROD, aucune réservation ou clôture dans les données réelles. PR vers DEV uniquement ; aucune modification V3/MAIN, aucune fusion automatique.
