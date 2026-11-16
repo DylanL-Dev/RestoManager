@@ -7,6 +7,7 @@ const {open,server,configure,getCalls}=require('./rm013a-management.cjs');
 const out=process.env.BROWSER_ARTIFACTS||path.resolve('test-results/rm014');
 const baseline=process.argv.includes('--baseline'),prototype=process.argv.includes('--prototype');
 const widths=[360,390,430,768,1024,1440,1920],results=[];
+const releaseTitle=JSON.parse(fs.readFileSync('app-release.json','utf8')).releases[0].title;
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const event=(extra={})=>({id:'booking-1',reservation_id:'new-1',guest_name:'118',hotel_room:'118',party_size:2,starts_at:'2032-11-08T11:30:00Z',created_at:'2032-11-08T09:58:00Z',read_at:null,restaurant_id:'fictional-venue',...extra});
 async function seed(page){
@@ -39,6 +40,29 @@ async function noOverflow(page){
  for(const c of layout.contrasts)assert.ok(c.ratio>=4.5,JSON.stringify(c));
  for(const c of layout.controls)assert.ok(c.width>=24&&c.height>=43,c.text+' touch target '+c.width+'x'+c.height);
 }
+async function expectHistory(page){
+ assert.equal(await page.locator('#rmNcTitle').textContent(),'Quoi de neuf ?');
+ assert.ok(await page.locator('.rmNcHistoryEntry').count()>=2,'Actual release history entries must be rendered, not only its title');
+ assert.equal(await page.locator('#serviceReminderPanel .rmNcCard').count(),0,'Notification cards cannot remain in the history view');
+ assert.ok((await page.locator('.rmNcHistoryEntry').first().innerText()).includes(releaseTitle));
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'rmNcTitle');
+}
+async function newsNavigation(page,role,width){
+ const release=()=>page.locator('[data-notification-id^="release:"]').getByRole('button',{name:'Voir les nouveautés',exact:true});
+ // Reading an unread release can remove its card during the same click.
+ await page.getByRole('button',{name:'Non lues',exact:true}).click();await release().click();await expectHistory(page);
+ await page.getByRole('button',{name:'Retour aux notifications',exact:true}).click();
+ assert.equal(await page.locator('.rmNcHistoryEntry').count(),0);
+ await page.getByRole('button',{name:'Non lues',exact:true}).click();
+ // The history cache must not mistake the restored notification flow for history.
+ await release().click();await expectHistory(page);
+ if([390,768,1440].includes(width))await screenshot(page,'history-from-card-'+role+'-'+width);
+ await close(page);await page.locator('.serviceBell').click();await release().click();await expectHistory(page);
+ await close(page);await page.evaluate(()=>window.RestoScreens.request('administration'));
+ await page.locator('#manageNewsToggle').click();await page.locator('#manageNews').getByRole('button',{name:'Voir les nouveautés',exact:true}).click();await expectHistory(page);
+ await close(page);await page.evaluate(()=>window.RestoScreens.request('tables'));await page.locator('.serviceBell').click();
+ assert.equal(await page.locator('.rmNcHistoryEntry').count(),0);
+}
 async function basic(page,role,width){
  const bell=page.locator('.serviceBell');assert.equal(await bell.count(),1);
  await page.evaluate(()=>{window.__previousSync=window.RestoSyncState;delete window.RestoSyncState;window.dispatchEvent(new Event('restomanager:connection-state'))});
@@ -70,6 +94,7 @@ async function basic(page,role,width){
   return [...document.querySelectorAll('.rmNcCardTitle,.rmNcBody,.rmNcPrimary,.rmNcSubtitle')].filter(e=>e.getClientRects().length).map(e=>{const a=lum(getComputedStyle(e).color),b=lum(bg(e));return {text:e.textContent,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)}});
  });for(const c of contrast)assert.ok(c.ratio>=4.5,JSON.stringify(c));
  await page.evaluate(()=>document.documentElement.dataset.theme='light');
+ await newsNavigation(page,role,width);
  if(role==='fb_admin'){
   const initial=await bell.locator('.serviceBellCount').textContent();
   configure(s=>s.bookingAlerts.push({...s.bookingAlerts[0]}));await page.evaluate(()=>window.RestoRefreshFbAlerts());
@@ -91,7 +116,7 @@ async function basic(page,role,width){
   await page.evaluate(async()=>{await window.RestoRefreshSharedService();return true});assert.equal(await late.count(),0);assert.equal(await card(page,'departure:departure-1').count(),0);
  }
  await page.getByRole('button',{name:'Quoi de neuf ?',exact:true}).click();assert.equal(await page.locator('#rmNcTitle').textContent(),'Quoi de neuf ?');
- assert.ok(await page.locator('.rmNcHistoryEntry').count()>=2);assert.match(await page.locator('.rmNcHistoryEntry').first().innerText(),/Vos informations de service/);
+ assert.ok(await page.locator('.rmNcHistoryEntry').count()>=2);assert.ok((await page.locator('.rmNcHistoryEntry').first().innerText()).includes(releaseTitle));
  await noOverflow(page);if([390,768,1440].includes(width))await screenshot(page,'history-'+role+'-'+width);
  await close(page);await page.locator('.serviceBell').click();assert.equal(await page.locator('.rmNcHistoryEntry').count(),0,'Reopening bell returns to flow, not stale history DOM');await close(page);assert.equal(await page.evaluate(()=>document.body.style.overflow),'');
  await page.evaluate(()=>{window.RestoSyncState='error';window.dispatchEvent(new Event('restomanager:connection-state'))});await bell.click();

@@ -114,6 +114,7 @@
   allRead.hidden=!items.some(n=>!n.read&&!n.snoozed&&!(n.type==='sync'&&n.read));snoozed.hidden=!items.some(n=>n.snoozed)&&!showSnoozed;snoozed.textContent=showSnoozed?'Retour au flux':'Reportés ('+items.filter(n=>n.snoozed).length+')';
   const key=JSON.stringify([visible,showSnoozed,unreadOnly]);if(!force&&key===renderKey)return;renderKey=key;
   const active=document.activeElement,focusId=active?.closest('[data-notification-id]')?.dataset.notificationId,focusLabel=active?.getAttribute('aria-label')||active?.textContent,position=scroll.scrollTop;
+  scroll.dataset.releaseView='notifications';
   scroll.replaceChildren();
   if(!visible.length){const empty=node('div','rmNcEmpty'),glyph=node('span','rmNcGlyph');glyph.append(icon('bell-off'));empty.append(glyph,node('strong','',showSnoozed?'Aucun rappel reporté':unreadOnly?'Vous êtes à jour':'Aucune notification pour le moment'),node('p','',unreadOnly?'Les rappels importants encore actifs restent toujours visibles.':'Les informations utiles à votre équipe apparaîtront ici.'));scroll.append(empty)}
   const groups=[['attention','À votre attention',n=>n.group==='important'||n.priority==='high'],['service','Votre service',n=>n.group!=='important'&&n.priority!=='high'&&n.group!=='news'],['news','Nouveautés',n=>n.group==='news']];

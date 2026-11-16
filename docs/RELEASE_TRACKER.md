@@ -285,3 +285,13 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Vérification publique : 17 ressources HTTP 200 avec empreintes identiques aux fichiers testés/protégés ; HTML et manifeste canoniques vérifiés séparément, version `2026.11.16-rm014`, canal `dev`. [Preuve du déploiement](audits/preuves/rm014-render-20261116.json).
 - Lien : https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html?preview=rm014 . La nouvelle cloche donne accès au centre et à « Quoi de neuf ? » ; la rubrique est également dans Gestion.
 - Aucune réservation, clôture ou donnée d’essai réelle, aucune écriture Supabase effectuée par le déploiement. V3/MAIN préservées. Le clone est disponible pour la recette du propriétaire ; aucune validation visuelle/authentifiée hébergée prétendue à sa place.
+
+
+### RM-014 — Retour de recette : accès aux nouveautés — EN COURS DEV (16/11/2026)
+
+- Signalement propriétaire : clic « Voir les nouveautés » sans effet sur Render DEV. Branche `fix/rm014-release-history-navigation`, créée depuis DEV `c73f953`.
+- Reproduire les accès carte de notification / pied du centre / Gestion, puis allers-retours, fermeture et réouverture et marqueur lu. Critère : contenu réel de l’historique visible, focus correct, aucune perte de brouillon, mobile/tablette/PC et deux rôles.
+- Correctif limité à la navigation et au rendu du centre ; tests isolés, aucune réservation/clôture ou écriture en base réelle. Déploiement sur le même clone Render DEV dans le cadre du retour de recette. V3/MAIN/PROD restent interdits.
+
+- Reproduction confirmée avant correction : cache d’historique réutilisé alors que le conteneur affichait les notifications. Correction : identité de la vue dans la validation du cache, sans supprimer le cache des rafraîchissements identiques. Version `2026.11.16-rm014.1`, références de scripts et cache PWA renouvelés.
+- Tests locaux : 14 combinaisons avec accès réels carte/pied/Gestion et allers-retours, 24 groupes de cycle de vie, 12 groupes PWA, syntaxe et tests Node réussis. [Compte rendu et captures](audits/RM014_NEWS_NAVIGATION_20261116.md). Contrôles GitHub à confirmer avant fusion DEV et déploiement du correctif sur Render.

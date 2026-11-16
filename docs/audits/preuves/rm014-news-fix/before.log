@@ -1,0 +1,26 @@
+
+> restomanager@1.0.0 test:notifications:browser
+> node tests/browser/rm014-notifications.cjs
+
+Failure state {
+  url: 'http://127.0.0.1:40185/v3-connected.html#tables',
+  pageErrors: [],
+  calls: []
+}
+AssertionError [ERR_ASSERTION]: Actual release history entries must be rendered, not only its title
+    at expectHistory (/workspace/RestoManager/tests/browser/rm014-notifications.cjs:44:9)
+    at async newsNavigation (/workspace/RestoManager/tests/browser/rm014-notifications.cjs:57:26)
+    at async basic (/workspace/RestoManager/tests/browser/rm014-notifications.cjs:96:2)
+    at async /workspace/RestoManager/tests/browser/rm014-notifications.cjs:135:437 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
