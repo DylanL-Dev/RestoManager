@@ -295,3 +295,10 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 
 - Reproduction confirmée avant correction : cache d’historique réutilisé alors que le conteneur affichait les notifications. Correction : identité de la vue dans la validation du cache, sans supprimer le cache des rafraîchissements identiques. Version `2026.11.16-rm014.1`, références de scripts et cache PWA renouvelés.
 - Tests locaux : 14 combinaisons avec accès réels carte/pied/Gestion et allers-retours, 24 groupes de cycle de vie, 12 groupes PWA, syntaxe et tests Node réussis. [Compte rendu et captures](audits/RM014_NEWS_NAVIGATION_20261116.md). Contrôles GitHub à confirmer avant fusion DEV et déploiement du correctif sur Render.
+
+
+### RM-014 — « Voir les nouveautés » corrigé et publié sur Render DEV (16/11/2026)
+
+- Reproduction avant correction puis clics carte/pied/Gestion, filtres et allers-retours validés aux sept largeurs pour les deux rôles. Six workflows GitHub verts sur `7863f13` ; PR #161 fusionnée vers DEV `bb2ed4b`.
+- Render `dep-dbtj12ei0phs73dgbk10` **LIVE** à `16:34:36Z`, version `2026.11.16-rm014.1`, dix-sept ressources HTTP 200 / empreintes conformes ; HTML, manifeste et lien de prévisualisation également vérifiés sans cache obsolète. [Rapport et preuve](audits/RM014_NEWS_NAVIGATION_20261116.md).
+- À TESTER CLONE par le propriétaire ; aucune validation de terrain inventée. Aucun changement V3/MAIN, RLS, configuration ou base Supabase, aucune donnée d’essai réelle.

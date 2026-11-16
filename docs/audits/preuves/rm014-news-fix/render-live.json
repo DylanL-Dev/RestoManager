@@ -1,0 +1,164 @@
+{
+  "version": "2026.11.16-rm014.1",
+  "channel": "dev",
+  "url": "https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html?preview=rm014.1",
+  "merge": "bb2ed4bf074eb9b6917c6dc697fadd54bc2dec3a",
+  "deployId": "dep-dbtj12ei0phs73dgbk10",
+  "checkedAt": "2026-11-16T16:36:36Z",
+  "allMatched": true,
+  "canonicalMatched": true,
+  "resources": [
+    {
+      "file": "service-v3-reminders.js",
+      "status": 200,
+      "sha256": "0daad999536549597645d018b500ce0732e4b905edc1338582351615538cb508",
+      "expected": "0daad999536549597645d018b500ce0732e4b905edc1338582351615538cb508",
+      "matches": true
+    },
+    {
+      "file": "service-v3-fb-alerts.js",
+      "status": 200,
+      "sha256": "c9796fbe2094fc791cca8d6f51ccd3ef634e6f457d054d6512c750c9610c5f70",
+      "expected": "c9796fbe2094fc791cca8d6f51ccd3ef634e6f457d054d6512c750c9610c5f70",
+      "matches": true
+    },
+    {
+      "file": "service-v3-notification-model.js",
+      "status": 200,
+      "sha256": "20e32ba09e4d7629fa2df8224f297cf5f7eaeb832f5492c941f97942a4c10319",
+      "expected": "20e32ba09e4d7629fa2df8224f297cf5f7eaeb832f5492c941f97942a4c10319",
+      "matches": true
+    },
+    {
+      "file": "service-v3-notifications.css",
+      "status": 200,
+      "sha256": "fb080df786e8d78c16c566ad5df69dd34d2c78e32cd9976b47458ee9d636fcb5",
+      "expected": "fb080df786e8d78c16c566ad5df69dd34d2c78e32cd9976b47458ee9d636fcb5",
+      "matches": true
+    },
+    {
+      "file": "service-v3-app-release.js",
+      "status": 200,
+      "sha256": "972d7c81cfb0099fea8a8a78afb14f2c3b865b39510c91a9e75bf873375909c4",
+      "expected": "972d7c81cfb0099fea8a8a78afb14f2c3b865b39510c91a9e75bf873375909c4",
+      "matches": true
+    },
+    {
+      "file": "service-v3-refresh.js",
+      "status": 200,
+      "sha256": "e122a897d334ece68c84ec4947d065e48c7091e490e0f8aa1cab1c4e2d584fd6",
+      "expected": "e122a897d334ece68c84ec4947d065e48c7091e490e0f8aa1cab1c4e2d584fd6",
+      "matches": true
+    },
+    {
+      "file": "service-v3-screens.js",
+      "status": 200,
+      "sha256": "90938e03e21748e415babb2a8d590855c74449211e5452af8ac1934ddcb7cf8e",
+      "expected": "90938e03e21748e415babb2a8d590855c74449211e5452af8ac1934ddcb7cf8e",
+      "matches": true
+    },
+    {
+      "file": "service-v3-reservations.js",
+      "status": 200,
+      "sha256": "a783c020f18d6ea4b11a2e9abd174e3628809d9eb7dc157690c3ec4ef3f1e74b",
+      "expected": "a783c020f18d6ea4b11a2e9abd174e3628809d9eb7dc157690c3ec4ef3f1e74b",
+      "matches": true
+    },
+    {
+      "file": "v3-connected-auth.js",
+      "status": 200,
+      "sha256": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870",
+      "expected": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870",
+      "matches": true
+    },
+    {
+      "file": "v3-connected.html",
+      "status": 200,
+      "sha256": "71b60a5eabf48c2d3d2b4d016d367117ce2cd2eb6532051ec2e2c6b678934ba4",
+      "expected": "71b60a5eabf48c2d3d2b4d016d367117ce2cd2eb6532051ec2e2c6b678934ba4",
+      "matches": true
+    },
+    {
+      "file": "sw.js",
+      "status": 200,
+      "sha256": "39cac6e82912d9467c28e718a36e73c3062556d62761c56474ac2782fc36bd9b",
+      "expected": "39cac6e82912d9467c28e718a36e73c3062556d62761c56474ac2782fc36bd9b",
+      "matches": true
+    },
+    {
+      "file": "lucide-local.js",
+      "status": 200,
+      "sha256": "3b06c8c2d3769d35836a1b2a793231b6f4cfc04e97b073e05215207fa15e8c46",
+      "expected": "3b06c8c2d3769d35836a1b2a793231b6f4cfc04e97b073e05215207fa15e8c46",
+      "matches": true
+    },
+    {
+      "file": "app-release.json",
+      "status": 200,
+      "sha256": "43c309db0d7b366b87eee0ccbd5a887befdb504c266883ee6eeff6bd3f301f0f",
+      "expected": "43c309db0d7b366b87eee0ccbd5a887befdb504c266883ee6eeff6bd3f301f0f",
+      "matches": true
+    },
+    {
+      "file": "supabase-service-bridge.js",
+      "status": 200,
+      "sha256": "7d077c8ae8617c3a6094ceef9469ffdf781bb86d75324f5eeff05705911a233d",
+      "expected": "7d077c8ae8617c3a6094ceef9469ffdf781bb86d75324f5eeff05705911a233d",
+      "matches": true
+    },
+    {
+      "file": "supabase-login.js",
+      "status": 200,
+      "sha256": "a99ec664cf4be29eb955cde3fbfdcc41018b40e301edef156d5123a29841d607",
+      "expected": "a99ec664cf4be29eb955cde3fbfdcc41018b40e301edef156d5123a29841d607",
+      "matches": true
+    },
+    {
+      "file": "restomanager-env.js",
+      "status": 200,
+      "sha256": "129f867cf86a670e69508b39be2721b0582031022848a9363d1f29ca7d75f4b0",
+      "expected": "129f867cf86a670e69508b39be2721b0582031022848a9363d1f29ca7d75f4b0",
+      "matches": true
+    },
+    {
+      "file": "package-lock.json",
+      "status": 200,
+      "sha256": "23a54f2a3cec09a3d9291006a8ee87f9691689c9efa0752ebbecb3c532dafe35",
+      "expected": "23a54f2a3cec09a3d9291006a8ee87f9691689c9efa0752ebbecb3c532dafe35",
+      "matches": true
+    }
+  ],
+  "canonical": [
+    {
+      "file": "v3-connected.html",
+      "status": 200,
+      "sha256": "71b60a5eabf48c2d3d2b4d016d367117ce2cd2eb6532051ec2e2c6b678934ba4",
+      "matches": true
+    },
+    {
+      "file": "app-release.json",
+      "status": 200,
+      "sha256": "43c309db0d7b366b87eee0ccbd5a887befdb504c266883ee6eeff6bd3f301f0f",
+      "matches": true
+    },
+    {
+      "file": "v3-connected.html?preview=rm014.1",
+      "status": 200,
+      "sha256": "71b60a5eabf48c2d3d2b4d016d367117ce2cd2eb6532051ec2e2c6b678934ba4",
+      "matches": true
+    }
+  ],
+  "agentDatabaseWrites": 0,
+  "v3MainUnchanged": true,
+  "authenticatedHostedFlowTested": false,
+  "status": "live",
+  "finishedAt": "2026-11-16T16:34:36.287131Z",
+  "ci": [
+    43908220414,
+    43908220635,
+    43908220912,
+    43908220618,
+    43908220869,
+    43908220642
+  ]
+}
