@@ -65,6 +65,7 @@ Les harnais servent le **vrai HTML/CSS/JS et le vrai garde d’authentification*
 
 Défauts détectés puis corrigés pendant la mission :
 
+- premier chargement explicitement en cours pour les deux rôles ; fermeture tardive ignorée après réouverture rapide ;
 - tri lu/non lu correctement booléen, y compris pour une source sans état initial ; pas de faux nouveau compteur après refresh ;
 - erreur de synchronisation Réception distinguée de son absence de source Restaurant ; message de consultation seule exact ;
 - acquittement serveur confirmé et absence de droits/compte changé traitée sans conserver les notifications confidentielles accessibles ;
@@ -83,7 +84,7 @@ Les réservations et leurs allergies/notes, RM-011-B (occupation physique après
 | Syntaxe JS | 141 fichiers, 0 erreur |
 | Tests Node | 53 fichiers de tests réussis ; dont 14 cas de projection RM-014 et 11 cas de protection de mise à jour |
 | Interface RM-014 | 14 combinaisons : Restaurant + Réception × 360/390/430/768/1024/1440/1920, clavier/tactile, ARIA, focus, thème clair/sombre, contraste texte ≥4,5:1 sur les éléments contrôlés, cibles et absence de débordement |
-| Cycle de vie RM-014 | 22 groupes réussis : sources dédupliquées, erreur/rétablissement, marqueurs, annulation, navigation réelle, lecture persistée, report/expiration, exemple RM-012 isolé, publication candidate/incohérente/autre canal rejetée, version publiée acceptée, notes/allergies préservées, sauvegarde en cours bloquante, historique hors ligne |
+| Cycle de vie RM-014 | 24 groupes réussis : sources dédupliquées, erreur/rétablissement, marqueurs, annulation, navigation réelle, lecture persistée, report/expiration, exemple RM-012 isolé, publication candidate/incohérente/autre canal rejetée, version publiée acceptée, nouveautés sans actualisation nécessaire sans bouton de rechargement, notes/allergies préservées, sauvegarde en cours bloquante, historique hors ligne |
 | PWA réelle | 12 groupes : racines `/` et `/RestoManager/`, précache, deux fenêtres, blocage de la saisie de l’autre onglet, worker installé en attente, activation explicite sans reload des autres fenêtres, shell hors ligne sans fausse mise à jour |
 | Réservations Mission 2 | 13 scénarios réussis |
 | Réservations / Service Mission 3 | 110 scénarios réussis, dont horloge contrôlée et navigateur configuré pour New York avec date Paris |
@@ -133,20 +134,20 @@ Le [manifeste de livraison](preuves/rm014/delivery-manifest.json) conserve les e
 
 - Nouveautés dans le flux : [mobile](preuves/rm014/news-fb_admin-390.png), [tablette](preuves/rm014/news-fb_admin-768.png), [PC](preuves/rm014/news-fb_admin-1440.png).
 - Scénario isolé « nouvelle version publiée » : [Restaurant](preuves/rm014/published-update-fb_admin.png), [Réception](preuves/rm014/published-update-reception.png). Ces captures simulent une publication dans le harnais ; aucune fausse mise à jour n’est annoncée sur un environnement réel.
-- Résultats machine : [14 combinaisons](preuves/rm014/responsive-results.json), [22 groupes de cycle de vie](preuves/rm014/lifecycle-results.json), [12 groupes PWA](preuves/rm014/pwa-results.json).
+- Résultats machine : [14 combinaisons](preuves/rm014/responsive-results.json), [24 groupes de cycle de vie](preuves/rm014/lifecycle-results.json), [12 groupes PWA](preuves/rm014/pwa-results.json).
 
 
 ### CI du code livré — 6 workflows réussis / 6
 
-Commit applicatif testé : `2bb1fd67924894ae142a92178f8fd46459e7c0ae`. **212 tests Node réussis, zéro échec** dans GitHub (53 fichiers dans le compte rendu local). La preuve et les liens sont conservés dans [ci-results.json](preuves/rm014/ci-results.json).
+Commit applicatif testé : `d08e8f6777f986c67bec79aead7fa6d8fcbbd915`. **212 tests Node réussis, zéro échec** dans GitHub (53 fichiers dans le compte rendu local). La preuve et les liens sont conservés dans [ci-results.json](preuves/rm014/ci-results.json).
 
 | Workflow | Exécution réussie |
 | --- | --- |
-| Tests unitaires DEV | [43893301845](https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301845) |
-| RM-014 : responsive, cycle de vie, PWA réelle | [43893302089](https://github.com/DylanL-Dev/RestoManager/actions/runs/43893302089) |
-| Salles RM-005 | [43893301825](https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301825) |
-| Audit Playwright existant | [43893301839](https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301839) |
-| Gestion et Assistance RM-013 | [43893301851](https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301851) |
-| Intégration Mission 3 : PostgreSQL, Auth/RLS/Realtime isolés et régressions navigateur | [43893301852](https://github.com/DylanL-Dev/RestoManager/actions/runs/43893301852) |
+| Tests unitaires DEV | [43896390875](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390875) |
+| RM-014 : responsive, cycle de vie, PWA réelle | [43896390941](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390941) |
+| Salles RM-005 | [43896390954](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390954) |
+| Audit Playwright existant | [43896390768](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390768) |
+| Gestion et Assistance RM-013 | [43896390878](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390878) |
+| Intégration Mission 3 : PostgreSQL, Auth/RLS/Realtime isolés et régressions navigateur | [43896390982](https://github.com/DylanL-Dev/RestoManager/actions/runs/43896390982) |
 
 Les commits documentaires de livraison conservent strictement les empreintes applicatives du manifeste. Les contrôles associés au dernier commit de PR restent visibles dans Checks. Validation utilisateur et essai authentifié du clone Render à réaliser après intégration/déploiement DEV autorisés ; aucune promotion vers V3 ou MAIN.

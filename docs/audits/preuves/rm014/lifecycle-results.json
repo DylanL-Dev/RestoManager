@@ -1,5 +1,5 @@
 {
-  "passed": 22,
+  "passed": 24,
   "failed": 0,
   "results": [
     "Tenant filtered for every select/update",
@@ -13,6 +13,7 @@
     "fb_admin RM-012 fixture only, permission / venue / resolved / expiry, no closeout",
     "fb_admin candidate-only publication is not announced",
     "fb_admin DEV rejects MAIN channel manifest",
+    "fb_admin published notes-only release does not request an unnecessary reload",
     "fb_admin published update preserves actual dirty notes + allergies, offers later",
     "Notification navigation cancellation preserves booking form",
     "fb_admin application update blocked during booking submission/checking",
@@ -21,6 +22,7 @@
     "reception RM-012 fixture only, permission / venue / resolved / expiry, no closeout",
     "reception candidate-only publication is not announced",
     "reception DEV rejects MAIN channel manifest",
+    "reception published notes-only release does not request an unnecessary reload",
     "reception published update preserves actual dirty notes + allergies, offers later",
     "reception application update blocked during booking submission/checking",
     "reception offline history available without fake update"

@@ -13,6 +13,7 @@ PASS Same-screen contextual action respects refused editor navigation and preser
 PASS fb_admin RM-012 fixture only, permission / venue / resolved / expiry, no closeout
 PASS fb_admin candidate-only publication is not announced
 PASS fb_admin DEV rejects MAIN channel manifest
+PASS fb_admin published notes-only release does not request an unnecessary reload
 PASS fb_admin published update preserves actual dirty notes + allergies, offers later
 PASS Notification navigation cancellation preserves booking form
 PASS fb_admin application update blocked during booking submission/checking
@@ -21,6 +22,7 @@ PASS Changed authenticated identity clears confidential notifications and closes
 PASS reception RM-012 fixture only, permission / venue / resolved / expiry, no closeout
 PASS reception candidate-only publication is not announced
 PASS reception DEV rejects MAIN channel manifest
+PASS reception published notes-only release does not request an unnecessary reload
 PASS reception published update preserves actual dirty notes + allergies, offers later
 PASS reception application update blocked during booking submission/checking
 PASS reception offline history available without fake update
