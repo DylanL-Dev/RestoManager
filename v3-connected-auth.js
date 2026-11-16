@@ -1,5 +1,5 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261114-rm010-sync-poll1';
-import {installFeedback} from './service-v3-feedback.js?v=20261108-bug01-1';
+import {installFeedback} from './service-v3-feedback.js?v=20261116-rm013a3';
 import {installTutorial} from './service-v3-tutorial.js?v=20261108-onboarding1';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261114-rm009-shared-threshold1';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
@@ -80,7 +80,10 @@ try{
    const picker=select?.parentElement?.querySelector('.tableChoice');
    if(picker){picker.hidden=true;picker.style.setProperty('display','none','important');}
   }
-  document.querySelector('.managementIntro').textContent='Gestion · Réception';
+  document.querySelector('.managementIntro h1').textContent='Gestion · Réception';
+  document.querySelector('.managementIntro p').textContent='Consultez les horaires partagés et retrouvez vos réglages et l’aide.';
+  const receptionSettings=document.querySelector('#manageSettingsToggle .managementGroupWords');
+  if(receptionSettings){receptionSettings.querySelector('strong').textContent='Paramètres de l’application';receptionSettings.querySelector('small').textContent='Apparence sur cet appareil';}
   // Réception can consult the shared weekly schedule, never edit it.
   const receptionManagement=document.querySelector('[data-screen="administration"]');
   const receptionCategories=receptionManagement?.querySelector('.rmManagementCategoryContent');
@@ -317,16 +320,22 @@ try{
  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
  // legacy localStorage-backed UI until they are replaced by server-side RPC calls.
- const allowedForms=window.RestoReception?['bookingForm','editForm','reportIssueForm']:['bookingForm','editForm','tableAdminForm','walkinForm','restaurantShiftForm','fusionForm','reportIssueForm'];
+ const allowedForms=window.RestoReception?['bookingForm','editForm','reportIssueForm']:['bookingForm','editForm','tableAdminForm','roomManagerForm','walkinForm','restaurantShiftForm','fusionForm','reportIssueForm'];
  const forbidden=e=>{
   const target=e.target;
   const form=target.closest?.('form');
-  if(e.type==='submit' && form && (!allowedForms.includes(form.id)||(!window.RestoSupabaseReady&&form.id!=='reportIssueForm'))){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
+  // Room rename editors are created dynamically, without unique form IDs.
+  // Only the Restaurant role may submit them, after shared data is writable.
+  const permittedRoomRename=!window.RestoReception&&form?.classList.contains('roomManagerRenameForm');
+  const permittedForm=form&&(allowedForms.includes(form.id)||permittedRoomRename);
+  if(e.type==='submit' && form && (!permittedForm||(!window.RestoSupabaseReady&&form.id!=='reportIssueForm'))){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout||btn.id==='reportIssueSubmit')return;
+   // Accordion headers only navigate; names such as manageClosureToggle are not mutations.
+   if(btn.classList?.contains('rmManagementCategoryButton'))return;
    const id=btn.id||'';
-   if(['tableAdminSubmit','fusionSubmit'].includes(id)&&!window.RestoReception&&window.RestoSupabaseReady)return;
+   if(['tableAdminSubmit','fusionSubmit','closureManual'].includes(id)&&!window.RestoReception&&window.RestoSupabaseReady)return;
    // Let view navigation, date selection, search and tabs work; block mutation buttons.
    if(/(?:save|submit|delete|remove|release|cancelReservation|confirmReservation|install|arrive|seated|noShow|complete|closure)/i.test(id)){
     e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification indisponible.';const feedback=document.getElementById('bookingFeedback');if(feedback)feedback.textContent='Cette action est temporairement indisponible.';

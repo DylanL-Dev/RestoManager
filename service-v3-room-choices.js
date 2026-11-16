@@ -12,7 +12,7 @@ ids.forEach(id=>{const select=document.getElementById(id);if(!select)return;
 const trigger=document.createElement('button');trigger.type='button';trigger.className='roomChoiceTrigger';trigger.setAttribute('aria-label','Choisir une salle');select.insertAdjacentElement('afterend',trigger);select.classList.add('visuallyHiddenSelect');select.tabIndex=-1;
 function refresh(){const chosen=[...select.options].find(o=>o.value===select.value);trigger.replaceChildren();const name=document.createElement('span');name.textContent=chosen?.textContent||'Choisir une salle';const arrow=document.createElement('span');arrow.textContent='⌄';arrow.setAttribute('aria-hidden','true');trigger.append(name,arrow);trigger.disabled=!select.options.length}
 trigger.addEventListener('click',()=>{previous=trigger;optionsBox.replaceChildren();[...select.options].forEach(o=>{const button=document.createElement('button');button.type='button';button.className='roomPickerOption'+(o.value===select.value?' selected':'');const name=document.createElement('span');name.textContent=o.textContent;const mark=document.createElement('span');mark.textContent=o.value===select.value?'✓':'';mark.setAttribute('aria-hidden','true');button.append(name,mark);button.addEventListener('click',()=>{select.value=o.value;select.dispatchEvent(new Event('change',{bubbles:true}));refresh();close()});optionsBox.append(button)});overlay.hidden=false;document.body.classList.add('roomPickerOpen');overlay.querySelector('.roomPickerClose').focus()});
-select.addEventListener('change',refresh);
+select.addEventListener('change',refresh);select.addEventListener('restomanager:picker-label',refresh);
 const observer=new MutationObserver(refresh);observer.observe(select,{childList:true,subtree:true});
 refresh();
 });
