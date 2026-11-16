@@ -148,7 +148,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await ui.page.evaluate(()=>window.RestoScreens.show('administration'));
    await ui.page.locator('.rmManagementCategoryButton[data-category="manageFusions"]').click();
    assert.equal(await ui.page.locator('#manageFusions').isVisible(),true,'Fusion category is visible');
-   assert.equal(await ui.page.locator('#manageTables').isVisible(),false,'Unrelated category is hidden');
+   assert.equal(await ui.page.locator('#manageTablesPanel').isVisible(),false,'Unrelated category panel is collapsed');
    assert.equal(await ui.page.locator('.rmFusionTableHead').isVisible(),viewport.width>1050,'Desktop shows detailed fusion table header');
    const tableCount=await ui.page.locator('.rmFusionTableCard').count();
    assert.ok(tableCount>=3,'At least three selectable fusion cards');
@@ -346,7 +346,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await feedbackGroup.waitFor({state:'attached'});
    await feedbackGroup.locator('summary').click();
    await feedbackGroup.locator('#reportIssueForm').waitFor({state:'visible'});
-   assert.match(await feedbackGroup.innerText(),/Signaler un problème/);
+   assert.match(await feedbackGroup.innerText(),/Assistance/);
    assert.equal(await feedbackGroup.locator('#reportIssueKind option').count(),3);
    assert.equal(await feedbackGroup.locator('#reportIssueSeverity option').count(),2);
    assert.equal(await feedbackGroup.locator('#reportIssueContact').getAttribute('maxlength'),'160');
