@@ -1,5 +1,12 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-014 — Retrait personnel par glissement — EN COURS DEV (16/11/2026)
+
+- Demande explicite : « Ou juste un slide pour enlever la notification qu'on ne veux plus ou déjà traité » ; complément de RM-014, sur branche `feature/rm014-swipe-dismiss` issue de DEV `82ccef7`.
+- Critères Restaurant/Réception, mobile/tablette/PC : retrait par glissement horizontal ou bouton accessible ; annulation ; conservation après rechargement sur cet appareil, isolée par compte/établissement/rôle ; aucun changement des réservations ni des notifications des collègues. Une nouvelle révision d'événement doit réapparaître.
+- Risques à contrôler : gestes verticaux et clics, priorité et erreurs de synchronisation actives, compteur, stockage indisponible, changement de compte, cache PWA. Aucun accès Supabase nécessaire ; tests sur données en mémoire uniquement.
+- Validation prévue : syntaxe, unités et Playwright aux sept largeurs/deux rôles, cycle de vie/PWA et captures mobile/tablette/PC ; livraison sur Render DEV pour recette. Aucune nouvelle publication V3/MAIN sans validation de ce complément.
+
 **Source de vérité du projet : ce document sur `feature/v3-supabase-full-clone`.**  
 Créé le 10 novembre 2026, après l'incident de synchronisation lié à la journée de service.  
 **Règle absolue : une seule évolution active à la fois.** Ne pas passer à une nouvelle fonctionnalité tant que la précédente n'est pas **VALIDÉE CLONE** par l'utilisateur ou explicitement **BLOQUÉE / REPORTÉE**. Une réparation urgente mettant le service en sécurité fait exception et suspend la fonctionnalité en cours.

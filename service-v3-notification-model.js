@@ -7,6 +7,9 @@
  const dateTime=value=>{const d=new Date(value);return Number.isFinite(+d)?d.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Horaire à vérifier'};
  const clock=value=>new Date(value).toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
  const scope=ctx=>ctx?.userId&&ctx?.restaurantId&&['fb_admin','reception'].includes(ctx.role)?[ctx.restaurantId,ctx.userId,ctx.role].map(encodeURIComponent).join(':'):null;
+ const dismissible=item=>item.dismissible!==false&&item.source!=='sync'&&item.type!=='sync'&&!item.pending&&!item.update;
+ // A new grouped event, changed estimate or increased priority must be seen again.
+ const dismissalRevision=item=>JSON.stringify([item.revision||'',item.createdAt||0,item.type||'',item.priority||'normal']);
  const who=r=>r.hotelRoom?'Chambre '+r.hotelRoom:(r.client||'Client');
  function reminders({reservations=[],role,now=Date.now(),interval}){
   if(role!=='fb_admin')return [];
@@ -61,7 +64,7 @@
  function project(items,state={},now=Date.now()){
   const unique=new Map();for(const item of items){if(!item?.id)continue;const prev=unique.get(item.id);if(!prev||item.createdAt>prev.createdAt)unique.set(item.id,item)}
   const order={high:0,normal:1,low:2};
-  return [...unique.values()].map(n=>{const local=state[n.id]||{};return {...n,read:n.source==='event'?n.read:Boolean(local.readAt)||Boolean(n.read),snoozed:n.snoozable&&Number(local.snoozedUntil)>now}}).sort((a,b)=>(order[a.priority]??1)-(order[b.priority]??1)||Number(a.read)-Number(b.read)||b.createdAt-a.createdAt||a.id.localeCompare(b.id));
+  return [...unique.values()].filter(n=>!dismissible(n)||state[n.id]?.dismissedRevision!==dismissalRevision(n)).map(n=>{const local=state[n.id]||{};return {...n,read:n.source==='event'?n.read:Boolean(local.readAt)||Boolean(n.read),snoozed:n.snoozable&&Number(local.snoozedUntil)>now}}).sort((a,b)=>(order[a.priority]??1)-(order[b.priority]??1)||Number(a.read)-Number(b.read)||b.createdAt-a.createdAt||a.id.localeCompare(b.id));
  }
- return {scope,paris,day,dateTime,reminders,events,project};
+ return {scope,paris,day,dateTime,reminders,events,project,dismissible,dismissalRevision};
 });
