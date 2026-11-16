@@ -1,0 +1,90 @@
+{
+  "version": "20261116-rm013a3",
+  "dev_pr": 154,
+  "dev_merge": "70531067b10536a44964fb579cc22b2d13f2a6f9",
+  "render_deploy": "dep-dbtdi5jbc2fs73drpf60",
+  "v3_pr": 155,
+  "v3_merge": "e5e98ca879628cf6efa8ed0e4542f2a97e3bda1f",
+  "main_pr": 156,
+  "main_merge": "a8915f9d04e51914d25280e910c3d60b4a027fd2",
+  "production_tree": "4836499956a0de8ec7acdf2cdf5f0d136bb99ed3",
+  "pages_workflow": "https://github.com/DylanL-Dev/RestoManager/actions/runs/43849260979",
+  "pages_url": "https://dylanl-dev.github.io/RestoManager/v3-connected.html",
+  "database_changes": false,
+  "real_test_messages": 0,
+  "checks": [
+    {
+      "file": "v3-connected.html",
+      "http": 200,
+      "sha256": "dbda1781246622e368fbf0eeea760ef2269f29f8bd309bc999c29643e6ad63cd",
+      "matches_tested_release": true
+    },
+    {
+      "file": "service-v3.css",
+      "http": 200,
+      "sha256": "8e35a6954a3b3cff3dfe1a850b6af6fc8860159e8b889dc1a5ceedc87aaf426a",
+      "matches_tested_release": true
+    },
+    {
+      "file": "service-v3-feedback.js",
+      "http": 200,
+      "sha256": "2b205a851d4edf586ceb807c04665789db6750c4eae9142185fcd4db3e6b9562",
+      "matches_tested_release": true
+    },
+    {
+      "file": "service-v3-management-categories.css",
+      "http": 200,
+      "sha256": "77de703cd10b09a24111da7f0e41575601518f75147948ff1d8a52ff7a09dae7",
+      "matches_tested_release": true
+    },
+    {
+      "file": "service-v3-screens.js",
+      "http": 200,
+      "sha256": "43273f285af222ad9d2c078f196013e3e22243be36e06265fe372a9dc854fe69",
+      "matches_tested_release": true
+    },
+    {
+      "file": "service-v3-table-admin.js",
+      "http": 200,
+      "sha256": "460347166ebf385cd83b2d41f887e4a3cff705cccf40b80a49ba979c4af6e8b7",
+      "matches_tested_release": true
+    },
+    {
+      "file": "service-v3-room-choices.js",
+      "http": 200,
+      "sha256": "9c7034bd42653102785653831555207d405ec821a27b789fb715d07ec0eec43b",
+      "matches_tested_release": true
+    },
+    {
+      "file": "service-v3.js",
+      "http": 200,
+      "sha256": "fe724cbf9dd7856c216c9e42a108d299fc9a5935aa978e6cbf4fe1b3e9d1c78c",
+      "matches_tested_release": true
+    },
+    {
+      "file": "v3-connected-auth.js",
+      "http": 200,
+      "sha256": "004b09a8d4fb348fff166b1bdb31543691297b6f94dc0f72810b11ebf6e6dc76",
+      "matches_tested_release": true
+    },
+    {
+      "file": "sw.js",
+      "http": 200,
+      "sha256": "c10fb7eae04c12d4cd83ddd59f594a48e7929d44c4cc0555067795150618e761",
+      "matches_tested_release": true
+    },
+    {
+      "file": "supabase-service-bridge.js",
+      "http": 200,
+      "sha256": "30c453a3084c79bdd834f0262a7ee8a89f2c61183a65088f444f4e5eb6100f6e",
+      "matches_tested_release": true
+    },
+    {
+      "file": "supabase-login.js",
+      "http": 200,
+      "sha256": "7878f4cd4026ca1229b15f9536632582704cef04d00f0eaf8d1ed89dc847c4c3",
+      "matches_tested_release": true
+    }
+  ],
+  "status": "Published; final field confirmation is separate"
+}

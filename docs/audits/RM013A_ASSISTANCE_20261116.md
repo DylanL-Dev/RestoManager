@@ -37,3 +37,7 @@ Captures limitées à la fenêtre du navigateur, avec données fictives :
 ## Livraison
 
 La version du formulaire, du module authentifié et du CSS est `20261116-rm013a3`. Le cache PWA contient le module Assistance. La livraison vers V3/MAIN est ciblée sur les interfaces validées de RM-013-A et ce formulaire, avec conservation des fichiers de connexion et dépendances propres à la production ; aucune fusion globale de DEV, aucun SQL ni routage DEV transmis.
+
+### Publication vérifiée
+
+La livraison a été fusionnée dans l’ordre DEV [#154](https://github.com/DylanL-Dev/RestoManager/pull/154), V3 [#155](https://github.com/DylanL-Dev/RestoManager/pull/155), puis MAIN [#156](https://github.com/DylanL-Dev/RestoManager/pull/156). Les workflows du paquet final sont verts. Render DEV est LIVE et GitHub Pages sert la version `20261116-rm013a3` ; le HTML et les ressources contrôlées correspondent aux fichiers de la livraison. [Empreintes et références exactes](preuves/rm013a-publication-20261116.json). Aucune modification Supabase PROD ni écriture de test distante.

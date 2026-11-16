@@ -247,3 +247,14 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 
 - Réalisé : choix intégrés et libellés Assistance, champs et bouton harmonisés, retours d’envoi et mode sombre ; aucune modification des enums, de la table ou de la confidentialité des signalements.
 - Tests techniques : syntaxe 134 fichiers, 51 fichiers unitaires, 14 combinaisons navigateur d’Assistance, 110 scénarios Mission 3. Captures et détail : [Assistance RM-013-A](audits/RM013A_ASSISTANCE_20261116.md). Livraison ciblée V3 puis MAIN demandée après ce dernier ajustement ; configurations de production préservées.
+
+## RM-013-A — PUBLIÉE V3 / PUBLIÉE MAIN (16/11/2026)
+
+- Validation utilisateur : « Parfait je pense qu'on peut valider et mettre sur main sur V3 main », avec harmonisation d’Assistance réalisée avant publication.
+- DEV : PR [#154](https://github.com/DylanL-Dev/RestoManager/pull/154), fusion `70531067b10536a44964fb579cc22b2d13f2a6f9`. Render DEV `dep-dbtdi5jbc2fs73drpf60` LIVE ; les ressources de la version `20261116-rm013a3` correspondent au code testé.
+- V3 : PR [#155](https://github.com/DylanL-Dev/RestoManager/pull/155), fusion `e5e98ca879628cf6efa8ed0e4542f2a97e3bda1f`, avant MAIN. MAIN : PR [#156](https://github.com/DylanL-Dev/RestoManager/pull/156), fusion `a8915f9d04e51914d25280e910c3d60b4a027fd2`. Arbre commun `4836499956a0de8ec7acdf2cdf5f0d136bb99ed3`.
+- Contrôles de publication : deux workflows V3 réussis et cinq MAIN réussis ; configuration PROD préservée, 154 tests unitaires, Gestion 14 combinaisons et Assistance 14 combinaisons, scénarios complémentaires des salles/planning/réservations et PostgreSQL isolé. Le fichier du test hebdomadaire manquant au premier paquet a été ajouté ; toutes les vérifications du paquet final sont vertes.
+- GitHub Pages : [déploiement 43849260979](https://github.com/DylanL-Dev/RestoManager/actions/runs/43849260979) réussi. HTML canonique et douze fichiers/ressources publiés en HTTP 200, empreintes identiques à la livraison testée. [Preuve machine](audits/preuves/rm013a-publication-20261116.json).
+- Aucun routage DEV, changement de dépendances PROD ni migration transmis. Modules de connexion PROD inchangés ; aucun message, réservation ou clôture de test écrit dans les données du restaurant.
+- Retour arrière : `backup/rm013a-v3-before-20261116` (`cc516a3`) et `backup/rm013a-main-before-20261116` (`2f0c2bc`).
+- Statut final technique : **PUBLIÉE V3 / PUBLIÉE MAIN**. La confirmation de l’utilisateur sur la production réelle reste distincte ; ne pas inscrire « CONFIRMÉE EN PRODUCTION » sans ce retour.
