@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "channel": "dev",
+  "currentVersion": "2026.11.16-rm014",
+  "releases": [
+    {
+      "version": "2026.11.16-rm014",
+      "date": "2026-11-16",
+      "title": "Vos informations de service, réunies",
+      "changes": [
+        "Une cloche unique et un centre de notifications adapté à chaque écran.",
+        "Les événements d’une réservation sont regroupés ; les rappels résolus disparaissent.",
+        "Marquez vos notifications comme lues et reportez les rappels de dix minutes.",
+        "Consultez les nouveautés et mettez l’application à jour en préservant votre saisie."
+      ],
+      "impact": "Les réservations, les droits de votre équipe et les actions de service restent inchangés.",
+      "requiresReload": true
+    },
+    {
+      "version": "2026.11.16-rm013a3",
+      "date": "2026-11-16",
+      "title": "Une gestion plus claire, sur tous vos écrans",
+      "changes": [
+        "Les noms des salles restent lisibles sur mobile.",
+        "Les réglages de Gestion se déplient par rubrique.",
+        "Le formulaire Assistance reprend le style de l’application."
+      ],
+      "impact": "Les réglages et les données du restaurant sont conservés.",
+      "requiresReload": true
+    }
+  ]
+}

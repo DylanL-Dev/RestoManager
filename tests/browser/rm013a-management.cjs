@@ -9,9 +9,9 @@ const baselineOnly=process.argv.includes('--baseline');
 const widths=[360,390,430,768,1024,1440,1920];
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-let state,sequence=0,calls=[],reportRequests=[],reportsFailed=false;const results=[];
+let state,sequence=0,calls=[],reportRequests=[],reportsFailed=false,notificationsFailed=false,workerRevision=0,notificationQueries=[];const results=[];
 function reset(){
- calls=[];reportRequests=[];reportsFailed=false;
+ calls=[];reportRequests=[];reportsFailed=false;notificationsFailed=false;notificationQueries=[];
  state={revision:'10',capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
  hours:{id:1,lunch_enabled:true,lunch_start:'12:00',lunch_end:'14:30',dinner_enabled:true,dinner_start:'19:00',dinner_end:'21:30',duration:60,arrival_limit_percent:60,
  weekly_schedule:Object.fromEntries(days.map(day=>[day,{lunch:{enabled:!['saturday','sunday'].includes(day),start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'21:30'}}]))},
@@ -23,8 +23,9 @@ function reset(){
 }
 const snapshot=()=>({...structuredClone(state),syncSequence:++sequence});
 function query({table,mode,values,filters,single}){
- let rows=table==='restaurants'?[{id:'fictional-venue',name:'Restaurant fictif RM-013-A'}]:table==='restaurant_rooms'?state.rooms:table==='restaurant_tables'?state.tables:table==='restaurant_hours'?[state.hours]:table==='service_closures'?state.serviceClosures:[];
- rows=rows.filter(row=>filters.every(([key,value])=>key==='restaurant_id'||row[key]===value));
+ if(['fb_reservation_alerts','reservation_change_alerts'].includes(table)){notificationQueries.push({table,mode,filters});if(notificationsFailed)return {data:null,error:{code:'NETWORK',message:'Fixture notification source unavailable'}}}
+ let rows=table==='restaurants'?[{id:'fictional-venue',name:'Restaurant fictif RM-013-A'}]:table==='restaurant_rooms'?state.rooms:table==='restaurant_tables'?state.tables:table==='restaurant_hours'?[state.hours]:table==='service_closures'?state.serviceClosures:table==='fb_reservation_alerts'?(state.bookingAlerts||[]):table==='reservation_change_alerts'?(state.changeAlerts||[]):[];
+ rows=rows.filter(row=>filters.every(([key,value,op])=>key==='restaurant_id'?!row.restaurant_id||row.restaurant_id===value:op==='in'?value.includes(row[key]):op==='is'?row[key]==value:row[key]===value));
  if(mode==='insert'&&table==='platform_reports'){
   reportRequests.push({data:structuredClone(values),failed:reportsFailed});
   return {data:null,error:reportsFailed?{code:'NETWORK',message:'Fixture transmission failure'}:null};
@@ -56,24 +57,24 @@ const bridge=`
 export async function requireStaff(){return {user:{id:'fictional-user'},profile:{role:window.__rmRole,active:true,display_name:'Équipe fictive',restaurant_id:'fictional-venue'}}}
 export async function loadSharedService(){return window.__rmSnapshot()}
 export async function subscribeSharedService(onSnapshot,onError,onConnection){const apply=async()=>{onConnection(true);onSnapshot(await loadSharedService())};window.addEventListener('rm:push',apply);setTimeout(apply,0);return ()=>{}}
-function query(table){const spec={table,mode:'select',filters:[],single:false};const q={select(){return q},eq(k,v){spec.filters.push([k,v]);return q},update(v){spec.mode='update';spec.values=v;return q},insert(v){spec.mode='insert';spec.values=v;return q},single(){spec.single=true;return q},maybeSingle(){spec.single=true;return q},then(yes,no){return window.__rmQuery(spec).then(yes,no)}};for(const n of ['order','limit','range','in','is','gte','lte','neq'])q[n]=()=>q;return q}
+function query(table){const spec={table,mode:'select',filters:[],single:false};const q={select(){return q},eq(k,v){spec.filters.push([k,v]);return q},update(v){spec.mode='update';spec.values=v;return q},insert(v){spec.mode='insert';spec.values=v;return q},single(){spec.single=true;return q},maybeSingle(){spec.single=true;return q},then(yes,no){return window.__rmQuery(spec).then(yes,no)}};q.in=(k,v)=>{spec.filters.push([k,v,'in']);return q};q.is=(k,v)=>{spec.filters.push([k,v,'is']);return q};for(const n of ['order','limit','range','gte','lte','neq'])q[n]=()=>q;return q}
 export const supabase={from:query,rpc:(name,args)=>window.__rmRpc(name,args),auth:{getUser:async()=>({data:{user:{id:'fictional-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
 const server=http.createServer((req,res)=>{
- const file=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1);
+ const file=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(process.argv.includes('--pwa-fixture')?/^\/(?:RestoManager\/)?/:/^\//,'');
  if(file.split('/').some(p=>p==='..'||p.startsWith('.'))){res.writeHead(404).end();return}
- let data;try{data=baselineOnly?execFileSync('git',['show',baseline+':'+file],{cwd:root,maxBuffer:10*1024*1024,stdio:['ignore','pipe','ignore']}):fs.readFileSync(path.join(root,file));}catch{res.writeHead(404).end();return}
+ let data;try{data=process.argv.includes('--pwa-fixture')&&file==='supabase-service-bridge.js'?bridge:process.argv.includes('--pwa-fixture')&&file==='sw.js'?fs.readFileSync(path.join(root,file),'utf8').replace('dev-rm014','dev-rm014-fixture'+workerRevision):baselineOnly?execFileSync('git',['show',baseline+':'+file],{cwd:root,maxBuffer:10*1024*1024,stdio:['ignore','pipe','ignore']}):fs.readFileSync(path.join(root,file));}catch{res.writeHead(404).end();return}
  res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(data);
 });
-async function open(browser,origin,width,role){
+async function open(browser,origin,width,role,options={}){
  reset();
- const context=await browser.newContext({viewport:{width,height:width<768?844:width===768?1024:width===1920?1080:900},serviceWorkers:'block',timezoneId:'Europe/Paris',isMobile:width<768,hasTouch:width<=1024});
+ const context=await browser.newContext({viewport:{width,height:width<768?844:width===768?1024:width===1920?1080:900},serviceWorkers:options.serviceWorkers||'block',timezoneId:'Europe/Paris',isMobile:width<768,hasTouch:width<=1024});
  await context.addInitScript(role=>window.__rmRole=role,role);
  await context.exposeFunction('__rmSnapshot',snapshot);await context.exposeFunction('__rmQuery',query);await context.exposeFunction('__rmRpc',rpc);
  await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin)return route.abort();if(u.pathname.endsWith('/supabase-service-bridge.js'))return route.fulfill({contentType:'text/javascript',body:bridge});return route.continue()});
  await context.routeWebSocket('**/*',ws=>ws.close());
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.clock.install({time:new Date('2032-11-08T10:00:00Z')});
- await page.goto(origin+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
+ await page.clock.install({time:new Date(options.time||'2032-11-08T10:00:00Z')});
+ await page.goto(origin+(options.basePath||'')+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
  const welcome=page.locator('#restoTourWelcome');if(await welcome.isVisible())await page.getByRole('button',{name:'Plus tard',exact:true}).click();
  await page.evaluate(()=>window.RestoScreens.show('administration'));
  return {context,page,errors};
@@ -260,4 +261,4 @@ if(require.main===module)(async()=>{let browser;try{
  fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({baseline,passed:results.length,failed:0,backend:'In-memory service boundary; real frontend and auth guard; external HTTP and WebSocket blocked',results},null,2));
 }finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}})().catch(e=>{console.error(e);process.exitCode=1});
 
-module.exports={open,server,failReports:value=>{reportsFailed=value},getReportRequests:()=>structuredClone(reportRequests)};
+module.exports={open,server,failReports:value=>{reportsFailed=value},getReportRequests:()=>structuredClone(reportRequests),configure:fn=>fn(state),getCalls:()=>structuredClone(calls),failNotifications:value=>{notificationsFailed=value},getNotificationQueries:()=>structuredClone(notificationQueries),bumpWorker:()=>{workerRevision++}};

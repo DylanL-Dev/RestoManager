@@ -1,0 +1,15 @@
+PASS 22 actual snapshot tables, upcoming arrivals and visible text fb_admin 390
+PASS 22 actual snapshot tables, upcoming arrivals and visible text fb_admin 768
+PASS 22 actual snapshot tables, upcoming arrivals and visible text fb_admin 1440
+PASS 22 actual snapshot tables, upcoming arrivals and visible text reception 390
+PASS 22 actual snapshot tables, upcoming arrivals and visible text reception 768
+PASS 22 actual snapshot tables, upcoming arrivals and visible text reception 1440
+PASS Confirmed empty-tables has an explicit empty state
+PASS Confirmed empty-arrivals has an explicit empty state
+PASS loading is explicit, with no demo tables or blank panels
+PASS error is explicit, with no demo tables or blank panels and retry recovers
+PASS Missing SQL capabilities preserve read-only tables and block writes fb_admin
+PASS Missing SQL capabilities preserve read-only tables and block writes reception
+PASS Offline preserves last table snapshot, labels it stale, and reconnects
+PASS Availability failure cannot interrupt table or arrival rendering
+{"passed":14,"failed":0,"backend":"fictitious snapshot; all remote HTTP and WebSocket blocked"}

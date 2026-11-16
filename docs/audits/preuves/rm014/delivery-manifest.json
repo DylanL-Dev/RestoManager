@@ -1,0 +1,41 @@
+{
+  "mission": "RM-014",
+  "date": "2026-11-16",
+  "branch": "feature/rm014-notification-center",
+  "base": "e3a5daa626007f7a8d67e173cbbfe7eafd6b5969",
+  "codeCommit": "d08e8f6777f986c67bec79aead7fa6d8fcbbd915",
+  "pullRequest": 159,
+  "applicationVersion": "2026.11.16-rm014",
+  "channel": "dev",
+  "runtimeSha256": {
+    "service-v3-reminders.js": "51702ef2c35070c4330d238a772e5576572df1df76f38cbbbb6ec177a83fff29",
+    "service-v3-fb-alerts.js": "c9796fbe2094fc791cca8d6f51ccd3ef634e6f457d054d6512c750c9610c5f70",
+    "service-v3-notification-model.js": "20e32ba09e4d7629fa2df8224f297cf5f7eaeb832f5492c941f97942a4c10319",
+    "service-v3-notifications.css": "fb080df786e8d78c16c566ad5df69dd34d2c78e32cd9976b47458ee9d636fcb5",
+    "service-v3-app-release.js": "3894a1e6bfb883cce1e697a62b5b53a090d82737c386cee49ee7cb4aa8bade90",
+    "service-v3-refresh.js": "e122a897d334ece68c84ec4947d065e48c7091e490e0f8aa1cab1c4e2d584fd6",
+    "service-v3-screens.js": "90938e03e21748e415babb2a8d590855c74449211e5452af8ac1934ddcb7cf8e",
+    "service-v3-reservations.js": "a783c020f18d6ea4b11a2e9abd174e3628809d9eb7dc157690c3ec4ef3f1e74b",
+    "v3-connected-auth.js": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870",
+    "v3-connected.html": "3ce69704162395c0bb528d51c4f51bac27ac7a4957bdaf5231c4be49d8feeded",
+    "sw.js": "b3cb214ae558c1c469e692cd73a4cec3d1e0453d0f4fc5d2a5da437b4fb2e0c2",
+    "lucide-local.js": "3b06c8c2d3769d35836a1b2a793231b6f4cfc04e97b073e05215207fa15e8c46",
+    "app-release.json": "5866049cf5671d35fdde41b5b0857c8b79736377d1cc593b5852c525bcd14966"
+  },
+  "protectedUnchanged": {
+    "supabase-service-bridge.js": "7d077c8ae8617c3a6094ceef9469ffdf781bb86d75324f5eeff05705911a233d",
+    "supabase-login.js": "a99ec664cf4be29eb955cde3fbfdcc41018b40e301edef156d5123a29841d607",
+    "restomanager-env.js": "129f867cf86a670e69508b39be2721b0582031022848a9363d1f29ca7d75f4b0",
+    "package-lock.json": "23a54f2a3cec09a3d9291006a8ee87f9691689c9efa0752ebbecb3c532dafe35"
+  },
+  "protectedBranchesUnchanged": {
+    "RestoManager-V3": "e5e98ca879628cf6efa8ed0e4542f2a97e3bda1f",
+    "main": "a8915f9d04e51914d25280e910c3d60b4a027fd2",
+    "DEV": "e3a5daa626007f7a8d67e173cbbfe7eafd6b5969"
+  },
+  "realDataWrites": 0,
+  "renderDeployment": false,
+  "evidence": "Actual frontend and auth gate; fictional in-memory service boundary; actual loopback service worker for PWA; no hosted authenticated test claimed",
+  "remoteDatabaseChanges": 0,
+  "databaseSchemaChangesInDiff": 0
+}
