@@ -1724,31 +1724,67 @@ html[data-theme="dark"] .navBackButton{
 html[data-theme="dark"] .navBackContext{color:#b5d6c3}
 
 
-/* BUG-01: compact private report form in Gestion, suitable for touch/PWA. */
-.reportIssueForm{display:grid;gap:9px;max-width:650px}
-.reportIssueForm label{font-size:13px;font-weight:750;color:#285843;margin-top:5px}
-.reportIssueForm input,.reportIssueForm select,.reportIssueForm textarea{
- box-sizing:border-box;width:100%;min-width:0;min-height:44px;padding:11px 12px;
- border:1px solid #bddec9;border-radius:11px;background:#fff;color:#183b2a;
- font:inherit;font-size:14px;resize:vertical;
+/* Staff assistance: native choices and fields shared by both roles. */
+#manageFeedback .reportIssueIntro,#manageFeedback .reportIssueForm{max-width:1000px;margin-inline:auto}
+.reportIssueIntro{margin-bottom:22px}
+.reportIssueIntro h3{margin:0 0 7px;font-size:19px;line-height:1.35;color:#173e33}
+.reportIssueIntro p{margin:0;font-size:13px;line-height:1.55;color:#60776a}
+.reportIssueForm{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;min-width:0}
+.reportIssueFull,.reportIssueOptions{grid-column:1/-1}
+.reportIssueOptions{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:24px}
+.reportIssueChoiceGroup{min-width:0;border:0;padding:0;margin:0}
+.reportIssueChoiceGroup legend{padding:0;margin:0 0 10px;font-size:13px;font-weight:700;color:#285843}
+.reportIssueChoices{display:grid;gap:8px;min-width:0}
+.reportIssueTypes{grid-template-columns:repeat(3,minmax(0,1fr))}
+.reportIssuePriorities{grid-template-columns:repeat(2,minmax(0,1fr))}
+.reportIssueChoice{position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;min-width:0;min-height:102px;padding:12px 6px;border:1px solid #d4e3da;border-radius:12px;background:#f8fbf9;color:#3c6150;text-align:center;cursor:pointer}
+.reportIssueChoice input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.reportIssueChoice>svg{width:21px;height:21px;flex:none;color:#238260}
+.reportIssueChoice strong{font-size:13px;line-height:1.35;font-weight:700}
+.reportIssueChoice small{font-size:11px;line-height:1.4;color:#60776a}
+.reportIssueChoice:has(input:checked){border-color:#0a815b;background:#e8f6ee;box-shadow:inset 0 0 0 1px #0a815b;color:#075f43}
+.reportIssueChoice:has(input:focus-visible){outline:3px solid #2eae80;outline-offset:3px}
+.reportIssueField{display:grid;align-content:start;gap:8px;min-width:0;margin:0}
+.reportIssueCaption{display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:13px;line-height:1.4;font-weight:700;color:#285843}
+.reportIssueCaption svg{width:17px;height:17px;flex:none;color:#238260}
+.reportIssueCaption small{font-size:11px;font-weight:500;color:#6b8175}
+.reportIssueField>input,.reportIssueField>textarea{box-sizing:border-box;width:100%;min-width:0;min-height:46px;padding:12px;border:1px solid #ccdcd2;border-radius:11px;background:#fff;color:#183e30;font:inherit;font-size:14px;line-height:1.5}
+.reportIssueField>textarea{min-height:132px;resize:vertical}
+.reportIssueField>small{font-size:11px;line-height:1.4;color:#6b8175}
+.reportIssueField>:is(input,textarea):focus-visible{outline:3px solid #8ed3ac;outline-offset:2px;border-color:#17805a}
+.reportIssueForm [hidden]{display:none!important}
+.reportIssuePrivacy{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-radius:11px;background:#f1f7f3;color:#60776a}
+.reportIssuePrivacy svg{width:18px;height:18px;flex:none;color:#238260;margin-top:1px}
+.reportIssuePrivacy p{margin:0;font-size:12px;line-height:1.55}
+.reportIssueFooter{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding-top:2px}
+.reportIssueFooter button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:46px;padding:12px 18px;border:0;border-radius:11px;background:#087f5b;color:#fff;font:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.reportIssueFooter button svg{width:18px;height:18px;flex:none}
+.reportIssueFooter button:focus-visible{outline:3px solid #2eae80;outline-offset:3px}
+.reportIssueFooter button:disabled{opacity:.65;cursor:wait}
+.reportIssueFooter [role="status"]{flex:1 1 220px;margin:0;font-size:13px;line-height:1.5;color:#206748}
+.reportIssueFooter [role="status"]:empty{display:none}
+.reportIssueFooter [data-state="error"]{color:#a33f33}
+@media(max-width:1050px){.reportIssueOptions{grid-template-columns:minmax(0,1fr);gap:20px}}
+@media(max-width:640px){
+ .reportIssueForm{grid-template-columns:minmax(0,1fr);gap:18px}
+ .reportIssueIntro{margin-bottom:18px}
+ .reportIssueIntro h3{font-size:18px}
+ .reportIssueChoice{min-height:94px;padding:10px 4px}
+ .reportIssueChoice strong{font-size:12px}
+ .reportIssueChoice small{font-size:10px}
+ .reportIssueFooter{align-items:stretch;flex-direction:column}
+ .reportIssueFooter button{width:100%}
+ .reportIssueFooter [role="status"]{flex:auto}
 }
-.reportIssueForm textarea{min-height:116px;line-height:1.55}
-.reportIssueForm input:focus-visible,.reportIssueForm select:focus-visible,
-.reportIssueForm textarea:focus-visible{outline:3px solid #8ed3ac;outline-offset:2px}
-.reportIssueForm button{
- display:inline-flex;align-items:center;justify-content:center;gap:8px;
- min-height:46px;width:fit-content;padding:11px 17px;
- border:0;border-radius:11px;background:#087f5b;color:white;
- font:inherit;font-size:14px;font-weight:800;cursor:pointer;
-}
-.reportIssueForm button svg{width:18px;height:18px}
-.reportIssueForm button:disabled{opacity:.65;cursor:wait}
-.reportIssueForm [role="status"]{min-height:20px;margin:0;font-size:13px;color:#206748}
-@media(max-width:600px){.reportIssueForm button{width:100%}}
-html[data-theme="dark"] .reportIssueForm label{color:#cee9d8}
-html[data-theme="dark"] .reportIssueForm input,
-html[data-theme="dark"] .reportIssueForm select,
-html[data-theme="dark"] .reportIssueForm textarea{background:#1a3a2a;color:#ebfff3;border-color:#577b65}
+html[data-theme="dark"] .reportIssueIntro h3,html[data-theme="dark"] :is(.reportIssueChoiceGroup legend,.reportIssueCaption){color:#e5f5e9}
+html[data-theme="dark"] :is(.reportIssueIntro p,.reportIssueChoice small,.reportIssueField>small,.reportIssueCaption small){color:#b7cebf}
+html[data-theme="dark"] .reportIssueChoice{background:#203d30;color:#e5f5e9;border-color:#527460}
+html[data-theme="dark"] .reportIssueChoice:has(input:checked){background:#285a42;border-color:#80d8af;box-shadow:inset 0 0 0 1px #80d8af}
+html[data-theme="dark"] :is(.reportIssueChoice>svg,.reportIssueCaption svg,.reportIssuePrivacy svg){color:#80d8af}
+html[data-theme="dark"] :is(.reportIssueField>input,.reportIssueField>textarea){background:#183329;color:#eff7f0;border-color:#527460}
+html[data-theme="dark"] .reportIssuePrivacy{background:#203d30;color:#b7cebf}
+html[data-theme="dark"] .reportIssueFooter [role="status"]{color:#a1dfbc}
+html[data-theme="dark"] .reportIssueFooter [data-state="error"]{color:#ffb7aa}
 
 
 /* Arrival load settings — compact access and accessible touch slider. */

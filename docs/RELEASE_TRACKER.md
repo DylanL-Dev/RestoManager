@@ -237,3 +237,13 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Correctif : navigation Clôture distinguée des mutations ; action manuelle transmise au gestionnaire partagé uniquement pour Restaurant connecté, sans changer les règles de clôture ; durée sans double cadre et valeur compacte.
 - Validation technique : syntaxe 133/133, 51 fichiers de tests, matrice Playwright 14 combinaisons avec vrais clics, sauvegarde de durée et clôtures fictives protégées. Ressources modifiées versionnées `20261116-rm013a2`. Rapport et captures : [retour de recette RM-013-A](audits/RM013A_RETOUR_RECETTE_20261116.md).
 - Validation utilisateur sur le clone : EN ATTENTE. Aucun statut VALIDÉE CLONE et aucune promotion V3/MAIN.
+
+## RM-013-A — Formulaire Assistance avant publication — PRÊTE À PUBLIER (16/11/2026)
+
+- Validation utilisateur du lot précédent et du correctif Clôture/durée : « Parfait je pense qu'on peut valider et mettre sur main sur V3 main », avec demande préalable de renommer « Contacter le créateur » en « Assistance » et d'harmoniser ce formulaire.
+- Même mission RM-013-A ; branche `feature/rm013a-assistance-form` depuis DEV `91e8017`. Nouveau formulaire à vérifier sur mobile/tablette/PC et pour les deux rôles ; maintien de l'envoi privé, des types et priorités enregistrés, de la protection des champs et de la conservation d'un message en cas d'échec.
+- Périmètre UI uniquement : remplacer les anciennes fenêtres de choix par des contrôles intégrés cohérents, moderniser les champs et la confirmation d'envoi. Aucun changement de droits ou de schéma Supabase ; tests fictifs, aucun message d'essai envoyé à l'assistance réelle.
+- Préparer ensuite la livraison ciblée V3 puis MAIN autorisée par l'utilisateur, en conservant les configurations propres aux environnements et en excluant les migrations DEV. Ne pas fusionner DEV en masse.
+
+- Réalisé : choix intégrés et libellés Assistance, champs et bouton harmonisés, retours d’envoi et mode sombre ; aucune modification des enums, de la table ou de la confidentialité des signalements.
+- Tests techniques : syntaxe 134 fichiers, 51 fichiers unitaires, 14 combinaisons navigateur d’Assistance, 110 scénarios Mission 3. Captures et détail : [Assistance RM-013-A](audits/RM013A_ASSISTANCE_20261116.md). Livraison ciblée V3 puis MAIN demandée après ce dernier ajustement ; configurations de production préservées.

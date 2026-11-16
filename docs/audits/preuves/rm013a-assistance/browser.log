@@ -1,0 +1,23 @@
+
+> restomanager@1.0.0 test:assistance:browser
+> node tests/browser/rm013a-assistance.cjs
+
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout fb_admin 360
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout reception 360
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout fb_admin 390
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout reception 390
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout fb_admin 430
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout reception 430
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout fb_admin 768
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout reception 768
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout fb_admin 1024
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout reception 1024
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout fb_admin 1440
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout reception 1440
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout fb_admin 1920
+PASS Assistance choices, keyboard, validation, private submit, failure/retry, reset and layout reception 1920
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
