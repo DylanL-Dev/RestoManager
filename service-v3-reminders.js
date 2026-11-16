@@ -1,207 +1,143 @@
 'use strict';
 (function(){
- const KEY='restomanager_reservations',SNOOZE='restomanager_v3_reminder_snoozes';
- const bell=document.createElement('button');bell.type='button';bell.className='serviceBell';bell.setAttribute('aria-label','Rappels de service');bell.innerHTML='<i data-lucide="bell"></i><span class="serviceBellCount" hidden>0</span>';
- const panel=document.createElement('section');panel.className='serviceReminderPanel';panel.hidden=true;panel.setAttribute('role','region');panel.setAttribute('aria-label','Notifications de service');
+ const model=window.RestoNotificationModel;if(!model)return;
+ const node=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el};
+ const icon=name=>{const el=node('i');el.dataset.lucide=name;el.setAttribute('aria-hidden','true');return el};
+ const button=(label,fn,cls='rmNcSecondary',glyph)=>{const b=node('button',cls);b.type='button';if(glyph)b.append(icon(glyph));b.append(document.createTextNode(label));b.addEventListener('click',()=>void fn());return b};
+ const bell=button('',()=>open(),'serviceBell');bell.append(icon('bell'));bell.id='serviceBell';bell.setAttribute('aria-label','Ouvrir les notifications');bell.setAttribute('aria-haspopup','dialog');bell.setAttribute('aria-controls','serviceReminderPanel');bell.setAttribute('aria-expanded','false');
+ const badge=node('span','serviceBellCount','0');badge.hidden=true;badge.setAttribute('aria-hidden','true');bell.append(badge);
+ const panel=node('dialog','rmNotificationCenter');panel.id='serviceReminderPanel';panel.setAttribute('aria-labelledby','rmNcTitle');
  (document.querySelector('.headerQuickActions')||document.querySelector('.top'))?.append(bell);document.body.append(panel);
- // Notifications are mounted dynamically; preserve a dedicated account control after the bell.
- const profileButton=document.getElementById('mobileAccountToggle');
- if(profileButton && bell.parentElement){
-  bell.insertAdjacentElement('afterend',profileButton);
-  // The CSS menu is mobile/tablet-only. Ensure no older button styles hide this control.
-  const matchMobile=window.matchMedia('(max-width:900px)');
-  const syncProfileVisibility=()=>{
-   profileButton.style.setProperty('display',matchMobile.matches?'inline-flex':'none','important');
-   profileButton.style.setProperty('visibility',matchMobile.matches?'visible':'hidden','important');
-   profileButton.style.setProperty('flex','0 0 42px','important');
-  };
-  syncProfileVisibility();
-  matchMobile.addEventListener?.('change',syncProfileVisibility);
+ const profile=document.getElementById('mobileAccountToggle');if(profile&&bell.parentElement){bell.after(profile);const media=matchMedia('(max-width:900px)');const sync=()=>{profile.style.setProperty('display',media.matches?'inline-flex':'none','important');profile.style.setProperty('visibility',media.matches?'visible':'hidden','important');profile.style.setProperty('flex','0 0 42px','important')};sync();media.addEventListener('change',sync)}
+ const header=node('header','rmNcHeader'),row=node('div','rmNcTitleRow'),words=node('div');
+ words.append(node('span','rmNcEyebrow','Votre équipe, à jour'));const title=node('h1','rmNcTitle','Notifications');title.id='rmNcTitle';title.tabIndex=-1;words.append(title);
+ const close=button('',()=>closePanel(),'rmNcIconButton','x');close.setAttribute('aria-label','Fermer les notifications');row.append(words,close);
+ const subtitle=node('p','rmNcSubtitle'),tools=node('div','rmNcTools');let unreadOnly=false,showSnoozed=false,historyView=false;
+ const filter=button('Non lues',()=>{unreadOnly=!unreadOnly;showSnoozed=false;render(true)},'rmNcFilter');filter.setAttribute('aria-pressed','false');
+ const allRead=button('Tout marquer comme lu',()=>markAll(),'rmNcTextButton');tools.append(filter,allRead);header.append(row,subtitle,tools);
+ const status=node('p','rmNcStatus');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+ const scroll=node('div','rmNcScroll'),footer=node('footer','rmNcFooter'),history=button('Quoi de neuf ?',()=>{if(historyView){historyView=false;render(true);scroll.scrollTop=flowScroll}else showHistory()},'rmNcTextButton','sparkles'),snoozed=button('Reportés',()=>{showSnoozed=!showSnoozed;unreadOnly=false;historyView=false;render(true)},'rmNcTextButton');
+ footer.append(history,snoozed);panel.append(header,status,scroll,footer);
+ let storageKey='',state={},items=[],renderKey='',returnFocus=null,marking=false,flowScroll=0,bodyLocked=false,previousOverflow='';
+ const sourceRegistry=new Map();
+ function context(){return window.RestoNotificationContext}
+ function load(){const key=model.scope(context());const next=key?'restomanager:notifications:v1:'+key:'';if(next===storageKey)return;storageKey=next;state={};if(next)try{const value=JSON.parse(localStorage.getItem(next)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))state=value}catch{}renderKey=''}
+ function save(){if(!storageKey)return;const now=Date.now();for(const [id,value] of Object.entries(state))if(!value||now-Number(value.updatedAt||0)>30*86400000)delete state[id];try{localStorage.setItem(storageKey,JSON.stringify(state))}catch{status.textContent='Les états de lecture ne peuvent pas être conservés sur cet appareil.'}}
+ function setLocal(id,patch){state[id]={...state[id],...patch,updatedAt:Date.now()};save()}
+ const ready=()=>Boolean(model.scope(context()));
+ const reservations=()=>Array.isArray(window.RestoSharedReservations)?window.RestoSharedReservations:[];
+ function capacity(){
+  if(!window.RestoSharedDataLoaded||!window.RestoTablePressure?.availability||typeof TableStore==='undefined')return [];
+  const now=Date.now(),date=model.day(now),p=model.paris(now),minute=Number(p.hour)*60+Number(p.minute);
+  const times=[...new Set(reservations().filter(r=>r.date===date&&['reserved','confirmed','late','arrived'].includes(r.status)&&Number(r.time?.slice(0,2))*60+Number(r.time?.slice(3,5))>=minute-15).map(r=>r.time))].sort();
+  const slots=times.map(time=>({time,info:window.RestoTablePressure.availability({date,time,guests:2,tables:TableStore.get().tables,reservations:reservations(),holds:window.RestoDraftHolds||[]})})).filter(x=>x.info.valid&&x.info.total>0&&x.info.remaining<=3).sort((a,b)=>a.info.remaining-b.info.remaining||a.time.localeCompare(b.time));
+  const slot=slots[0];return slot?[{id:'capacity:'+date+':'+slot.time,source:'capacity',type:'capacity',group:'service',priority:'normal',title:slot.info.remaining===0?'Créneau complet':'Peu de tables disponibles',icon:'users',body:slot.time+' · '+slot.info.remaining+' table'+(slot.info.remaining>1?'s':'')+' compatible'+(slot.info.remaining>1?'s':'')+' pour 2 couverts. Vérifiez les disponibilités avant de proposer ce créneau.',createdAt:window.RestoBookingInterval?.(date,slot.time,1)?.[0]||0,action:'capacity',context:'Disponibilités'}]:[];
  }
-
- const errorMessage=(error,fallback)=>{window.RestoErrors?.diagnostic('notification-action',error);return window.RestoErrors?.message(error,fallback)||fallback};
- const connected=()=>Boolean(window.RestoSharedReservations);
- const read=()=>{if(connected())return ReservationEngine.normalizeReservations(window.RestoSharedReservations);try{return ReservationEngine.normalizeReservations(JSON.parse(localStorage.getItem(KEY)||'[]'))}catch{return []}};
- const snoozes=()=>{try{return JSON.parse(localStorage.getItem(SNOOZE)||'{}')}catch{return {}}};
- const sameDay=(d,now)=>{
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
-  return d===parts.year+'-'+parts.month+'-'+parts.day;
- };
- const expectedAt=r=>{try{return new Date(window.RestoBookingInterval?window.RestoBookingInterval(r.date,r.time,r.duration||90)[0]:r.date+'T'+r.time+':00')}catch{return new Date(NaN)}};
- const clock=d=>d.toLocaleTimeString('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit'});
- const button=(label,fn,kind)=>{const b=document.createElement('button');b.type='button';b.textContent=label;if(kind)b.className=kind;b.addEventListener('click',fn);return b};
  function collect(){
-  if(window.RestoReception===true)return [];
-  if(window.RestoSharedReservations && window.RestoReception!==false)return [];
-  const now=new Date(),all=read(),sleep=snoozes(),alerts=[];
-  for(const r of all){
-   if(!sameDay(r.date,now)||!['reserved','confirmed','late'].includes(r.status))continue;
-   const expected=expectedAt(r);
-   if(!Number.isFinite(expected.getTime()))continue;
-   const delay=Math.floor((now.getTime()-expected.getTime())/60000);
-   if(delay<10||Number(sleep['late:'+r.id])>now.getTime())continue;
-   alerts.push({kind:'late',r,delay,priority:delay>=20});
+  if(!ready())return [];
+  const role=context().role,common={reservations:reservations(),role,interval:window.RestoBookingInterval,now:Date.now()};
+  const list=[...model.reminders(common),...model.events({...common,bookings:window.RestoFbReservationAlerts||[],changes:window.RestoFbChangeAlerts||[]}),...capacity()];
+  const sync=window.RestoSyncState||'pending';
+  if(navigator.onLine===false||sync&&sync!=='ok'||role==='fb_admin'&&window.RestoFbAlertsStatus!=='ready'){
+   const pending=navigator.onLine!==false&&(!sync||sync==='pending'||role==='fb_admin'&&(!window.RestoFbAlertsStatus||window.RestoFbAlertsStatus==='pending'));
+   list.push({id:'important:sync',source:'sync',type:'sync',pending,group:'important',priority:pending?'normal':'high',title:pending?'Vérification des notifications':sync==='readonly'?'Service en consultation seule':'Synchronisation indisponible',read:pending,body:pending?'Les informations du service sont en cours de vérification.':sync==='readonly'?'Les informations restent consultables. Contactez le responsable avant de reprendre les modifications.':navigator.onLine===false?'Vous êtes hors ligne. Les informations affichées peuvent être anciennes. La reconnexion sera automatique.':role==='fb_admin'&&window.RestoFbAlertsStatus==='error'?'Les notifications de la Réception ne sont pas à jour. Les informations disponibles restent affichées.':'Les informations du service peuvent être anciennes. Vérifiez la connexion avant toute action.',createdAt:0,action:'sync',context:'Connexion'});
   }
-  for(const r of all){
-   if(r.status!=='seated'||!sameDay(r.date,now))continue;
-   const start=r.seatedAt?new Date(r.seatedAt):expectedAt(r);
-   if(!Number.isFinite(start.getTime()))continue;
-   const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);
-   const remaining=Math.ceil((end.getTime()-now.getTime())/60000);
-   if(remaining>15)continue;
-   const next=all.filter(x=>x.id!==r.id&&x.date===r.date&&ReservationEngine.isBlocking(x)&&x.tables.some(t=>r.tables.includes(t))).map(x=>x.time).sort()[0];
-   const priority=remaining<=-15||Boolean(next);
-   if(Number(sleep[r.id])>now.getTime())continue;
-   alerts.push({kind:'departure',r,end,remaining,next,priority});
+  if(sync==='ok'&&(role!=='fb_admin'||window.RestoFbAlertsStatus==='ready')&&navigator.onLine!==false&&state['important:sync']){delete state['important:sync'];save()}
+  const release=window.RestoAppRelease?.notification?.();if(release)list.push(release);
+  for(const [name,source] of sourceRegistry){
+   if(!source.roles.includes(role))continue;
+   try{for(const value of source.collect({context:context(),now:Date.now()})){if(value.restaurantId!==context().restaurantId||!value.id||value.resolved||value.expiresAt&&value.expiresAt<=Date.now())continue;list.push({...value,id:name+':'+value.id,source:name,group:value.group==='important'?'important':'service',snoozable:false,action:'source',handler:source.open})}}catch{list.push({id:name+':unavailable',source:name,group:'important',priority:'normal',title:'Une information est indisponible',body:'Cette source de notifications ne peut pas être vérifiée pour le moment.',createdAt:0,icon:'wifi-off',context:'Connexion'})}
   }
-  return alerts.sort((a,b)=>Number(b.priority)-Number(a.priority)||(a.kind==='late'?-a.delay:a.remaining)-(b.kind==='late'?-b.delay:b.remaining));
+  return model.project(list,state);
  }
- function capacityAlert(){
-  if(!window.RestoSupabaseReady||!window.RestoTablePressure?.availability||typeof TableStore==='undefined')return null;
-  const all=read(),now=new Date();
-  const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(now).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
-  const today=parts.year+'-'+parts.month+'-'+parts.day;
-  const current=Number(parts.hour)*60+Number(parts.minute);
-  const future=all.filter(r=>r.date===today&&['reserved','confirmed','late','arrived'].includes(r.status)&&r.time&&Number(r.time.slice(0,2))*60+Number(r.time.slice(3,5))>=current-15);
-  if(!future.length)return null;
-  const slots=[...new Set(future.map(r=>r.time))].sort();
-  const tablePlan=TableStore.get().tables;
-  const results=slots.map(time=>({time,info:window.RestoTablePressure.availability({date:today,time,guests:2,tables:tablePlan,reservations:all,holds:window.RestoDraftHolds||[]})}))
-    .filter(x=>x.info.valid&&x.info.total>0&&x.info.remaining<=3)
-    .sort((a,b)=>a.info.remaining-b.info.remaining||a.time.localeCompare(b.time));
-  return results[0]||null;
+ async function markItem(item){
+  if(item.source==='event'){
+   if(window.RestoMarkFbNotificationsRead)await window.RestoMarkFbNotificationsRead(item.refs);
+   else for(const ref of item.refs)await (ref.source==='booking'?window.RestoMarkFbAlertRead:window.RestoMarkFbChangeRead)?.(ref.id);
+  }else setLocal(item.id,{readAt:Date.now()});
  }
- function openReservationFromAlert(a,view){
-  const current=read().find(r=>r.id===a.reservation_id);
-  const when=new Date(a.starts_at);
-  const search=document.getElementById('reservationQuery');
-  if(search){search.value=current?(current.hotelRoom||current.client):(a.hotel_room||a.guest_name||'');search.dispatchEvent(new Event('input',{bubbles:true}))}
-  const date=document.getElementById('reservationDate');
-  if(date&&current){
-   date.value=current.date;date.dispatchEvent(new Event('change',{bubbles:true}));
-  }else if(date&&Number.isFinite(when.getTime())){
-   const parts=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(when);
-   const d=Object.fromEntries(parts.filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
-   date.value=d.year+'-'+d.month+'-'+d.day;
-   date.dispatchEvent(new Event('change',{bubbles:true}));
-  }
-  window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{
-   detail:{view:current&&['completed','released','cancelled','no_show'].includes(current.status)?'departed':view,reservationId:a.reservation_id}
-  }));
-  window.RestoScreens?.show('reservations');
-  panel.hidden=true;
+ async function perform(fn,control){
+  if(marking)return;marking=true;if(control)control.disabled=true;status.textContent='';
+  try{await fn()}catch(error){window.RestoErrors?.diagnostic('notification-action',error);status.textContent='Action non confirmée. Vérifiez la connexion puis réessayez.'}finally{marking=false;if(control)control.disabled=false;update()}
  }
- function update(){
-  const reception=window.RestoReception===true;
-  const ready=window.RestoSupabaseReady&&typeof window.RestoReception==='boolean';
-  const activeRestaurant=window.RestoReception===false&&ready;
-  const bookingAlerts=activeRestaurant?(window.RestoFbReservationAlerts||[]).filter(a=>!a.read_at):[];
-  const changeAlerts=activeRestaurant?(window.RestoFbChangeAlerts||[]).filter(a=>!a.read_at):[];
-  const currentReservations=new Map(read().map(r=>[r.id,r]));
-  const alerts=ready&&!reception?collect():[];
-  const pressure=ready?capacityAlert():null;
-  const total=alerts.length+bookingAlerts.length+changeAlerts.length+(pressure?1:0);
-  bell.hidden=!ready;
-  if(!ready){panel.hidden=true;return}
-  const count=bell.querySelector('span');count.textContent=String(total);count.hidden=!total;
-  bell.setAttribute('aria-label',total+' notification(s) '+(reception?'Réception':'Restaurant'));
-  panel.replaceChildren();
-  const head=document.createElement('div');head.className='serviceReminderHead';const h=document.createElement('strong');h.textContent=reception?'Notifications · Réception':'Notifications · Restaurant';head.append(h,button('Fermer',()=>{panel.hidden=true},'serviceReminderClose'));panel.append(head);
-  if(!total){const p=document.createElement('p');p.textContent='Aucune nouvelle notification.';panel.append(p);return}
-  if(pressure){
-   const item=document.createElement('article');item.className='serviceReminderItem serviceCapacityWarning';
-   const title=document.createElement('strong');title.textContent=pressure.info.remaining===0?'Créneau complet · '+pressure.time:'Peu de tables disponibles · '+pressure.time;
-   const detail=document.createElement('p');detail.textContent=pressure.info.remaining===0?'Aucune table compatible libre pour 2 couverts à cet horaire.':'Seulement '+pressure.info.remaining+' table(s) encore compatible(s) pour 2 couverts à cet horaire. Vérifiez les disponibilités avant de proposer ce créneau.';
-   const actions=document.createElement('div');actions.className='serviceReminderActions';
-   actions.append(button('Voir les disponibilités',()=>{window.RestoScreens?.show('reservationForm');panel.hidden=true},'serviceReminderPrimary'));
-   item.append(title,detail,actions);panel.append(item);
-  }
-  for(const a of changeAlerts){
-   const item=document.createElement('article');item.className='serviceReminderItem serviceReceptionChangeAlert'+(a.event_type==='cancelled'?' isCancellation':'');
-   const title=document.createElement('strong');
-   title.textContent=a.event_type==='cancelled'?'Réservation annulée · Réception':'Réservation modifiée · Réception';
-   const who=a.hotel_room?'Chambre '+a.hotel_room:(a.guest_name||'Client');
-   const when=new Date(a.starts_at);
-   const displayDate=value=>Number.isFinite(new Date(value).getTime())?new Date(value).toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Horaire à vérifier';
-   const detail=document.createElement('p');
-   detail.textContent=who+' · '+a.party_size+' couvert(s) · '+displayDate(a.starts_at);
-   item.append(title,detail);
-   if(a.event_type==='modified'){
-    const changes=[];
-    const fields=Array.isArray(a.changed_fields)?a.changed_fields:[];
-    if(fields.includes('horaire'))changes.push('Horaire : '+displayDate(a.previous_starts_at)+' → '+displayDate(a.starts_at));
-    if(fields.includes('couverts'))changes.push('Couverts : '+a.previous_party_size+' → '+a.party_size);
-    if(fields.includes('chambre'))changes.push('Chambre : '+(a.previous_hotel_room||'—')+' → '+(a.hotel_room||'—'));
-    if(fields.includes('client'))changes.push('Nom du client modifié');
-    if(fields.includes('consignes'))changes.push('Consignes ou allergies modifiées');
-    if(changes.length){
-     const summary=document.createElement('ul');summary.className='serviceChangeDetails';
-     for(const text of changes){const line=document.createElement('li');line.textContent=text;summary.append(line)}
-     item.append(summary);
-    }
-   }
-   const actions=document.createElement('div');actions.className='serviceReminderActions';
-   actions.append(button('Voir la réservation',async()=>{
-    try{
-     await window.RestoMarkFbChangeRead?.(a.id);
-     openReservationFromAlert(a,a.event_type==='cancelled'?'departed':'active');
-    }catch(err){await window.RestoDialog?.alert(errorMessage(err,'Impossible d’ouvrir cette réservation. Réessayez après synchronisation.'),{title:'Notification'});}
-   },'serviceReminderPrimary'));
-   actions.append(button('Marquer comme lue',async()=>{
-    try{await window.RestoMarkFbChangeRead?.(a.id)}
-    catch(err){await window.RestoDialog?.alert(errorMessage(err,'Cette action ne peut pas être confirmée. Réessayez après synchronisation.'),{title:'Notification'})}
-   }));
-   item.append(actions);panel.append(item);
-  }
-  for(const a of bookingAlerts){
-   const current=currentReservations.get(a.reservation_id);
-   const item=document.createElement('article');item.className='serviceReminderItem serviceReceptionBookingAlert';
-   const title=document.createElement('strong');title.textContent='Nouvelle réservation · Réception';
-   const when=new Date(a.starts_at);
-   const time=current?current.date.split('-').reverse().join('/')+' '+current.time:Number.isFinite(when.getTime())?when.toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'Horaire à vérifier';
-   const room=current?current.hotelRoom:a.hotel_room,guest=current?current.client:a.guest_name;
-   const detail=document.createElement('p');detail.textContent=(room?'Chambre '+room:guest)+' · '+(current?current.guests:a.party_size)+' couvert(s) · '+time;
-   const actions=document.createElement('div');actions.className='serviceReminderActions';
-   actions.append(button('Voir la réservation',async()=>{
-    try{
-     await window.RestoMarkFbAlertRead?.(a.id);
-     openReservationFromAlert(a,'active');
-    }catch(err){await window.RestoDialog?.alert(errorMessage(err,'Impossible de lire cette réservation. Réessayez après synchronisation.'),{title:'Notification'});}
-   },'serviceReminderPrimary'));
-   actions.append(button('Marquer comme lue',async()=>{try{await window.RestoMarkFbAlertRead?.(a.id)}catch(err){await window.RestoDialog?.alert(errorMessage(err,'Cette action ne peut pas être confirmée. Réessayez après synchronisation.'),{title:'Notification'})}}));
-   item.append(title,detail,actions);panel.append(item);
-  }
-  for(const a of alerts){
-   const item=document.createElement('article');item.className='serviceReminderItem';
-   if(a.kind==='late'){
-    const title=document.createElement('strong');title.textContent='Client en retard · '+a.r.client+' · Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ');
-    const desc=document.createElement('p');desc.textContent='Attendu à '+a.r.time+' · '+a.delay+' min de retard. Vérifiez si le client est installé avant de modifier son statut.';
-    const actions=document.createElement('div');actions.className='serviceReminderActions';
-    const changeStatus=async(status)=>{const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||!['reserved','confirmed','late'].includes(all[idx].status)){update();return}if(status==='late'&&all[idx].status==='late'){update();return}if(connected()){try{await window.RestoChangeSharedStatus(all[idx],status)}catch(error){await window.RestoDialog.alert(errorMessage(error,'Cette action ne peut pas être confirmée. Réessayez après synchronisation.'),{title:'Action impossible'})}update();return}const result=ReservationEngine.transition(all[idx],status,undefined,all);if(!result.valid){window.RestoDialog.alert(result.error||'Action impossible.',{title:'Action impossible'});return}all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update()};
-    if(a.r.status!=='late')actions.append(button('Signaler le retard',()=>changeStatus('late')));
-    actions.append(button('Rappeler dans 10 min',()=>{const data=snoozes();data['late:'+a.r.id]=Date.now()+600000;localStorage.setItem(SNOOZE,JSON.stringify(data));update()}));
-    item.append(title,desc,actions);panel.append(item);continue;
-   }
-   const title=document.createElement('strong');title.textContent=(a.priority?'⚠ ':'')+'Table'+(a.r.tables.length>1?'s ':' ')+a.r.tables.join(' + ')+' · '+a.r.client;
-   const desc=document.createElement('p');desc.textContent=(a.remaining>0?'Départ estimé dans '+a.remaining+' min':a.remaining===0?'Fin estimée maintenant':'Fin estimée dépassée de '+Math.abs(a.remaining)+' min')+' (prévue à '+clock(a.end)+'). Vérifier si les clients sont partis.'+(a.next?' Prochaine réservation : '+a.next+'.':'');
-   const actions=document.createElement('div');actions.className='serviceReminderActions';
-   actions.append(button('Libérer la table',async()=>{
-    if(!await window.RestoConfirmRelease(a.r))return;
-    const all=read(),idx=all.findIndex(r=>r.id===a.r.id);if(idx<0||all[idx].status!=='seated'){update();return}
-    if(connected()){try{await window.RestoChangeSharedStatus(all[idx],'released')}catch(error){await window.RestoDialog.alert(errorMessage(error,'Libération non confirmée. Vérifiez la table après synchronisation.'),{title:'Libération impossible'})}update();return}
-    const result=ReservationEngine.transition(all[idx],'released',undefined,all);
-    if(!result.valid){window.RestoDialog.alert(result.error||'Impossible de libérer cette table.',{title:'Libération impossible'});return}
-    all[idx]=result.reservation;localStorage.setItem(KEY,JSON.stringify(all));window.dispatchEvent(new Event('restomanager:v3-change'));update();
-   },'serviceReminderPrimary'));
-   actions.append(button('Toujours occupée · 10 min',()=>{const s=snoozes();s[a.r.id]=Date.now()+600000;localStorage.setItem(SNOOZE,JSON.stringify(s));update()}));
-   item.append(title,desc,actions);panel.append(item);
-  }
+ async function markAll(){
+  return perform(async()=>{
+   const unread=items.filter(n=>!n.read&&!n.snoozed&&!(n.type==='sync'&&n.read));
+   const events=unread.filter(n=>n.source==='event');
+   if(events.length&&window.RestoMarkFbNotificationsRead)await window.RestoMarkFbNotificationsRead(events.flatMap(n=>n.refs));
+   else for(const event of events)await markItem(event);
+   for(const item of unread.filter(n=>n.source!=='event'))setLocal(item.id,{readAt:Date.now()});
+   status.textContent='Notifications marquées comme lues. Les rappels actifs restent disponibles.';
+  },allRead);
  }
- bell.addEventListener('click',()=>{panel.hidden=!panel.hidden;update()});
- window.addEventListener('restomanager:v3-change',update);
- window.addEventListener('restomanager:supabase-snapshot',update);
- window.addEventListener('restomanager:fb-alerts',update);
- window.addEventListener('storage',update);
- document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});
- setInterval(update,60000);update();
+ async function navigate(item){
+  // Close the top-layer drawer before the existing draft confirmation can open.
+  closePanel({restoreFocus:false});
+  const destination=item.action==='capacity'?'reservationForm':item.action==='sync'||item.action==='source'&&item.targetScreen!=='reservations'?'administration':'reservations';
+  const allowed=await window.RestoScreens?.request(destination);
+  if(allowed!==true||window.RestoScreens?.current()!==destination)return;
+  if(item.action==='sync'){window.RestoManagementCategories?.open('manageNetwork');await markItem(item);return}
+  if(item.action==='capacity'){await markItem(item);return}
+  if(item.action==='source'){await item.handler?.(item);await markItem(item);return}
+  const r=reservations().find(r=>r.id===item.reservationId),a=item.event;
+  const date=document.getElementById('reservationDate'),query=document.getElementById('reservationQuery');
+  if(date&&(r||a?.starts_at)){date.value=r?.date||model.day(a.starts_at);date.dispatchEvent(new Event('change',{bubbles:true}))}
+  if(query){query.value=r?(r.hotelRoom||r.client):(a?.hotel_room||a?.guest_name||'');query.dispatchEvent(new Event('input',{bubbles:true}))}
+  window.dispatchEvent(new CustomEvent('restomanager:open-reservation',{detail:{view:r&&['completed','released','cancelled','no_show'].includes(r.status)||item.type==='cancelled'?'departed':'active',reservationId:item.reservationId}}));
+  await markItem(item);
+ }
+ function card(item){
+  const classes='rmNcCard'+(!item.read?' is-unread':'')+(item.priority==='high'||item.group==='important'?' is-important':'')+(item.source==='event'?' '+(item.type==='created'?'serviceReceptionBookingAlert':'serviceReceptionChangeAlert'):'');
+  const article=node('article',classes);article.dataset.notificationId=item.id;
+  const top=node('div','rmNcCardTop'),glyph=node('span','rmNcGlyph');glyph.append(icon(item.icon||'info'));
+  const words=node('div','rmNcWords');words.append(node('h3','rmNcCardTitle',item.title));
+  const meta=node('p','rmNcMeta',item.context||'Service');
+  if(item.createdAt){const time=node('time','',new Date(item.createdAt).toLocaleString('fr-FR',{timeZone:'Europe/Paris',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}));time.dateTime=new Date(item.createdAt).toISOString();meta.append(document.createTextNode(' · '),time)}
+  meta.append(document.createTextNode(' · '+(item.pending?'En cours':item.snoozed?'Reportée':item.read?'Lue':'Non lue')));words.append(meta);top.append(glyph,words);if(!item.read){const dot=node('span','rmNcUnread');dot.setAttribute('aria-hidden','true');top.append(dot)}
+  article.append(top,node('p','rmNcBody',item.body));
+  if(item.groupedCount>1)article.append(node('p','rmNcMeta',item.groupedCount+' événements regroupés'));
+  const actions=node('div','rmNcActions');
+  if(item.action){const label=item.action==='capacity'?'Voir les disponibilités':item.action==='sync'?'Voir la connexion':item.action==='source'?item.actionLabel||'Voir le détail':'Voir la réservation';actions.append(button(label,()=>perform(()=>navigate(item)),'rmNcPrimary',item.action==='sync'?'wifi':'arrow-up-right'))}
+  if(item.snoozable)actions.append(button(item.snoozed?'Réactiver le rappel':'Reporter 10 min',()=>{setLocal(item.id,{snoozedUntil:item.snoozed?0:Date.now()+600000});status.textContent=item.snoozed?'Rappel réactivé.':'Rappel reporté de 10 minutes.';update()},'rmNcSecondary',item.snoozed?'bell':'alarm-clock'));
+  if(!item.read&&item.type!=='sync'){
+   const readButton=button('',()=>perform(()=>markItem(item),readButton),'rmNcIconButton','check');readButton.setAttribute('aria-label','Marquer comme lue : '+item.title);readButton.title='Marquer comme lue';top.append(readButton);
+  }
+  article.append(actions);return article;
+ }
+ function render(force=false){
+  if(!panel.open)return;
+  if(historyView){window.RestoAppRelease?.renderHistory(scroll);return}
+  title.textContent='Notifications';tools.hidden=false;history.textContent='Quoi de neuf ?';filter.setAttribute('aria-pressed',String(unreadOnly));
+  const visible=items.filter(n=>showSnoozed?n.snoozed:!n.snoozed&&(!unreadOnly||!n.read||n.priority==='high'||n.type==='sync'));
+  const count=items.filter(n=>!n.read&&!n.snoozed).length;
+  subtitle.textContent=showSnoozed?'Rappels reportés · Réactivables à tout moment':count+' non lue'+(count>1?'s':'')+' · Espace '+(context()?.role==='reception'?'Réception':'Restaurant');
+  allRead.hidden=!items.some(n=>!n.read&&!n.snoozed&&!(n.type==='sync'&&n.read));snoozed.hidden=!items.some(n=>n.snoozed)&&!showSnoozed;snoozed.textContent=showSnoozed?'Retour au flux':'Reportés ('+items.filter(n=>n.snoozed).length+')';
+  const key=JSON.stringify([visible,showSnoozed,unreadOnly]);if(!force&&key===renderKey)return;renderKey=key;
+  const active=document.activeElement,focusId=active?.closest('[data-notification-id]')?.dataset.notificationId,focusLabel=active?.getAttribute('aria-label')||active?.textContent,position=scroll.scrollTop;
+  scroll.dataset.releaseView='notifications';
+  scroll.replaceChildren();
+  if(!visible.length){const empty=node('div','rmNcEmpty'),glyph=node('span','rmNcGlyph');glyph.append(icon('bell-off'));empty.append(glyph,node('strong','',showSnoozed?'Aucun rappel reporté':unreadOnly?'Vous êtes à jour':'Aucune notification pour le moment'),node('p','',unreadOnly?'Les rappels importants encore actifs restent toujours visibles.':'Les informations utiles à votre équipe apparaîtront ici.'));scroll.append(empty)}
+  const groups=[['attention','À votre attention',n=>n.group==='important'||n.priority==='high'],['service','Votre service',n=>n.group!=='important'&&n.priority!=='high'&&n.group!=='news'],['news','Nouveautés',n=>n.group==='news']];
+  for(const [,label,predicate] of groups){const list=visible.filter(predicate);if(!list.length)continue;const section=node('section','rmNcSection'),h=node('h2','rmNcGroupTitle',label);h.append(node('span','',String(list.length)));section.append(h);for(const item of list)section.append(item.source==='release'?window.RestoAppRelease.card(item,{mark:()=>{setLocal(item.id,{readAt:Date.now()});update()},history:showHistory}):card(item));scroll.append(section)}
+  scroll.scrollTop=position;
+  if(focusId){const candidate=[...scroll.querySelectorAll('[data-notification-id]')].find(n=>n.dataset.notificationId===focusId);const control=[...(candidate?.querySelectorAll('button')||[])].find(b=>(b.getAttribute('aria-label')||b.textContent)===focusLabel);(control||title).focus({preventScroll:true})}
+ }
+ function update(){load();items=collect();const count=items.filter(n=>!n.read&&!n.snoozed).length;bell.hidden=!ready();badge.textContent=count>99?'99+':String(count);badge.hidden=!count;bell.setAttribute('aria-label',count?'Notifications, '+count+' non lues':'Notifications, aucune non lue');if(!ready()&&panel.open)closePanel();render()}
+ function mountModal(){if(panel.open)return;returnFocus=document.activeElement;previousOverflow=document.body.style.overflow;panel.showModal();bodyLocked=true;document.body.style.overflow='hidden';bell.setAttribute('aria-expanded','true')}
+ function finishClose(restoreFocus=true){bell.setAttribute('aria-expanded','false');if(bodyLocked){bodyLocked=false;document.body.style.overflow=previousOverflow}if(restoreFocus)returnFocus?.focus?.({preventScroll:true});returnFocus=null}
+ function closePanel({restoreFocus=true}={}){if(panel.open)panel.close();finishClose(restoreFocus)}
+ function open(){if(!ready())return;mountModal();historyView=false;unreadOnly=false;showSnoozed=false;update();render(true);scroll.scrollTop=0;title.focus({preventScroll:true})}
+ function showHistory(){if(!ready())return;if(!historyView)flowScroll=scroll.scrollTop;const release=items.find(n=>n.source==='release');if(release&&!release.read)setLocal(release.id,{readAt:Date.now()});mountModal();historyView=true;title.textContent='Quoi de neuf ?';subtitle.textContent='Les évolutions de votre application';tools.hidden=true;history.textContent='Retour aux notifications';window.RestoAppRelease?.renderHistory(scroll);scroll.scrollTop=0;update();title.focus({preventScroll:true})}
+ panel.addEventListener('keydown',event=>{
+  if(event.key!=='Tab')return;
+  const controls=[...panel.querySelectorAll('button,a[href],input,select,textarea')].filter(el=>!el.disabled&&el.getClientRects().length),first=controls[0],last=controls.at(-1);
+  if(event.shiftKey&&(document.activeElement===first||document.activeElement===title)){event.preventDefault();last?.focus()}
+  else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+ });
+ panel.addEventListener('close',()=>{if(bodyLocked&&!panel.open)finishClose()});
+ panel.addEventListener('click',e=>{if(e.target===panel){const r=panel.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel()}});
+ for(const event of ['restomanager:notification-context','restomanager:v3-change','restomanager:supabase-snapshot','restomanager:fb-alerts','restomanager:connection-state','restomanager:app-release','online','offline'])window.addEventListener(event,update);
+ window.addEventListener('storage',event=>{if(event.key===storageKey){storageKey='';load();update()}});
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});setInterval(()=>{if(!document.hidden)update()},60000);
+ window.RestoNotifications={open,close:()=>closePanel({restoreFocus:false}),showHistory,refresh:update,registerSource(name,source){if(!/^[a-z][a-z0-9-]+$/.test(name)||['release','event','reminder','sync','capacity'].includes(name)||!Array.isArray(source.roles)||typeof source.collect!=='function')throw Error('Source de notifications invalide.');if(sourceRegistry.has(name))throw Error('Source déjà enregistrée.');sourceRegistry.set(name,source);update();return ()=>{sourceRegistry.delete(name);update()}}};update();
 })();

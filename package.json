@@ -19,7 +19,10 @@
     "test:assistance:browser": "node tests/browser/rm013a-assistance.cjs",
     "test:rm013a:browser": "node tests/browser/rm013a-management.cjs",
     "test:syntax": "node tests/check-syntax.cjs",
-    "test:display": "node tests/browser/table-display.cjs"
+    "test:display": "node tests/browser/table-display.cjs",
+    "test:notifications:browser": "node tests/browser/rm014-notifications.cjs",
+    "test:notifications:lifecycle": "node tests/browser/rm014-lifecycle.cjs",
+    "test:notifications:pwa": "node tests/browser/rm014-pwa.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.57.0",

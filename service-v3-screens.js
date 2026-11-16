@@ -147,7 +147,16 @@ function commit(id,mode='push'){
  else history.pushState(stateFor(id,depth),'','#'+id);
  show(id);
 }
-async function mayLeave(){
+function hasUnsavedChanges(){
+ const assistance=document.getElementById('reportIssueForm');
+ const assistanceDirty=assistance&&['reportIssueTitle','reportIssueDescription','reportIssueContact'].some(id=>document.getElementById(id)?.value?.trim());
+ return Boolean(editDirty()||bookingDirty()||walkinDirty()||assistanceDirty);
+}
+async function mayLeave(options={}){
+ if(options.preserveDraft&&hasUnsavedChanges()){
+  await window.RestoDialog?.alert?.('Votre saisie est conservée. Terminez-la ou enregistrez-la avant de mettre à jour l’application. Vous pourrez réessayer plus tard.',{title:'Mise à jour reportée'});
+  return false;
+ }
  if(editDirty()||bookingDirty()||walkinDirty()){
   if(!window.RestoDialog?.confirm)return false;
   const approved=await window.RestoDialog.confirm(
@@ -159,17 +168,18 @@ async function mayLeave(){
  return true;
 }
 async function request(id,{scrollTables=false}={}){
- if(navigationBusy||!screens.has(id))return;
+ if(navigationBusy||!screens.has(id))return false;
  if(id===current&&!editForm()){
   if(scrollTables)document.getElementById('tables')?.scrollIntoView({behavior:'smooth',block:'start'});
-  return;
+  return true;
  }
  navigationBusy=true;
  try{
-  if(!await mayLeave())return;
+  if(!await mayLeave())return false;
   if(id!==current)commit(id);
   updateBack();
   if(scrollTables)document.getElementById('tables')?.scrollIntoView({behavior:'smooth',block:'start'});
+  return true;
  }finally{navigationBusy=false}
 }
 async function goBack(){
@@ -230,7 +240,7 @@ window.addEventListener('hashchange',()=>{
 window.addEventListener('restomanager:editor-open',updateBack);
 window.addEventListener('restomanager:editor-close',updateBack);
 window.RestoScreens={show:id=>commit(id),current:()=>current,back:goBack,request,
- markBookingSaved:resetBookingBaseline,confirmLeaveForRefresh:mayLeave};
+ markBookingSaved:resetBookingBaseline,hasUnsavedChanges,confirmLeaveForRefresh:mayLeave};
 const initial=screens.has(location.hash.slice(1))?location.hash.slice(1):'tables';
 if(history.state?.[navKey]&&screens.has(history.state.screen))depth=Math.max(0,Number(history.state.depth)||0);
 history.replaceState(stateFor(initial,depth),'','#'+initial);
