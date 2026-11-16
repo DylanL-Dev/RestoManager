@@ -3,11 +3,13 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const root=path.join(__dirname,'..'),read=filename=>fs.readFileSync(path.join(root,filename),'utf8');
 const screens=read('service-v3-screens.js'),fusions=read('service-v3-fusions.js'),styles=read('service-v3-management-categories.css'),html=read('v3-connected.html');
 test('Gestion provides dedicated Salles, Tables, Fusions, Cloture and Rapports categories',()=>{
- for(const x of ['manageHours','manageTables','manageFusions','manageClosure','manageReports'])assert.ok(screens.includes(x),x);
+ for(const x of ['manageSettings','manageRooms','manageHours','manageTables','manageFusions','manageClosure','manageReports'])assert.ok(screens.includes(x),x);
  assert.match(screens,/const fusions=tables\?\.querySelector\('\.fusionAdmin'\)/);
  assert.match(screens,/if\(fusions\)fusions\.remove\(\)/);
  assert.match(screens,/categoryContent\.append\(wrapper\)/);
- assert.match(screens,/categoryNav\.append\(button\)/);
+ assert.match(screens,/button\.setAttribute\('aria-controls',body\.id\)/);
+ assert.match(screens,/setAttribute\('aria-expanded',String\(active\)\)/);
+ assert.match(screens,/entry\.body\.hidden=!active/);
  assert.match(screens,/activateCategory\(id/);
 });
 test('Authorized fusions are categorized and distinguished from underlying pair links',()=>{
@@ -24,9 +26,12 @@ test('Layout offers desktop navigation and table, tablet/mobile navigation and c
  assert.match(html,/service-v3-management-categories\.css\?v=20261113-room-filter1/);
  assert.match(html,/service-v3-screens\.js\?v=20261115-rm011a-clean-form1/);
  assert.match(html,/service-v3-fusions\.js\?v=20261112-management-layout1/);
- assert.match(styles,/grid-template-columns:220px minmax\(0,1fr\)/);
+ assert.match(styles,/\.rmManagementWorkspace\{width:100%;min-width:0/);
+ assert.match(styles,/\.rmManagementCategoryContent\{display:grid/);
  assert.match(styles,/\.rmFusionTableHead,\.rmFusionGroupRow/);
  assert.match(styles,/@media\(max-width:1050px\)/);
  assert.match(styles,/@media\(max-width:640px\)/);
- assert.match(styles,/\.rmManagementCategoryNav\{position:static;flex-direction:row;overflow-x:auto/);
+ assert.doesNotMatch(styles,/\.rmManagementCategoryNav\{[^}]*overflow-x:auto/);
+ assert.match(styles,/\.roomManagerName\{[^}]*white-space:nowrap;overflow:hidden;text-overflow:ellipsis/);
+ assert.match(styles,/\.roomManagerItem\{display:grid;grid-template-columns:minmax\(0,1fr\) auto/);
 });

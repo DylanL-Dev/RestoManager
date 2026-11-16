@@ -12,64 +12,88 @@ const screens=new Map();
 groups.forEach(group=>{const screen=document.createElement('section');screen.className='appScreen';screen.dataset.screen=group.id;screen.setAttribute('aria-label',({tables:'Service et tables',reservations:'Réservations',reservationForm:'Nouvelle réservation',passages:'Service en cours',administration:'Gestion des tables',history:'Historique et statistiques'})[group.id]);group.nodes.forEach(selector=>{const el=main.querySelector(selector);if(el){if(el.tagName==='DETAILS')el.open=true;screen.append(el)}});main.append(screen);screens.set(group.id,screen)});
 // The Reception service tab is a safe, read-only screen, not the restaurant's passage actions.
 const receptionService=document.createElement('section');receptionService.id='receptionServiceOverview';receptionService.className='receptionServiceOverview';screens.get('passages').append(receptionService);
-// Gestion : navigation compacte, sections indépendantes et accessibles.
+// Gestion: one accordion hierarchy. Panels retain their DOM and unsaved input.
 const management=screens.get('administration');
 if(management){
  const hours=document.getElementById('restaurantShifts'),tables=document.getElementById('administration'),reports=document.getElementById('historyStats'),closure=document.getElementById('serviceClosure');
- const intro=document.createElement('header');intro.className='managementIntro';intro.innerHTML='<span class="managementEyebrow">ESPACE DE GESTION</span><h1>Gestion du restaurant</h1><p>Choisissez une rubrique pour gérer votre établissement.</p>';
+ const intro=document.createElement('header');intro.className='managementIntro';intro.innerHTML='<span class="managementEyebrow">ESPACE DE GESTION</span><h1>Gestion du restaurant</h1><p>Dépliez une rubrique pour consulter ou modifier ses réglages.</p>';
  management.prepend(intro);
  const workspace=document.createElement('div');workspace.className='rmManagementWorkspace';
- const categoryNav=document.createElement('nav');categoryNav.className='rmManagementCategoryNav';categoryNav.setAttribute('aria-label','Rubriques de gestion');
  const categoryContent=document.createElement('div');categoryContent.className='rmManagementCategoryContent';
- workspace.append(categoryNav,categoryContent);management.append(workspace);
+ workspace.append(categoryContent);management.append(workspace);
  const categoryGroups=[];
- function activateCategory(id,{focus=false}={}){
-  for(const entry of categoryGroups){
-   const active=entry.id===id;
-   entry.wrapper.classList.toggle('rmManagementCategoryActive',active);
-   entry.wrapper.open=active;
-   entry.button.classList.toggle('active',active);
-   if(active)entry.button.setAttribute('aria-current','page');else entry.button.removeAttribute('aria-current');
-  }
-  if(focus&&window.matchMedia('(max-width: 900px)').matches)categoryContent.scrollIntoView({behavior:'smooth',block:'start'});
+ function setOpen(entry,active){
+  if(!active&&entry.body.contains(document.activeElement))entry.button.focus({preventScroll:true});
+  entry.wrapper.classList.toggle('rmManagementCategoryActive',active);
+  entry.button.setAttribute('aria-expanded',String(active));
+  if(entry.native)entry.wrapper.open=active;else entry.body.hidden=!active;
  }
- function group(id,symbol,title,description,element,opened){
+ function activateCategory(id,{focus=false,toggle=false}={}){
+  const chosen=categoryGroups.find(entry=>entry.id===id);if(!chosen)return;
+  const close=toggle&&chosen.button.getAttribute('aria-expanded')==='true';
+  for(const entry of categoryGroups)setOpen(entry,entry===chosen&&!close);
+  if(focus){chosen.button.focus({preventScroll:true});chosen.button.scrollIntoView({block:'nearest',behavior:'instant'})}
+ }
+ function group(id,symbol,title,description,element){
   if(!element)return;
-  const wrapper=document.createElement('details');wrapper.className='managementGroup';wrapper.id=id;wrapper.open=!!opened;
-  const summary=document.createElement('summary');summary.className='managementGroupHead';
-  const badge=document.createElement('span');badge.className='managementGroupIcon';const iconNames={clock:'clock-3',tables:'layout-grid',fusion:'link-2',check:'check-check',report:'chart-no-axes-column'};
-  badge.innerHTML='<i data-lucide="'+(iconNames[symbol]||'settings')+'"></i>';badge.setAttribute('aria-hidden','true');
+  const wrapper=document.createElement('section');wrapper.className='managementGroup';wrapper.id=id;
+  const heading=document.createElement('h2');heading.className='rmManagementHeading';
+  const button=document.createElement('button');button.type='button';button.className='managementGroupHead rmManagementCategoryButton';button.dataset.category=id;button.id=id+'Toggle';
+  const badge=document.createElement('span');badge.className='managementGroupIcon';badge.innerHTML='<i data-lucide="'+symbol+'"></i>';badge.setAttribute('aria-hidden','true');
   const words=document.createElement('span');words.className='managementGroupWords';
   const strong=document.createElement('strong');strong.textContent=title;
-  const small=document.createElement('small');small.textContent=description;
-  words.append(strong,small);
+  const small=document.createElement('small');small.textContent=description;words.append(strong,small);
   const chevron=document.createElement('span');chevron.className='managementChevron';chevron.innerHTML='<i data-lucide="chevron-down"></i>';chevron.setAttribute('aria-hidden','true');
-  summary.append(badge,words,chevron);
-  const body=document.createElement('div');body.className='managementGroupBody';body.append(element);
-  wrapper.append(summary,body);categoryContent.append(wrapper);
-  const button=document.createElement('button');button.type='button';button.className='rmManagementCategoryButton';
-  const symbolIcon=document.createElement('i');symbolIcon.dataset.lucide=iconNames[symbol]||'settings';symbolIcon.setAttribute('aria-hidden','true');
-  const navWords=document.createElement('span');navWords.className='rmManagementCategoryWords';
-  const label=document.createElement('strong');label.textContent=title;
-  const hint=document.createElement('small');hint.textContent=description;
-  navWords.append(label,hint);button.append(symbolIcon,navWords);
-  button.dataset.category=id;
-  button.addEventListener('click',()=>activateCategory(id,{focus:true}));
-  categoryNav.append(button);
-  categoryGroups.push({id,wrapper,button});
-  summary.addEventListener('click',event=>{event.preventDefault();activateCategory(id)});
+  button.append(badge,words,chevron);heading.append(button);
+  const body=document.createElement('div');body.className='managementGroupBody';body.id=id+'Panel';body.setAttribute('role','region');body.setAttribute('aria-labelledby',button.id);body.append(element);
+  button.setAttribute('aria-controls',body.id);wrapper.append(heading,body);categoryContent.append(wrapper);
+  const entry={id,wrapper,button,body};categoryGroups.push(entry);setOpen(entry,false);
+  button.addEventListener('click',()=>activateCategory(id,{toggle:true}));
   return wrapper;
  }
  const fusions=tables?.querySelector('.fusionAdmin');
  if(fusions)fusions.remove();
- group('manageHours','clock','Salles & horaires','Salles et services',hours,true);
- if(tables){tables.open=true;group('manageTables','tables','Tables','Capacité et configuration',tables,false)}
- group('manageFusions','fusion','Tables fusionnables','Groupes de 2 à 4 tables',fusions,false);
- group('manageClosure','check','Clôture du service','Fermeture et archives',closure,false);
- group('manageReports','report','Rapports & statistiques','Historique et PDF',reports,false);
- const initialCategory=location.hash==='#manageFusions'?'manageFusions':'manageHours';
- activateCategory(initialCategory);
- window.RestoManagementCategories={open:id=>{if(categoryGroups.some(group=>group.id===id))activateCategory(id,{focus:true})}};
+ const settings=document.createElement('div');settings.className='rmManagementSettings';
+ group('manageSettings','settings','Paramètres du service','Durée, arrivées et apparence',settings);
+ group('manageHours','clock-3','Horaires du restaurant','Services du midi et du soir, par jour',hours);
+ group('manageRooms','building-2','Salles','Espaces, tables et places',tables?.querySelector('.roomManager'));
+ if(tables){tables.open=true;group('manageTables','layout-grid','Tables','Choisir une salle et configurer ses tables',tables)}
+ group('manageFusions','link-2','Fusions','Associations autorisées de 2 à 4 tables',fusions);
+ group('manageClosure','check-check','Clôture du service / historique','Fermeture et services archivés',closure);
+ group('manageReports','chart-no-axes-column','Rapports & statistiques','Activité et export PDF',reports);
+ // Modules loaded later (auth, help, network) join this same hierarchy.
+ // Native details keep their identity so existing shortcuts can still set .open.
+ function registerNative(wrapper){
+  if(categoryGroups.some(entry=>entry.wrapper===wrapper))return;
+  const button=wrapper.querySelector(':scope > summary'),body=wrapper.querySelector(':scope > .managementGroupBody');
+  if(!button||!body)return;
+  const id=wrapper.id;button.classList.add('rmManagementCategoryButton');button.dataset.category=id;
+  button.id=id+'Toggle';body.id=id+'Panel';button.setAttribute('aria-controls',body.id);
+  const entry={id,wrapper,button,body,native:true};categoryGroups.push(entry);setOpen(entry,false);
+  wrapper.addEventListener('toggle',()=>{
+   if(wrapper.open)for(const other of categoryGroups)if(other!==entry)setOpen(other,false);
+   button.setAttribute('aria-expanded',String(wrapper.open));wrapper.classList.toggle('rmManagementCategoryActive',wrapper.open);
+  });
+  categoryContent.append(wrapper);
+ }
+ function organizeModules(){
+  const duration=management.querySelector('.restaurantDurationSetting');
+  if(duration&&duration.parentElement!==settings){duration.querySelector('select')?.setAttribute('form','restaurantShiftForm');settings.prepend(duration)}
+  const rush=management.querySelector('#rushArrivalSettings');if(rush&&rush.parentElement!==settings)settings.append(rush);
+  const theme=management.querySelector('.themeSettingsGroup');if(theme&&theme.parentElement!==settings){theme.classList.remove('managementGroup');settings.append(theme)}
+  for(const wrapper of management.querySelectorAll(':scope > details.managementGroup'))registerNative(wrapper);
+  const readonly=document.getElementById('receptionWeeklyReadOnly');
+  if(readonly&&readonly.parentElement===categoryContent)group('manageReadonlyHours','clock-3','Horaires du restaurant','Planning partagé · lecture seule',readonly);
+ }
+ new MutationObserver(organizeModules).observe(management,{childList:true,subtree:true});organizeModules();
+ categoryContent.addEventListener('keydown',event=>{
+  if(!['ArrowDown','ArrowUp','Home','End'].includes(event.key)||!event.target.matches('.rmManagementCategoryButton'))return;
+  const buttons=categoryGroups.map(entry=>entry.button).filter(button=>button.getClientRects().length&&getComputedStyle(button).visibility!=='hidden');
+  const current=buttons.indexOf(event.target);if(current<0)return;
+  event.preventDefault();const index=event.key==='Home'?0:event.key==='End'?buttons.length-1:(current+(event.key==='ArrowDown'?1:-1)+buttons.length)%buttons.length;buttons[index].focus();
+ });
+ window.RestoManagementCategories={open:id=>activateCategory(id,{focus:true})};
+ if(location.hash==='#manageFusions')activateCategory('manageFusions');
 }
 const links=[...document.querySelectorAll('.mobileNavItem')],sidebar=[...document.querySelectorAll('.sidebar a[href^="#"]')];
 const titles={tables:'Votre service',reservations:'Réservations',reservationForm:'Ajouter un client',passages:'Suivi du service',administration:'Gestion'};
