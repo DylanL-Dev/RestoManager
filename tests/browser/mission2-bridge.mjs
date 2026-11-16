@@ -1,5 +1,5 @@
 // In-memory adapter for browser regression tests. No remote Supabase client.
-export async function requireStaff(){return {user:{id:'fictional-user'},profile:{active:true,role:window.__mission2Role,display_name:'Équipe fictive'}}}
+export async function requireStaff(){return {user:{id:'fictional-user'},profile:{active:true,role:window.__mission2Role,display_name:'Équipe fictive',restaurant_id:'fictional-restaurant'}}}
 export async function loadSharedService(){return window.__mission2Snapshot()}
 export async function subscribeSharedService(onSnapshot,onError,onConnection){
  const apply=async()=>{try{onConnection(true);onSnapshot(await loadSharedService())}catch(error){onError(error)}};

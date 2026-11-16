@@ -1,0 +1,33 @@
+{
+  "mission": "RM-014",
+  "source_dev": "12ce8812ca50d6f5524e9949f0042e6b97a2f792",
+  "source_code": "7863f13f8ebabfaecaddc478d147514c6a7db016",
+  "v3_before": "e5e98ca879628cf6efa8ed0e4542f2a97e3bda1f",
+  "main_before": "a8915f9d04e51914d25280e910c3d60b4a027fd2",
+  "version": "2026.11.16-rm014.1",
+  "channel": "main",
+  "runtime": {
+    "service-v3-app-release.js": "972d7c81cfb0099fea8a8a78afb14f2c3b865b39510c91a9e75bf873375909c4",
+    "service-v3-fb-alerts.js": "c9796fbe2094fc791cca8d6f51ccd3ef634e6f457d054d6512c750c9610c5f70",
+    "service-v3-notification-model.js": "20e32ba09e4d7629fa2df8224f297cf5f7eaeb832f5492c941f97942a4c10319",
+    "service-v3-notifications.css": "fb080df786e8d78c16c566ad5df69dd34d2c78e32cd9976b47458ee9d636fcb5",
+    "service-v3-refresh.js": "e122a897d334ece68c84ec4947d065e48c7091e490e0f8aa1cab1c4e2d584fd6",
+    "service-v3-reminders.js": "0daad999536549597645d018b500ce0732e4b905edc1338582351615538cb508",
+    "service-v3-reservations.js": "a783c020f18d6ea4b11a2e9abd174e3628809d9eb7dc157690c3ec4ef3f1e74b",
+    "service-v3-screens.js": "90938e03e21748e415babb2a8d590855c74449211e5452af8ac1934ddcb7cf8e",
+    "v3-connected-auth.js": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870",
+    "v3-connected.html": "a00e049edbc28b6b76bad2a4dd69c65f79037fb793a18796461f2687014e4228",
+    "sw.js": "1ba6cc8139053dba16e07ec86c837697a3061806aa263a160be373f06cedabdc",
+    "lucide-local.js": "3b06c8c2d3769d35836a1b2a793231b6f4cfc04e97b073e05215207fa15e8c46",
+    "app-release.json": "5884ce6ba9d1b143dc0d34782edc744f91edade77846e0f3d684c29aa8f8cd7a"
+  },
+  "protected_production_files": {
+    "supabase-service-bridge.js": "30c453a3084c79bdd834f0262a7ee8a89f2c61183a65088f444f4e5eb6100f6e",
+    "supabase-login.js": "7878f4cd4026ca1229b15f9536632582704cef04d00f0eaf8d1ed89dc847c4c3",
+    "creator-auth.js": "04bfce830085d120a33272747c7dc6a014cd80c22b8e735c8460e10941166dc6",
+    "login.html": "c6a6abf774974a2303b16551a51f725a37e16fce688c7d3f8a539a062e9b0a5c",
+    "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14"
+  },
+  "remote_database_changes": false,
+  "precached_resources": 71
+}
