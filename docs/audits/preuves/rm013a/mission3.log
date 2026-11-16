@@ -1,0 +1,120 @@
+
+> restomanager@1.0.0 test:mission3:browser
+> node tests/browser/mission3.cjs
+
+PASS mock UI fb_admin historical long notes/allergies preserved on room edit
+PASS mock UI fb_admin explicit changed text limits preserve draft
+PASS mock UI reception historical long notes/allergies preserved on room edit
+PASS mock UI reception explicit changed text limits preserve draft
+PASS mock UI Reception 2→10→2 automatically reassigned table is shown in confirmation
+PASS mock UI fb_admin/reception stale version, reconnect, review/reload race and explicit confirmation
+PASS mock UI reception/fb_admin stale version, reconnect, review/reload race and explicit confirmation
+PASS mock UI fb_admin safe error and cancellation cannot restore stale reservation
+PASS mock UI reception safe error and cancellation cannot restore stale reservation
+PASS mock UI atomic snapshot refreshes hours, tables and fusions without resetting an unrelated unsaved hours draft
+PASS mock UI Fusion Gestion categories responsive 390px
+PASS mock UI Fusion Gestion categories responsive 768px
+PASS mock UI Fusion Gestion categories responsive 1440px
+PASS mock UI fb_admin 390px coherent five-tab hierarchy and accessible Lucide icons
+PASS mock UI fb_admin 390px navigation browser/toolbar Back and protected booking draft
+PASS mock UI fb_admin 390px refresh cancellation preserves unsaved notes and page
+PASS mock UI fb_admin 390px saved reservation leaves form without false confirmation
+PASS mock UI fb_admin 390px protected edit form Back and cancellation
+PASS mock UI Android/browser Back native navigation protects dirty draft
+PASS mock UI fb_admin 390px sticky viewport sidebar or mobile bottom navigation
+PASS mock UI fb_admin 390px staff private report form without owner data access
+PASS mock UI fb_admin 390px responsive service identity and naturally wrapping heading
+PASS mock UI fb_admin 390px four KPI and occupancy icons displayed with unchanged values
+PASS mock UI fb_admin 390px service dashboard headings and status cards preserve metrics with Lucide
+PASS mock UI fb_admin 390px clearer client selection, guest stepper and recommendation kept
+PASS mock UI fb_admin 390px legacy active notification opens targeted upcoming booking
+PASS mock UI fb_admin mobile booking hotel guests display genuine Lucide hotel SVG
+PASS mock UI fb_admin 390px compact two-band card, horizontal actions and conditional indicators
+PASS mock UI fb_admin 390px reservation actions aligned without overflow and menu accessible
+PASS mock UI fb_admin 390x844 five screens without horizontal overflow, editable form and touch target
+PASS mock UI fb_admin 768px coherent five-tab hierarchy and accessible Lucide icons
+PASS mock UI fb_admin 768px navigation browser/toolbar Back and protected booking draft
+PASS mock UI fb_admin 768px refresh cancellation preserves unsaved notes and page
+PASS mock UI fb_admin 768px saved reservation leaves form without false confirmation
+PASS mock UI fb_admin 768px protected edit form Back and cancellation
+PASS mock UI fb_admin 768px sticky viewport sidebar or mobile bottom navigation
+PASS mock UI fb_admin 768px staff private report form without owner data access
+PASS mock UI fb_admin 768px responsive service identity and naturally wrapping heading
+PASS mock UI fb_admin 768px four KPI and occupancy icons displayed with unchanged values
+PASS mock UI fb_admin 768px service dashboard headings and status cards preserve metrics with Lucide
+PASS mock UI fb_admin 768px clearer client selection, guest stepper and recommendation kept
+PASS mock UI fb_admin 768px legacy active notification opens targeted upcoming booking
+PASS mock UI fb_admin 768px reservation heading sort arrows contained
+PASS mock UI fb_admin 768px responsive reservation grid fits available panel width
+PASS mock UI fb_admin 768px reservation actions aligned without overflow and menu accessible
+PASS mock UI fb_admin 768x1024 five screens without horizontal overflow, editable form and touch target
+PASS mock UI fb_admin 1440px coherent five-tab hierarchy and accessible Lucide icons
+PASS mock UI fb_admin 1440px navigation browser/toolbar Back and protected booking draft
+PASS mock UI fb_admin 1440px refresh cancellation preserves unsaved notes and page
+PASS mock UI fb_admin 1440px saved reservation leaves form without false confirmation
+PASS mock UI fb_admin 1440px protected edit form Back and cancellation
+PASS mock UI fb_admin 1440px sticky viewport sidebar or mobile bottom navigation
+PASS mock UI fb_admin 1440px staff private report form without owner data access
+PASS mock UI fb_admin 1440px responsive service identity and naturally wrapping heading
+PASS mock UI fb_admin 1440px four KPI and occupancy icons displayed with unchanged values
+PASS mock UI fb_admin 1440px service dashboard headings and status cards preserve metrics with Lucide
+PASS mock UI fb_admin 1440px clearer client selection, guest stepper and recommendation kept
+PASS mock UI fb_admin 1440px legacy active notification opens targeted upcoming booking
+PASS mock UI fb_admin 1440px reservation heading sort arrows contained
+PASS mock UI fb_admin Full HD reservation actions sized and aligned
+PASS mock UI fb_admin 1440px reservation actions aligned without overflow and menu accessible
+PASS mock UI fb_admin 1440x900 five screens without horizontal overflow, editable form and touch target
+PASS mock UI reception 390px coherent five-tab hierarchy and accessible Lucide icons
+PASS mock UI reception 390px navigation browser/toolbar Back and protected booking draft
+PASS mock UI reception 390px refresh cancellation preserves unsaved notes and page
+PASS mock UI reception 390px saved reservation leaves form without false confirmation
+PASS mock UI reception 390px protected edit form Back and cancellation
+PASS mock UI reception 390px sticky viewport sidebar or mobile bottom navigation
+PASS mock UI reception 390px staff private report form without owner data access
+PASS mock UI reception 390px responsive service identity and naturally wrapping heading
+PASS mock UI reception 390px four KPI and occupancy icons displayed with unchanged values
+PASS mock UI reception 390px service dashboard headings and status cards preserve metrics with Lucide
+PASS mock UI reception 390px legacy active notification opens targeted upcoming booking
+PASS mock UI reception mobile booking hotel guests display genuine Lucide hotel SVG
+PASS mock UI reception 390px compact two-band card, horizontal actions and conditional indicators
+PASS mock UI reception 390px reservation actions aligned without overflow and menu accessible
+PASS mock UI reception 390x844 five screens without horizontal overflow, editable form and touch target
+PASS mock UI reception 768px coherent five-tab hierarchy and accessible Lucide icons
+PASS mock UI reception 768px navigation browser/toolbar Back and protected booking draft
+PASS mock UI reception 768px refresh cancellation preserves unsaved notes and page
+PASS mock UI reception 768px saved reservation leaves form without false confirmation
+PASS mock UI reception 768px protected edit form Back and cancellation
+PASS mock UI reception 768px sticky viewport sidebar or mobile bottom navigation
+PASS mock UI reception 768px staff private report form without owner data access
+PASS mock UI reception 768px responsive service identity and naturally wrapping heading
+PASS mock UI reception 768px four KPI and occupancy icons displayed with unchanged values
+PASS mock UI reception 768px service dashboard headings and status cards preserve metrics with Lucide
+PASS mock UI reception 768px legacy active notification opens targeted upcoming booking
+PASS mock UI reception 768px reservation heading sort arrows contained
+PASS mock UI reception 768px responsive reservation grid fits available panel width
+PASS mock UI reception 768px reservation actions aligned without overflow and menu accessible
+PASS mock UI reception 768x1024 five screens without horizontal overflow, editable form and touch target
+PASS mock UI reception 1440px coherent five-tab hierarchy and accessible Lucide icons
+PASS mock UI reception 1440px navigation browser/toolbar Back and protected booking draft
+PASS mock UI reception 1440px refresh cancellation preserves unsaved notes and page
+PASS mock UI reception 1440px saved reservation leaves form without false confirmation
+PASS mock UI reception 1440px protected edit form Back and cancellation
+PASS mock UI reception 1440px sticky viewport sidebar or mobile bottom navigation
+PASS mock UI reception 1440px staff private report form without owner data access
+PASS mock UI reception 1440px responsive service identity and naturally wrapping heading
+PASS mock UI reception 1440px four KPI and occupancy icons displayed with unchanged values
+PASS mock UI reception 1440px service dashboard headings and status cards preserve metrics with Lucide
+PASS mock UI reception 1440px legacy active notification opens targeted upcoming booking
+PASS mock UI reception 1440px reservation heading sort arrows contained
+PASS mock UI reception Full HD reservation actions sized and aligned
+PASS mock UI reception 1440px reservation actions aligned without overflow and menu accessible
+PASS mock UI reception 1440x900 five screens without horizontal overflow, editable form and touch target
+PASS mock UI fb_admin clock-controlled 11:59→12:01 keeps 22 overdue visible with zero current arrivals
+PASS mock UI reception clock-controlled 11:59→12:01 keeps 22 overdue visible with zero current arrivals
+PASS mock UI Paris overdue notifications remain correct in a browser configured for New York
+{"passed":110,"failed":0,"backend":"in-memory mock, external requests blocked; Auth/RLS/Realtime NOT validated","viewports":["390x844","768x1024","1440x900"]}
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

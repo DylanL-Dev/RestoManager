@@ -23,8 +23,8 @@ test('Authorized fusions are categorized and distinguished from underlying pair 
  assert.match(fusions,/Les groupes résultent des associations autorisées/);
 });
 test('Layout offers desktop navigation and table, tablet/mobile navigation and cards',()=>{
- assert.match(html,/service-v3-management-categories\.css\?v=20261113-room-filter1/);
- assert.match(html,/service-v3-screens\.js\?v=20261115-rm011a-clean-form1/);
+ assert.match(html,/service-v3-management-categories\.css\?v=20261116-rm013a1/);
+ assert.match(html,/service-v3-screens\.js\?v=20261116-rm013a1/);
  assert.match(html,/service-v3-fusions\.js\?v=20261112-management-layout1/);
  assert.match(styles,/\.rmManagementWorkspace\{width:100%;min-width:0/);
  assert.match(styles,/\.rmManagementCategoryContent\{display:grid/);

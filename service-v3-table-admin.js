@@ -9,13 +9,13 @@ const submitButton=$('tableAdminSubmit');
 submitButton.addEventListener('click',()=>{if(editId&&window.RestoSharedReservations)feedback.textContent='Enregistrement des modifications…';});
 let editId=null,displayedRoom=null;
 async function mayResetTable(){
- if(!editId&&!$('tableAdminNumber').value)return true;
+ if(!editId&&!$('tableAdminNumber').value&&$('tableAdminMin').value==='1'&&$('tableAdminMax').value==='2')return true;
  return !!(await window.RestoDialog?.confirm('Le formulaire de table contient une saisie. Voulez-vous l’abandonner ?',{title:'Saisie de table en cours',acceptLabel:'Abandonner la saisie',danger:true}));
 }
 function resetTableForm(roomId){editId=null;form.reset();if(roomId)$('tableAdminRoom').value=roomId;$('tableAdminSubmit').textContent='Ajouter la table';$('tableAdminMin').value=1;$('tableAdminMax').value=2;}
 function bookings(){return E.normalizeReservations(window.RestoSharedReservations||JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
- const plan=TableStore.get();list.replaceChildren();list.lastRoom=null;const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.id==='main'&&['Salle à configurer','Salle principale'].includes(r.name)?'Salle principale':r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
+ const plan=TableStore.get();list.replaceChildren();const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.id==='main'&&['Salle à configurer','Salle principale'].includes(r.name)?'Salle principale':r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
  displayedRoom=rooms.value;
  const activeRoom=plan.rooms.find(r=>r.id===rooms.value);
  const roomHeader=document.createElement('div');roomHeader.className='rmTableRoomListHeading';
@@ -146,7 +146,7 @@ function addRoomRenameControls(row,room,actions){
     if(!target)throw business('Salle introuvable.');
     target.name=name;TableStore.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));
    }
-   feedback.textContent='✓ Salle « '+name+' » renommée et synchronisée.';close();
+   feedback.textContent='✓ Salle « '+name+' » renommée et synchronisée.';close();refresh();[...list.children].find(row=>row.dataset.roomId===room.id)?.querySelector('.roomManagerRenameToggle')?.focus({preventScroll:true});
   }catch(error){feedback.textContent=errorMessage(error)}
   finally{save.disabled=false;cancel.disabled=false;toggle.disabled=false}
  });

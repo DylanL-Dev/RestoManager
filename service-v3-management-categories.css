@@ -143,12 +143,22 @@ html[data-theme="dark"] .roomManager .roomManagerRemove{background:#4b2e2c;color
 #manageTables .rmTableRoomListHeading{flex-wrap:wrap}
 @container(max-width:900px){#manageTables #tableAdminList{grid-template-columns:minmax(0,1fr)}}
 @container(max-width:480px){
- #manageTables .tableAdminItem{grid-template-columns:minmax(0,1fr)}
- #manageTables .tableAdminItem>span{flex:none}
+ #manageTables .tableAdminItem{grid-template-columns:minmax(88px,1fr) auto;padding:8px}
+ #manageTables .tableAdminItem>span{font-size:12px;line-height:1.5}
+ #manageTables .tableAdminActions{flex-wrap:nowrap}
+ #manageTables .tableAdminItem button{padding:7px 8px}
 }
 @media(max-width:640px){
  .rmManagementCategoryButton{padding:12px;gap:10px}
  .rmManagementCategoryButton .managementGroupWords strong{font-size:14px}
  .rmManagementCategoryContent>.managementGroup>.managementGroupBody{padding:12px}
  .rmManagementSettings .restaurantDurationSetting label{grid-template-columns:minmax(0,1fr)}
+}
+
+#manageTables #tableAdminForm{grid-template-columns:repeat(2,minmax(0,1fr))}
+#manageTables #tableAdminForm label:has(#tableAdminRoom){grid-column:1/-1;grid-row:1}
+#manageTables #tableAdminForm label:has(#tableAdminNumber){grid-column:1/-1}
+@media(min-width:1100px){
+ #manageTables #tableAdminForm{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #manageTables #tableAdminForm label:has(#tableAdminNumber){grid-column:auto}
 }

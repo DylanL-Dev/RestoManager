@@ -1,0 +1,37 @@
+name: RM-013-A Management - isolated responsive validation
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  management-responsive:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:syntax
+      - run: npm test
+      - name: Capture DEV baseline at 390 / 768 / 1440
+        env:
+          RM013_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: npm run test:rm013a:browser -- --baseline
+      - name: Real frontend, fictitious data - seven widths and two roles
+        run: npm run test:rm013a:browser
+      - name: Existing weekly scheduler and room safety checks
+        run: |
+          node tests/browser/weekly-ui.cjs
+          node tests/browser/rm005-room-management.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm013a-management-responsive
+          path: test-results/rm013a/
