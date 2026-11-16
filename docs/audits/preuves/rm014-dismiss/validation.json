@@ -1,0 +1,16 @@
+{
+  "version": "2026.11.16-rm014.2",
+  "base": "82ccef7e962c870519f65b0056c5cc932d6bbaee",
+  "scope": "DEV only; no database access",
+  "syntaxFiles": 142,
+  "unitTestsWithIsolationNone": 216,
+  "unitFilesWithDefaultRunner": 53,
+  "dismissalRoleWidthCombinations": 14,
+  "regressionRoleWidthCombinations": 14,
+  "lifecycleGroups": 24,
+  "pwaGroups": 12,
+  "hostedAuthenticatedTest": false,
+  "realDataWrites": 0,
+  "productionChanges": false,
+  "screenshots": "Loopback frontend + simulated authenticated service; not hosted data"
+}

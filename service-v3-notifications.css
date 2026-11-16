@@ -27,6 +27,17 @@
 .rmNcGroupTitle span{font-size:11px;letter-spacing:0;background:var(--nc-soft);padding:3px 7px;border-radius:10px}
 .rmNcCard{border:1px solid var(--nc-line);background:var(--nc-bg);border-radius:18px;padding:16px;position:relative}
 .rmNcCard+.rmNcCard{margin-top:10px}
+.rmNcDismissible{position:relative;overflow:hidden;border-radius:18px;background:var(--nc-tint)}
+.rmNcSection>:is(.rmNcDismissible,.rmNcCard)~:is(.rmNcDismissible,.rmNcCard){margin-top:10px}
+.rmNcDismissible>.rmNcCard{touch-action:pan-y pinch-zoom;user-select:none;transition:transform .18s ease-out}
+.rmNcDismissible.is-swiping>.rmNcCard{transition:none;cursor:grabbing}
+.rmNcSwipeBack{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:20px;color:var(--nc-accent);font-size:12px;font-weight:750;visibility:hidden}
+.is-swiping>.rmNcSwipeBack{visibility:visible}
+.rmNcDismissible[data-direction="right"]>.rmNcSwipeBack{justify-content:flex-start}
+.rmNotificationCenter .rmNcDismiss{display:inline-flex;align-items:center;gap:6px;margin-left:auto}
+.rmNcUndo{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 24px;background:var(--nc-tint);border-bottom:1px solid var(--nc-line);font-size:12px;line-height:1.5;flex-shrink:0}
+.rmNotificationCenter .rmNcGestureHint{font-size:11px;color:var(--nc-muted);margin-top:10px;line-height:1.5}
+@media(min-width:1101px){.rmNcGestureHint{display:none}}
 .rmNcCard.is-unread{background:var(--nc-soft)}
 .rmNcCard.is-important{border-left:3px solid #ad6828}
 .rmNcCardTop{display:flex;align-items:flex-start;gap:12px}
