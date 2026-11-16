@@ -1,0 +1,5 @@
+
+> restomanager@1.0.0 test:syntax
+> node tests/check-syntax.cjs
+
+{"checked":134,"failed":0}

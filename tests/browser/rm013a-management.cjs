@@ -9,9 +9,9 @@ const baselineOnly=process.argv.includes('--baseline');
 const widths=[360,390,430,768,1024,1440,1920];
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const days=['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-let state,sequence=0,calls=[];const results=[];
+let state,sequence=0,calls=[],reportRequests=[],reportsFailed=false;const results=[];
 function reset(){
- calls=[];
+ calls=[];reportRequests=[];reportsFailed=false;
  state={revision:'10',capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
  hours:{id:1,lunch_enabled:true,lunch_start:'12:00',lunch_end:'14:30',dinner_enabled:true,dinner_start:'19:00',dinner_end:'21:30',duration:60,arrival_limit_percent:60,
  weekly_schedule:Object.fromEntries(days.map(day=>[day,{lunch:{enabled:!['saturday','sunday'].includes(day),start:'12:00',end:'14:30'},dinner:{enabled:true,start:'19:00',end:'21:30'}}]))},
@@ -25,6 +25,10 @@ const snapshot=()=>({...structuredClone(state),syncSequence:++sequence});
 function query({table,mode,values,filters,single}){
  let rows=table==='restaurants'?[{id:'fictional-venue',name:'Restaurant fictif RM-013-A'}]:table==='restaurant_rooms'?state.rooms:table==='restaurant_tables'?state.tables:table==='restaurant_hours'?[state.hours]:table==='service_closures'?state.serviceClosures:[];
  rows=rows.filter(row=>filters.every(([key,value])=>key==='restaurant_id'||row[key]===value));
+ if(mode==='insert'&&table==='platform_reports'){
+  reportRequests.push({data:structuredClone(values),failed:reportsFailed});
+  return {data:null,error:reportsFailed?{code:'NETWORK',message:'Fixture transmission failure'}:null};
+ }
  if(mode==='insert'){
   assert.equal(table,'restaurant_rooms');const row={...values,id:id(50+calls.length)};state.rooms.push(row);rows=[row];calls.push({table,mode,values});
  }else if(mode==='update'){
@@ -211,7 +215,7 @@ async function exerciseRestaurant(page,width){
  await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight));
  if(width<=900){const rect=await page.locator('.restoTourLaunch').boundingBox(),nav=await page.locator('.mobileBottomNav').boundingBox();assert.ok(rect.y+rect.height<=nav.y,'Last control clears fixed navigation')}
 }
-(async()=>{let browser;try{
+if(require.main===module)(async()=>{let browser;try{
  fs.mkdirSync(out,{recursive:true});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
  browser=await chromium.launch({headless:true});
  if(baselineOnly){for(const width of [390,768,1440]){const v=await open(browser,origin,width,'fb_admin');await v.page.locator('[data-category="manageTables"]').click();await capture(v.page,'before-rooms-'+width);await v.context.close();console.log('Captured baseline '+width)}return;}
@@ -255,3 +259,5 @@ async function exerciseRestaurant(page,width){
  }
  fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({baseline,passed:results.length,failed:0,backend:'In-memory service boundary; real frontend and auth guard; external HTTP and WebSocket blocked',results},null,2));
 }finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}})().catch(e=>{console.error(e);process.exitCode=1});
+
+module.exports={open,server,failReports:value=>{reportsFailed=value},getReportRequests:()=>structuredClone(reportRequests)};

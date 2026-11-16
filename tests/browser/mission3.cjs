@@ -346,7 +346,7 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await feedbackGroup.waitFor({state:'attached'});
    await feedbackGroup.locator('summary').click();
    await feedbackGroup.locator('#reportIssueForm').waitFor({state:'visible'});
-   assert.match(await feedbackGroup.innerText(),/Signaler un problème/);
+   assert.match(await feedbackGroup.innerText(),/Assistance/);
    assert.equal(await feedbackGroup.locator('#reportIssueKind option').count(),3);
    assert.equal(await feedbackGroup.locator('#reportIssueSeverity option').count(),2);
    assert.equal(await feedbackGroup.locator('#reportIssueContact').getAttribute('maxlength'),'160');

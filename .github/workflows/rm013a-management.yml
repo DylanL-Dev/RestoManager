@@ -1,7 +1,7 @@
 name: RM-013-A Management - isolated responsive validation
 on:
   pull_request:
-    branches: [feature/v3-supabase-full-clone]
+    branches: [feature/v3-supabase-full-clone, RestoManager-V3, main]
 permissions:
   contents: read
 jobs:
@@ -26,6 +26,10 @@ jobs:
         run: npm run test:rm013a:browser -- --baseline
       - name: Real frontend, fictitious data - seven widths and two roles
         run: npm run test:rm013a:browser
+      - name: Assistance - isolated private submission and responsive form
+        env:
+          BROWSER_ARTIFACTS: test-results/rm013a-assistance
+        run: npm run test:assistance:browser
       - name: Existing weekly scheduler and room safety checks
         run: |
           node tests/browser/weekly-ui.cjs
@@ -34,4 +38,4 @@ jobs:
         if: always()
         with:
           name: rm013a-management-responsive
-          path: test-results/rm013a/
+          path: test-results/
