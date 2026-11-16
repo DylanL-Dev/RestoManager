@@ -7,10 +7,16 @@ const form=$('tableAdminForm'),list=$('tableAdminList'),feedback=$('tableAdminFe
 form.noValidate=true;
 const submitButton=$('tableAdminSubmit');
 submitButton.addEventListener('click',()=>{if(editId&&window.RestoSharedReservations)feedback.textContent='Enregistrement des modifications…';});
-let editId=null;
+let editId=null,displayedRoom=null;
+async function mayResetTable(){
+ if(!editId&&!$('tableAdminNumber').value&&$('tableAdminMin').value==='1'&&$('tableAdminMax').value==='2')return true;
+ return !!(await window.RestoDialog?.confirm('Le formulaire de table contient une saisie. Voulez-vous l’abandonner ?',{title:'Saisie de table en cours',acceptLabel:'Abandonner la saisie',danger:true}));
+}
+function resetTableForm(roomId){editId=null;form.reset();if(roomId)$('tableAdminRoom').value=roomId;$('tableAdminSubmit').textContent='Ajouter la table';$('tableAdminMin').value=1;$('tableAdminMax').value=2;}
 function bookings(){return E.normalizeReservations(window.RestoSharedReservations||JSON.parse(localStorage.getItem(KEY)||'[]'))}
 function refresh(){
- const plan=TableStore.get();list.replaceChildren();list.lastRoom=null;const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.id==='main'&&['Salle à configurer','Salle principale'].includes(r.name)?'Salle principale':r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
+ const plan=TableStore.get();list.replaceChildren();const rooms=$('tableAdminRoom');const selectedRoom=rooms.value;rooms.replaceChildren();plan.rooms.forEach(r=>{const o=document.createElement('option');o.value=r.id;o.textContent=r.id==='main'&&['Salle à configurer','Salle principale'].includes(r.name)?'Salle principale':r.name;rooms.append(o)});if(plan.rooms.some(r=>r.id===selectedRoom))rooms.value=selectedRoom;
+ displayedRoom=rooms.value;
  const activeRoom=plan.rooms.find(r=>r.id===rooms.value);
  const roomHeader=document.createElement('div');roomHeader.className='rmTableRoomListHeading';
  const title=document.createElement('strong');title.textContent='Tables · '+(activeRoom?.name||'Salle');
@@ -23,10 +29,9 @@ function refresh(){
   list.append(empty);
  }
  selectedTables.sort((a,b)=>a.number-b.number).forEach(t=>{
- if(!list.lastRoom||list.lastRoom!==t.roomId){const heading=document.createElement('h4');heading.textContent=plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle';list.append(heading);list.lastRoom=t.roomId}
  const row=document.createElement('div');row.className='tableAdminItem';
- const info=document.createElement('span');info.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places · '+(plan.rooms.find(r=>r.id===t.roomId)?.name||'Salle');
- const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.onclick=()=>{editId=t.id;feedback.textContent='Modification de la table '+t.number+' : vérifiez les champs puis enregistrez.';$('tableAdminNumber').value=t.number;$('tableAdminMin').value=t.capacityMin||1;$('tableAdminMax').value=t.capacity;$('tableAdminRoom').value=t.roomId;$('tableAdminSubmit').textContent='Enregistrer les modifications';form.scrollIntoView({behavior:'smooth',block:'center'})};
+ const info=document.createElement('span');info.textContent='Table '+t.number+' · '+(t.capacityMin||1)+'–'+t.capacity+' places';
+ const edit=document.createElement('button');edit.type='button';edit.textContent='Modifier';edit.setAttribute('aria-label','Modifier la table '+t.number);edit.onclick=async()=>{if(!await mayResetTable())return;editId=t.id;feedback.textContent='Modification de la table '+t.number+' : vérifiez les champs puis enregistrez.';$('tableAdminNumber').value=t.number;$('tableAdminMin').value=t.capacityMin||1;$('tableAdminMax').value=t.capacity;$('tableAdminRoom').value=t.roomId;$('tableAdminSubmit').textContent='Enregistrer les modifications';form.scrollIntoView({behavior:'smooth',block:'center'})};
  const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';if(window.RestoSharedReservations)remove.textContent='Retirer';remove.onclick=async()=>{try{
  if(window.RestoSharedReservations){
   if(!await window.RestoDialog.confirm('Retirer la table '+t.number+' de cette salle ? Elle ne sera plus proposée, mais son historique sera conservé. Vous pourrez la réactiver.',{title:'Retirer la table',danger:true,acceptLabel:'Retirer'}))return;
@@ -39,7 +44,7 @@ function refresh(){
  if(!await window.RestoDialog.confirm('Supprimer définitivement la table '+t.number+' ?',{title:'Supprimer la table',danger:true,acceptLabel:'Supprimer'}))return;
  const next=TableStore.get();next.tables=next.tables.filter(x=>x.id!==t.id);TableStore.save(next);refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Table supprimée.';
  }catch(e){feedback.textContent=errorMessage(e)}};
- row.append(info,edit,remove);list.append(row);
+ const actions=document.createElement('div');actions.className='tableAdminActions';remove.setAttribute('aria-label',remove.textContent+' la table '+t.number);actions.append(edit,remove);row.append(info,actions);list.append(row);
  });
  const selectedInactive=(window.RestoInactiveRestaurantTables||[]).filter(t=>t.room_id===window.RestoSharedRoomIds?.get(rooms.value));
  if(window.RestoSharedReservations&&selectedInactive.length){
@@ -57,7 +62,7 @@ function refresh(){
  }
 }
 $('tableAdminNew').textContent='Réinitialiser le formulaire';
-$('tableAdminNew').addEventListener('click',()=>{editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';$('tableAdminMin').value=1;$('tableAdminMax').value=2;feedback.textContent='Formulaire prêt pour une nouvelle table.';$('tableAdminNumber').focus()});
+$('tableAdminNew').addEventListener('click',async()=>{if(!await mayResetTable())return;resetTableForm(displayedRoom);feedback.textContent='Formulaire prêt pour une nouvelle table.';$('tableAdminNumber').focus()});
 form.addEventListener('submit',async e=>{e.preventDefault();try{
  const next=TableStore.get(),number=Number($('tableAdminNumber').value),min=Number($('tableAdminMin').value),max=Number($('tableAdminMax').value),roomId=$('tableAdminRoom').value;
  if(!Number.isInteger(number)||number<1)throw business('Indiquez un numéro de table entier supérieur à zéro.');
@@ -91,10 +96,10 @@ form.addEventListener('submit',async e=>{e.preventDefault();try{
  }else{
  next.tables.push({id:'table-v3-'+Date.now(),number,capacityMin:min,capacity:max,roomId});
  }
- TableStore.save(next);editId=null;form.reset();$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Table enregistrée.';refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));
+ TableStore.save(next);resetTableForm(roomId);feedback.textContent='Table enregistrée.';refresh();window.dispatchEvent(new Event('restomanager:v3-tables'));
  }catch(err){feedback.textContent=errorMessage(err)}});
 window.addEventListener('restomanager:v3-tables',refresh);window.addEventListener('restomanager:supabase-snapshot',refresh);
-$('tableAdminRoom').addEventListener('change',()=>{editId=null;$('tableAdminSubmit').textContent='Ajouter la table';feedback.textContent='Affichage des tables de la salle sélectionnée.';refresh()});refresh();
+$('tableAdminRoom').addEventListener('change',async()=>{const chosen=$('tableAdminRoom').value;if(!await mayResetTable()){$('tableAdminRoom').value=displayedRoom;$('tableAdminRoom').dispatchEvent(new Event('restomanager:picker-label'));return}resetTableForm(chosen);feedback.textContent='Affichage des tables de la salle sélectionnée.';refresh()});refresh();
 })();
 
 (function(){
@@ -102,28 +107,24 @@ const business=message=>window.RestoErrors?.business(message)||Error(message);
 const errorMessage=error=>{window.RestoErrors?.diagnostic('room-action',error);return window.RestoErrors?.message(error,'Cette modification de salle n’est pas confirmée.')||'Cette modification de salle n’est pas confirmée.'};
 const form=document.getElementById('tableAdminForm');if(!form)return;
 const box=document.createElement('section');box.className='roomManager';
-const style=document.createElement('style');style.textContent='.roomManager{padding:16px;border:1px solid #dce8e0;border-radius:16px;margin-bottom:18px}.roomManagerItem{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #dce8e0}.roomManagerForm{display:flex;gap:12px;align-items:end;margin-top:14px}.roomManagerForm label{flex:1}.roomManagerForm input{width:100%;box-sizing:border-box;min-height:44px}@media(max-width:600px){.roomManagerForm{flex-direction:column;align-items:stretch}.roomManagerForm button{min-height:46px}}';document.head.append(style);const styleExtra=document.createElement('style');styleExtra.textContent='.roomManager{padding:16px;margin:0 0 18px;border:1px solid #dbe7df;border-radius:16px;background:#f7faf8}.roomManager h3{margin:0 0 8px}.roomManagerItem{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 0;border-bottom:1px solid #dbe7df}.roomManagerItem span{overflow-wrap:anywhere}.roomManagerItem button{min-height:42px}.roomManagerForm{display:flex;gap:10px;align-items:end;margin-top:15px}.roomManagerForm label{flex:1;min-width:0}.roomManagerForm input{width:100%;min-height:44px;box-sizing:border-box}@media(max-width:600px){.roomManagerForm{flex-direction:column;align-items:stretch}.roomManagerForm button{min-height:46px}}';document.head.append(styleExtra);
-const renameStyle=document.createElement('style');
-renameStyle.textContent='.roomManagerItem{flex-wrap:wrap}.roomManagerItem>span{flex:1 1 160px}.roomManagerRenameToggle,.roomManagerRenameCancel{border:1px solid #b9d9c8;border-radius:9px;background:#e8f5ed;color:#176347;padding:9px 12px;font-weight:700}.roomManagerRenameForm{order:5;flex:1 0 100%;display:flex;flex-wrap:wrap;align-items:end;gap:9px;padding:11px 0 2px}.roomManagerRenameForm[hidden]{display:none!important}.roomManagerRenameForm label{flex:1 1 220px;display:grid;gap:6px;font-size:13px}.roomManagerRenameForm input{width:100%;box-sizing:border-box;min-height:44px;padding:8px;border:1px solid #abc8b9;border-radius:9px}.roomManagerRenameForm button{min-height:44px}.roomManagerRenameForm button:focus-visible,.roomManagerRenameToggle:focus-visible{outline:3px solid #17805a;outline-offset:2px}@media(max-width:600px){.roomManagerRenameForm label{flex-basis:100%}.roomManagerRenameForm button{flex:1 1 125px}}';
-document.head.append(renameStyle);
 box.innerHTML='<div class="roomManagerHeader"><div><h3>Gestion des salles</h3><p class="muted">Organisez vos espaces et leur capacité.</p></div></div><div id="roomManagerList"></div><form id="roomManagerForm"><label for="roomManagerName">Nouvelle salle<input id="roomManagerName" maxlength="60" required placeholder="Ex. Salon privé" autocomplete="off"></label><button type="submit"><span aria-hidden="true">＋</span> Ajouter la salle</button></form><p id="roomManagerFeedback" role="status" aria-live="polite"></p>';
 form.parentElement.insertBefore(box,form);
 const list=box.querySelector('#roomManagerList'),feedback=box.querySelector('#roomManagerFeedback');
 
 const roomName=room=>room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name;
-function addRoomRenameControls(row,room){
+function addRoomRenameControls(row,room,actions){
  const toggle=document.createElement('button');toggle.type='button';toggle.className='roomManagerRenameToggle';
  toggle.textContent='Renommer';toggle.setAttribute('aria-expanded','false');toggle.setAttribute('aria-label','Renommer '+roomName(room));
- const editor=document.createElement('form');editor.className='roomManagerRenameForm';editor.hidden=true;editor.noValidate=true;
+ const editor=document.createElement('form');editor.className='roomManagerRenameForm';editor.hidden=true;editor.noValidate=true;editor.id='roomRename-'+room.id;toggle.setAttribute('aria-controls',editor.id);
  const label=document.createElement('label');label.textContent='Nouveau nom de la salle';
  const input=document.createElement('input');input.type='text';input.required=true;input.maxLength=60;input.value=roomName(room);
  label.append(input);
  const save=document.createElement('button');save.type='submit';save.textContent='Enregistrer';
  const cancel=document.createElement('button');cancel.type='button';cancel.textContent='Annuler';cancel.className='roomManagerRenameCancel';
- editor.append(label,save,cancel);row.append(toggle,editor);
+ editor.append(label,save,cancel);actions.append(toggle);row.append(editor);
  const close=()=>{editor.hidden=true;toggle.setAttribute('aria-expanded','false')};
  toggle.addEventListener('click',()=>{const open=editor.hidden;editor.hidden=!open;toggle.setAttribute('aria-expanded',String(open));if(open){input.focus();input.select()}});
- cancel.addEventListener('click',()=>{input.value=roomName(room);close()});
+ cancel.addEventListener('click',()=>{input.value=roomName(room);close();toggle.focus()});
  editor.addEventListener('submit',async event=>{
   event.preventDefault();if(save.disabled)return;
   save.disabled=true;cancel.disabled=true;toggle.disabled=true;
@@ -145,12 +146,12 @@ function addRoomRenameControls(row,room){
     if(!target)throw business('Salle introuvable.');
     target.name=name;TableStore.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));
    }
-   feedback.textContent='✓ Salle « '+name+' » renommée et synchronisée.';close();
+   feedback.textContent='✓ Salle « '+name+' » renommée et synchronisée.';close();refresh();[...list.children].find(row=>row.dataset.roomId===room.id)?.querySelector('.roomManagerRenameToggle')?.focus({preventScroll:true});
   }catch(error){feedback.textContent=errorMessage(error)}
   finally{save.disabled=false;cancel.disabled=false;toggle.disabled=false}
  });
 }
-function refresh(){const plan=TableStore.get();list.replaceChildren();for(const room of plan.rooms){const row=document.createElement('div');row.className='roomManagerItem';const tables=plan.tables.filter(t=>t.roomId===room.id);const label=document.createElement('span');label.textContent=(room.id==='main'&&['Salle à configurer','Salle principale'].includes(room.name)?'Salle principale':room.name)+' · '+tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';row.append(label);addRoomRenameControls(row,room);if(room.id!=='main'){const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.addEventListener('click',async()=>{try{const next=TableStore.get();if(next.tables.some(t=>t.roomId===room.id))throw business('Cette salle contient encore des tables ou du mobilier.');if(!await window.RestoDialog.confirm('Supprimer la salle vide « '+room.name+' » de la liste active ? Les données historiques seront conservées.',{title:'Supprimer la salle',danger:true,acceptLabel:'Supprimer'}))return;if(window.RestoSharedReservations){if(!window.RestoSupabaseReady||typeof window.RestoDeactivateRestaurantRoom!=='function')throw business('Synchronisation indisponible : suppression impossible.');await window.RestoDeactivateRestaurantRoom(window.RestoSharedRoomIds?.get(room.id));await window.RestoRefreshSharedService();feedback.textContent='Salle désactivée et synchronisée.'}else{next.rooms=next.rooms.filter(r=>r.id!==room.id);TableStore.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle supprimée.'}}catch(e){feedback.textContent=errorMessage(e)}});row.append(remove)}list.append(row)}}
+function refresh(){const plan=TableStore.get();const active=document.activeElement;const editors=new Map([...list.children].filter(row=>!row.querySelector('.roomManagerRenameForm')?.hidden).map(row=>[row.dataset.roomId,row]));list.replaceChildren();for(const room of plan.rooms){const retained=editors.get(room.id);if(retained){list.append(retained);const name=retained.querySelector('.roomManagerName');name.textContent=roomName(room);name.title=roomName(room);const tables=plan.tables.filter(t=>t.roomId===room.id);retained.querySelector('.roomManagerMeta').textContent=tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';continue}const row=document.createElement('div');row.className='roomManagerItem';row.dataset.roomId=room.id;const tables=plan.tables.filter(t=>t.roomId===room.id);const info=document.createElement('div');info.className='roomManagerInfo';const label=document.createElement('strong');label.className='roomManagerName';label.textContent=roomName(room);label.title=roomName(room);const meta=document.createElement('span');meta.className='roomManagerMeta';meta.textContent=tables.length+' tables · '+tables.reduce((n,t)=>n+t.capacity,0)+' places';info.append(label,meta);const actions=document.createElement('div');actions.className='roomManagerActions';row.append(info,actions);addRoomRenameControls(row,room,actions);if(room.id!=='main'){const remove=document.createElement('button');remove.type='button';remove.textContent='Supprimer';remove.addEventListener('click',async()=>{try{const next=TableStore.get();if(next.tables.some(t=>t.roomId===room.id))throw business('Cette salle contient encore des tables ou du mobilier.');if(!await window.RestoDialog.confirm('Supprimer la salle vide « '+room.name+' » de la liste active ? Les données historiques seront conservées.',{title:'Supprimer la salle',danger:true,acceptLabel:'Supprimer'}))return;if(window.RestoSharedReservations){if(!window.RestoSupabaseReady||typeof window.RestoDeactivateRestaurantRoom!=='function')throw business('Synchronisation indisponible : suppression impossible.');await window.RestoDeactivateRestaurantRoom(window.RestoSharedRoomIds?.get(room.id));await window.RestoRefreshSharedService();feedback.textContent='Salle désactivée et synchronisée.'}else{next.rooms=next.rooms.filter(r=>r.id!==room.id);TableStore.save(next);window.dispatchEvent(new Event('restomanager:v3-tables'));feedback.textContent='Salle supprimée.'}}catch(e){feedback.textContent=errorMessage(e)}});remove.className='roomManagerRemove';remove.setAttribute('aria-label','Supprimer '+roomName(room));actions.append(remove)}list.append(row)}if(active?.isConnected&&list.contains(active))active.focus({preventScroll:true})}
 box.querySelector('#roomManagerForm').addEventListener('submit',async e=>{
  e.preventDefault();
  const input=box.querySelector('#roomManagerName'),button=box.querySelector('#roomManagerForm button');

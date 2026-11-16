@@ -1,0 +1,25 @@
+{
+  "source_dev_commit": "9c57ae9cbce283edbfec7cc543817dfb1ce82f28",
+  "v3_before": "cc516a396b12eea0259e1563553b8223cf1549f2",
+  "main_before": "2f0c2bc21fccdfb2b0c515a89419e767a2810b53",
+  "runtime": {
+    "service-v3-management-categories.css": "77de703cd10b09a24111da7f0e41575601518f75147948ff1d8a52ff7a09dae7",
+    "service-v3-room-choices.js": "9c7034bd42653102785653831555207d405ec821a27b789fb715d07ec0eec43b",
+    "service-v3-screens.js": "43273f285af222ad9d2c078f196013e3e22243be36e06265fe372a9dc854fe69",
+    "service-v3-table-admin.js": "460347166ebf385cd83b2d41f887e4a3cff705cccf40b80a49ba979c4af6e8b7",
+    "service-v3.css": "8e35a6954a3b3cff3dfe1a850b6af6fc8860159e8b889dc1a5ceedc87aaf426a",
+    "service-v3.js": "fe724cbf9dd7856c216c9e42a108d299fc9a5935aa978e6cbf4fe1b3e9d1c78c",
+    "service-v3-feedback.js": "2b205a851d4edf586ceb807c04665789db6750c4eae9142185fcd4db3e6b9562",
+    "v3-connected-auth.js": "004b09a8d4fb348fff166b1bdb31543691297b6f94dc0f72810b11ebf6e6dc76",
+    "v3-connected.html": "dbda1781246622e368fbf0eeea760ef2269f29f8bd309bc999c29643e6ad63cd",
+    "sw.js": "c10fb7eae04c12d4cd83ddd59f594a48e7929d44c4cc0555067795150618e761"
+  },
+  "protected_production_files": {
+    "supabase-service-bridge.js": "30c453a3084c79bdd834f0262a7ee8a89f2c61183a65088f444f4e5eb6100f6e",
+    "supabase-login.js": "7878f4cd4026ca1229b15f9536632582704cef04d00f0eaf8d1ed89dc847c4c3",
+    "creator-auth.js": "04bfce830085d120a33272747c7dc6a014cd80c22b8e735c8460e10941166dc6",
+    "login.html": "c6a6abf774974a2303b16551a51f725a37e16fce688c7d3f8a539a062e9b0a5c",
+    "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14"
+  },
+  "database_changes": false
+}
