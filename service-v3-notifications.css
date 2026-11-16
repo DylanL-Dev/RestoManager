@@ -1,0 +1,73 @@
+/* RM-014: one notification flow, within RestoManager's existing palette. */
+.serviceBell{width:44px;height:44px;min-width:44px;border-radius:14px;background:#edf7f1;color:#146c55;border:1px solid #c6dbd0}
+.serviceBellCount{background:#146c55;top:-4px;right:-4px;border:2px solid #fff;min-width:23px;height:23px;line-height:17px}
+.rmNotificationCenter{--nc-bg:#fff;--nc-soft:#f3f7f4;--nc-text:#183b32;--nc-muted:#52675d;--nc-line:#dce7e0;--nc-accent:#146c55;--nc-tint:#e8f5ed;color:var(--nc-text);background:var(--nc-bg);border:1px solid var(--nc-line);padding:0;margin:0 16px 0 auto;inset:calc(var(--resto-shell-top,74px) + 12px) 0 16px auto;width:min(460px,calc(100vw - 32px));max-width:none;height:calc(100dvh - var(--resto-shell-top,74px) - 28px);max-height:none;border-radius:24px;box-shadow:0 24px 80px #102d2929;overflow:hidden;font:inherit}
+.rmNotificationCenter::backdrop{background:#102d2938;backdrop-filter:blur(2px)}
+.rmNotificationCenter[open]{display:flex;flex-direction:column}
+.rmNotificationCenter *{box-sizing:border-box}
+.rmNotificationCenter :is(h1,h2,h3,p){margin:0}
+.rmNotificationCenter button{font:inherit;color:var(--nc-text);cursor:pointer}
+.rmNotificationCenter button:disabled{opacity:.6;cursor:wait}
+.rmNotificationCenter :is(button,a):focus-visible{outline:3px solid var(--nc-accent);outline-offset:3px}
+.rmNotificationCenter [hidden]{display:none!important}
+.rmNcHeader{padding:24px 24px 18px;border-bottom:1px solid var(--nc-line);flex-shrink:0}
+.rmNcTitleRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.rmNcEyebrow{display:block;color:var(--nc-accent);font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:5px}
+.rmNotificationCenter .rmNcTitle{font-size:25px;font-weight:800;letter-spacing:-.8px;line-height:1.2}
+.rmNcSubtitle{font-size:13px;color:var(--nc-muted);margin-top:10px!important;line-height:1.5}
+.rmNotificationCenter .rmNcIconButton{display:inline-flex;align-items:center;justify-content:center;min-width:44px;height:44px;flex:0 0 44px;border-radius:14px;border:1px solid var(--nc-line);background:var(--nc-soft);padding:10px}
+.rmNotificationCenter :is(svg,i){width:19px;height:19px;flex-shrink:0}
+.rmNcTools{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:16px}
+.rmNotificationCenter .rmNcFilter{display:flex;gap:7px;align-items:center;background:var(--nc-soft);border:1px solid var(--nc-line);border-radius:20px;padding:9px 12px;font-size:12px;font-weight:700;min-height:44px}
+.rmNotificationCenter .rmNcFilter[aria-pressed="true"]{background:var(--nc-tint);border-color:var(--nc-accent);color:var(--nc-accent)}
+.rmNotificationCenter .rmNcTextButton{background:transparent;border:0;padding:10px 2px;min-height:44px;font-size:12px;font-weight:700;color:var(--nc-accent);text-align:left}
+.rmNcScroll{overflow:auto;overscroll-behavior:contain;flex:1;min-height:0;padding:20px 24px 24px;scrollbar-gutter:stable}
+.rmNcSection+.rmNcSection{margin-top:24px}
+.rmNotificationCenter .rmNcGroupTitle{display:flex;align-items:center;justify-content:space-between;color:var(--nc-muted);font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:12px}
+.rmNcGroupTitle span{font-size:11px;letter-spacing:0;background:var(--nc-soft);padding:3px 7px;border-radius:10px}
+.rmNcCard{border:1px solid var(--nc-line);background:var(--nc-bg);border-radius:18px;padding:16px;position:relative}
+.rmNcCard+.rmNcCard{margin-top:10px}
+.rmNcCard.is-unread{background:var(--nc-soft)}
+.rmNcCard.is-important{border-left:3px solid #ad6828}
+.rmNcCardTop{display:flex;align-items:flex-start;gap:12px}
+.rmNcGlyph{background:var(--nc-tint);color:var(--nc-accent);display:grid;place-items:center;width:36px;height:36px;flex:0 0 36px;border-radius:12px}
+.is-important .rmNcGlyph{background:#fff1df;color:#8a501b}
+.rmNcWords{min-width:0;flex:1}
+.rmNotificationCenter .rmNcCardTitle{font-size:14px;line-height:1.4;font-weight:750;letter-spacing:-.15px;margin:0 0 5px}
+.rmNcMeta{display:flex;align-items:center;flex-wrap:wrap;gap:5px;color:var(--nc-muted);font-size:11px;line-height:1.5}
+.rmNcUnread{width:7px;height:7px;border-radius:50%;background:var(--nc-accent);flex:0 0 7px;margin-top:7px}
+.rmNotificationCenter .rmNcBody{color:var(--nc-muted);font-size:13px;line-height:1.65;margin:12px 0;overflow-wrap:anywhere}
+.rmNcActions{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.rmNotificationCenter .rmNcPrimary{background:var(--nc-accent);border:1px solid var(--nc-accent);color:#fff;font-weight:750;border-radius:11px;min-height:44px;padding:10px 14px;font-size:12px;display:inline-flex;gap:7px;align-items:center;justify-content:center}
+.rmNotificationCenter .rmNcSecondary{background:var(--nc-bg);border:1px solid var(--nc-line);border-radius:11px;padding:10px 12px;min-height:44px;font-size:12px;font-weight:650;display:inline-flex;gap:7px;align-items:center}
+.rmNcFooter{border-top:1px solid var(--nc-line);padding:12px 24px max(12px,env(safe-area-inset-bottom));background:var(--nc-bg);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-shrink:0}
+.rmNcFooter small{font-size:11px;color:var(--nc-muted)}
+.rmNcStatus{padding:0 24px;font-size:12px;color:var(--nc-accent);flex-shrink:0}
+.rmNcStatus:empty{display:none}
+.rmNcEmpty{display:grid;justify-items:center;gap:12px;text-align:center;padding:32px 12px;color:var(--nc-muted);font-size:13px;line-height:1.6}
+.rmNcEmpty .rmNcGlyph{width:52px;height:52px;border-radius:18px}
+.rmNcRelease{background:var(--nc-tint)}
+.rmNcRelease ul{padding-left:19px;color:var(--nc-muted);font-size:13px;line-height:1.8}
+.rmNcHistoryEntry{padding:18px 0;border-bottom:1px solid var(--nc-line)}
+.rmNcHistoryEntry time{font-size:12px;color:var(--nc-muted)}
+.rmNcHistoryEntry h3{font-size:17px;margin:8px 0!important}
+.rmNcHistoryEntry ul{font-size:13px;line-height:1.8;padding-left:19px;color:var(--nc-muted)}
+.rmNcHistoryEntry p{font-size:13px;line-height:1.65;color:var(--nc-muted)}
+.rmNcHelp{padding:16px;background:var(--nc-tint);border-radius:16px;color:var(--nc-text);font-size:13px;line-height:1.6}
+@media(max-width:767px){.rmNotificationCenter{inset:0;margin:0;width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0}.rmNcHeader{padding:max(20px,env(safe-area-inset-top)) 20px 16px}.rmNcScroll{padding:18px 16px 22px;scrollbar-gutter:auto}.rmNcFooter{padding-left:20px;padding-right:20px}.rmNcCard{padding:15px}.rmNcStatus{padding:0 20px}}
+@media(min-width:768px) and (max-width:1100px){.rmNotificationCenter{width:480px;inset:16px 0 16px auto;height:calc(100dvh - 32px)}}
+html[data-theme="dark"] .rmNotificationCenter{--nc-bg:#19342b;--nc-soft:#213f34;--nc-text:#f0f8f3;--nc-muted:#bfd3c7;--nc-line:#476658;--nc-accent:#8de4bb;--nc-tint:#254b3b;color-scheme:dark}
+html[data-theme="dark"] .rmNotificationCenter .rmNcPrimary{background:#146c55;border-color:#61bd95;color:#fff}
+html[data-theme="dark"] .rmNcCard.is-important{border-left-color:#e5ad70}
+html[data-theme="dark"] .is-important .rmNcGlyph{color:#f4c28c;background:#493b29}
+html[data-theme="dark"] .serviceBell{background:#254b3b;color:#b7f2d1;border-color:#5b806e}
+@media(prefers-reduced-motion:reduce){.rmNotificationCenter,.rmNotificationCenter *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+/* Override the legacy global dark button selector at equal specificity. */
+.rmNotificationCenter .rmNcTitle:focus{outline:none}
+html[data-theme="dark"] dialog.rmNotificationCenter{background:var(--nc-bg);color:var(--nc-text);border-color:var(--nc-line)}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcPrimary{background:#146c55;color:#fff;border-color:#61bd95}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcTextButton{background:transparent;color:var(--nc-accent);border-color:transparent}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcFilter{background:var(--nc-soft);color:var(--nc-text);border-color:var(--nc-line)}
+html[data-theme="dark"] .rmNotificationCenter button.rmNcFilter[aria-pressed="true"]{background:var(--nc-tint);color:var(--nc-accent);border-color:var(--nc-accent)}
+
+.rmNotificationCenter .rmNcCardTitle{overflow-wrap:anywhere}

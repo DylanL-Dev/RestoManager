@@ -14,25 +14,25 @@ test('RM-011-A : every successful booking path resets the navigation dirty basel
  assert.match(screens,/function bookingDirty\(\)/);
  assert.match(screens,/if\(editDirty\(\)\|\|bookingDirty\(\)\|\|walkinDirty\(\)\)/);
 });
-test('RM-011-A : refresh protection precedes hold release, cache invalidation and page replace',()=>{
+test('RM-011-A : refresh protection precedes hold release and page replace without deleting other tabs caches',()=>{
  const s=source('service-v3-refresh.js');
- const guard=s.indexOf('await window.RestoScreens.confirmLeaveForRefresh()');
+ const guard=s.indexOf('await window.RestoScreens.confirmLeaveForRefresh(');
  const close=s.indexOf('window.RestoBookingDraft?.close()');
- const clear=s.indexOf('caches.keys()');
  const reload=s.indexOf('window.location.replace(url.href)');
- assert.ok(guard>=0&&close>guard&&clear>close&&reload>clear);
- assert.match(s,/if\(!await window\.RestoScreens\.confirmLeaveForRefresh\(\)\)return/);
- assert.match(s,/if\(window\.RestoBookingDraft\?\.checking\?\.\(\)\)/);
+ assert.ok(guard>=0&&close>guard&&reload>close);
+ assert.ok(!s.includes('caches.delete('),'Other open tabs retain their resources');
+ assert.match(s,/if\(!await window\.RestoScreens\.confirmLeaveForRefresh\(/);
+ assert.match(s,/window\.RestoBookingDraft\?\.checking\?\.\(\)/);
  assert.match(source('booking-draft.js'),/checking:\(\)=>submitting\|\|holding\|\|recovering\|\|!!recovery/);
  assert.match(source('service-v3-screens.js'),/confirmLeaveForRefresh:mayLeave/);
 });
 test('RM-011-A : connected PWA references versioned scripts after change',()=>{
  const html=source('v3-connected.html');
- for(const key of ['service-v3-screens.js?v=20261116-rm013a1',
-  'service-v3-refresh.js?v=20261115-rm011a-safe-refresh1',
+ for(const key of ['service-v3-screens.js?v=20261116-rm014',
+  'service-v3-refresh.js?v=20261116-rm014',
   'service-v3.js?v=20261116-rm013a1',
   'v3-supabase-booking.js?v=20261115-rm011a-safe-booking1'])
   assert.ok(html.includes(key),key);
  assert.match(source('v3-supabase-booking.js'),/booking-draft.js\?v=20261115-rm011a-safe-submit1/);
- assert.match(source('sw.js'),/restomanager-shell-20261116-prod-rm013a3/);
+ assert.match(source('sw.js'),/restomanager-shell-20261116-prod-rm014.1/);
 });
