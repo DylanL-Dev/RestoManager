@@ -1,0 +1,23 @@
+
+> restomanager@1.0.0 test:notifications:dismiss
+> node tests/browser/rm014-dismiss.cjs
+
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation fb_admin 360
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation reception 360
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation fb_admin 390
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation reception 390
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation fb_admin 430
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation reception 430
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation fb_admin 768
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation reception 768
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation fb_admin 1024
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation reception 1024
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation fb_admin 1440
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation reception 1440
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation fb_admin 1920
+PASS personal dismissal, actual gestures, undo, persistence and no shared mutation reception 1920
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice
