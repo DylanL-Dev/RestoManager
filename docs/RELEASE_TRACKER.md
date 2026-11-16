@@ -275,3 +275,13 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Code testé `d08e8f6777f986c67bec79aead7fa6d8fcbbd915` : **six workflows GitHub réussis / six**, 212 tests Node, syntaxe 141 fichiers, RM-014 14 combinaisons / 24 groupes de cycle de vie / 12 groupes PWA. Régressions Réservations, Gestion, Assistance, horaires, tables, PostgreSQL et Auth/RLS/Realtime isolés validées. [Rapport détaillé, captures avant/après et preuves](audits/RM014_NOTIFICATIONS_20261116.md).
 - Préservation : modules de connexion, configuration d’environnement et lockfile inchangés ; aucune migration ni écriture dans Supabase DEV/PROD, aucune réservation/clôture fictive dans les données réelles. V3 reste `e5e98ca`, MAIN `a8915f9`, DEV cible `e3a5daa` au contrôle de livraison.
 - État : **PR prête à relire, validation utilisateur du clone encore en attente**. Les captures sont celles du frontend DEV authentifié via frontière fictive, pas d’une session Render réelle. Cette fiche ne vaut ni validation visuelle de terrain ni autorisation de promotion V3/MAIN. Les ressources applicatives des preuves restent identiques lors de l’ajout documentaire final.
+
+
+### RM-014 — Render DEV publié, À TESTER CLONE (16/11/2026)
+
+- Nouvelle instruction propriétaire après préparation de la PR : « Pour que je puisse voir », en réponse au déploiement Render non encore réalisé. Intégration et publication du clone DEV autorisées ; aucune autorisation V3/MAIN/PROD.
+- PR [#159](https://github.com/DylanL-Dev/RestoManager/pull/159) fusionnée vers DEV uniquement, commit `3e3a08a807093b196648be1eb8da80e244b69f77`, après les six workflows verts. L’arbre fusionné est identique au paquet relu/testé `6a10ff5`.
+- Render : service `srv-dbm8o15g1s2s73cemju0`, branche `feature/v3-supabase-full-clone`, déploiement `dep-dbticiei0phs73f0pd00` **LIVE**, fin `2026-11-16T15:50:54Z`. Build statique inchangé, sans migration.
+- Vérification publique : 17 ressources HTTP 200 avec empreintes identiques aux fichiers testés/protégés ; HTML et manifeste canoniques vérifiés séparément, version `2026.11.16-rm014`, canal `dev`. [Preuve du déploiement](audits/preuves/rm014-render-20261116.json).
+- Lien : https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html?preview=rm014 . La nouvelle cloche donne accès au centre et à « Quoi de neuf ? » ; la rubrique est également dans Gestion.
+- Aucune réservation, clôture ou donnée d’essai réelle, aucune écriture Supabase effectuée par le déploiement. V3/MAIN préservées. Le clone est disponible pour la recette du propriétaire ; aucune validation visuelle/authentifiée hébergée prétendue à sa place.
