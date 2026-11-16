@@ -332,8 +332,10 @@ try{
   if(e.type==='click'){
    const btn=target.closest?.('button');
    if(!btn||btn===logout||btn.id==='reportIssueSubmit')return;
+   // Accordion headers only navigate; names such as manageClosureToggle are not mutations.
+   if(btn.classList?.contains('rmManagementCategoryButton'))return;
    const id=btn.id||'';
-   if(['tableAdminSubmit','fusionSubmit'].includes(id)&&!window.RestoReception&&window.RestoSupabaseReady)return;
+   if(['tableAdminSubmit','fusionSubmit','closureManual'].includes(id)&&!window.RestoReception&&window.RestoSupabaseReady)return;
    // Let view navigation, date selection, search and tabs work; block mutation buttons.
    if(/(?:save|submit|delete|remove|release|cancelReservation|confirmReservation|install|arrive|seated|noShow|complete|closure)/i.test(id)){
     e.preventDefault();e.stopImmediatePropagation();label.textContent='Modification indisponible.';const feedback=document.getElementById('bookingFeedback');if(feedback)feedback.textContent='Cette action est temporairement indisponible.';

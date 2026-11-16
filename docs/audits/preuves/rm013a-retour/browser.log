@@ -1,0 +1,23 @@
+
+> restomanager@1.0.0 test:rm013a:browser
+> node tests/browser/rm013a-management.cjs
+
+PASS real Gestion layout, keyboard, permissions and workflows fb_admin 360
+PASS real Gestion layout, keyboard, permissions and workflows reception 360
+PASS real Gestion layout, keyboard, permissions and workflows fb_admin 390
+PASS real Gestion layout, keyboard, permissions and workflows reception 390
+PASS real Gestion layout, keyboard, permissions and workflows fb_admin 430
+PASS real Gestion layout, keyboard, permissions and workflows reception 430
+PASS real Gestion layout, keyboard, permissions and workflows fb_admin 768
+PASS real Gestion layout, keyboard, permissions and workflows reception 768
+PASS real Gestion layout, keyboard, permissions and workflows fb_admin 1024
+PASS real Gestion layout, keyboard, permissions and workflows reception 1024
+PASS real Gestion layout, keyboard, permissions and workflows fb_admin 1440
+PASS real Gestion layout, keyboard, permissions and workflows reception 1440
+PASS real Gestion layout, keyboard, permissions and workflows fb_admin 1920
+PASS real Gestion layout, keyboard, permissions and workflows reception 1920
+npm notice
+npm notice New major version of npm available! 11.9.0 -> 12.2.2
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.2
+npm notice To update run: npm install -g npm@12.2.2
+npm notice

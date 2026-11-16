@@ -18,5 +18,5 @@ assert.match(js,/RestoSaveSharedArrivalLimit\(percent\)/,'Connected Restaurant m
 assert.match(js,/RestoSharedHours\?\.arrivalLimitPercent/,'Shared threshold must override local values');
 assert.match(css,/rushPercentSlider::-webkit-slider-thumb/,'Touch slider has a visible thumb');
 assert.match(html,/<script[^>]+src="service-v3\.js\?v=[^"\s]+"/,'Versioned JS entrypoint must be present');
-assert.match(html,/service-v3\.css\?v=20261108-rush-subtle1/,'CSS cache key must change');
+assert.match(html,/service-v3\.css\?v=20261116-rm013a2/,'CSS cache key must change');
 console.log('Rush slider navigation, permissions and asset-version smoke checks passed');

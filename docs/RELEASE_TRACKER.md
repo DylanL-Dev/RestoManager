@@ -226,3 +226,14 @@ Cette contre-vérification ne doit pas être présentée comme une preuve de fon
 - Proposition détaillée : [RM006_ROADMAP_PROPOSAL_20261113.md](RM006_ROADMAP_PROPOSAL_20261113.md).
 - Préparer RM-005 ET RM-006 sans les mélanger : RM-005 passe par la revue SQL/branches/rollback puis demande d'accord explicite ; RM-006 reste à l'étape de sélection des fonctions avant développement.
 - Pas de modification de MAIN, RestoManager-V3 ou Supabase PROD sans accord explicite.
+
+## RM-013-A — Retour de recette : dépliant Clôture et durée — À TESTER CLONE (16/11/2026)
+
+- Même évolution RM-013-A, reprise après les captures utilisateur : « clôture de service ça se déroule pas » et encadré de durée « 1 h » à retravailler. Aucune nouvelle règle de clôture RM-012.
+- Base DEV : `76a5a7e` (PR #152), publiée sur le clone Render par `dep-dbtc60gae00c73aakgdg`. Branche corrective : `fix/rm013a-closure-duration`.
+- Critères : dépliant Clôture ouvrable au toucher et au clavier avec la vraie protection authentifiée ; état et archives visibles ; durée compacte, sans double encadré, sélecteur/sauvegarde conservés ; mobile/tablette/PC et Réception inchangée en lecture seule.
+- Risques à contrôler : filtrage des clics par identifiant, navigation confondue avec mutation, styles hérités après déplacement de la durée, droits, PWA/cache. Tests fictifs uniquement ; pas de réservation, clôture ni écriture en base distante. V3/MAIN attendent la validation utilisateur du clone.
+
+- Correctif : navigation Clôture distinguée des mutations ; action manuelle transmise au gestionnaire partagé uniquement pour Restaurant connecté, sans changer les règles de clôture ; durée sans double cadre et valeur compacte.
+- Validation technique : syntaxe 133/133, 51 fichiers de tests, matrice Playwright 14 combinaisons avec vrais clics, sauvegarde de durée et clôtures fictives protégées. Ressources modifiées versionnées `20261116-rm013a2`. Rapport et captures : [retour de recette RM-013-A](audits/RM013A_RETOUR_RECETTE_20261116.md).
+- Validation utilisateur sur le clone : EN ATTENTE. Aucun statut VALIDÉE CLONE et aucune promotion V3/MAIN.
