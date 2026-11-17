@@ -1,6 +1,6 @@
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 // Native V3 -> Supabase reservation creation. No direct table inserts or local writes.
-import {setupBookingDraft} from './booking-draft.js?v=20261115-rm011a-safe-submit1';
+import {setupBookingDraft} from './booking-draft.js?v=20261117-rm016-readonly';
 import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
 
