@@ -20,6 +20,13 @@ jobs:
       - run: npm test
       - name: PostgreSQL 17, network disabled, fictional identities, RLS and concurrent transactions
         run: npm run test:closeout:postgres
+      - name: Existing RM-012 rules against activation and automatic-close migration
+        env:
+          RM012_POLICY: '1'
+          BROWSER_ARTIFACTS: test-results/rm012-policy-regression
+        run: npm run test:closeout:postgres
+      - name: Real pg_cron, start date, automatic close, system audit and concurrent staff
+        run: node tests/postgres/rm012-policy.cjs
       - name: Actual PostgreSQL RPCs behind isolated auth, seven widths and two roles
         run: npm run test:closeout:browser
       - uses: actions/upload-artifact@v4

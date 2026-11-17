@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.17-rm012",
+  "currentVersion": "2026.11.17-rm012.1",
   "releases": [
+    {
+      "version": "2026.11.17-rm012.1",
+      "date": "2026-11-17",
+      "title": "Un suivi qui démarre aujourd’hui, une clôture automatique sûre",
+      "changes": [
+        "Le suivi débute le 17 novembre 2026 : les journées antérieures restent consultables sans générer de rappels.",
+        "Une journée terminée est clôturée automatiquement si tout est finalisé et sans blocage, même lorsque l’application est fermée.",
+        "Les tables occupées et les réservations à vérifier restent ouvertes ; chaque clôture automatique est identifiée dans l’historique."
+      ],
+      "impact": "Aucun client n’est déclaré absent et aucune table n’est libérée automatiquement. Aucun rattrapage automatique des journées antérieures au début du suivi.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.17-rm012",
       "date": "2026-11-17",

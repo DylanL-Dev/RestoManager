@@ -11,14 +11,14 @@
  function validate(data,restaurant){
   const date=validDate;
   const day=d=>d&&date(d.date)&&typeof d.ended==='boolean'&&typeof d.can_close==='boolean'&&['pending','occupied_tables','awaited','arrived','unsupported','active_holds','total','served_covers'].every(k=>Number.isSafeInteger(d[k])&&d[k]>=0)&&(!d.can_close||d.ended&&!d.closure&&d.pending===0&&d.active_holds===0);
-  return data?.schema===1&&data.restaurant_id===restaurant&&date(data.today)&&Number.isFinite(Date.parse(data.server_time))&&typeof data.revision==='string'&&Array.isArray(data.services)&&data.services.every(day)&&Array.isArray(data.notification_days)&&data.notification_days.every(day)&&Array.isArray(data.history)&&data.history.every(c=>date(c.service_date))&&day(data.selected)&&Array.isArray(data.selected.items)&&data.selected.items.every(i=>typeof i.id==='string'&&typeof i.version==='string'&&typeof i.status==='string'&&Array.isArray(i.tables))&&Array.isArray(data.selected.audit);
+  return data?.schema===1&&((data.detection_since===undefined&&data.automatic_closure===undefined)||(date(data.detection_since)&&typeof data.automatic_closure==='boolean'))&&data.restaurant_id===restaurant&&date(data.today)&&Number.isFinite(Date.parse(data.server_time))&&typeof data.revision==='string'&&Array.isArray(data.services)&&data.services.every(day)&&Array.isArray(data.notification_days)&&data.notification_days.every(day)&&Array.isArray(data.history)&&data.history.every(c=>date(c.service_date))&&day(data.selected)&&Array.isArray(data.selected.items)&&data.selected.items.every(i=>typeof i.id==='string'&&typeof i.version==='string'&&typeof i.status==='string'&&Array.isArray(i.tables))&&Array.isArray(data.selected.audit);
  }
- function notifications(days,context,{stale=false}={}){
+ function notifications(days,context,{stale=false,since=null,automatic=false}={}){
   if(context?.role!=='fb_admin'||!context.restaurantId)return [];
   const unique=new Map(days.map(d=>[d.date,d]));
-  return [...unique.values()].filter(d=>d.ended&&!d.closure).map(d=>{
+  return [...unique.values()].filter(d=>d.ended&&!d.closure&&(!since||validDate(since)&&d.date>=since)).map(d=>{
    const toCheck=d.awaited+d.arrived+(d.unsupported||0);
-   const text=d.pending||d.active_holds?d.occupied_tables+' table'+(d.occupied_tables>1?'s':'')+' encore occupée'+(d.occupied_tables>1?'s':'')+' · '+Math.max(toCheck,d.occupied_tables?0:d.pending)+' réservation'+(toCheck>1?'s':'')+' à vérifier'+(d.active_holds?' · '+d.active_holds+' maintien(s) actif(s)':'')+'.':'Vérifications terminées. La clôture reste à confirmer.';
+   const text=d.pending||d.active_holds?d.occupied_tables+' table'+(d.occupied_tables>1?'s':'')+' encore occupée'+(d.occupied_tables>1?'s':'')+' · '+Math.max(toCheck,d.occupied_tables?0:d.pending)+' réservation'+(toCheck>1?'s':'')+' à vérifier'+(d.active_holds?' · '+d.active_holds+' maintien(s) actif(s)':'')+'.':automatic?'Vérifications terminées. La clôture automatique est prévue après vérification serveur.':'Vérifications terminées. La clôture reste à confirmer.';
    return {id:'service:'+d.date,restaurantId:context.restaurantId,serviceDate:d.date,type:'service-regularization',group:'important',priority:'high',title:'Service du '+formatDate(d.date)+' à régulariser',body:stale?'Informations à revérifier après reconnexion. '+text:text,createdAt:Date.parse(d.date+'T12:00:00Z'),revision:d.revision,resolved:false,dismissible:false,icon:'clipboard-check',targetScreen:'administration',actionLabel:'Régulariser ce service'};
   });
  }
