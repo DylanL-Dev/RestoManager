@@ -126,7 +126,7 @@ export function installTutorial({user, profile, management}) {
     const h = el('h2'); h.id = 'rmGuideTitle'; const description = el('p'); description.id = 'rmGuideDescription';
     const result = el('p', 'rmLearnResult'); result.id = 'rmGuideResult';
     const message = el('p', 'rmLearnStatus'); message.id = 'rmGuideStatus'; message.setAttribute('role', 'status'); message.setAttribute('aria-live', 'polite');
-    const extra = el('details', 'rmLearnCoachExtra'), extraTitle = el('summary', '', 'Je n’ai pas compris'), extraText = el('p'); extra.append(extraTitle, extraText, button('Recommencer ce parcours', () => { if (!session) return; const id = session.course.id; delete settings.progress[model.progressKey(session.course, session.level)]; session.ready = false; save(); void startCourse(id, {restart: true}); }, 'rmLearnTextButton'));
+    const extra = el('details', 'rmLearnCoachExtra'), extraTitle = el('summary', '', 'Je n’ai pas compris'), extraText = el('p'); extra.addEventListener('toggle', positionCoach); extra.append(extraTitle, extraText, button('Recommencer ce parcours', () => { if (!session) return; const id = session.course.id; delete settings.progress[model.progressKey(session.course, session.level)]; session.ready = false; save(); void startCourse(id, {restart: true}); }, 'rmLearnTextButton'));
     const foot = el('div', 'rmLearnCoachFooter');
     const prev = button('Précédent', () => move(-1)), next = button('Continuer', () => move(1), 'rmLearnPrimary'); prev.id = 'rmGuidePrev'; next.id = 'rmGuideNext'; foot.append(prev, next);
     const focus = button('Aller au repère', () => target?.focus?.({preventScroll: true}), 'rmLearnTextButton'); focus.id = 'rmGuideFocus';
@@ -163,6 +163,8 @@ export function installTutorial({user, profile, management}) {
       }
     }
     chosen ||= {left: rightEdge - width, top: Math.max(topEdge, bottomEdge - h)};
+    const availableHeight = target && chosen.top + h <= b.top - gap + 1 ? b.top - gap - chosen.top : bottomEdge - chosen.top;
+    coach.style.maxHeight = Math.max(150, Math.min(parseFloat(coach.style.maxHeight), Math.floor(availableHeight))) + 'px';
     coach.style.left = chosen.left + 'px'; coach.style.top = chosen.top + 'px';
   }
   function refreshHighlight() {
@@ -210,7 +212,7 @@ export function installTutorial({user, profile, management}) {
       r.description.textContent = step.navigate ? verb + ' le bouton mis en évidence pour continuer.' : step.open ? verb + ' la cloche pour continuer.' : step.text;
       r.result.textContent = step.result;
       r.message.textContent = missing ? step.absent || 'Ce repère n’est pas disponible dans cet écran actuellement. Vous pouvez continuer les explications ou essayer l’exercice fictif.' : '';
-      r.extraText.textContent = [step.text, current.level === 'beginner' && model.basics[step.basics], step.detail].filter(Boolean).join(' '); r.extra.open = false;
+      r.extraText.textContent = [step.text, current.level === 'beginner' && model.basics[step.basics], step.detail].filter(Boolean).join(' '); r.extra.open = false; coach.querySelector('.rmLearnCoachReading').scrollTop = 0;
       r.prev.disabled = index === 0; r.next.disabled = !missing && !!(step.navigate || step.open); r.next.textContent = index === total - 1 ? 'Terminer le parcours' : 'Continuer';
       r.focus.hidden = !n || !!n.closest('form[inert]'); r.focus.disabled = r.focus.hidden;
       if (n) { n.classList.add('rmLearnTarget'); const ids = new Set((n.getAttribute('aria-describedby') || '').split(' ').filter(Boolean)); ids.add('rmGuideDescription'); n.setAttribute('aria-describedby', [...ids].join(' ')); n.scrollIntoView({block: 'center', behavior: 'instant'}); }
