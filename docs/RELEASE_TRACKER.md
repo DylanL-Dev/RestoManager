@@ -1,5 +1,19 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+
+### RM-016.1 — Recette Render validée, correction du bouton Nouveautés et promotion V3/MAIN autorisée (17/11/2026)
+
+- Décision propriétaire : « Ok c’est parfait […] j’ai découvert un bouton très moche une fois réglé […] tout sur main et v3 ». Recette du didacticiel sur Render validée ; harmoniser Voir les nouveautés avant la livraison officielle.
+- Source DEV RM-016 `4ca84fb`, PR #180, huit workflows réussis sur `8f560e3`, Render `dep-dbucinojo6nc739mcbu0` LIVE ; 13 ressources et parcours des deux rôles vérifiés. Enrichir les guides lors des évolutions importantes selon le registre versionné déjà livré.
+- Correction ciblée du bouton Gestion → Quoi de neuf ?, avec icône Lucide, surface tactile et focus clair/sombre. Aucune règle métier ni donnée partagée modifiée. Tests/captures sur les sept largeurs et les deux rôles.
+- Livraison ciblée depuis DEV vers deux branches filles de V3/MAIN, avec sauvegardes `backup/rm016-v3-before-20261117` et `backup/rm016-main-before-20261117`. Conserver connexions PROD, dépendances, lockfile et historique réel des publications ; aucune fusion DEV globale et aucune modification Supabase.
+- Vérifier les CI propres à chaque cible avant fusion V3 puis MAIN, puis le déploiement réel GitHub Pages. Aucun essai avec employés non observés n’est inventé.
+
+
+# RestoManager — registre officiel des évolutions DEV → V3 → MAIN
+
+[Rapport de livraison RM-016.1 et manifeste](releases/RM016_PRODUCTION_20261117.md).
+
 ### RM-012.1 — Promotion V3 puis MAIN autorisée, activation PROD à confirmer (17/11/2026)
 
 - Instruction propriétaire après livraison Render : « Oui si tout est ok tu met à jour V3 et main ». Préparer la livraison ciblée de RM-012 et du correctif RM-012.1 ; ne pas fusionner DEV globalement.

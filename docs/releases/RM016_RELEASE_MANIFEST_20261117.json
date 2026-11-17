@@ -1,0 +1,28 @@
+{
+  "version": "2026.11.17-rm016.1",
+  "channel": "main",
+  "sourceDEV": "c70f5bb3f96cba5aa458e5945eff30f049b1edf7",
+  "protected_production_files": {
+    "supabase-service-bridge.js": "f4fe66d2be046491bc44f5518f77ff54d4e0ada85877e498f0279e14a5dfbae3",
+    "supabase-login.js": "7878f4cd4026ca1229b15f9536632582704cef04d00f0eaf8d1ed89dc847c4c3",
+    "creator-auth.js": "04bfce830085d120a33272747c7dc6a014cd80c22b8e735c8460e10941166dc6",
+    "login.html": "c6a6abf774974a2303b16551a51f725a37e16fce688c7d3f8a539a062e9b0a5c",
+    "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14",
+    "service-v3-screens.js": "90938e03e21748e415babb2a8d590855c74449211e5452af8ac1934ddcb7cf8e"
+  },
+  "runtime": {
+    "app-release.json": "3a4d33ea8fa96a6c83d32faba7544cca6a2cae737f169156b24a170d177a6301",
+    "booking-draft.js": "c2c15ad0502aa4135b0fb978a5163e8246df5c76ed9b38a9412cfa5dde892b43",
+    "service-v3-app-release.js": "195a36f157239e082c9518180eabfc6d01744b4f2e0b792a8d185500b6b68b34",
+    "service-v3-tutorial-model.js": "e1fdc9f631045fa8bba380bd18cf1e946a86e5d9a3ede413ed7b0db79aa4a382",
+    "service-v3-tutorial-training.js": "c532de587a4149e7dfc5ad779242277ba8733f928c8b33c4bda80935d3589a5f",
+    "service-v3-tutorial.css": "97812fa2451fc132e88846721129f5a53909f1c77bb6ac64079d7a6407f90a98",
+    "service-v3-tutorial.js": "786b35bbd011cfe25a85d542017882aae695caf6f75cde08c0f6ba18eb5f9e09",
+    "service-v3-notifications.css": "5a5bb5f14add300a370bf394fdfcf9bdeec84b75b6b34a6cf673fb500907507a",
+    "sw.js": "6391c6a3e01d3da1c8ded463faa85acb6ef8c9e76d91ffeb622c623d1c68ae0b",
+    "v3-connected-auth.js": "186b3f5e378b55deed4bd24747f713eb9475366913961c65479a77383a98a09f",
+    "v3-connected.html": "7b1431e03474480ae71448d7e2e06c3f26c9b7eed41e517611c0b44136460b51",
+    "v3-supabase-booking.js": "774d1a9bbe36ab07f46068ce02f00d5bfcb1f65fe9855f3a5237e07613139e50"
+  },
+  "supabaseMigrationRequired": false
+}
