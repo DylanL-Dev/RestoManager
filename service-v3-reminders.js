@@ -14,16 +14,56 @@
  const close=button('',()=>closePanel(),'rmNcIconButton','x');close.setAttribute('aria-label','Fermer les notifications');row.append(words,close);
  const subtitle=node('p','rmNcSubtitle'),tools=node('div','rmNcTools');let unreadOnly=false,showSnoozed=false,historyView=false;
  const filter=button('Non lues',()=>{unreadOnly=!unreadOnly;showSnoozed=false;render(true)},'rmNcFilter');filter.setAttribute('aria-pressed','false');
- const allRead=button('Tout marquer comme lu',()=>markAll(),'rmNcTextButton');tools.append(filter,allRead);header.append(row,subtitle,tools);
+ const allRead=button('Tout marquer comme lu',()=>markAll(),'rmNcTextButton');tools.append(filter,allRead);header.append(row,subtitle,tools,node('p','rmNcGestureHint','Glissez une notification pour la retirer.'));
  const status=node('p','rmNcStatus');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
  const scroll=node('div','rmNcScroll'),footer=node('footer','rmNcFooter'),history=button('Quoi de neuf ?',()=>{if(historyView){historyView=false;render(true);scroll.scrollTop=flowScroll}else showHistory()},'rmNcTextButton','sparkles'),snoozed=button('Reportés',()=>{showSnoozed=!showSnoozed;unreadOnly=false;historyView=false;render(true)},'rmNcTextButton');
- footer.append(history,snoozed);panel.append(header,status,scroll,footer);
+ const undoBar=node('div','rmNcUndo'),undoMessage=node('span','','Notification retirée sur cet appareil.'),undoButton=button('Annuler',()=>undoDismissal(),'rmNcTextButton');undoButton.setAttribute('aria-label','Annuler le retrait');undoBar.setAttribute('role','status');undoBar.setAttribute('aria-live','polite');undoBar.hidden=true;undoBar.append(undoMessage,undoButton);
+ footer.append(history,snoozed);panel.append(header,status,undoBar,scroll,footer);
  let storageKey='',state={},items=[],renderKey='',returnFocus=null,marking=false,flowScroll=0,bodyLocked=false,previousOverflow='';
- const sourceRegistry=new Map();
+ const sourceRegistry=new Map(),undoStack=[];
  function context(){return window.RestoNotificationContext}
- function load(){const key=model.scope(context());const next=key?'restomanager:notifications:v1:'+key:'';if(next===storageKey)return;storageKey=next;state={};if(next)try{const value=JSON.parse(localStorage.getItem(next)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))state=value}catch{}renderKey=''}
- function save(){if(!storageKey)return;const now=Date.now();for(const [id,value] of Object.entries(state))if(!value||now-Number(value.updatedAt||0)>30*86400000)delete state[id];try{localStorage.setItem(storageKey,JSON.stringify(state))}catch{status.textContent='Les états de lecture ne peuvent pas être conservés sur cet appareil.'}}
- function setLocal(id,patch){state[id]={...state[id],...patch,updatedAt:Date.now()};save()}
+ function load(){const key=model.scope(context());const next=key?'restomanager:notifications:v1:'+key:'';if(next===storageKey)return;storageKey=next;state={};undoStack.length=0;undoBar.hidden=true;status.textContent='';if(next)try{const value=JSON.parse(localStorage.getItem(next)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))state=value}catch{}renderKey=''}
+ function save(){if(!storageKey)return false;const now=Date.now();for(const [id,value] of Object.entries(state))if(!value||now-Number(value.updatedAt||0)>30*86400000)delete state[id];try{localStorage.setItem(storageKey,JSON.stringify(state));return true}catch{status.textContent='Les préférences de notifications ne peuvent pas être conservées sur cet appareil.';return false}}
+ function setLocal(id,patch){state[id]={...state[id],...patch,updatedAt:Date.now()};return save()}
+ function dismissItem(item){
+  if(marking||!ready()||!model.dismissible(item))return;
+  const current=collect().find(n=>n.id===item.id);if(!current||model.dismissalRevision(current)!==model.dismissalRevision(item)){update();return}
+  const previous=state[item.id],revision=model.dismissalRevision(item);
+  if(!setLocal(item.id,{dismissedRevision:revision})){if(previous)state[item.id]=previous;else delete state[item.id];return}
+  undoStack.push({id:item.id,revision});undoBar.hidden=false;status.textContent='';
+  const focused=document.activeElement?.closest('[data-notification-id]')?.dataset.notificationId===item.id;update();if(focused)undoButton.focus({preventScroll:true});
+ }
+ function undoDismissal(){
+  if(!ready())return;const last=undoStack.at(-1);if(!last)return;
+  const previous=state[last.id];
+  if(previous?.dismissedRevision===last.revision){const next={...previous};delete next.dismissedRevision;state[last.id]={...next,updatedAt:Date.now()};if(!save()){state[last.id]=previous;return}}
+  undoStack.pop();undoBar.hidden=!undoStack.length;status.textContent='Retrait annulé.';update();if(undoBar.hidden)title.focus({preventScroll:true});
+ }
+ function dismissibleCard(article,item){
+  if(!model.dismissible(item))return article;
+  const wrapper=node('div','rmNcDismissible'),back=node('div','rmNcSwipeBack');back.setAttribute('aria-hidden','true');back.append(icon('trash-2'),node('span','','Retirer'));wrapper.append(back,article);
+  const remove=button('Retirer',()=>dismissItem(item),'rmNcTextButton rmNcDismiss','trash-2');remove.setAttribute('aria-label','Retirer la notification : '+item.title);article.querySelector('.rmNcActions').append(remove);
+  let gesture=null,suppressClickUntil=0;
+  const reset=()=>{gesture=null;wrapper.classList.remove('is-swiping');article.style.removeProperty('transform')};
+  article.addEventListener('pointerdown',event=>{
+   if(!event.isPrimary||event.button!==0||event.target.closest('button,a,input,select,textarea'))return;
+   gesture={id:event.pointerId,x:event.clientX,y:event.clientY,dx:0,horizontal:false};
+  });
+  article.addEventListener('pointermove',event=>{
+   if(!gesture||gesture.id!==event.pointerId)return;
+   const dx=event.clientX-gesture.x,dy=event.clientY-gesture.y;
+   if(!gesture.horizontal){if(Math.abs(dy)>12&&Math.abs(dy)>=Math.abs(dx)){reset();return}if(Math.abs(dx)<12||Math.abs(dx)<Math.abs(dy)*1.35)return;gesture.horizontal=true;article.setPointerCapture(event.pointerId);wrapper.classList.add('is-swiping')}
+   event.preventDefault();gesture.dx=dx;wrapper.dataset.direction=dx<0?'left':'right';article.style.transform='translateX('+Math.max(-article.clientWidth*.7,Math.min(article.clientWidth*.7,dx))+'px)';
+  });
+  article.addEventListener('pointerup',event=>{
+   if(!gesture||gesture.id!==event.pointerId)return;
+   const horizontal=gesture.horizontal,commit=horizontal&&Math.abs(gesture.dx)>=Math.min(100,article.clientWidth*.3);reset();
+   if(horizontal)suppressClickUntil=performance.now()+400;if(commit)dismissItem(item);
+  });
+  article.addEventListener('pointercancel',reset);article.addEventListener('lostpointercapture',event=>{if(event.target===article)reset()});
+  article.addEventListener('click',event=>{if(performance.now()<suppressClickUntil){event.preventDefault();event.stopImmediatePropagation()}},true);
+  return wrapper;
+ }
  const ready=()=>Boolean(model.scope(context()));
  const reservations=()=>Array.isArray(window.RestoSharedReservations)?window.RestoSharedReservations:[];
  function capacity(){
@@ -46,7 +86,7 @@
   const release=window.RestoAppRelease?.notification?.();if(release)list.push(release);
   for(const [name,source] of sourceRegistry){
    if(!source.roles.includes(role))continue;
-   try{for(const value of source.collect({context:context(),now:Date.now()})){if(value.restaurantId!==context().restaurantId||!value.id||value.resolved||value.expiresAt&&value.expiresAt<=Date.now())continue;list.push({...value,id:name+':'+value.id,source:name,group:value.group==='important'?'important':'service',snoozable:false,action:'source',handler:source.open})}}catch{list.push({id:name+':unavailable',source:name,group:'important',priority:'normal',title:'Une information est indisponible',body:'Cette source de notifications ne peut pas être vérifiée pour le moment.',createdAt:0,icon:'wifi-off',context:'Connexion'})}
+   try{for(const value of source.collect({context:context(),now:Date.now()})){if(value.restaurantId!==context().restaurantId||!value.id||value.resolved||value.expiresAt&&value.expiresAt<=Date.now())continue;list.push({...value,id:name+':'+value.id,source:name,group:value.group==='important'?'important':'service',snoozable:false,action:'source',handler:source.open})}}catch{list.push({id:name+':unavailable',source:name,type:'sync',group:'important',priority:'normal',title:'Une information est indisponible',body:'Cette source de notifications ne peut pas être vérifiée pour le moment.',createdAt:0,icon:'wifi-off',context:'Connexion'})}
   }
   return model.project(list,state);
  }
@@ -118,7 +158,7 @@
   scroll.replaceChildren();
   if(!visible.length){const empty=node('div','rmNcEmpty'),glyph=node('span','rmNcGlyph');glyph.append(icon('bell-off'));empty.append(glyph,node('strong','',showSnoozed?'Aucun rappel reporté':unreadOnly?'Vous êtes à jour':'Aucune notification pour le moment'),node('p','',unreadOnly?'Les rappels importants encore actifs restent toujours visibles.':'Les informations utiles à votre équipe apparaîtront ici.'));scroll.append(empty)}
   const groups=[['attention','À votre attention',n=>n.group==='important'||n.priority==='high'],['service','Votre service',n=>n.group!=='important'&&n.priority!=='high'&&n.group!=='news'],['news','Nouveautés',n=>n.group==='news']];
-  for(const [,label,predicate] of groups){const list=visible.filter(predicate);if(!list.length)continue;const section=node('section','rmNcSection'),h=node('h2','rmNcGroupTitle',label);h.append(node('span','',String(list.length)));section.append(h);for(const item of list)section.append(item.source==='release'?window.RestoAppRelease.card(item,{mark:()=>{setLocal(item.id,{readAt:Date.now()});update()},history:showHistory}):card(item));scroll.append(section)}
+  for(const [,label,predicate] of groups){const list=visible.filter(predicate);if(!list.length)continue;const section=node('section','rmNcSection'),h=node('h2','rmNcGroupTitle',label);h.append(node('span','',String(list.length)));section.append(h);for(const item of list)section.append(dismissibleCard(item.source==='release'?window.RestoAppRelease.card(item,{mark:()=>{setLocal(item.id,{readAt:Date.now()});update()},history:showHistory}):card(item),item));scroll.append(section)}
   scroll.scrollTop=position;
   if(focusId){const candidate=[...scroll.querySelectorAll('[data-notification-id]')].find(n=>n.dataset.notificationId===focusId);const control=[...(candidate?.querySelectorAll('button')||[])].find(b=>(b.getAttribute('aria-label')||b.textContent)===focusLabel);(control||title).focus({preventScroll:true})}
  }
@@ -137,7 +177,7 @@
  panel.addEventListener('close',()=>{if(bodyLocked&&!panel.open)finishClose()});
  panel.addEventListener('click',e=>{if(e.target===panel){const r=panel.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)closePanel()}});
  for(const event of ['restomanager:notification-context','restomanager:v3-change','restomanager:supabase-snapshot','restomanager:fb-alerts','restomanager:connection-state','restomanager:app-release','online','offline'])window.addEventListener(event,update);
- window.addEventListener('storage',event=>{if(event.key===storageKey){storageKey='';load();update()}});
+ window.addEventListener('storage',event=>{if(event.key===storageKey||event.key===null){storageKey='';load();update()}});
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)update()});setInterval(()=>{if(!document.hidden)update()},60000);
  window.RestoNotifications={open,close:()=>closePanel({restoreFocus:false}),showHistory,refresh:update,registerSource(name,source){if(!/^[a-z][a-z0-9-]+$/.test(name)||['release','event','reminder','sync','capacity'].includes(name)||!Array.isArray(source.roles)||typeof source.collect!=='function')throw Error('Source de notifications invalide.');if(sourceRegistry.has(name))throw Error('Source déjà enregistrée.');sourceRegistry.set(name,source);update();return ()=>{sourceRegistry.delete(name);update()}}};update();
 })();

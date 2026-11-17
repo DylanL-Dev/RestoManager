@@ -1,0 +1,19 @@
+{
+  "passed": 12,
+  "failed": 0,
+  "results": [
+    "PWA shell + safe manifest bypass, scope /",
+    "Dirty second tab blocks request without losing either draft /",
+    "New worker stays waiting; no automatic claim/reload /",
+    "Waiting activation also refuses dirty peer /",
+    "Clean explicit update reloads requesting tab only /",
+    "Controlled PWA offline shell: explicit stale status, no fake update /",
+    "PWA shell + safe manifest bypass, scope /RestoManager",
+    "Dirty second tab blocks request without losing either draft /RestoManager",
+    "New worker stays waiting; no automatic claim/reload /RestoManager",
+    "Waiting activation also refuses dirty peer /RestoManager",
+    "Clean explicit update reloads requesting tab only /RestoManager",
+    "Controlled PWA offline shell: explicit stale status, no fake update /RestoManager"
+  ],
+  "network": "Loopback only; actual SW; in-memory bridge"
+}
