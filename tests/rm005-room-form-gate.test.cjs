@@ -6,9 +6,9 @@ const end=auth.indexOf(' // Native HTML validation can prevent submit events ent
 assert.ok(start>=0&&end>start,'The authenticated event gate must be present');
 const gateCode=auth.slice(start,end)+'\nwindow.__guardSubmit=forbidden;';
 
-function guard(role,{ready=true}={}){
+function guard(role,{ready=true,capability=false}={}){
  const label={textContent:''};
- const window={RestoReception:role==='reception',RestoSupabaseReady:ready};
+ const window={RestoReception:role==='reception',RestoSupabaseReady:ready,RestoServiceCapabilities:{service_regularization:capability?1:0}};
  vm.runInNewContext(gateCode,{window,document:{getElementById:()=>null},label,logout:null,Error});
  return window.__guardSubmit;
 }
@@ -66,3 +66,10 @@ test('Management accordion navigation is not a closure mutation, for either role
   assert.deepEqual(click(fn,{id:'deleteReservation'}),{prevented:true,stopped:true});
  }
 });
+
+ test('RM-012 confirmation requires Restaurant, ready session and server capability',()=>{
+  for(const role of ['restaurant','reception'])for(const ready of [true,false])for(const capability of [true,false]){
+   const allowed=role==='restaurant'&&ready&&capability;
+   assert.deepEqual(submit(guard(role,{ready,capability}),{id:'rm012ConfirmationForm'}),{prevented:!allowed,stopped:!allowed});
+  }
+ });

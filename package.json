@@ -25,7 +25,9 @@
     "test:syntax": "node tests/check-syntax.cjs",
     "test:display": "node tests/browser/table-display.cjs",
     "test:audit:dev:postgres": "node tests/postgres/mission2.cjs --mission3 --dev-snapshot",
-    "test:audit:dev:supabase": "node tests/supabase/mission3.cjs --dev-snapshot"
+    "test:audit:dev:supabase": "node tests/supabase/mission3.cjs --dev-snapshot",
+    "test:closeout:postgres": "node tests/postgres/rm012.cjs",
+    "test:closeout:browser": "node tests/browser/rm012-closeout.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.119.0",

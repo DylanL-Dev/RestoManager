@@ -15,7 +15,7 @@ async function reset(page){await page.evaluate(()=>{window.RestoPrepareNewReserv
   const v=await open(browser,origin,390,'fb_admin',{serviceWorkers:'allow',basePath}),{context,page}=v;
   await page.evaluate(()=>window.RestoScreens.show('tables'));
   await waitAsync(page,async()=>{const r=await navigator.serviceWorker.getRegistration('./');return Boolean(r?.active)});
-  const cache=await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration('./');const names=await caches.keys();const name=names.find(n=>n.includes('dev-rm014-fixture'));const urls=(await (await caches.open(name)).keys()).map(req=>new URL(req.url).pathname);return {scope:new URL(r.scope).pathname,urls}});
+  const cache=await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration('./');const names=await caches.keys();const name=names.find(n=>n.includes('-rm-fixture'));const urls=(await (await caches.open(name)).keys()).map(req=>new URL(req.url).pathname);return {scope:new URL(r.scope).pathname,urls}});
   assert.equal(cache.scope,basePath+'/');assert.ok(cache.urls.includes(basePath+'/v3-connected.html'));assert.ok(cache.urls.includes(basePath+'/service-v3-notification-model.js'));assert.ok(!cache.urls.includes(basePath+'/app-release.json'));pass('PWA shell + safe manifest bypass, scope '+(basePath||'/'));
   const second=await context.newPage();await second.goto(origin+basePath+'/v3-connected.html');await second.waitForFunction(()=>window.RestoSupabaseReady===true);
   const welcome=second.locator('#restoTourWelcome');if(await welcome.isVisible())await second.getByRole('button',{name:'Plus tard',exact:true}).click();
