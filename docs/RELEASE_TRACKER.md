@@ -1,5 +1,12 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-012.1 — Démarrage du suivi et clôture automatique sûre — EN COURS DEV (17/11/2026)
+
+- Retour de recette : six alertes de journées antérieures à la mise à jour. Le propriétaire demande un démarrage du suivi au 17/11/2026, sans rattrapage automatique des journées précédentes.
+- Préférence confirmée explicitement : « Oui, clôturer automatiquement si tout est finalisé ». Clôture après la fin réelle seulement, sans statut déduit, sans blocage, avec trace système identifiable et unicité restaurant/date ; les oublis restent ouverts avec une alerte.
+- Branche `fix/rm012-start-date` depuis DEV `8924ff1`, sauvegarde distante `backup/rm012-dev-before-start-date-20261117`. Anciennes journées conservées et consultables volontairement, sans notifications ni clôtures automatiques rétroactives.
+- Préparer et tester les changements serveur sur PostgreSQL/Cron isolés, présenter les impacts de migration avant application partagée ; correction sur le clone DEV uniquement. V3/MAIN/Supabase PROD préservés, aucune réservation/clôture fictive dans une base réelle.
+
 ### RM-012 — Publication du clone DEV autorisée — À TESTER CLONE (17/11/2026)
 
 - Après le rapport et la PR #174, le propriétaire demande la disponibilité Render puis répond « Oui » à l’autorisation explicite : appliquer la migration sur Supabase DEV, intégrer la PR et déployer le clone Render, exclusivement DEV. V3/MAIN/Supabase PROD restent interdits.

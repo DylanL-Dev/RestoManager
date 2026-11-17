@@ -7,7 +7,7 @@ const uid=n=>'20000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const rid=n=>'10000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const booking=n=>'50000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const lit=v=>v===null||v===undefined?'null':typeof v==='number'?String(v):"'"+String(v).replaceAll("'","''")+"'";
-async function start({applyMigration=true}={}){
+async function start({applyMigration=true,withPolicy=false}={}){
  const container='rm012-tests-'+process.pid+'-'+Math.random().toString(16).slice(2,8),env={...process.env};
  for(const key of ['DOCKER_HOST','DOCKER_CONTEXT','DOCKER_TLS','DOCKER_TLS_VERIFY','DOCKER_CERT_PATH'])delete env[key];
  async function docker(args,input='',onData){return new Promise((resolve,reject)=>{
@@ -21,8 +21,13 @@ async function start({applyMigration=true}={}){
  async function json(query){return JSON.parse((await ok(query)).split('\n').at(-1))}
  const stop=()=>docker(['rm','-f',container]);
  try{
-  const r=await docker(['run','-d','--name',container,'--network','none','--tmpfs','/var/lib/postgresql/data:rw','--label','restomanager.mission=rm012-isolated','-e','POSTGRES_HOST_AUTH_METHOD=trust','-e','POSTGRES_DB=rm012',image]);assert.equal(r.code,0,r.stderr);
-  let ready=false;for(let i=0;i<100;i++){const r=await docker(['logs',container]);if((r.stdout+r.stderr).includes('PostgreSQL init process complete; ready for start up.')){ready=true;break}await new Promise(resolve=>setTimeout(resolve,100))}assert.ok(ready,'Disposable PostgreSQL ready');
+  const r=await docker([withPolicy?'create':'run',...(withPolicy?[]:['-d']),'--name',container,'--network','none','--tmpfs','/var/lib/postgresql/data:rw','--label','restomanager.mission=rm012-isolated','-e','POSTGRES_HOST_AUTH_METHOD=trust','-e','POSTGRES_DB=rm012',...(withPolicy?['--mount','type=bind,src='+path.join(root,'tests/postgres/rm012-cron-init.sql')+',dst=/docker-entrypoint-initdb.d/rm012-cron.sql,readonly']:[]),image,...(withPolicy?['postgres','-c','shared_preload_libraries=pg_cron','-c','cron.database_name=rm012','-c','cron.use_background_workers=on']:[])]);assert.equal(r.code,0,r.stderr);
+  if(withPolicy){
+   const {execFileSync}=require('node:child_process'),folder=execFileSync('bash',[path.join(root,'tests/postgres/prepare-rm012-cron.sh')],{encoding:'utf8',env}).trim();
+   for(const [src,dest] of [[folder+'/usr/lib/postgresql/17/lib/pg_cron.so','/usr/lib/postgresql/17/lib/pg_cron.so'],[folder+'/usr/share/postgresql/17/extension/.','/usr/share/postgresql/17/extension/']]){const copy=await docker(['cp',src,container+':'+dest]);assert.equal(copy.code,0,copy.stderr)}
+   const launched=await docker(['start',container]);assert.equal(launched.code,0,launched.stderr);
+  }
+  let ready=false;for(let i=0;i<100;i++){const r=await docker(['logs',container]);if((r.stdout+r.stderr).includes('PostgreSQL init process complete; ready for start up.')){ready=true;break}await new Promise(resolve=>setTimeout(resolve,100))}if(!ready){const logs=await docker(['logs',container]);throw Error('Disposable PostgreSQL did not start: '+logs.stdout+'\n'+logs.stderr)}
   const apply=file=>ok(fs.readFileSync(path.join(root,file),'utf8'));
   await apply('tests/postgres/fixture.sql');
   for(const file of ['mission2_reservation_edits.sql','mission3_validation_integration.sql','reception_right_size_recommendations.sql','platform_owner_foundation.sql','bug01_private_reports.sql'])await apply('supabase/scripts/'+file);
@@ -35,6 +40,9 @@ async function start({applyMigration=true}={}){
   await ok('set check_function_bodies=on;');
   const body=fs.readFileSync(path.join(root,'supabase/migrations',migration),'utf8');
   if(applyMigration){await ok(body);await ok(body)}
+  const policyMigration=fs.readdirSync(path.join(root,'supabase/migrations')).find(f=>f.endsWith('_rm012_activation_and_automatic_close.sql'));
+  const policyBody=withPolicy?fs.readFileSync(path.join(root,'supabase/migrations',policyMigration),'utf8'):null;
+  if(withPolicy){assert.ok(applyMigration);await ok(policyBody);await ok(policyBody)}
   async function clock(value='2032-11-08T10:00:00Z'){assert.ok(/^\d{4}-\d{2}-\d{2}T[\d:]+Z$/.test(value));await ok(`create or replace function private.rm012_now() returns timestamptz language sql volatile security invoker set search_path='' as $$select ${lit(value)}::timestamptz$$;`)}
   async function reset(){
    await ok('truncate public.service_closures'+(applyMigration?',public.service_regularization_audit':'')+';');
@@ -55,7 +63,7 @@ async function start({applyMigration=true}={}){
    return {data:JSON.parse(r.stdout.trim().split('\n').at(-1)),error:null};
   }
   await reset();
-  return {container,docker,sql,ok,json,ctx,clock,reset,rpc,snapshot,stop,body,migration};
+  return {container,docker,sql,ok,json,ctx,clock,reset,rpc,snapshot,stop,body,migration,policyBody,policyMigration};
  }catch(error){await stop();throw error}
 }
 module.exports={start,uid,rid,booking,lit};
