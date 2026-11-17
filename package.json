@@ -25,7 +25,8 @@
     "test:notifications:pwa": "node tests/browser/rm014-pwa.cjs",
     "test:notifications:dismiss": "node tests/browser/rm014-dismiss.cjs",
     "test:closeout:postgres": "node tests/postgres/rm012.cjs",
-    "test:closeout:browser": "node tests/browser/rm012-closeout.cjs"
+    "test:closeout:browser": "node tests/browser/rm012-closeout.cjs",
+    "test:learning:browser": "node tests/browser/rm016-learning.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.57.0",

@@ -1,8 +1,21 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.17-rm012.1",
+  "currentVersion": "2026.11.17-rm016.1",
   "releases": [
+    {
+      "version": "2026.11.17-rm016.1",
+      "date": "2026-11-17",
+      "title": "Apprendre RestoManager à votre rythme",
+      "changes": [
+        "Deux niveaux et des petits parcours adaptés à votre équipe, avec des repères dans les vrais écrans.",
+        "Trois exercices fictifs permettent d’apprendre sans modifier le service réel.",
+        "L’aide recherchable et la progression sont accessibles depuis chaque écran.",
+        "Le bouton Voir les nouveautés est harmonisé, tactile et accessible au clavier."
+      ],
+      "impact": "Ouvrez Aide pour découvrir les guides et M’entraîner. Aucun exercice ne crée de vraie réservation.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.17-rm012.1",
       "date": "2026-11-17",

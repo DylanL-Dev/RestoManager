@@ -1,0 +1,33 @@
+name: RM-016 Learning - isolated training and real-screen guides
+on:
+  pull_request:
+    branches: [RestoManager-V3, main]
+permissions:
+  contents: read
+jobs:
+  learning:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:syntax
+      - run: npm test
+      - name: Previous tutorial from the actual DEV parent, three formats and two roles
+        env:
+          RM013_BASE_REF: ${{ github.event.pull_request.base.sha }}
+        run: node tests/browser/rm016-baseline.cjs
+      - name: Seven widths, role-based guides, opaque training, input protection and progress
+        run: npm run test:learning:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm016-learning-before-after-and-results
+          path: test-results/rm016*/
