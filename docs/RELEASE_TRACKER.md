@@ -1,5 +1,15 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-014.2 — PUBLIÉE V3 / PUBLIÉE MAIN (17/11/2026)
+
+- Publication expressément autorisée : « Ok mes sur main est v3 », consignée par PR #169. Source du glissement DEV b6e6603, PR #167, Render dep-dbtnn3mk1f9s7397811g. Aucune recette physique détaillée inventée.
+- V3 : PR [#170](https://github.com/DylanL-Dev/RestoManager/pull/170), trois workflows réussis, fusion b8f7a397fd35541e13d222421e43b0025ba13ead **en premier**. MAIN : PR [#171](https://github.com/DylanL-Dev/RestoManager/pull/171), six workflows réussis, fusion a74e7ed9cab740b215e27946d75da35181f4b0e2 **ensuite**. Arbre identique c9963f3c4809527b4d393b61959141f1f25f3de6, conforme au candidat testé.
+- Paquet production : 136 fichiers de syntaxe, 188 tests Node, 14 combinaisons de gestes, 14 combinaisons de régression, 24 groupes de cycle de vie, 12 groupes PWA réussis. CI des cibles inclut aussi Gestion/Assistance, salles, tableaux/réservations et PostgreSQL isolé ; aucun accès aux données réelles pour ces tests.
+- GitHub Pages : [44016361568](https://github.com/DylanL-Dev/RestoManager/actions/runs/44016361568), **completed / success** sur MAIN a74e7ed. Version 2026.11.16-rm014.2, canal main ; 22 vérifications HTTP 200/empreintes conformes, dont entrées canonique/versionnée, manifeste, assets et six fichiers protégés inchangés avant/après.
+- Six fichiers applicatifs transférés, configuration et dépendances PROD préservées, historique réel conservé, précache 71 ressources. Aucune écriture, migration ou modification Supabase ; aucune réservation/clôture fictive réelle. Sauvegardes backup/rm0142-v3-before-20261117 et backup/rm0142-main-before-20261117.
+- [Rapport final et captures](audits/RM0142_PUBLICATION_20261117.md) · [Preuve machine](audits/preuves/rm0142-publication-20261117.json). Statut technique **PUBLIÉE V3 / PUBLIÉE MAIN** ; confirmation visuelle utilisateur de cette publication encore distincte. Aucun parcours robot authentifié sur les données hébergées prétendu.
+
+
 ### RM-014.2 — Livraison V3 puis MAIN autorisée (17/11/2026)
 
 - Décision explicite du propriétaire après présentation du clone et des tests : « Ok mes sur main est v3 ». Cette instruction autorise la publication du glissement et de l’annulation ; aucune recette physique détaillée n’est inventée.
