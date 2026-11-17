@@ -1,0 +1,18 @@
+{
+  "syntax": {
+    "checked": 154,
+    "failed": 0
+  },
+  "node": {
+    "passed": 235,
+    "failed": 0
+  },
+  "playwright": {
+    "passed": 65,
+    "failed": 0
+  },
+  "baselineCaptures": 6,
+  "newCaptures": 30,
+  "realDatabaseWrites": 0,
+  "humanEmployeeTrials": false
+}
