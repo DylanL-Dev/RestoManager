@@ -23,7 +23,9 @@
     "test:notifications:browser": "node tests/browser/rm014-notifications.cjs",
     "test:notifications:lifecycle": "node tests/browser/rm014-lifecycle.cjs",
     "test:notifications:pwa": "node tests/browser/rm014-pwa.cjs",
-    "test:notifications:dismiss": "node tests/browser/rm014-dismiss.cjs"
+    "test:notifications:dismiss": "node tests/browser/rm014-dismiss.cjs",
+    "test:closeout:postgres": "node tests/postgres/rm012.cjs",
+    "test:closeout:browser": "node tests/browser/rm012-closeout.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.57.0",
