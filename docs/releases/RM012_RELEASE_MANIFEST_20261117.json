@@ -1,0 +1,32 @@
+{
+  "version": "2026.11.17-rm012.1",
+  "channel": "main",
+  "sourceDEV": "0e7f7b7af6f6b90c4af2efd9e10656f9852e4c9e",
+  "protected_production_files": {
+    "supabase-login.js": "7878f4cd4026ca1229b15f9536632582704cef04d00f0eaf8d1ed89dc847c4c3",
+    "creator-auth.js": "04bfce830085d120a33272747c7dc6a014cd80c22b8e735c8460e10941166dc6",
+    "login.html": "c6a6abf774974a2303b16551a51f725a37e16fce688c7d3f8a539a062e9b0a5c",
+    "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14"
+  },
+  "runtime": {
+    "supabase-service-bridge.js": "f4fe66d2be046491bc44f5518f77ff54d4e0ada85877e498f0279e14a5dfbae3",
+    "v3-connected-auth.js": "d2eaa2462b32a9b01ad512a43e578e2d94dd8917802ca43b45f45fbd7164cb5e",
+    "service-v3-closeout.js": "b68c23236c7c734e5a16a73fd1908397736270a6285a770a83289ef57ddf1a53",
+    "service-v3-closeout-model.js": "4a5c5f2952a0047773a48b8339390f648c534aa71a4abef85a7b73e6b0ee5aba",
+    "service-v3-closeout.css": "4f45a3684c186425db7b93a3c4ff795d077a882401c05fbb28b4000b65ef6c11",
+    "service-v3-calendar-picker.js": "0a09cde950496e1225d4b2e2c7f78ec3e8e7ba52e1b5f0382238562eb4a6ec35",
+    "service-v3-refresh.js": "ab7942c36ee9580ab5d93827efbaa64d44879eb5d21155434dd161491e63c7db",
+    "service-v3-shared-closure.js": "e80e91cc743a991175ec023098405604922bd9475d1a3e11af7730fdceb37d26",
+    "sw.js": "9ac51f837e3a1dac9b4f967c7bd4ff70ae42c12905d3453fcb91cc8dce19d9b8",
+    "app-release.json": "6c9ef6059313a331d220a58d4adfa26d0d031992aa2335b671242741190559b9",
+    "v3-connected.html": "7472b329ac85eaa457e519c590eeb69df8a6aa975e7be0d0c87ac443232b1421"
+  },
+  "prepared_migrations": {
+    "supabase/migrations/20261117083046_rm012_intelligent_closeout.sql": "ec43462792b98b331a457d0f43785a0b03ee9f9a273663dfc557298bfa5851bc",
+    "supabase/migrations/20261117151709_rm012_activation_and_automatic_close.sql": "631edfae7192f5d572b8475c576ee9d48974e454db926a9c51b8a5e23847c481"
+  },
+  "supabasePRODApplied": false,
+  "productionCatalogSnapshot": {
+    "tests/postgres/prod-closeout-snapshot-20261117.sql": "39b08b024652681348ecf3e631b1d136018e326a52d1818a013ee068ad6154db"
+  }
+}

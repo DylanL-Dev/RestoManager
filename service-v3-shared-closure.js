@@ -23,7 +23,7 @@
  date.max=now.date;label.append(date);root.insertBefore(container,status);
  container.append(label);
  button.disabled=false;
- let loading=false,history=[],lastAuto='',closedDates=new Set(),lastError='';
+ let loading=false,history=[],closedDates=new Set(),lastError='';
  function pendingCount(value){
   return (window.RestoSharedReservations||[]).filter(r=>r.date===value&&!['completed','released','cancelled','no_show'].includes(r.status)).length;
  }
@@ -31,6 +31,7 @@
   const at=clock();return day<at.date||(day===at.date&&at.minutes>=1410);
  }
  function display(){
+  if(window.RestoCloseout?.enabled){root.hidden=true;return}
   if(window.RestoReception===true){root.hidden=true;return}
   root.hidden=false;
   const selected=date.value;
@@ -65,6 +66,7 @@
   return supabase;
  }
  async function refresh(){
+  if(window.RestoCloseout?.enabled){root.hidden=true;return}
   if(!window.RestoSupabaseReady||window.RestoReception!==false){display();return}
   try{
    const db=await getDb();
@@ -75,6 +77,7 @@
   display();
  }
  async function close(day,mode){
+  if(window.RestoCloseout?.enabled)return;
   if(loading||!window.RestoSupabaseReady||!eligible(day)||closedDates.has(day)||pendingCount(day)>0)return;
   loading=true;display();
   try{
@@ -95,18 +98,8 @@
  window.addEventListener('restomanager:supabase-snapshot',()=>{void refresh()});
  window.addEventListener('online',()=>void refresh());
  document.addEventListener('visibilitychange',()=>{if(!document.hidden)void refresh()});
- // Automatic closeout is best-effort when a Restaurant device is open.
- // A server scheduler is required for truly unattended closeouts.
- async function tick(){
-  const at=clock();
-  if(!window.RestoSupabaseReady||window.RestoReception!==false){display();return}
-  if(at.minutes>=1410&&lastAuto!==at.date&&!closedDates.has(at.date)&&!pendingCount(at.date)){
-   lastAuto=at.date;
-   await close(at.date,'automatic');
-  }else display();
- }
- setInterval(()=>void tick(),60000);
+ // RM-012: closing a day always requires the manager's explicit confirmation.
+ setInterval(display,60000);
  setInterval(()=>void refresh(),30000);
  await refresh();
- void tick();
 })();
