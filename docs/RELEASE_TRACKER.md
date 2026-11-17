@@ -1,5 +1,12 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-014.2 — Livraison V3 puis MAIN autorisée (17/11/2026)
+
+- Décision explicite du propriétaire après présentation du clone et des tests : « Ok mes sur main est v3 ». Cette instruction autorise la publication du glissement et de l’annulation ; aucune recette physique détaillée n’est inventée.
+- Source DEV `b6e6603`, code `bfbc5bc`, tests `b590cc6`, PR #167/#168 ; Render `dep-dbtnn3mk1f9s7397811g` LIVE, version `2026.11.16-rm014.2`. Six CI réussies, 216 tests unitaires DEV et validations Playwright mobile/tablette/PC.
+- Préparer des branches filles de V3 `c5ef487` et MAIN `f17e6ea`, avec sauvegardes, puis transférer uniquement les fichiers du complément et ses tests. Conserver connexions PROD, dépendances/lockfile, canal main et historique réel de production, précache 71 fichiers.
+- Tester le paquet production et ses deux PR ; fusionner V3 d’abord puis MAIN. Vérifier GitHub Pages et les empreintes des fichiers publics. Aucun changement de schéma, droits, données ou configuration Supabase PROD, aucune réservation/clôture fictive réelle.
+
 ### RM-014 — Retrait personnel par glissement — À TESTER CLONE (16/11/2026)
 
 - Demande explicite : « Ou juste un slide pour enlever la notification qu'on ne veux plus ou déjà traité » ; complément de RM-014, sur branche `feature/rm014-swipe-dismiss` issue de DEV `82ccef7`.
