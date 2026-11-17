@@ -54,22 +54,22 @@ function rpc(name,args){
  return {data:id(999),error:null};
 }
 const bridge=`
-export async function requireStaff(){return {user:{id:'fictional-user'},profile:{role:window.__rmRole,active:true,display_name:'Équipe fictive',restaurant_id:'fictional-venue'}}}
+export async function requireStaff(){return {user:{id:window.__rmUserId||'fictional-user'},profile:{role:window.__rmRole,active:true,display_name:'Équipe fictive',restaurant_id:window.__rmVenue||'fictional-venue'}}}
 export async function loadSharedService(){return window.__rmSnapshot()}
 export async function subscribeSharedService(onSnapshot,onError,onConnection){const apply=async()=>{onConnection(true);onSnapshot(await loadSharedService())};window.addEventListener('rm:push',apply);setTimeout(apply,0);return ()=>{}}
 function query(table){const spec={table,mode:'select',filters:[],single:false};const q={select(){return q},eq(k,v){spec.filters.push([k,v]);return q},update(v){spec.mode='update';spec.values=v;return q},insert(v){spec.mode='insert';spec.values=v;return q},single(){spec.single=true;return q},maybeSingle(){spec.single=true;return q},then(yes,no){return window.__rmQuery(spec).then(yes,no)}};q.in=(k,v)=>{spec.filters.push([k,v,'in']);return q};q.is=(k,v)=>{spec.filters.push([k,v,'is']);return q};for(const n of ['order','limit','range','gte','lte','neq'])q[n]=()=>q;return q}
-export const supabase={from:query,rpc:(name,args)=>window.__rmRpc(name,args),auth:{getUser:async()=>({data:{user:{id:'fictional-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
+export const supabase={from:query,rpc:(name,args)=>window.__rmRpc(name,args),auth:{getUser:async()=>({data:{user:{id:window.__rmUserId||'fictional-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
 const server=http.createServer((req,res)=>{
  const file=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(process.argv.includes('--pwa-fixture')?/^\/(?:RestoManager\/)?/:/^\//,'');
  if(file.split('/').some(p=>p==='..'||p.startsWith('.'))){res.writeHead(404).end();return}
- let data;try{data=process.argv.includes('--pwa-fixture')&&file==='supabase-service-bridge.js'?bridge:process.argv.includes('--pwa-fixture')&&file==='sw.js'?fs.readFileSync(path.join(root,file),'utf8').replace(/(dev|prod)-rm014/,'$1-rm014-fixture'+workerRevision):baselineOnly?execFileSync('git',['show',baseline+':'+file],{cwd:root,maxBuffer:10*1024*1024,stdio:['ignore','pipe','ignore']}):fs.readFileSync(path.join(root,file));}catch{res.writeHead(404).end();return}
+ let data;try{data=process.argv.includes('--pwa-fixture')&&file==='supabase-service-bridge.js'?bridge:process.argv.includes('--pwa-fixture')&&file==='sw.js'?fs.readFileSync(path.join(root,file),'utf8').replace(/(dev|prod)-rm\d+/g,'$1-rm-fixture'+workerRevision):baselineOnly?execFileSync('git',['show',baseline+':'+file],{cwd:root,maxBuffer:10*1024*1024,stdio:['ignore','pipe','ignore']}):fs.readFileSync(path.join(root,file));}catch{res.writeHead(404).end();return}
  res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(data);
 });
 async function open(browser,origin,width,role,options={}){
  reset();
  const context=await browser.newContext({viewport:{width,height:width<768?844:width===768?1024:width===1920?1080:900},serviceWorkers:options.serviceWorkers||'block',timezoneId:'Europe/Paris',isMobile:width<768,hasTouch:width<=1024});
- await context.addInitScript(role=>window.__rmRole=role,role);
- await context.exposeFunction('__rmSnapshot',snapshot);await context.exposeFunction('__rmQuery',query);await context.exposeFunction('__rmRpc',rpc);
+ await context.addInitScript(({role,user,venue})=>{window.__rmRole=role;window.__rmUserId=user;window.__rmVenue=venue},{role,user:options.userId,venue:options.restaurantId});
+ await context.exposeFunction('__rmSnapshot',options.snapshot?async()=>({...await options.snapshot(),syncSequence:++sequence}):snapshot);await context.exposeFunction('__rmQuery',options.query?spec=>options.query(spec,query):query);await context.exposeFunction('__rmRpc',options.rpc?async(name,args)=>name.startsWith('rm012_')?options.rpc(name,args):rpc(name,args):rpc);
  await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin!==origin)return route.abort();if(u.pathname.endsWith('/supabase-service-bridge.js'))return route.fulfill({contentType:'text/javascript',body:bridge});return route.continue()});
  await context.routeWebSocket('**/*',ws=>ws.close());
  const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
