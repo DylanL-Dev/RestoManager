@@ -1,5 +1,14 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-012 — Fin de service intelligente — EN COURS DEV (17/11/2026)
+
+- Nouvelle mission explicitement autorisée, sept lots : détection selon horaires réels, espace Services à régulariser, clôture ciblée, notifications RM-014, audit, responsive et tests isolés. Cette instruction ouvre RM-012 après la livraison RM-014.2 ; aucune validation physique de production précédente n’est inventée.
+- Sauvegarde DEV distante `backup/rm012-dev-before-20261117` sur `85227fccb32cbdd36a41e30ee42dc5f063912e50`, créée avant modification. Branche `feature/rm012-intelligent-closeout` issue de ce même DEV.
+- Critères : date exacte explicitement sélectionnée, statuts jamais déduits automatiquement, actions confirmées et auditées, droits Restaurant côté serveur/RLS, Réception exclue, horaires hebdomadaires/Paris/minuit/DST, concurrence et absence de double clôture, protection des autres journées.
+- Migration éventuelle préparée dans le dépôt et testée uniquement sur PostgreSQL éphémère. **Aucune application à une base partagée sans présentation préalable des impacts**, aucun changement V3/MAIN/Supabase PROD, aucune donnée fictive réelle, aucun réglage de restaurant modifié silencieusement.
+- Livrables : commits par fonctionnalité, PR DEV uniquement, résultats Node/PostgreSQL/Playwright aux sept largeurs, captures mobile/tablette/PC, limites et procédure Render. L’éventuelle absence de migration sur le clone doit être affichée explicitement, sans repli vers une action non sécurisée.
+- Lots serveur 1/3/5 préparés : migration `20261117083046_rm012_intelligent_closeout.sql`, créée avec le CLI dans un conteneur sans réseau. Validation locale : 29 groupes PostgreSQL réussis, dont idempotence, concurrence, préservation du jour courant, Europe/Paris/DST, RLS, audit immuable, pagination indépendante des alertes et migration/rollback sous administrateur non-superuser. Aucune application partagée.
+
 ### RM-014.2 — PUBLIÉE V3 / PUBLIÉE MAIN (17/11/2026)
 
 - Publication expressément autorisée : « Ok mes sur main est v3 », consignée par PR #169. Source du glissement DEV b6e6603, PR #167, Render dep-dbtnn3mk1f9s7397811g. Aucune recette physique détaillée inventée.
