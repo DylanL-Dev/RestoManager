@@ -15,3 +15,13 @@
 - Livraison ciblée RM-014.1, treize fichiers applicatifs, sans configuration DEV ni migration. Canal main et historique des publications réelles ; cache adapté aux fichiers de production.
 - Garde des brouillons RM-011-A, rôles, marqueurs existants et configuration PROD conservés. Tests isolés, aucune donnée fictive réelle.
 - Sauvegardes `backup/rm014-v3-before-20261116` et `backup/rm014-main-before-20261116`. CI du paquet exact avant V3, puis MAIN ; contrôle de GitHub Pages ensuite. [Rapport et manifeste](releases/RM014_NOTIFICATIONS_20261116.md).
+
+
+## RM-014.2 — Glissement et annulation — livraison autorisée (17/11/2026)
+
+- Décision explicite propriétaire : « Ok mes sur main est v3 », après disponibilité sur Render DEV et confirmation des six CI réussies. Autorisation consignée par PR #169 ; source DEV b6e6603, code bfbc5bc, tests b590cc6, PR #167.
+- Livraison ciblée de six fichiers applicatifs, sans fusion globale DEV. Canal main, historique réel conservé, cache restomanager-shell-20261117-prod-rm014.2, précache 71 fichiers. Connexions PROD et lockfile préservés.
+- Sauvegardes backup/rm0142-v3-before-20261117 (c5ef487) et backup/rm0142-main-before-20261117 (f17e6ea). Tests du paquet réel, puis CI propres à chaque cible ; V3 d’abord, MAIN ensuite, contrôle de GitHub Pages et empreintes publiques.
+- Aucun changement Supabase PROD, aucune donnée fictive réelle, aucune réservation/clôture/message transmis. [Rapport et manifeste](releases/RM0142_DISMISS_20261117.md). La validation technique ne remplace pas la confirmation utilisateur sur la version publique.
+
+- Candidat exact production : 136 fichiers de syntaxe, 188 tests Node, 14 combinaisons de glissement, 14 de régression, 24 groupes de cycle de vie et 12 groupes PWA réussis localement, deux rôles/sept largeurs. CI des PR encore requise avant fusion.
