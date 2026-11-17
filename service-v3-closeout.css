@@ -61,6 +61,7 @@ html[data-theme=dark] .rm012 .rm012Primary,html[data-theme=dark] .rm012Confirm .
 html[data-theme=dark] .rm012 .rm012Secondary{background:var(--co-bg);color:var(--co-text);border-color:var(--co-line)}
 html[data-theme=dark] .rm012 .rm012Date{background:var(--co-bg);color:var(--co-text)}
 html[data-theme=dark] .rm012 .rm012Date[aria-pressed=true],html[data-theme=dark] .rm012Tabs button[aria-pressed=true]{background:var(--co-soft);color:var(--co-accent)}
+html[data-theme=dark] .rm012 .rm012Badge:not(.is-attention){background:#244537;color:#c6f3dc}
 html[data-theme=dark] .rm012Status.is-warning{color:#f6c390}
 html[data-theme=dark] .rm012Eyebrow{color:#96e0b8}
 html[data-theme=dark] dialog.rm012Confirm{background:#19342b;color:#eef8f1;border-color:#527361}

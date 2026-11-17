@@ -1,0 +1,47 @@
+{
+  "baseDEV": "85227fccb32cbdd36a41e30ee42dc5f063912e50",
+  "backup": "backup/rm012-dev-before-20261117",
+  "branch": "feature/rm012-intelligent-closeout",
+  "pullRequest": "https://github.com/DylanL-Dev/RestoManager/pull/174",
+  "migrationAppliedShared": false,
+  "productionDataWrites": 0,
+  "renderDeploymentTriggered": false,
+  "protectedBranchesUnchanged": {
+    "RestoManager-V3": "b8f7a397fd35541e13d222421e43b0025ba13ead",
+    "main": "a74e7ed9cab740b215e27946d75da35181f4b0e2"
+  },
+  "localResults": {
+    "syntaxFiles": 148,
+    "syntaxFailed": 0,
+    "namedNodeTests": 226,
+    "nodeFailed": 0,
+    "postgresGroups": 29,
+    "postgresFailed": 0,
+    "browserGroups": 21,
+    "browserFailed": 0,
+    "widths": [
+      360,
+      390,
+      430,
+      768,
+      1024,
+      1440,
+      1920
+    ]
+  },
+  "applicationSHA256": {
+    "app-release.json": "18314f20d3406a8ae1b4c46d4beac6785e07ac0540b9cce3e65da66f5ed0be56",
+    "package.json": "08dcded2d21528605732f800f63a8cf9cbb2cdde6e0b40b49cc870746c8b9f55",
+    "service-v3-calendar-picker.js": "0a09cde950496e1225d4b2e2c7f78ec3e8e7ba52e1b5f0382238562eb4a6ec35",
+    "service-v3-closeout-model.js": "4d91f1006a9bf3144221c9f1c1d3ddebc47670a69d039e5d6618bd84eda4a6f8",
+    "service-v3-closeout.css": "4f45a3684c186425db7b93a3c4ff795d077a882401c05fbb28b4000b65ef6c11",
+    "service-v3-closeout.js": "401e1e2a452aaf5ffa418e54f1ccd207f76f2d0a5e8811046f35fe8f800d7585",
+    "service-v3-refresh.js": "ab7942c36ee9580ab5d93827efbaa64d44879eb5d21155434dd161491e63c7db",
+    "service-v3-shared-closure.js": "e80e91cc743a991175ec023098405604922bd9475d1a3e11af7730fdceb37d26",
+    "supabase-service-bridge.js": "56528946caa3b31cf6327864ddc3ab26782ee5f14bbccc132aea6ce3167cf2e6",
+    "supabase/migrations/20261117083046_rm012_intelligent_closeout.sql": "ec43462792b98b331a457d0f43785a0b03ee9f9a273663dfc557298bfa5851bc",
+    "sw.js": "78b19ca7bf4ce202ca443a1fbf63ebad29263895110d0ca1971005035228ae5f",
+    "v3-connected-auth.js": "d2eaa2462b32a9b01ad512a43e578e2d94dd8917802ca43b45f45fbd7164cb5e",
+    "v3-connected.html": "581546193e7a5b13a1ea7440a0fb5bf71a8af482fc3c782fc5662c7d2acee8fb"
+  }
+}

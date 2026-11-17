@@ -12,6 +12,10 @@ async function layout(page){
  const controls=await page.locator('#rm012Workspace button').evaluateAll(nodes=>nodes.filter(n=>n.getClientRects().length).map(n=>({text:n.textContent,width:n.getBoundingClientRect().width,height:n.getBoundingClientRect().height})));
  for(const c of controls)assert.ok(c.width>=24&&c.height>=43,JSON.stringify(c));
  assert.equal(await page.locator('#rm012Workspace [data-lucide]').count(),0,'All icons resolved from local Lucide');
+ const contrast=await page.locator('#rm012Workspace .rm012Badge').evaluateAll(nodes=>{
+  const luminance=rgb=>{const [r,g,b]=rgb.match(/[\d.]+/g).slice(0,3).map(n=>{const v=Number(n)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4});return .2126*r+.7152*g+.0722*b};
+  return nodes.filter(n=>n.getClientRects().length).map(n=>{const s=getComputedStyle(n),a=luminance(s.color),b=luminance(s.backgroundColor);return {label:n.textContent,ratio:(Math.max(a,b)+.05)/(Math.min(a,b)+.05)}});
+ });for(const c of contrast)assert.ok(c.ratio>=4.5,'Readable small status text: '+JSON.stringify(c));
 }
 (async()=>{let db,browser;try{
  fs.mkdirSync(out,{recursive:true});db=await start();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;browser=await chromium.launch({headless:true});
