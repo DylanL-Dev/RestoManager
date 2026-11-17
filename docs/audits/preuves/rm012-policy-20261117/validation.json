@@ -1,0 +1,18 @@
+{
+  "namedNodeTests": 229,
+  "syntaxFiles": 149,
+  "newCronGroups": 15,
+  "existingRulesAgainstNewSchema": 29,
+  "browserGroups": 23,
+  "widths": [
+    360,
+    390,
+    430,
+    768,
+    1024,
+    1440,
+    1920
+  ],
+  "migrationSHA256": "631edfae7192f5d572b8475c576ee9d48974e454db926a9c51b8a5e23847c481",
+  "data": "Fictional and isolated; PostgreSQL 17 plus pg_cron 1.6.4; no external browser HTTP/WS"
+}

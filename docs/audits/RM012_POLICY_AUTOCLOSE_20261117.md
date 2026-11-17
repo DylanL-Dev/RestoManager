@@ -52,4 +52,6 @@ npm run test:closeout:browser
 
 Le workflow RM-012 reproduit les deux états du serveur, les nouveaux scénarios Cron et les sept largeurs/deux rôles. Les scénarios ciblent le démarrage inclusif, l’absence de rétroactivité, les tables/attentes/arrivées, les maintiens, la protection de la journée en cours, minuit/DST, les droits, l’audit système, les courses entre actions manuelles et automatiques, les verrous occupés et le travail réel.
 
-Résultats finaux et captures consignés après leur exécution, avant publication du correctif. Aucune donnée fictive dans un projet partagé ; aucun appel d’écriture de test sur DEV/PROD.
+Résultats locaux : **229 tests Node**, **149 fichiers de syntaxe**, **15 groupes SQL/Cron supplémentaires**, **29 groupes RM-012 existants sur le nouveau schéma**, **23 groupes Playwright** aux sept largeurs/deux rôles, tous réussis. Les [preuves JSON](preuves/rm012-policy-20261117/validation.json) décrivent le paquet testé. CI complète à vérifier dans la PR avant publication.
+
+Captures avec données fictives : [mobile](preuves/rm012-policy-20261117/automatic-closed-390.png) · [tablette](preuves/rm012-policy-20261117/automatic-closed-768.png) · [PC](preuves/rm012-policy-20261117/automatic-closed-1440.png). Elles montrent le début du suivi et l’archive automatique ; les captures de revue et de thème sombre sont dans le même dossier. Aucune donnée fictive dans un projet partagé ; aucun appel d’écriture de test sur DEV/PROD.

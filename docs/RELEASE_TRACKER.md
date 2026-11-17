@@ -6,6 +6,7 @@
 - Préférence confirmée explicitement : « Oui, clôturer automatiquement si tout est finalisé ». Clôture après la fin réelle seulement, sans statut déduit, sans blocage, avec trace système identifiable et unicité restaurant/date ; les oublis restent ouverts avec une alerte.
 - Branche `fix/rm012-start-date` depuis DEV `8924ff1`, sauvegarde distante `backup/rm012-dev-before-start-date-20261117`. Anciennes journées conservées et consultables volontairement, sans notifications ni clôtures automatiques rétroactives.
 - Préparer et tester les changements serveur sur PostgreSQL/Cron isolés, présenter les impacts de migration avant application partagée ; correction sur le clone DEV uniquement. V3/MAIN/Supabase PROD préservés, aucune réservation/clôture fictive dans une base réelle.
+- Correctif préparé : début serveur par établissement, worker privé Supabase Cron toutes les cinq minutes, archive commune aux deux modes, audit système distinct et protections de concurrence. Validation locale : 229 tests Node, syntaxe 149 fichiers, 15 groupes SQL/Cron, 29 régressions SQL sur le nouveau schéma et 23 groupes navigateur aux sept largeurs/deux rôles. [Impacts, résultats et captures](audits/RM012_POLICY_AUTOCLOSE_20261117.md). Migration nouvelle non encore appliquée à une base partagée.
 
 ### RM-012 — Publication du clone DEV autorisée — À TESTER CLONE (17/11/2026)
 
