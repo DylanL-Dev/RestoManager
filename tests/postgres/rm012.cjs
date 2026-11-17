@@ -3,7 +3,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const {start,uid,rid,booking,lit}=require('./rm012-support.cjs');
 const out=process.env.BROWSER_ARTIFACTS||path.resolve('test-results/rm012-postgres'),results=[];
 (async()=>{let db;try{
- db=await start();const {ok,sql,ctx,json,reset,rpc,clock}=db;
+ db=await start({withPolicy:process.env.RM012_POLICY==='1'});const {ok,sql,ctx,json,reset,rpc,clock}=db;
  const row=n=>json('select to_jsonb(r) from public.reservations r where id='+lit(booking(n)));
  const read=(args={},user=1)=>rpc('rm012_services_v1',args,user);
  const params=async(n,action,extra={})=>({p_date:'2032-11-07',p_reservation:booking(n),p_version:(await row(n)).edit_version,p_action:action,p_operation:randomUUID(),...extra});
@@ -104,7 +104,7 @@ const out=process.env.BROWSER_ARTIFACTS||path.resolve('test-results/rm012-postgr
  });
  await pass('Migration reapplication preserves existing rows, settings, archives and schema privileges',async()=>{
   await finalize();await success('rm012_close_v1',{p_date:'2032-11-07',p_operation:randomUUID()});const before=await json("select jsonb_build_object('r',(select jsonb_agg(r order by id) from public.reservations r),'h',(select jsonb_agg(h order by id) from public.restaurant_hours h),'c',(select jsonb_agg(c order by id) from public.service_closures c),'a',(select jsonb_agg(a order by id) from public.service_regularization_audit a))");
-  await ok(db.body);const after=await json("select jsonb_build_object('r',(select jsonb_agg(r order by id) from public.reservations r),'h',(select jsonb_agg(h order by id) from public.restaurant_hours h),'c',(select jsonb_agg(c order by id) from public.service_closures c),'a',(select jsonb_agg(a order by id) from public.service_regularization_audit a))");assert.deepEqual(after,before);
+  await ok(db.policyBody||db.body);const after=await json("select jsonb_build_object('r',(select jsonb_agg(r order by id) from public.reservations r),'h',(select jsonb_agg(h order by id) from public.restaurant_hours h),'c',(select jsonb_agg(c order by id) from public.service_closures c),'a',(select jsonb_agg(a order by id) from public.service_regularization_audit a))");assert.deepEqual(after,before);
  });
  await pass('Notification snapshots retain ALL unresolved dates independently of list pagination',async()=>{
   await ok(`insert into public.reservations(guest_name,party_size,starts_at,ends_at,notes,restaurant_id)

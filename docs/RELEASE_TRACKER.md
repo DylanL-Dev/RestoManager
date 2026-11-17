@@ -1,5 +1,17 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-012.1 — Démarrage du suivi et clôture automatique sûre — À TESTER CLONE (17/11/2026)
+
+- Activation DEV autorisée par le retour de recette et la confirmation explicite de la clôture automatique si tout est finalisé. Migration `rm012_activation_and_automatic_close` appliquée uniquement à RestoManager-DEV, version distante `20261117163056`, SQL SHA-256 `631edfae7192f5d572b8475c576ee9d48974e454db926a9c51b8a5e23847c481`.
+- Deux politiques démarrent au 17/11/2026 ; le travail unique `rm012-safe-automatic-close` est actif toutes les cinq minutes. Lecture applicative vérifiée : date sélectionnée 17/11, aucune ancienne alerte, historique conservé. RLS forcée et worker privé inaccessible aux rôles applicatifs.
+- Sept workflows verts sur le paquet `c93579f`. PR [#176](https://github.com/DylanL-Dev/RestoManager/pull/176) vers DEV uniquement, puis publication du clone Render et preuves dans cette PR. Aucune publication V3/MAIN ni modification Supabase PROD.
+
+- Retour de recette : six alertes de journées antérieures à la mise à jour. Le propriétaire demande un démarrage du suivi au 17/11/2026, sans rattrapage automatique des journées précédentes.
+- Préférence confirmée explicitement : « Oui, clôturer automatiquement si tout est finalisé ». Clôture après la fin réelle seulement, sans statut déduit, sans blocage, avec trace système identifiable et unicité restaurant/date ; les oublis restent ouverts avec une alerte.
+- Branche `fix/rm012-start-date` depuis DEV `8924ff1`, sauvegarde distante `backup/rm012-dev-before-start-date-20261117`. Anciennes journées conservées et consultables volontairement, sans notifications ni clôtures automatiques rétroactives.
+- Préparer et tester les changements serveur sur PostgreSQL/Cron isolés, présenter les impacts de migration avant application partagée ; correction sur le clone DEV uniquement. V3/MAIN/Supabase PROD préservés, aucune réservation/clôture fictive dans une base réelle.
+- Correctif préparé : début serveur par établissement, worker privé Supabase Cron toutes les cinq minutes, archive commune aux deux modes, audit système distinct et protections de concurrence. Validation locale : 229 tests Node, syntaxe 149 fichiers, 15 groupes SQL/Cron, 29 régressions SQL sur le nouveau schéma et 23 groupes navigateur aux sept largeurs/deux rôles. [Impacts, résultats et captures](audits/RM012_POLICY_AUTOCLOSE_20261117.md). Migration nouvelle non encore appliquée à une base partagée.
+
 ### RM-012 — Publication du clone DEV autorisée — À TESTER CLONE (17/11/2026)
 
 - Après le rapport et la PR #174, le propriétaire demande la disponibilité Render puis répond « Oui » à l’autorisation explicite : appliquer la migration sur Supabase DEV, intégrer la PR et déployer le clone Render, exclusivement DEV. V3/MAIN/Supabase PROD restent interdits.

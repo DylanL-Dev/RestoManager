@@ -1,0 +1,23 @@
+{
+  "passed": 15,
+  "failed": 0,
+  "pgCron": "1.6.4 pinned Debian package",
+  "network": "none",
+  "results": [
+    "Start date hides old pending days and notifications but preserves exact-date access",
+    "Automatic close archives finalized past service once, with system actor and correct real timestamp",
+    "No retrospective automatic archive, including finalized pre-start services",
+    "Every unfinished business status blocks automatic closure without status inference",
+    "Scheduled end and longest booking protect an ongoing day after clients are finalized",
+    "Active hold blocks automatic close; expiry never changes a booking status",
+    "Only trusted background execution can call the worker; user-facing automatic RPC remains refused",
+    "Rollout policy is venue-scoped, Restaurant-only and cannot be changed by application roles",
+    "System traces cannot be forged by the writer, and remain immutable and visible in history",
+    "Manual and automatic concurrent closes share one archive and one audit",
+    "Busy service lock skips background work instead of delaying live staff actions",
+    "Paris midnight and DST keep the selected civil day and current-day bookings independent",
+    "Reapplying preserves policy, business rows and the single named cron job",
+    "New venue starts on its actual Paris creation date and empty days never auto-close",
+    "Real pg_cron executes without an app session, records success and does not duplicate a closure"
+  ]
+}

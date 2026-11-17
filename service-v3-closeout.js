@@ -10,7 +10,7 @@
  const reload=button('Actualiser',()=>load(),'rm012Secondary','refresh-cw');reload.dataset.focus='refresh';header.append(intro,reload);
  const status=node('p','rm012Status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
  const outcome=node('div','rm012Outcome');outcome.hidden=true;const outcomeText=node('span'),verify=button('Vérifier l’enregistrement',()=>sendPending(),'rm012Secondary');outcome.append(outcomeText,verify);
- const body=node('div','rm012Body');root.append(header,status,outcome,body);
+ const monitoring=node('p','rm012Help');monitoring.hidden=true;const body=node('div','rm012Body');root.append(header,monitoring,status,outcome,body);
  let scope='',data=null,selected='',stale=true,loading=false,busy=false,pending=null,confirming=false,sequence=0,view='pending',renderKey='',registered=false,dialog=null,loadError='';
  const context=()=>window.RestoNotificationContext;
  const authorized=()=>context()?.role==='fb_admin'&&Boolean(context()?.restaurantId);
@@ -30,7 +30,7 @@
   if(registered||!window.RestoNotifications)return;registered=true;
   window.RestoNotifications.registerSource('rm012',{roles:['fb_admin'],collect(){
    if(!enabled())return [];if(!data&&loadError)throw Error('Source RM-012 indisponible');
-   return m.notifications(data?.notification_days||[],context(),{stale});
+   return m.notifications(data?.notification_days||[],context(),{stale,since:data?.detection_since,automatic:data?.automatic_closure===true});
   },open:item=>openDate(item.serviceDate)});
  }
  function sync(){
@@ -74,6 +74,7 @@
  function render(){
   sync();if(!enabled())return;
   status.textContent=loadError||(!data?'Chargement des journées…':stale?'Informations à revérifier. Les actions sont suspendues jusqu’à une lecture serveur confirmée.':loading?'Actualisation…':'Horaires et statuts vérifiés auprès du serveur.');
+  monitoring.hidden=!data?.detection_since;if(!monitoring.hidden)monitoring.textContent='Suivi depuis le '+m.formatDate(data.detection_since)+'. '+(data.automatic_closure?'Clôture automatique après la fin de journée si tout est finalisé, avec vérification toutes les 5 minutes.':'Clôture sur confirmation du responsable.');
   status.classList.toggle('is-warning',stale&&Boolean(data)||Boolean(loadError));
   outcome.hidden=!pending;verify.disabled=busy||!window.RestoSupabaseReady||navigator.onLine===false;
   outcomeText.textContent=pending?'Une action sur le service du '+m.formatDate(pending.date)+' attend confirmation. Son identifiant est conservé pour éviter un doublon.':'';
@@ -95,7 +96,8 @@
   const dayHeader=node('header','rm012DayHead'),dayWords=node('div'),h=node('h3','','Service du '+m.formatDate(day.date));h.id='rm012DayTitle';h.tabIndex=-1;dayWords.append(h,node('p','',day.ends_at?'Fin de journée prévue : '+m.formatTime(day.ends_at)+' · Europe/Paris':'Horaires de cette journée indisponibles'));
   dayHeader.append(dayWords,badge(day.closure?'Clôturé':!day.ended?'En cours':day.pending||day.active_holds?'À vérifier':'Prêt à clôturer',day.closure?'is-done':day.pending?'is-attention':''));detail.append(dayHeader);
   if(!day.ended&&!day.closure)detail.append(node('p','rm012Callout','La journée est encore en cours. Son suivi habituel reste disponible ; aucune régularisation ni clôture n’est autorisée ici.'));
-  if(day.closure)detail.append(node('p','rm012Callout','Service du '+m.formatDate(day.date)+' clôturé le '+m.formatTime(day.closure.closed_at)+'. '+day.closure.served_covers+' couverts servis. Les autres journées restent indépendantes.'));
+  if(data.detection_since&&day.date<data.detection_since)detail.append(node('p','rm012Callout','Journée antérieure au début du suivi. Elle reste consultable à votre demande, sans rappel ni clôture automatique.'));
+  if(day.closure)detail.append(node('p','rm012Callout','Service du '+m.formatDate(day.date)+(day.closure.close_mode==='automatic'?' clôturé automatiquement le ':' clôturé le ')+m.formatTime(day.closure.closed_at)+'. '+day.closure.served_covers+' couverts servis. Les autres journées restent indépendantes.'));
   const stats=node('dl','rm012Stats');for(const [label,value] of [['Tables occupées',day.occupied_tables],['Clients attendus',day.awaited],['Arrivés, non installés',day.arrived]]){const box=node('div');box.append(node('dt','',label),node('dd','',String(value)));stats.append(box)}detail.append(stats);
   if(day.active_holds)detail.append(node('p','rm012Callout',day.active_holds+' maintien(s) de réservation encore actif(s). Attendez leur expiration ou la fin de la saisie sur le poste concerné.'));
   const unresolved=day.items.filter(r=>!m.finalStates.has(r.status));
@@ -106,7 +108,7 @@
   if(!day.can_close&&!day.closure&&day.ended)detail.append(node('p','rm012Help','La clôture restera indisponible tant que des éléments bloquants subsistent.'));
   const audit=node('details','rm012Audit');audit.dataset.detail='audit';const summary=node('summary','','Historique de cette journée ('+day.audit.length+')');audit.append(summary);
   if(!day.audit.length)audit.append(node('p','rm012Help','Aucune régularisation enregistrée pour cette journée.'));
-  for(const entry of day.audit){const row=node('article','rm012AuditRow');row.append(node('strong','',entry.action==='close_service'?'Clôture confirmée':(m.labels[entry.old_status]||entry.old_status)+' → '+(m.labels[entry.new_status]||entry.new_status)),node('p','',m.formatTime(entry.performed_at)+' · '+entry.actor_label),node('small','','Service du '+m.formatDate(entry.service_date)));if(entry.reason)row.append(node('p','',entry.reason));audit.append(row)}
+  for(const entry of day.audit){const row=node('article','rm012AuditRow');row.append(node('strong','',entry.action==='close_service'?(entry.actor_kind==='system'?'Clôture automatique':'Clôture confirmée'):(m.labels[entry.old_status]||entry.old_status)+' → '+(m.labels[entry.new_status]||entry.new_status)),node('p','',m.formatTime(entry.performed_at)+' · '+entry.actor_label),node('small','','Service du '+m.formatDate(entry.service_date)));if(entry.reason)row.append(node('p','',entry.reason));audit.append(row)}
   if(day.audit.length===100)audit.append(node('p','rm012Help','Les 100 dernières traces de cette journée sont affichées. Les traces antérieures sont conservées sur le serveur.'));
   detail.append(audit);layout.append(aside,detail);body.append(layout);
   for(const d of body.querySelectorAll('details'))if(details.includes(d.dataset.detail))d.open=true;

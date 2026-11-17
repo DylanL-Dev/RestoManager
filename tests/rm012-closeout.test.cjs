@@ -38,3 +38,17 @@ test('RM-012: automatic legacy closure is removed, existing manual confirmation 
 test('RM-012: app refresh includes uncertain administrative operations in the shared PWA guard',()=>{
  assert.match(fs.readFileSync('service-v3-refresh.js','utf8'),/RestoCloseout\?\.isBusy/);
 });
+
+test('RM-012.1: deployment starts inclusively on its server date without rewriting old business rows',()=>{
+ const before=day({date:'2026-11-16'}),today=day({date:'2026-11-17'}),after=day({date:'2026-11-18'}),rows=[before,today,after];const initial=JSON.stringify(rows);
+ assert.deepEqual(m.notifications(rows,context,{since:'2026-11-17'}).map(n=>n.serviceDate),['2026-11-17','2026-11-18']);assert.equal(JSON.stringify(rows),initial);
+ assert.deepEqual(m.notifications(rows,context,{since:'invalid'}),[]);
+});
+test('RM-012.1: automatic closure explains the waiting state but never infers a final status',()=>{
+ const clear=day({pending:0,occupied_tables:0,awaited:0,arrived:0,can_close:true});assert.match(m.notifications([clear],context,{automatic:true})[0].body,/clôture automatique/);
+ assert.deepEqual(m.available({status:'seated'},day()),['release_table']);
+});
+test('RM-012.1: optional rollout metadata is atomic and validated for old-server compatibility',()=>{
+ assert.equal(m.validate({...response(),detection_since:'2026-11-17',automatic_closure:true},'venue-a'),true);
+ for(const patch of [{detection_since:'invalid',automatic_closure:true},{detection_since:'2026-11-17'},{automatic_closure:true}])assert.equal(m.validate({...response(),...patch},'venue-a'),false);
+});
