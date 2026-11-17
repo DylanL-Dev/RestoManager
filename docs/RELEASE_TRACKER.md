@@ -1,6 +1,13 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
-### RM-012 — Fin de service intelligente — À TESTER CLONE après revue migration/intégration (17/11/2026)
+### RM-012 — Publication du clone DEV autorisée — À TESTER CLONE (17/11/2026)
+
+- Après le rapport et la PR #174, le propriétaire demande la disponibilité Render puis répond « Oui » à l’autorisation explicite : appliquer la migration sur Supabase DEV, intégrer la PR et déployer le clone Render, exclusivement DEV. V3/MAIN/Supabase PROD restent interdits.
+- Migration `rm012_intelligent_closeout` appliquée sur **RestoManager-DEV** (`lykoybacslvmhtzftqsf`), version distante `20261117115202`, SQL identique au paquet testé (SHA-256 `ec43462792b98b331a457d0f43785a0b03ee9f9a273663dfc557298bfa5851bc`). Audit vide après application, RLS activée/forcée, droits temporaires restaurés, RPC Restaurant fonctionnelle et Réception refusée avec 42501.
+- Empreintes avant/après identiques : 81 réservations, 110 attributions, 1 archive, 2 lignes horaires. Aucune réservation/clôture créée, aucun statut ni paramètre modifié. Les alertes de sécurité préexistantes n’augmentent pas ; les deux anciennes fonctions publiques passent SECURITY INVOKER.
+- Publication du paquet applicatif `907934e` : sept workflows GitHub verts, intégration DEV puis contrôle du déploiement Render LIVE et des ressources servies. Les preuves de livraison et le lien du clone seront consignés dans la PR #174. La recette utilisateur reste à réaliser ; aucune validation de terrain ni autorisation V3/MAIN n’est déduite.
+
+Les éléments ci-dessous décrivent la livraison initiale, avant cette autorisation d’activation DEV.
 
 - Nouvelle mission explicitement autorisée, sept lots : détection selon horaires réels, espace Services à régulariser, clôture ciblée, notifications RM-014, audit, responsive et tests isolés. Cette instruction ouvre RM-012 après la livraison RM-014.2 ; aucune validation physique de production précédente n’est inventée.
 - Sauvegarde DEV distante `backup/rm012-dev-before-20261117` sur `85227fccb32cbdd36a41e30ee42dc5f063912e50`, créée avant modification. Branche `feature/rm012-intelligent-closeout` issue de ce même DEV.
