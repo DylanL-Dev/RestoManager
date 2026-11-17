@@ -133,6 +133,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  }
  async function rpc(key,action,args={}){
   if(!onlineReady())throw safe(offlineMessage);
+  if(action!=='release'&&window.RestoTutorial?.isReading?.())throw safe('Le guide reste en lecture. Quittez-le avant de réserver une vraie table.');
   const {data,error}=await supabase.rpc('booking_draft_v3',{p_key:key,p_action:action,...args});
   if(error)throw error;
   return data;
@@ -161,6 +162,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   if(draft?.key===current.key)draft=null;
  }
  async function ensure(force=false){
+  if(window.RestoTutorial?.isReading?.())throw safe('Le guide reste en lecture. Quittez-le avant de réserver une vraie table.');
   if(!onlineReady())throw safe(offlineMessage);
   if(recovery)throw safe('Une confirmation précédente doit être vérifiée avant de continuer.','RESULT_UNKNOWN');
   const generation=holdGeneration;
@@ -197,13 +199,13 @@ export function setupBookingDraft(supabase, parisDateTime){
   if(feedback&&/^Saisie abandonnée(?:\.| hors ligne\.)/.test(feedback.textContent.trim()))feedback.textContent='';
  }
  function inputChanged(event){
-  if(submitting||!window.RestoSupabaseReady||window.RestoScreens?.current()!=='reservationForm')return;
+  if(submitting||window.RestoTutorial?.isReading?.()||!window.RestoSupabaseReady||window.RestoScreens?.current()!=='reservationForm')return;
   clearPreviousAbandonMessage();
   active=true;
   if(['bookingDate','bookingTime','bookingGuests','bookingTable'].includes(event?.target?.id))holdGeneration++;
   clearTimeout(debounce);
   debounce=setTimeout(()=>serial(async()=>{
-   if(!active||submitting)return;
+   if(!active||submitting||window.RestoTutorial?.isReading?.())return;
    try{window.RestoRefreshBookingAvailability?.();await ensure()}catch(error){if(active){window.RestoErrors?.diagnostic('booking-hold',error);show(errorMessage(error),true);redraw()}}
   }),250);
  }
@@ -212,7 +214,7 @@ export function setupBookingDraft(supabase, parisDateTime){
  extend.addEventListener('click',()=>serial(async()=>{
   clearTimeout(debounce);
   if(!onlineReady()){show(offlineMessage,false);return}
-  if(!active||submitting)return;
+  if(!active||submitting||window.RestoTutorial?.isReading?.())return;
   try{
    if(!remaining()||draft.signature!==fields().signature){await ensure(true);return}
    const sent=Date.now(),result=await rpc(draft.key,'extend');
@@ -316,6 +318,7 @@ export function setupBookingDraft(supabase, parisDateTime){
   },
   pinned(date,time,guests){return remaining()>0&&draft.guests===guests&&draft.start===parisDateTime(date,time)?draft.numbers:null},
   async confirm(candidate){
+   if(window.RestoTutorial?.isReading?.())throw safe('Le guide reste en lecture. Quittez-le avant de réserver une vraie table.');
    if(submitting)throw safe('Enregistrement déjà en cours.');
    if(recovery){await recover();throw safe(committedRecovered?'Cette réservation a déjà été enregistrée. Consultez les réservations avant de commencer une nouvelle saisie.':'La confirmation précédente reste à vérifier. Votre saisie est conservée.','RESULT_UNKNOWN')}
    if(!onlineReady())throw safe(offlineMessage);

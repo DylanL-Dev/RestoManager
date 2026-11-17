@@ -1,35 +1,64 @@
-/* RestoManager V3 — guided first-use tutorial, responsive and non-intrusive */
-.restoTourWelcome,.restoTourDock{
- box-sizing:border-box;position:fixed;z-index:100050;right:24px;bottom:24px;
- width:min(400px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow-y:auto;
- border:1px solid #d4e6da;border-radius:19px;background:#fff;color:#153e31;
- box-shadow:0 18px 55px rgba(9,45,29,.2);padding:20px;
-}
-.restoTourWelcomeTop,.restoTourDockHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.restoTourWelcomeTop strong{display:block;font-size:17px;line-height:1.35}
-.restoTourWelcomeTop p,.restoTourDescription{margin:9px 0 16px;font-size:14px;line-height:1.6;color:#567267}
-.restoTourWelcomeClose,.restoTourClose{flex:none;display:grid;place-items:center;width:38px;height:38px;border:0;border-radius:10px;background:transparent;color:#6b8275;font-size:26px;line-height:1;cursor:pointer}
-.restoTourWelcomeClose:hover,.restoTourClose:hover{background:#eef6f0;color:#135f47}
-.restoTourWelcomeActions,.restoTourDockFooter{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
-.restoTourWelcomeActions button,.restoTourDockFooter button,.restoTourLaunch{
- min-height:44px;border:1px solid #cde0d4;border-radius:11px;background:#f2f8f4;
- color:#15563f;padding:10px 15px;font-size:13px;font-weight:750;cursor:pointer;
-}
-.restoTourWelcomeActions .restoTourStart,.restoTourDockFooter .restoTourNext,.restoTourLaunch{background:#087f5b;border-color:#087f5b;color:white}
-.restoTourDockFooter button:disabled{opacity:.4;cursor:default}
-.restoTourStepLabel{display:block;color:#258262;font-size:11px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;padding-top:10px}
-.restoTourTitle{font-size:20px!important;line-height:1.3!important;color:#143d30!important;margin:12px 0 0!important}
-.restoTourTarget{outline:3px solid #2cb385!important;outline-offset:4px;border-radius:10px}
-.restoTourHelp .managementGroupBody>p{margin-top:0}
-.restoTourWelcomeClose:focus-visible,.restoTourClose:focus-visible,.restoTourWelcomeActions button:focus-visible,.restoTourDockFooter button:focus-visible,.restoTourLaunch:focus-visible{outline:3px solid #2eb287;outline-offset:3px}
-html[data-theme="dark"] .restoTourWelcome,html[data-theme="dark"] .restoTourDock{background:#20382d;color:#f0f8f2;border-color:#496e57}
-html[data-theme="dark"] .restoTourTitle{color:#f0f8f2!important}
-html[data-theme="dark"] .restoTourWelcomeTop p,html[data-theme="dark"] .restoTourDescription{color:#bfd7c5}
-html[data-theme="dark"] .restoTourWelcomeClose,html[data-theme="dark"] .restoTourClose{color:#d0e6d5}
-html[data-theme="dark"] .restoTourWelcomeActions .restoTourLater,html[data-theme="dark"] .restoTourPrev{background:#294b39;color:#e7f5ea;border-color:#557462}
+/* RM-016: a calm learning space and compact coachmarks in the actual application. */
+.rmLearningCenter,.rmLearnCoach,.restoTourWelcome{--learn-ink:#173e33;--learn-muted:#526c61;--learn-border:#c9ded3;--learn-bg:#fff;--learn-soft:#f0f7f3;--learn-green:#176d57;color:var(--learn-ink);background:var(--learn-bg);font:16px/1.5 system-ui,sans-serif;box-sizing:border-box}
+.rmLearningCenter *, .rmLearnCoach *, .restoTourWelcome *{box-sizing:border-box}
+.rmLearningCenter{width:min(840px,calc(100vw - 48px));max-width:none;max-height:90dvh;padding:0;border:1px solid var(--learn-border);border-radius:24px;box-shadow:0 24px 80px #123e3129;overflow:auto;overscroll-behavior:contain}
+.rmLearningCenter::backdrop{background:#102d245c;backdrop-filter:blur(2px)}
+.rmLearnHeader{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:24px 28px 18px;border-bottom:1px solid var(--learn-border);position:sticky;top:0;background:var(--learn-bg);z-index:2}
+.rmLearnHeader h1{font-size:28px;line-height:1.2;margin:6px 0 0;color:var(--learn-ink)}
+.rmLearnEyebrow{font-size:11px;letter-spacing:.12em;font-weight:800;color:var(--learn-green);margin:0}
+.rmLearnContent{padding:0 28px 28px;overflow-wrap:anywhere}
+.rmLearnLead{color:var(--learn-muted);font-size:16px;line-height:1.6;margin:10px 0 22px}
+.rmLearnStatus{color:var(--learn-muted);font-size:14px;line-height:1.5;margin:0;overflow-wrap:anywhere}
+.rmLearningCenter>.rmLearnStatus:not(:empty){padding:14px 28px 0}
+.rmLearningCenter button,.rmLearnCoach button,.restoTourWelcome button{font-family:inherit;cursor:pointer;box-sizing:border-box}
+.rmLearnPrimary,.rmLearnSecondary,.rmLearnCourseStart{min-height:46px;padding:11px 16px;border:1px solid var(--learn-border);border-radius:12px;font-size:14px;font-weight:750;background:var(--learn-soft);color:var(--learn-ink);display:inline-flex;gap:8px;align-items:center;justify-content:center;text-align:center;text-decoration:none;line-height:1.4}
+.rmLearnPrimary{background:var(--learn-green);border-color:var(--learn-green);color:#fff}
+.rmLearnPrimary svg,.rmLearnSecondary svg,.rmLearnCourseIcon svg{width:21px;height:21px;flex:none}
+.rmLearnIconButton{min-height:44px;min-width:44px;width:44px;height:44px;display:grid;place-items:center;flex:none;border:1px solid var(--learn-border);border-radius:12px;background:var(--learn-soft);color:var(--learn-ink);padding:10px}
+.rmLearnIconButton svg{width:22px;height:22px}
+.rmLearnTextButton{font-size:13px;font-weight:700;min-height:44px;padding:9px 3px;border:0;background:transparent;color:var(--learn-green);display:inline-flex;align-items:center;gap:8px;line-height:1.4;text-align:left}
+.rmLearnTextButton svg{width:18px;height:18px}
+.rmLearnLevels{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:26px}
+.rmLearnLevel{display:flex;align-items:flex-start;gap:12px;min-width:0;min-height:105px;border:1px solid var(--learn-border);border-radius:16px;padding:18px;text-align:left;background:var(--learn-bg);color:var(--learn-ink)}
+.rmLearnLevel[aria-pressed=true]{border:2px solid var(--learn-green);padding:17px;background:var(--learn-soft)}
+.rmLearnLevel>svg{height:24px;width:24px;flex:none;color:var(--learn-green)}
+.rmLearnLevel strong,.rmLearnLevel small{display:block}.rmLearnLevel strong{font-size:16px;line-height:1.4}.rmLearnLevel small{margin-top:7px;color:var(--learn-muted);font-size:13px;line-height:1.5}
+.rmLearnSectionTitle{font-size:17px;line-height:1.4;margin:0 0 14px;color:var(--learn-ink)}
+.rmLearnSuggested{margin-bottom:26px}
+.rmLearnCourse{display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--learn-border);min-width:0}
+.rmLearnCourseIcon{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:var(--learn-soft);color:var(--learn-green)}
+.rmLearnCourseWords{min-width:0}.rmLearnCourseWords h3{font-size:16px;line-height:1.35;margin:0 0 5px;color:var(--learn-ink)}.rmLearnCourseWords p{font-size:14px;line-height:1.45;margin:0 0 6px;color:var(--learn-muted)}.rmLearnCourseWords small{color:var(--learn-muted);font-size:12px;line-height:1.5;display:block}
+.rmLearnCourseStart{background:var(--learn-bg);color:var(--learn-green);white-space:nowrap}
+.rmLearnPractice{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px;border-radius:18px;background:var(--learn-soft);margin:24px 0 30px;border:1px solid var(--learn-border)}
+.rmLearnPractice h2{font-size:20px;line-height:1.35;margin:8px 0;color:var(--learn-ink)}.rmLearnPractice p{font-size:14px;color:var(--learn-muted);margin:0;max-width:420px}.rmLearnPractice button{flex:none}
+.rmLearnQuestions{margin:26px 0}.rmLearnSearchLabel{font-size:14px;display:block;color:var(--learn-muted);font-weight:650}
+.rmLearnSearchLabel input{display:block;width:100%;min-height:48px;font:inherit;padding:12px 15px;border:1px solid var(--learn-border);border-radius:12px;background:var(--learn-bg);color:var(--learn-ink);margin:9px 0 16px}
+.rmLearnAnswer{border-bottom:1px solid var(--learn-border);padding:0 2px}.rmLearnAnswer summary,.rmLearnAll>summary{font-size:15px;font-weight:700;min-height:48px;padding:14px 0;cursor:pointer;line-height:1.45;color:var(--learn-ink)}
+.rmLearnAnswer p{font-size:15px;line-height:1.6;color:var(--learn-muted);margin:0 0 8px}.rmLearnAll{border-top:1px solid var(--learn-border);padding:7px 0}.rmLearnAll>button{margin:6px 6px 6px 0}
+.rmLearnLexicon{font-size:15px;margin:0 0 16px}.rmLearnLexicon dt{font-weight:800;margin-top:14px}.rmLearnLexicon dd{margin:3px 0 0;color:var(--learn-muted)}
+.rmLearnEmpty{font-size:15px;color:var(--learn-muted)}
+.rmLearnTraining{display:block;border:1px solid var(--learn-border);border-radius:16px;width:100%;height:min(65dvh,650px);min-height:360px;margin-top:16px;background:var(--learn-soft)}
+.rmLearningHelp{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #80b09d;border-radius:13px;background:#f0f8f3;color:#155f49;padding:9px 12px;font-size:13px;font-weight:750;cursor:pointer;flex:none}.rmLearningHelp svg{width:21px;height:21px;flex:none}
+.rmLearnCoach{position:fixed;z-index:100060;border:1px solid var(--learn-border);border-radius:19px;box-shadow:0 14px 50px #123e3133;padding:16px;overflow:auto;overscroll-behavior:contain;width:350px;max-width:calc(100vw - 24px)}
+.rmLearnCoach .rmLearnPrimary{color:#fff}.rmNotificationCenter .rmLearnCoach p{margin:8px 0}
+.rmLearnCoachTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.rmLearnCoachTop .rmLearnIconButton{width:44px;min-height:44px}
+.rmLearnCoach h2{font-size:20px!important;line-height:1.3!important;margin:8px 0 10px!important;color:var(--learn-ink)!important}.rmLearnCoach p{font-size:14px;line-height:1.55;margin:10px 0;color:var(--learn-muted)}
+.rmLearnCoach .rmLearnResult{padding-left:12px;border-left:3px solid #8cbaa6;font-size:13px}.rmLearnCoachExtra{font-size:13px}.rmLearnCoachExtra summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--learn-green);font-weight:750}.rmLearnCoachExtra p{font-size:13px;margin-top:0}
+.rmLearnCoachFooter{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}.rmLearnCoachFooter button{flex:1}.rmLearnCoachFooter button:disabled{opacity:.48;cursor:default}
+.rmLearnCoachLinks{display:flex;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-top:4px}.rmLearnCoachLinks button{font-size:12px}
+.rmLearnTarget{outline:3px solid #238466!important;outline-offset:4px;scroll-margin-top:100px;scroll-margin-bottom:120px;border-radius:9px!important;animation:rmLearnPulse 1.6s ease-out 2}
+@keyframes rmLearnPulse{50%{outline-color:#a9d9bf;outline-offset:7px}}
+.restoTourWelcome{position:fixed;right:20px;bottom:100px;width:min(370px,calc(100vw - 24px));z-index:100050;border:1px solid var(--learn-border);border-radius:18px;padding:16px;box-shadow:0 14px 50px #123e3129}.restoTourWelcome strong{font-size:16px}.restoTourWelcome p{font-size:14px;color:var(--learn-muted);line-height:1.5}
+.rmLearnSr{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.rmLearningCenter :focus-visible,.rmLearnCoach :focus-visible,.restoTourWelcome :focus-visible,.rmLearningHelp:focus-visible{outline:3px solid #278967;outline-offset:3px}
+html[data-theme=dark] .rmLearningCenter,html[data-theme=dark] .rmLearnCoach,html[data-theme=dark] .restoTourWelcome{--learn-ink:#e5f3ec;--learn-muted:#bfd5c8;--learn-border:#4b6d5c;--learn-bg:#203a2f;--learn-soft:#294b3b;--learn-green:#b4e2c7}
+html[data-theme=dark] .rmLearnPrimary{color:#143d2c}html[data-theme=dark] .rmLearningHelp{color:#e5f3ec;background:#254938;border-color:#668a73}html[data-theme=dark] .rmLearnTarget{outline-color:#9bd9b5!important}
+@media(max-width:1100px){.rmLearningHelp{width:44px;padding:10px}.rmLearningHelp>span{display:none}}
 @media(max-width:700px){
- .restoTourWelcome,.restoTourDock{right:12px;left:12px;width:auto;bottom:calc(80px + env(safe-area-inset-bottom));padding:16px;max-height:min(58dvh,430px);border-radius:16px}
- .restoTourTitle{font-size:18px!important}
- .restoTourWelcomeActions button,.restoTourDockFooter button{flex:1}
+ .rmLearningCenter{width:calc(100vw - 16px);max-height:calc(100dvh - 24px);border-radius:19px}.rmLearnHeader{padding:18px 16px 14px}.rmLearnHeader h1{font-size:23px}.rmLearnContent{padding:0 16px 20px}.rmLearningCenter>.rmLearnStatus:not(:empty){padding:12px 16px 0}
+ .rmLearnLevels{grid-template-columns:1fr;gap:9px;margin-bottom:22px}.rmLearnLevel{min-height:80px;padding:14px}.rmLearnLevel[aria-pressed=true]{padding:13px}.rmLearnLevel small{margin-top:4px}.rmLearnPractice{padding:18px;display:block}.rmLearnPractice button{margin-top:16px;width:100%}
+ .rmLearnCourse{grid-template-columns:36px 1fr;gap:10px}.rmLearnCourseIcon{height:36px;width:36px}.rmLearnCourseStart{grid-column:2;justify-self:start;margin-top:0;padding:9px 16px;min-height:44px}.rmLearnCourseWords p{font-size:13px}
+ .rmLearnCoach{padding:12px;border-radius:16px}.rmLearnCoach h2{font-size:18px!important}.rmLearnCoach p{margin:8px 0;font-size:14px}.rmLearnCoach .rmLearnResult{font-size:13px}.rmLearnCoachExtra summary{font-size:12px;padding:10px 0;min-height:44px}.rmLearnCoachLinks{margin-top:0}.rmLearnCoachLinks button{font-size:12px}
+ .restoTourWelcome{right:12px;bottom:calc(88px + env(safe-area-inset-bottom));padding:14px}.rmLearnTraining{height:64dvh;min-height:330px}
 }
-@media(prefers-reduced-motion:reduce){.restoTourTarget{scroll-behavior:auto}}
+@media(prefers-reduced-motion:reduce){.rmLearnTarget{animation:none;scroll-behavior:auto}.rmLearningCenter::backdrop{backdrop-filter:none}}
