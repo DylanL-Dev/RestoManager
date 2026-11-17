@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.16-rm014.2",
+  "currentVersion": "2026.11.17-rm012",
   "releases": [
+    {
+      "version": "2026.11.17-rm012",
+      "date": "2026-11-17",
+      "title": "Retrouvez les services à régulariser",
+      "changes": [
+        "Consultez les journées oubliées et vérifiez chaque table ou réservation avant correction.",
+        "Confirmez la clôture de la date sélectionnée, avec un historique des actions.",
+        "Retrouvez les services encore ouverts dans vos notifications Restaurant."
+      ],
+      "impact": "Les actions RM-012 nécessitent la mise à jour serveur dédiée. Aucun statut ni horaire n’est modifié automatiquement.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.16-rm014.2",
       "date": "2026-11-16",

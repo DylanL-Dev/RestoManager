@@ -1,5 +1,26 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-012 — Publication du clone DEV autorisée — À TESTER CLONE (17/11/2026)
+
+- Après le rapport et la PR #174, le propriétaire demande la disponibilité Render puis répond « Oui » à l’autorisation explicite : appliquer la migration sur Supabase DEV, intégrer la PR et déployer le clone Render, exclusivement DEV. V3/MAIN/Supabase PROD restent interdits.
+- Migration `rm012_intelligent_closeout` appliquée sur **RestoManager-DEV** (`lykoybacslvmhtzftqsf`), version distante `20261117115202`, SQL identique au paquet testé (SHA-256 `ec43462792b98b331a457d0f43785a0b03ee9f9a273663dfc557298bfa5851bc`). Audit vide après application, RLS activée/forcée, droits temporaires restaurés, RPC Restaurant fonctionnelle et Réception refusée avec 42501.
+- Empreintes avant/après identiques : 81 réservations, 110 attributions, 1 archive, 2 lignes horaires. Aucune réservation/clôture créée, aucun statut ni paramètre modifié. Les alertes de sécurité préexistantes n’augmentent pas ; les deux anciennes fonctions publiques passent SECURITY INVOKER.
+- Publication du paquet applicatif `907934e` : sept workflows GitHub verts, intégration DEV puis contrôle du déploiement Render LIVE et des ressources servies. Les preuves de livraison et le lien du clone seront consignés dans la PR #174. La recette utilisateur reste à réaliser ; aucune validation de terrain ni autorisation V3/MAIN n’est déduite.
+
+Les éléments ci-dessous décrivent la livraison initiale, avant cette autorisation d’activation DEV.
+
+- Nouvelle mission explicitement autorisée, sept lots : détection selon horaires réels, espace Services à régulariser, clôture ciblée, notifications RM-014, audit, responsive et tests isolés. Cette instruction ouvre RM-012 après la livraison RM-014.2 ; aucune validation physique de production précédente n’est inventée.
+- Sauvegarde DEV distante `backup/rm012-dev-before-20261117` sur `85227fccb32cbdd36a41e30ee42dc5f063912e50`, créée avant modification. Branche `feature/rm012-intelligent-closeout` issue de ce même DEV.
+- Critères : date exacte explicitement sélectionnée, statuts jamais déduits automatiquement, actions confirmées et auditées, droits Restaurant côté serveur/RLS, Réception exclue, horaires hebdomadaires/Paris/minuit/DST, concurrence et absence de double clôture, protection des autres journées.
+- Migration éventuelle préparée dans le dépôt et testée uniquement sur PostgreSQL éphémère. **Aucune application à une base partagée sans présentation préalable des impacts**, aucun changement V3/MAIN/Supabase PROD, aucune donnée fictive réelle, aucun réglage de restaurant modifié silencieusement.
+- Livrables : commits par fonctionnalité, PR DEV uniquement, résultats Node/PostgreSQL/Playwright aux sept largeurs, captures mobile/tablette/PC, limites et procédure Render. L’éventuelle absence de migration sur le clone doit être affichée explicitement, sans repli vers une action non sécurisée.
+- Lots serveur 1/3/5 préparés : migration `20261117083046_rm012_intelligent_closeout.sql`, créée avec le CLI dans un conteneur sans réseau. Validation locale : 29 groupes PostgreSQL réussis, dont idempotence, concurrence, préservation du jour courant, Europe/Paris/DST, RLS, audit immuable, pagination indépendante des alertes et migration/rollback sous administrateur non-superuser. Aucune application partagée.
+- Lots interface 2/4/6 préparés : espace daté intégré à RM-013, confirmations accessibles, corrections motivées, historique et audit, source RM-014 protégée non effaçable par lecture, reprise idempotente après erreur réseau et blocage de mise à jour PWA pendant une action incertaine. Activation uniquement sur capacité serveur RM-012 ; déclenchement automatique de l’ancienne clôture supprimé.
+
+- Livraison des sept lots : PR [#174](https://github.com/DylanL-Dev/RestoManager/pull/174) vers DEV uniquement, avec commits serveur, interface/notifications, tests et corrections Realtime. Validation locale : syntaxe 148 fichiers, 226 tests Node, 29 groupes PostgreSQL, 21 groupes Playwright RM-012 aux sept largeurs/deux rôles ; non-régressions RM-011/013/014 réussies. [Rapport détaillé, impacts de migration, captures et procédure Render](audits/RM012_CLOSEOUT_20261117.md).
+- Une régression pré-migration Realtime révélée par la CI historique a été corrigée : abonnement au bus de révision déjà publié, sans imposer la publication préalable des archives. CI complète et artefacts à consulter dans la PR avant toute intégration.
+- **Migration non appliquée, PR non fusionnée, RM-012 non publié sur Render**. Revue/autorisation préalable des impacts SQL nécessaire avant la base DEV partagée. Aucun changement V3/MAIN/PROD ni donnée fictive réelle. La recette hébergée par le propriétaire reste en attente ; aucune validation de terrain n’est inventée.
+
 ### RM-014.2 — PUBLIÉE V3 / PUBLIÉE MAIN (17/11/2026)
 
 - Publication expressément autorisée : « Ok mes sur main est v3 », consignée par PR #169. Source du glissement DEV b6e6603, PR #167, Render dep-dbtnn3mk1f9s7397811g. Aucune recette physique détaillée inventée.

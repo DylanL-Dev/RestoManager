@@ -1,0 +1,10 @@
+{
+  "passed": 110,
+  "failed": 0,
+  "backend": "in-memory mock, external requests blocked; Auth/RLS/Realtime NOT validated",
+  "viewports": [
+    "390x844",
+    "768x1024",
+    "1440x900"
+  ]
+}

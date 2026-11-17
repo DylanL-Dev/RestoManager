@@ -2,7 +2,7 @@
 (function(){
  const button=document.getElementById('refreshAppBtn');
  let busy=false;
- const state=()=>({dirty:window.RestoScreens?.hasUnsavedChanges?.()??true,busy:Boolean(window.RestoBookingDraft?.checking?.()||window.RestoEditNavigation?.isBusy?.()||document.querySelector('form[aria-busy="true"]'))});
+ const state=()=>({dirty:window.RestoScreens?.hasUnsavedChanges?.()??true,busy:Boolean(window.RestoBookingDraft?.checking?.()||window.RestoEditNavigation?.isBusy?.()||window.RestoCloseout?.isBusy?.()||document.querySelector('form[aria-busy="true"]'))});
  // A worker asks every open client immediately before activating an application update.
  navigator.serviceWorker?.addEventListener('message',event=>{
   if(event.data?.type==='RESTO_UPDATE_CHECK')event.ports?.[0]?.postMessage({type:'RESTO_UPDATE_STATE',...state()});

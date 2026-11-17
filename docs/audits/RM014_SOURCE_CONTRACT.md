@@ -1,6 +1,10 @@
-# RM-014 — Contrat des sources futures (RM-012)
+# RM-014 — Contrat des sources et intégration RM-012
 
-Aucun fournisseur RM-012 n’est chargé dans l’application de cette livraison. Aucune migration ou clôture n’est créée. L’adaptateur sera ajouté quand les règles et la source autorisée RM-012 seront disponibles.
+Depuis la branche RM-012 du 17/11/2026, `service-v3-closeout.js` inscrit le fournisseur `rm012`. Il reste inactif sans la capacité serveur `service_regularization: 1`. La migration RM-012 est préparée et testée uniquement sur PostgreSQL éphémère ; ce document ne signifie pas qu’elle est appliquée sur une base partagée.
+
+Le fournisseur utilise le champ autorisé `notification_days` de `rm012_services_v1`, contenant toutes les journées terminées non clôturées, indépendamment de la pagination des listes et de l’historique. Identité : `rm012:service:AAAA-MM-JJ`, rôle `fb_admin`, priorité haute, `dismissible: false`. Les compteurs et la révision évoluent après vérification serveur. Une journée sans élément restant à corriger garde son rappel « clôture reste à confirmer » jusqu’à sa clôture réelle. Une lecture ne résout rien ; le rappel revient à la prochaine connexion. Une réponse réseau incertaine conserve explicitement le dernier état périmé et bloque les mutations. Réception ne charge aucune donnée RM-012.
+
+Le schéma ci-dessous illustre le contrat générique ; l’implémentation utilise `service:date` comme identité stable et `RestoCloseout.openDate` comme navigation protégée par RM-011.
 
 ```js
 const unregister = window.RestoNotifications.registerSource('rm012', {
@@ -9,7 +13,7 @@ const unregister = window.RestoNotifications.registerSource('rm012', {
     // Lire uniquement un snapshot déjà autorisé par le backend RM-012.
     // Retourner [] tant que cette source n’est pas réellement disponible.
     return authorizedSnapshot.map(service => ({
-      id: 'unclosed:' + service.date, // stable, indépendamment du nombre de points
+      id: 'service:' + service.date, // stable, indépendamment du nombre de points
       restaurantId: context.restaurantId,
       group: 'important',
       type: 'service-regularization',
@@ -29,8 +33,8 @@ const unregister = window.RestoNotifications.registerSource('rm012', {
   },
   async open(notification) {
     // Le centre a déjà demandé la navigation via RestoScreens.request.
-    // Ouvrir la future rubrique RM-012. Ne jamais clôturer ni libérer automatiquement.
-    await futureAuthorizedRm012Navigator(notification.serviceDate);
+    // Ouvrir la rubrique RM-012 autorisée. Ne jamais clôturer ni libérer automatiquement.
+    await window.RestoCloseout.openDate(notification.serviceDate);
   }
 });
 ```

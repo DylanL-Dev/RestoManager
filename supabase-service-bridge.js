@@ -9,7 +9,9 @@ export const supabase=createClient(
  supabaseEnvironment.publishableKey,
  {auth:{persistSession:true,autoRefreshToken:true,...(location.hostname.endsWith('.github.io')?{storageKey:'restomanager-ghpages-auth-v2'}:{})}}
 );
-const tables=['reservations','reservation_tables','restaurant_rooms','restaurant_tables','table_holds','table_fusion_links','restaurant_hours'];
+// The existing revision bus also signals closures/audit after RM-012.
+// Do not subscribe to an archive absent from pre-migration publications.
+const tables=['reservations','reservation_tables','restaurant_rooms','restaurant_tables','table_holds','table_fusion_links','restaurant_hours','restaurant_service_changes'];
 export async function requireStaff(){
  const {data:{user},error}=await supabase.auth.getUser();
  if(error||!user)throw new Error('Connexion requise');

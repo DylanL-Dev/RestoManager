@@ -1,0 +1,28 @@
+{
+  "passed": 21,
+  "failed": 0,
+  "data": "Actual PostgreSQL functions; disposable --network none container; fictional auth identities; all external browser HTTP/WS blocked",
+  "results": [
+    "fb_admin 360 real database review, confirmation, audit, current-day preservation and notifications",
+    "reception 360 real database review, confirmation, audit, current-day preservation and notifications",
+    "fb_admin 390 real database review, confirmation, audit, current-day preservation and notifications",
+    "reception 390 real database review, confirmation, audit, current-day preservation and notifications",
+    "fb_admin 430 real database review, confirmation, audit, current-day preservation and notifications",
+    "reception 430 real database review, confirmation, audit, current-day preservation and notifications",
+    "fb_admin 768 real database review, confirmation, audit, current-day preservation and notifications",
+    "reception 768 real database review, confirmation, audit, current-day preservation and notifications",
+    "fb_admin 1024 real database review, confirmation, audit, current-day preservation and notifications",
+    "reception 1024 real database review, confirmation, audit, current-day preservation and notifications",
+    "fb_admin 1440 real database review, confirmation, audit, current-day preservation and notifications",
+    "reception 1440 real database review, confirmation, audit, current-day preservation and notifications",
+    "fb_admin 1920 real database review, confirmation, audit, current-day preservation and notifications",
+    "reception 1920 real database review, confirmation, audit, current-day preservation and notifications",
+    "Lost committed response: same operation, one audit, PWA update blocked until confirmed",
+    "Offline suspension and fresh reconnect with retained business anomalies",
+    "Explicit active current date is read-only",
+    "Two real sessions: stale correction refused, synchronized row and single audit",
+    "Two browsers concurrently close: one archive, one closure audit",
+    "RM-012 notification cancellation preserves the actual RM-011 dirty draft",
+    "Missing migration is explicit: no RM-012 calls and no legacy automatic midnight close"
+  ]
+}
