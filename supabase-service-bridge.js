@@ -9,7 +9,7 @@ export const supabase=createClient(
  supabaseEnvironment.publishableKey,
  {auth:{persistSession:true,autoRefreshToken:true,...(location.hostname.endsWith('.github.io')?{storageKey:'restomanager-ghpages-auth-v2'}:{})}}
 );
-const tables=['reservations','reservation_tables','restaurant_rooms','restaurant_tables','table_holds','table_fusion_links','restaurant_hours'];
+const tables=['reservations','reservation_tables','restaurant_rooms','restaurant_tables','table_holds','table_fusion_links','restaurant_hours','service_closures'];
 export async function requireStaff(){
  const {data:{user},error}=await supabase.auth.getUser();
  if(error||!user)throw new Error('Connexion requise');

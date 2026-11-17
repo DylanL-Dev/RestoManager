@@ -8,6 +8,7 @@
 - Migration éventuelle préparée dans le dépôt et testée uniquement sur PostgreSQL éphémère. **Aucune application à une base partagée sans présentation préalable des impacts**, aucun changement V3/MAIN/Supabase PROD, aucune donnée fictive réelle, aucun réglage de restaurant modifié silencieusement.
 - Livrables : commits par fonctionnalité, PR DEV uniquement, résultats Node/PostgreSQL/Playwright aux sept largeurs, captures mobile/tablette/PC, limites et procédure Render. L’éventuelle absence de migration sur le clone doit être affichée explicitement, sans repli vers une action non sécurisée.
 - Lots serveur 1/3/5 préparés : migration `20261117083046_rm012_intelligent_closeout.sql`, créée avec le CLI dans un conteneur sans réseau. Validation locale : 29 groupes PostgreSQL réussis, dont idempotence, concurrence, préservation du jour courant, Europe/Paris/DST, RLS, audit immuable, pagination indépendante des alertes et migration/rollback sous administrateur non-superuser. Aucune application partagée.
+- Lots interface 2/4/6 préparés : espace daté intégré à RM-013, confirmations accessibles, corrections motivées, historique et audit, source RM-014 protégée non effaçable par lecture, reprise idempotente après erreur réseau et blocage de mise à jour PWA pendant une action incertaine. Activation uniquement sur capacité serveur RM-012 ; déclenchement automatique de l’ancienne clôture supprimé.
 
 ### RM-014.2 — PUBLIÉE V3 / PUBLIÉE MAIN (17/11/2026)
 
