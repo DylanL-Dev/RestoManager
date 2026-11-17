@@ -20,7 +20,7 @@ async function guideLayout(page,name){
 async function firstSteps(page,role,width){
  const calls=fixture.getCalls().length;
  if(width===360)await page.evaluate(()=>{const style=document.createElement('style');style.id='rm016ReadabilityStress';style.textContent='.rmLearnCoach p{font-size:18px!important;line-height:1.7!important}.rmLearnCoach h2{font-size:24px!important}';document.head.append(style)});
- await start(page,'first-steps');assert.match(await page.locator('#rmGuideTitle').innerText(),/espace/);await guideLayout(page,'first '+role+width);
+ await page.locator('.rmLearnSuggested [data-learning-course="first-steps"] button').first().click();await page.locator('#rmLearningCoach').waitFor({state:'visible'});assert.match(await page.locator('#rmGuideTitle').innerText(),/espace/);await guideLayout(page,'first '+role+width);
  await next(page);assert.equal(await page.locator('#rmGuideNext').isDisabled(),true);await guideLayout(page,'nav '+role+width);assert.match(await page.locator('#rmGuideDescription').innerText(),width<=1024?/Touchez/:/Cliquez/);
  if(width===390){await page.locator('#rmGuideFocus').click();await page.keyboard.press('Enter');await page.waitForTimeout(60)}else await targetAction(page);assert.equal(await screen(page),'reservations');assert.match(await page.locator('#rmGuideTitle').innerText(),/Retrouver/);await guideLayout(page,'search '+role+width);await page.locator('.rmLearnCoachExtra summary').click();await page.waitForTimeout(30);await guideLayout(page,'expanded explanation '+role+width);await page.locator('.rmLearnCoachExtra summary').click();if([390,768,1440].includes(width))await capture(page,'guide-'+role+'-'+width);
  await page.locator('#rmGuidePrev').click();await page.waitForTimeout(30);assert.match(await page.locator('#rmGuideTitle').innerText(),/Ouvrir/);await targetAction(page);await next(page);
@@ -58,6 +58,7 @@ async function allGuides(page,role,width){
   await start(page,id,{restart:true});let steps=0;
   while(await page.locator('#rmLearningCoach').isVisible()){
    if(++steps>12)throw Error('Guide does not complete '+id);
+   assert.equal(await page.locator('.rmLearnTarget').count(),1,'Visible guide target '+id+' step '+steps+' '+role+' '+width);
 
    if(id==='notifications'&&steps===2&&[390,768,1440].includes(width)){await guideLayout(page,'actual notification '+role+width);await capture(page,'notification-guide-'+role+'-'+width)}
    const disabled=await page.locator('#rmGuideNext').isDisabled();if(disabled)await targetAction(page);else await next(page);

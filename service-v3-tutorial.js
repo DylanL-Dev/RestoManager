@@ -70,9 +70,12 @@ export function installTutorial({user, profile, management}) {
     if (topic && courses().some(c => c.id === topic)) {
       const focused = el('section', 'rmLearnSuggested'); focused.append(sectionTitle('L’explication qui vous intéresse'), courseCard(courses().find(c => c.id === topic))); content.append(focused);
     }
-    const contextSection = el('section', 'rmLearnSuggested'); contextSection.append(sectionTitle('Pour cet écran'));
-    const suggested = courses().filter(c => c.screens.includes(currentContext)).slice(0, 2);
-    if (!suggested.length) suggested.push(courses().find(c => c.id === 'first-steps'));
+    const intro = courses().find(c => c.id === 'first-steps');
+    const discovering = settings.level === 'beginner' && !progress(intro).complete;
+    const contextSection = el('section', 'rmLearnSuggested'); contextSection.append(sectionTitle(discovering ? 'Pour commencer' : 'Pour cet écran'));
+    const relevant = courses().filter(c => c.screens.includes(currentContext) && c.id !== intro.id);
+    const suggested = discovering ? [intro, ...relevant.slice(0, 1)] : courses().filter(c => c.screens.includes(currentContext)).slice(0, 2);
+    if (!suggested.length) suggested.push(intro);
     for (const c of suggested) contextSection.append(courseCard(c)); content.append(contextSection);
     const practice = el('section', 'rmLearnPractice'); const practiceWords = el('div'); practiceWords.append(el('span', 'rmLearnEyebrow', 'ESSAYER SANS RISQUE'), el('h2', '', 'Un exercice, aucun vrai client'), el('p', '', role === 'restaurant' ? 'Retrouvez la chambre 204, installez le client fictif puis libérez sa table.' : 'Retrouvez la chambre 204 et confirmez sa réservation fictive.'));
     practice.append(practiceWords, button('M’entraîner', () => showPractice('welcome'), 'rmLearnPrimary', 'arrow-up-right')); content.append(practice);
@@ -112,7 +115,7 @@ export function installTutorial({user, profile, management}) {
     settings.practice[event.data.scenario] = true; save(); status('Exercice réussi. Rien n’a été modifié dans le service réel. Vous pouvez recommencer.');
   });
 
-  function visible(n) { return !!n?.isConnected && n.getClientRects().length > 0 && getComputedStyle(n).visibility !== 'hidden' && !n.closest('[hidden], [inert]'); }
+  function visible(n) { return !!n?.isConnected && n.getClientRects().length > 0 && getComputedStyle(n).visibility !== 'hidden' && !n.closest('[hidden]'); }
   function findTarget(step) { return step.target.flatMap(selector => [...document.querySelectorAll(selector)]).find(visible) || null; }
   function clearTarget() { if (!target) return; target.classList.remove('rmLearnTarget'); const ids = (target.getAttribute('aria-describedby') || '').split(' ').filter(id => id && id !== 'rmGuideDescription'); if (ids.length) target.setAttribute('aria-describedby', ids.join(' ')); else target.removeAttribute('aria-describedby'); target = null; }
   function closeGuide({restore = true} = {}) {

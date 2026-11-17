@@ -6,7 +6,7 @@ Issue [#175](https://github.com/DylanL-Dev/RestoManager/issues/175), mission exp
 
 La visite précédente comprend six étapes Réception et sept Restaurant. Elle décrit surtout des écrans, conserve un unique marqueur « vu » dès son lancement et à la fermeture, ne propose ni recherche d’aide ni exercice. La carte fixe peut gêner le repère montré. Elle utilise déjà la navigation protégée ; cette protection est conservée.
 
-Le nouveau centre d’aide possède deux niveaux, un choix d’exercice et une recherche de questions courantes. Les autres parcours et le lexique sont repliés. Le bouton Aide reste disponible depuis chaque écran, et Gestion conserve son accordéon Didacticiel & aide. Les deux niveaux utilisent les mêmes règles métier : le niveau rapide retire seulement les explications détaillées.
+Le nouveau centre d’aide propose Mes premiers pas en tête aux débutants tant que ce parcours n’est pas terminé, quel que soit l’écran de départ. Il possède deux niveaux, un choix d’exercice et une recherche de questions courantes. Les autres parcours et le lexique sont repliés. Le bouton Aide reste disponible depuis chaque écran, et Gestion conserve son accordéon Didacticiel & aide. Les deux niveaux utilisent les mêmes règles métier : le niveau rapide retire seulement les explications détaillées.
 
 Les guides restent une **lecture accompagnée des vrais écrans**. Un repère indique le contrôle ; la carte se place à côté, au-dessus ou au-dessous. Les étapes de navigation demandent de cliquer/toucher le véritable bouton. Les autres expliquent un seul geste ou un seul concept, avec un résultat attendu et une aide « Je n’ai pas compris ». Une action principale permet de poursuivre. Précédent, Quitter, Recommencer et reprise restent disponibles.
 
