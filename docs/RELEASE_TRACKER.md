@@ -1,5 +1,12 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-012.1 — Promotion V3 puis MAIN autorisée, activation PROD à confirmer (17/11/2026)
+
+- Instruction propriétaire après livraison Render : « Oui si tout est ok tu met à jour V3 et main ». Préparer la livraison ciblée de RM-012 et du correctif RM-012.1 ; ne pas fusionner DEV globalement.
+- Source DEV `0e7f7b7`, PR #174/#176, sept workflows réussis sur `1553c20`, Render `dep-dbu83st9fdbs73dvg83g` LIVE, version `2026.11.17-rm012.1`, cache et 19 ressources conformes. Le propriétaire demande la promotion sous condition de validation technique ; aucune recette physique supplémentaire n’est inventée.
+- Branches protégées de départ : V3 `b8f7a397fd35541e13d222421e43b0025ba13ead`, MAIN `a74e7ed9cab740b215e27946d75da35181f4b0e2`. Sauvegardes préalables et branches filles dédiées ; conserver URL/clé publiques PROD, SDK/lockfile existants et historique des publications réelles.
+- Supabase PROD inspecté en lecture seule : prérequis RM-012 présents, module RM-012 et pg_cron non installés. L’autorisation de mise à jour V3/MAIN ne vaut pas autorisation explicite des migrations PROD, interdite dans les consignes initiales. Préparer leurs impacts et leur validation isolée, puis demander l’accord explicite avant toute application partagée PROD.
+
 ### RM-012.1 — Démarrage du suivi et clôture automatique sûre — À TESTER CLONE (17/11/2026)
 
 - Activation DEV autorisée par le retour de recette et la confirmation explicite de la clôture automatique si tout est finalisé. Migration `rm012_activation_and_automatic_close` appliquée uniquement à RestoManager-DEV, version distante `20261117163056`, SQL SHA-256 `631edfae7192f5d572b8475c576ee9d48974e454db926a9c51b8a5e23847c481`.
