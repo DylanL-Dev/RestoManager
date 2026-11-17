@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.16-rm014.1",
+  "currentVersion": "2026.11.16-rm014.2",
   "releases": [
+    {
+      "version": "2026.11.16-rm014.2",
+      "date": "2026-11-16",
+      "title": "Retirez les notifications déjà traitées",
+      "changes": [
+        "Glissez une notification à gauche ou à droite pour la retirer sur cet appareil.",
+        "Utilisez « Annuler » en cas d’erreur ou le bouton « Retirer » sur ordinateur.",
+        "Une nouvelle modification de la même réservation réapparaît ; l’historique des nouveautés reste accessible."
+      ],
+      "impact": "Le retrait est personnel à cet appareil. Les réservations et les notifications des collègues sont conservées.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.16-rm014.1",
       "date": "2026-11-16",

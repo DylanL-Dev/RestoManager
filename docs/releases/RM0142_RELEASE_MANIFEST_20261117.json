@@ -1,0 +1,39 @@
+{
+  "mission": "RM-014.2",
+  "source_dev": "b6e6603e034f9aea77b099b57c55ffa2add42871",
+  "source_code": "bfbc5bc",
+  "v3_before": "c5ef487813e27821c1435350cc44429dd719438d",
+  "main_before": "f17e6ea43f94452d3608eb778e218f350542e730",
+  "version": "2026.11.16-rm014.2",
+  "channel": "main",
+  "runtime": {
+    "service-v3-app-release.js": "972d7c81cfb0099fea8a8a78afb14f2c3b865b39510c91a9e75bf873375909c4",
+    "service-v3-fb-alerts.js": "c9796fbe2094fc791cca8d6f51ccd3ef634e6f457d054d6512c750c9610c5f70",
+    "service-v3-notification-model.js": "994d7e73eb259f82d1428cb540cc58ec82cb29365e4ff3367fab51bb7b2db70c",
+    "service-v3-notifications.css": "602730506451c46c291c3d9fbe599b03b3fe2c43708ae5ec342c76949f9949cd",
+    "service-v3-refresh.js": "e122a897d334ece68c84ec4947d065e48c7091e490e0f8aa1cab1c4e2d584fd6",
+    "service-v3-reminders.js": "b55e99158b142ad8abd7d0f816386dc1c365ba13fc3e99c0b91e1678289e1e0a",
+    "service-v3-reservations.js": "a783c020f18d6ea4b11a2e9abd174e3628809d9eb7dc157690c3ec4ef3f1e74b",
+    "service-v3-screens.js": "90938e03e21748e415babb2a8d590855c74449211e5452af8ac1934ddcb7cf8e",
+    "v3-connected-auth.js": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870",
+    "v3-connected.html": "5650d282c086f6cd6d7f8846ac0ac9ebb59b139a4742627504e22971a3378687",
+    "sw.js": "d2f31a6dd54594b8d31cc573908a72e9c4dc6cc88cccd3a2bb72d4b91260748e",
+    "lucide-local.js": "3b06c8c2d3769d35836a1b2a793231b6f4cfc04e97b073e05215207fa15e8c46",
+    "app-release.json": "54f5a73dea9d4b08a1360c4775a51c47917de7eca7b66cff32348a3ed61acb56"
+  },
+  "protected_production_files": {
+    "supabase-service-bridge.js": "30c453a3084c79bdd834f0262a7ee8a89f2c61183a65088f444f4e5eb6100f6e",
+    "supabase-login.js": "7878f4cd4026ca1229b15f9536632582704cef04d00f0eaf8d1ed89dc847c4c3",
+    "creator-auth.js": "04bfce830085d120a33272747c7dc6a014cd80c22b8e735c8460e10941166dc6",
+    "login.html": "c6a6abf774974a2303b16551a51f725a37e16fce688c7d3f8a539a062e9b0a5c",
+    "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14",
+    "v3-connected-auth.js": "6e244c9516f7408828e70f4e244f05524d800ac91b398bffbc8f654ef8d6e870"
+  },
+  "remote_database_changes": false,
+  "precached_resources": 71,
+  "source_tests": "b590cc6386867077d9f68eac4fa9dba3c517debf",
+  "authorization": "Ok mes sur main est v3 — 17/11/2026",
+  "authorization_pr": 169,
+  "source_pr": 167,
+  "source_render": "dep-dbtnn3mk1f9s7397811g"
+}

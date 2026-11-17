@@ -20,7 +20,7 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:syntax
       - run: npm test
-      - name: Before screenshots from the actual DEV base
+      - name: Before screenshots from the actual target branch
         env:
           RM013_BASE_REF: ${{ github.event.pull_request.base.sha }}
           BROWSER_ARTIFACTS: test-results/rm014-before
@@ -29,6 +29,8 @@ jobs:
         run: npm run test:notifications:browser
       - name: Tenant filtering, release proof, dirty drafts and future source fixture
         run: npm run test:notifications:lifecycle
+      - name: Personal dismissal, real touch gestures, undo and persistence
+        run: npm run test:notifications:dismiss
       - name: Real service worker, two tabs, waiting activation and offline shell
         run: npm run test:notifications:pwa
       - uses: actions/upload-artifact@v4
