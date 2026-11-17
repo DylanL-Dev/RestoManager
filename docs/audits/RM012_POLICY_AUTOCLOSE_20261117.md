@@ -4,6 +4,8 @@ Le propriétaire a signalé six notifications antérieures à la livraison. Il d
 
 Branche `fix/rm012-start-date`, issue de DEV `8924ff1`, sauvegarde distante `backup/rm012-dev-before-start-date-20261117`. V3/MAIN et Supabase PROD restent hors périmètre. Le correctif vise le clone Render DEV déjà autorisé.
 
+Activation DEV après validation : migration distante `20261117163056`, date de début 17/11/2026, clôture automatique active. Lecture vérifiée sur DEV : aucune alerte antérieure, journée sélectionnée au 17/11 et historique conservé. Le paquet `c93579f` a passé les sept workflows ; [PR #176 et preuves de publication Render](https://github.com/DylanL-Dev/RestoManager/pull/176). Les impacts ci-dessous ont été présentés avant application.
+
 ## Comportement
 
 - La date de démarrage est enregistrée côté serveur, par établissement. Les installations existantes démarrent le 17/11/2026 ; les nouveaux établissements démarrent à leur création, selon Europe/Paris.
