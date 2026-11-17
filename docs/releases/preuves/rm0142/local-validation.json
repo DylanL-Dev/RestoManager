@@ -1,0 +1,18 @@
+{
+  "version": "2026.11.16-rm014.2",
+  "channel": "main",
+  "syntaxFiles": 136,
+  "unitTests": 188,
+  "dismissalCombinations": 14,
+  "regressionCombinations": 14,
+  "lifecycleGroups": 24,
+  "pwaGroups": 12,
+  "sourceDev": "b6e6603e034f9aea77b099b57c55ffa2add42871",
+  "sourceRender": "dep-dbtnn3mk1f9s7397811g",
+  "sourcePr": 167,
+  "authorizationPr": 169,
+  "data": "In-memory only; real frontend; HTTP/WS external blocked",
+  "authenticatedHostedFlowTested": false,
+  "agentDatabaseWrites": 0,
+  "dependenciesPreserved": true
+}

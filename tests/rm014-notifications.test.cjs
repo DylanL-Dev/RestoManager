@@ -76,3 +76,28 @@ test('priority ordering is stable: important, service, news; unread before read 
 test('invalid dates and uninstalled future service sources do not create fictitious business alerts',()=>{
  assert.deepEqual(collect([r({time:'invalid'})]),[]);assert.deepEqual(m.events({role:'fb_admin',now}),[]);assert.deepEqual(m.project([]),[]);
 });
+test('personal dismissal hides read or unread notifications without mutating source or server read state',()=>{
+ const item=m.events({role:'fb_admin',bookings:[event()],now})[0],before=JSON.stringify(item);
+ const state={[item.id]:{dismissedRevision:m.dismissalRevision(item)}};
+ assert.deepEqual(m.project([item],state),[]);assert.equal(JSON.stringify(item),before);assert.equal(item.read,false);
+ assert.equal(m.project([item],{}).length,1,'Another account/device keeps its notification');
+ assert.deepEqual(m.project([{...item,read:true}],state),[],'Reading elsewhere does not revive the same event');
+});
+test('a new event in a dismissed reservation group reappears unread',()=>{
+ const old=m.events({role:'fb_admin',bookings:[event()],now})[0];
+ const state={[old.id]:{dismissedRevision:m.dismissalRevision(old)}};
+ const next=m.events({role:'fb_admin',bookings:[event()],changes:[event({id:'next',event_type:'modified',created_at:new Date(now).toISOString()})],now})[0];
+ assert.equal(m.project([next],state).length,1);assert.equal(m.project([next],state)[0].read,false);
+});
+test('reminder countdown stays dismissed; changed priority or estimate reappears',()=>{
+ const item=collect([r()])[0],state={[item.id]:{dismissedRevision:m.dismissalRevision(item)}};
+ assert.deepEqual(m.project(collect([r()],'fb_admin',now+60000),state),[]);
+ assert.equal(m.project([{...item,priority:'normal'}],state).length,1);
+ assert.equal(m.project([{...item,createdAt:item.createdAt+60000}],state).length,1);
+});
+test('connection problems and available updates cannot be hidden through stale dismissal preferences',()=>{
+ for(const item of [{id:'sync',source:'sync',type:'sync'},{id:'external',source:'rm012',pending:true},{id:'update',source:'release',update:true},{id:'protected',source:'rm012',dismissible:false}]){
+  assert.equal(m.dismissible(item),false);assert.equal(m.project([item],{[item.id]:{dismissedRevision:m.dismissalRevision(item)}}).length,1);
+ }
+ assert.equal(m.dismissible({source:'release',update:false}),true);
+});

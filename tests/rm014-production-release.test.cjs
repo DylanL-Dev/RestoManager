@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
-const manifest=JSON.parse(fs.readFileSync('docs/releases/RM014_RELEASE_MANIFEST_20261116.json'));
+const manifest=JSON.parse(fs.readFileSync('docs/releases/RM0142_RELEASE_MANIFEST_20261117.json'));
 test('RM-014 production: protected connection files and dependency lock remain unchanged',()=>{
  for(const [file,expected] of Object.entries(manifest.protected_production_files))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),expected,file);
  assert.equal(fs.existsSync('restomanager-env.js'),false);
