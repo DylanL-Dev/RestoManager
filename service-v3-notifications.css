@@ -82,3 +82,10 @@ html[data-theme="dark"] .rmNotificationCenter button.rmNcFilter{background:var(-
 html[data-theme="dark"] .rmNotificationCenter button.rmNcFilter[aria-pressed="true"]{background:var(--nc-tint);color:var(--nc-accent);border-color:var(--nc-accent)}
 
 .rmNotificationCenter .rmNcCardTitle{overflow-wrap:anywhere}
+
+/* Management entry uses the same action language as the notification center. */
+#manageNews .rmNewsLaunch{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;max-width:100%;padding:12px 18px;border:1px solid #146c55;border-radius:12px;background:#146c55;color:#fff;font:750 14px/1.4 system-ui,sans-serif;cursor:pointer}
+#manageNews .rmNewsLaunch svg{width:20px;height:20px;flex:none}
+#manageNews .rmNewsLaunch:focus-visible{outline:3px solid #238466;outline-offset:3px}
+html[data-theme="dark"] #manageNews .rmNewsLaunch{background:#146c55;border-color:#61bd95;color:#fff}
+@media(max-width:700px){#manageNews .rmNewsLaunch{width:100%}}
