@@ -39,7 +39,7 @@ export function installTutorial({user, profile, management}) {
 
   function status(message) { centerStatus.textContent = message || (memoryOnly ? 'Votre progression est conservée pour cette visite seulement : l’enregistrement sur cet appareil est indisponible.' : navigator.onLine === false ? 'L’aide reste consultable hors connexion. Les données du service peuvent être anciennes.' : ''); }
   function releaseFrame() { trainingFrame?.remove(); trainingFrame = null; trainingToken = null; }
-  function closeCenter({restore = true} = {}) { releaseFrame(); if (center.open) center.close(); document.body.style.overflow = previousOverflow; helpButton.setAttribute('aria-expanded', 'false'); if (restore && returnFocus?.isConnected) returnFocus.focus({preventScroll: true}); }
+  function closeCenter({restore = true} = {}) { releaseFrame(); if (center.open) center.close(); document.body.style.overflow = previousOverflow; helpButton.setAttribute('aria-expanded', 'false'); if (restore) (returnFocus?.isConnected && visible(returnFocus) ? returnFocus : helpButton).focus({preventScroll: true}); }
   function openCenter(options = {}) {
     if (!validIdentity()) return false;
     const origin = session ? helpButton : document.activeElement;
@@ -133,7 +133,8 @@ export function installTutorial({user, profile, management}) {
     const practice = button('Essayer sans risque', () => { const scenario = session?.course.id === 'notifications' ? 'notifications' : session?.course.id === 'new-booking' ? 'booking' : 'welcome'; openCenter(); showPractice(scenario); }, 'rmLearnTextButton');
     const help = button('Toute l’aide', () => openCenter(), 'rmLearnTextButton');
     const links = el('div', 'rmLearnCoachLinks'); links.append(focus, practice, help);
-    panel.append(top, h, description, result, message, extra, foot, links); panel._refs = {count, h, description, result, message, extra, extraText, prev, next, focus}; document.body.append(panel); return panel;
+    const reading = el('div', 'rmLearnCoachReading'); reading.append(h, description, result, message, extra);
+    panel.append(top, reading, foot, links); panel._refs = {count, h, description, result, message, extra, extraText, prev, next, focus}; document.body.append(panel); return panel;
   }
   function positionCoach() {
     if (!coach) return;
@@ -146,14 +147,22 @@ export function installTutorial({user, profile, management}) {
     const bottomEdge = Math.min((v?.offsetTop || 0) + viewportHeight - (innerWidth < 768 ? 85 : 14), parent ? parent.bottom - 12 : Infinity);
     const width = Math.min(350, rightEdge - leftEdge), maxHeight = Math.max(150, bottomEdge - topEdge);
     coach.style.width = width + 'px'; coach.style.maxHeight = maxHeight + 'px';
-    const h = Math.min(coach.scrollHeight, maxHeight), gap = 14;
+    let h = Math.min(coach.scrollHeight + 2, maxHeight); const gap = 14;
     const candidates = [
       {left: b.right + gap, top: Math.max(topEdge, Math.min(b.top, bottomEdge - h))},
       {left: b.left - width - gap, top: Math.max(topEdge, Math.min(b.top, bottomEdge - h))},
       {left: Math.max(leftEdge, Math.min(b.left, rightEdge - width)), top: b.bottom + gap},
       {left: Math.max(leftEdge, Math.min(b.left, rightEdge - width)), top: b.top - h - gap}
     ];
-    const chosen = candidates.find(p => p.left >= leftEdge && p.left + width <= rightEdge + 1 && p.top >= topEdge && p.top + h <= bottomEdge + 1) || {left: rightEdge - width, top: Math.max(topEdge, bottomEdge - h)};
+    let chosen = candidates.find(p => p.left >= leftEdge && p.left + width <= rightEdge + 1 && p.top >= topEdge && p.top + h <= bottomEdge + 1);
+    if (!chosen && target && visible(target)) {
+      const above = b.top - gap - topEdge, below = bottomEdge - b.bottom - gap, room = Math.max(above, below);
+      if (room >= 160) {
+        const limit = Math.min(maxHeight, Math.floor(room)); coach.style.maxHeight = limit + 'px'; h = Math.min(coach.scrollHeight + 2, limit);
+        chosen = {left: Math.max(leftEdge, Math.min(b.left, rightEdge - width)), top: above >= below ? b.top - h - gap : b.bottom + gap};
+      }
+    }
+    chosen ||= {left: rightEdge - width, top: Math.max(topEdge, bottomEdge - h)};
     coach.style.left = chosen.left + 'px'; coach.style.top = chosen.top + 'px';
   }
   function refreshHighlight() {

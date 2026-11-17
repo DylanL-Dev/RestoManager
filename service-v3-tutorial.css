@@ -41,6 +41,7 @@
 .rmLearningHelp{min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #80b09d;border-radius:13px;background:#f0f8f3;color:#155f49;padding:9px 12px;font-size:13px;font-weight:750;cursor:pointer;flex:none}.rmLearningHelp svg{width:21px;height:21px;flex:none}
 .rmLearnCoach{position:fixed;z-index:100060;border:1px solid var(--learn-border);border-radius:19px;box-shadow:0 14px 50px #123e3133;padding:16px;overflow:auto;overscroll-behavior:contain;width:350px;max-width:calc(100vw - 24px)}
 .rmLearnCoach .rmLearnPrimary{color:#fff}.rmNotificationCenter .rmLearnCoach p{margin:8px 0}
+.rmLearnCoach{display:flex;flex-direction:column;overflow:hidden}.rmLearnCoach[hidden]{display:none}.rmLearnCoachReading{overflow:auto;min-height:0;overscroll-behavior:contain}.rmLearnCoachTop,.rmLearnCoachFooter,.rmLearnCoachLinks{flex-shrink:0}
 .rmLearnCoachTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.rmLearnCoachTop .rmLearnIconButton{width:44px;min-height:44px}
 .rmLearnCoach h2{font-size:20px!important;line-height:1.3!important;margin:8px 0 10px!important;color:var(--learn-ink)!important}.rmLearnCoach p{font-size:14px;line-height:1.55;margin:10px 0;color:var(--learn-muted)}
 .rmLearnCoach .rmLearnResult{padding-left:12px;border-left:3px solid #8cbaa6;font-size:13px}.rmLearnCoachExtra{font-size:13px}.rmLearnCoachExtra summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--learn-green);font-weight:750}.rmLearnCoachExtra p{font-size:13px;margin-top:0}

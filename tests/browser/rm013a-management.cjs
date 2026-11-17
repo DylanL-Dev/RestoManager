@@ -212,9 +212,9 @@ async function exerciseRestaurant(page,width){
  if([390,768,1440].includes(width))await capture(page,'after-dark-'+width);
  await page.evaluate(()=>document.documentElement.dataset.theme='light');
  // The final module can scroll completely above the fixed mobile navigation.
- await openCategory(page,'restoTourHelp');await page.locator('.restoTourLaunch').scrollIntoViewIfNeeded();
+ await openCategory(page,'restoTourHelp');await page.locator('#restoTourHelpPanel .rmLearnPrimary').scrollIntoViewIfNeeded();
  await page.evaluate(()=>scrollTo(0,document.documentElement.scrollHeight));
- if(width<=900){const rect=await page.locator('.restoTourLaunch').boundingBox(),nav=await page.locator('.mobileBottomNav').boundingBox();assert.ok(rect.y+rect.height<=nav.y,'Last control clears fixed navigation')}
+ if(width<=900){const rect=await page.locator('#restoTourHelpPanel .rmLearnPrimary').boundingBox(),nav=await page.locator('.mobileBottomNav').boundingBox();assert.ok(rect.y+rect.height<=nav.y,'Last control clears fixed navigation')}
 }
 if(require.main===module)(async()=>{let browser;try{
  fs.mkdirSync(out,{recursive:true});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
