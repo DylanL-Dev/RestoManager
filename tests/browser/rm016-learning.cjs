@@ -81,6 +81,10 @@ async function extraExercises(page,role,width){
  for(const width of widths)for(const role of ['fb_admin','reception']){
   const v=await fixture.open(browser,origin,width,role,{serviceWorkers:'allow'});const {page}=v;
   fixture.configure(s=>{s.reservations=[{id:'00000000-0000-4000-8000-000000000901',guest_name:'Exemple fictif Martin',hotel_room:'204',party_size:2,starts_at:'2032-11-08T18:30Z',ends_at:'2032-11-08T19:30Z',status:'reserved',edit_version:'00000000-0000-4000-8000-000000000902',notes:''}];s.assignments=[{reservation_id:s.reservations[0].id,table_id:s.tables[0].id}]});await page.evaluate(()=>window.RestoRefreshSharedService());
+  await page.evaluate(()=>window.RestoManagementCategories.open('manageNews'));const news=page.locator('#manageNews .rmNewsLaunch');
+  const style=await news.evaluate(b=>({height:b.getBoundingClientRect().height,background:getComputedStyle(b).backgroundColor,radius:parseFloat(getComputedStyle(b).borderRadius),icon:!!b.querySelector('svg')}));assert.ok(style.height>=48&&style.radius>=12&&style.icon);assert.equal(style.background,'rgb(20, 108, 85)');
+  if([390,768,1440].includes(width))await capture(page,'news-button-'+role+'-'+width);
+  await page.evaluate(()=>window.RestoAppRelease.check());await news.focus();await page.keyboard.press('Enter');await page.waitForFunction(()=>document.getElementById('rmNcTitle').textContent==='Quoi de neuf ?');await page.getByRole('button',{name:'Fermer les notifications',exact:true}).click();
   await openHelp(page);await layout(page,role+width);
   if(width===360){await page.keyboard.press('Shift+Tab');assert.match(await page.evaluate(()=>document.activeElement.textContent),/Quoi de neuf/);await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.getAttribute('aria-label')),'Fermer l’aide')}
   const targets=await page.evaluate(()=>window.RestoTutorial.checkTargets());assert.deepEqual(targets.filter(t=>!t.exists),[],'Static selector contract '+role+width);

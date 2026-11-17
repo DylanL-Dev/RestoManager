@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.17-rm016",
+  "currentVersion": "2026.11.17-rm016.1",
   "releases": [
+    {
+      "version": "2026.11.17-rm016.1",
+      "date": "2026-11-17",
+      "title": "Un accès aux nouveautés harmonisé",
+      "changes": [
+        "Le bouton Voir les nouveautés adopte les couleurs et les arrondis de RestoManager.",
+        "Sa surface tactile s’adapte au téléphone, à la tablette et au PC.",
+        "Son icône Lucide et son repère clavier restent lisibles en thème clair comme sombre."
+      ],
+      "impact": "Retrouvez les nouveautés depuis Gestion. Les guides et les exercices restent accessibles dans Aide.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.17-rm016",
       "date": "2026-11-17",
