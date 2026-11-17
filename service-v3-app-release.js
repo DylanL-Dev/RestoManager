@@ -64,6 +64,8 @@
   for(const r of verified.releases){
    const article=node('article','rmNcHistoryEntry'),time=node('time','',new Date(r.date+'T12:00:00Z').toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',day:'numeric',month:'long',year:'numeric'}));time.dateTime=r.date;
    article.append(time,node('h3','',r.title));const list=node('ul');for(const change of r.changes)list.append(node('li','',change));article.append(list,node('p','',r.impact));
+   const learning=window.RestoTutorial?.guideForRelease?.(r.version);
+   if(learning)article.append(button('Comprendre cette nouveauté',()=>{window.RestoNotifications?.close?.();window.RestoTutorial?.open?.({topic:learning})},'rmNcSecondary'));
    const installed=r.version===current;article.append(node('p','rmNcMeta',installed?'Version ouverte sur cet appareil':r.version===verified.currentVersion?'Version publiée':'Version précédente'));
    if(!r.requiresReload)article.append(node('p','rmNcMeta','Aucune actualisation nécessaire'));
    if(r.version===verified.currentVersion&&!installed&&onlineVerified&&r.requiresReload)article.append(button('Mettre à jour',async()=>{window.RestoNotifications?.close?.();await window.RestoAppRefresh?.request({kind:'update',expectedVersion:r.version})},'rmNcPrimary'));
@@ -74,7 +76,7 @@
   const management=document.querySelector('[data-screen="administration"]');if(!management||document.getElementById('manageNews'))return;
   const wrapper=node('details','managementGroup');wrapper.id='manageNews';
   const summary=node('summary','managementGroupHead');summary.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="sparkles"></i></span><span class="managementGroupWords"><strong>Quoi de neuf ?</strong><small>Les améliorations de RestoManager</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
-  const body=node('div','managementGroupBody');body.append(node('p','muted','Retrouvez les évolutions de votre application et les informations de mise à jour.'),button('Voir les nouveautés',()=>window.RestoNotifications?.showHistory(),'roomManagerPrimary'));
+  const body=node('div','managementGroupBody'),launch=button('Voir les nouveautés',()=>window.RestoNotifications?.showHistory(),'rmNewsLaunch'),glyph=node('i');glyph.dataset.lucide='sparkles';glyph.setAttribute('aria-hidden','true');launch.prepend(glyph);body.append(node('p','muted','Retrouvez les évolutions de votre application et les informations de mise à jour.'),launch);
   wrapper.append(summary,body);management.append(wrapper);
  }
  window.RestoAppRelease={check,notification,card,renderHistory,availableVersion:()=>onlineVerified&&verified?.releases.findIndex(r=>r.version===current)>0&&verified.releases[0].requiresReload?verified?.currentVersion:null};
