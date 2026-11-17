@@ -1,0 +1,36 @@
+name: RM-012 Intelligent closeout - isolated database and UI
+on:
+  pull_request:
+    branches: [RestoManager-V3, main]
+permissions:
+  contents: read
+jobs:
+  closeout:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:syntax
+      - run: npm test
+      - name: PostgreSQL 17, network disabled, fictional identities, RLS and concurrent transactions
+        run: npm run test:closeout:postgres
+      - name: Existing RM-012 rules against activation and automatic-close migration
+        env:
+          RM012_POLICY: '1'
+          BROWSER_ARTIFACTS: test-results/rm012-policy-regression
+        run: npm run test:closeout:postgres
+      - name: Real pg_cron, start date, automatic close, system audit and concurrent staff
+        run: node tests/postgres/rm012-policy.cjs
+      - name: Actual PostgreSQL RPCs behind isolated auth, seven widths and two roles
+        run: npm run test:closeout:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm012-closeout-responsive-and-database
+          path: test-results/rm012*/

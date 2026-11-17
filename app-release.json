@@ -1,8 +1,21 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.16-rm014.2",
+  "currentVersion": "2026.11.17-rm012.1",
   "releases": [
+    {
+      "version": "2026.11.17-rm012.1",
+      "date": "2026-11-17",
+      "title": "Fin de service intelligente et clôture automatique sûre",
+      "changes": [
+        "Retrouvez les journées à vérifier, corrigez les oublis après confirmation et consultez un historique des actions.",
+        "Le suivi commence le 17 novembre 2026 ; les journées antérieures restent consultables sans nouveaux rappels.",
+        "Une journée terminée se clôture automatiquement si tout est finalisé et sans blocage, même application fermée.",
+        "Aucun client n’est déclaré absent et aucune table n’est libérée automatiquement."
+      ],
+      "impact": "Aucun client n’est déclaré absent et aucune table n’est libérée automatiquement. Aucun rattrapage automatique des journées antérieures au début du suivi.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.16-rm014.2",
       "date": "2026-11-16",

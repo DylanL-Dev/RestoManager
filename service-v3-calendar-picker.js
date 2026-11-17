@@ -20,19 +20,22 @@
   for(let day=1;day<=total;day++){const value=iso(year,month,day),btn=document.createElement('button');btn.type='button';btn.className='rmCalendarDay';btn.textContent=day;btn.disabled=!allowed(value);btn.setAttribute('aria-label',new Date(year,month,day).toLocaleDateString('fr-FR',{dateStyle:'full'}));if(value===active?.value)btn.classList.add('isSelected');if(value===todayIso)btn.classList.add('isToday');btn.addEventListener('click',()=>choose(value));days.append(btn)}
  };
  const open=input=>{active=input;previousFocus=input;const date=parse(input.value)||new Date();year=date.getFullYear();month=date.getMonth();root.querySelector('#rmCalendarTitle').textContent=input.closest('label')?.textContent?.trim().slice(0,48)||'Choisir une date';root.hidden=false;document.body.classList.add('rmCalendarOpen');render();root.querySelector('.rmCalendarPrev').focus({preventScroll:true})};
- for(const input of inputs){
+ function attach(input){
+  if(input.dataset.rmCalendarAttached)return;input.dataset.rmCalendarAttached='true';
   // Conserver le type date natif pour les formulaires, la validation et les valeurs ISO.
   // Un bouton transparent superposé intercepte l'interaction sans invoquer le calendrier Android.
   const wrapper=document.createElement('span');wrapper.className='rmCalendarField';input.parentNode.insertBefore(wrapper,input);wrapper.append(input);
   const trigger=document.createElement('button');trigger.type='button';trigger.className='rmCalendarTrigger';trigger.setAttribute('aria-label','Choisir une date');trigger.addEventListener('click',()=>open(input));wrapper.append(trigger);
   input.classList.add('rmCalendarInput');input.tabIndex=-1;
-  const update=()=>{trigger.replaceChildren();const label=document.createElement('span');label.textContent=parse(input.value)?parse(input.value).toLocaleDateString('fr-FR'):'Choisir une date';const icon=document.createElement('i');icon.setAttribute('data-lucide','calendar-days');trigger.append(label,icon);window.lucide?.createIcons?.();trigger.classList.toggle('isEmpty',!parse(input.value))};
+  const update=()=>{trigger.disabled=input.disabled;trigger.replaceChildren();const label=document.createElement('span');label.textContent=parse(input.value)?parse(input.value).toLocaleDateString('fr-FR'):'Choisir une date';const icon=document.createElement('i');icon.setAttribute('data-lucide','calendar-days');trigger.append(label,icon);window.lucide?.createIcons?.();trigger.classList.toggle('isEmpty',!parse(input.value))};
   input.addEventListener('input',update);input.addEventListener('change',update);
-  const observer=new MutationObserver(update);observer.observe(input,{attributes:true,attributeFilter:['value']});
+  const observer=new MutationObserver(update);observer.observe(input,{attributes:true,attributeFilter:['value','disabled','min','max']});
   update();
   // Certaines vues changent la valeur en JavaScript sans émettre d'événement.
   wrapper.addEventListener('pointerenter',update);
  }
+ inputs.forEach(attach);
+ window.RestoCalendar={attach};
  root.querySelector('.rmCalendarPrev').addEventListener('click',()=>{month--;if(month<0){month=11;year--}render()});
  root.querySelector('.rmCalendarNext').addEventListener('click',()=>{month++;if(month>11){month=0;year++}render()});
  root.querySelector('.rmCalendarToday').addEventListener('click',()=>{const d=new Date();const value=iso(d.getFullYear(),d.getMonth(),d.getDate());if(allowed(value))choose(value);else{year=d.getFullYear();month=d.getMonth();render()}});
