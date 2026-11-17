@@ -1,6 +1,6 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
-### RM-012 — Fin de service intelligente — EN COURS DEV (17/11/2026)
+### RM-012 — Fin de service intelligente — À TESTER CLONE après revue migration/intégration (17/11/2026)
 
 - Nouvelle mission explicitement autorisée, sept lots : détection selon horaires réels, espace Services à régulariser, clôture ciblée, notifications RM-014, audit, responsive et tests isolés. Cette instruction ouvre RM-012 après la livraison RM-014.2 ; aucune validation physique de production précédente n’est inventée.
 - Sauvegarde DEV distante `backup/rm012-dev-before-20261117` sur `85227fccb32cbdd36a41e30ee42dc5f063912e50`, créée avant modification. Branche `feature/rm012-intelligent-closeout` issue de ce même DEV.
@@ -9,6 +9,10 @@
 - Livrables : commits par fonctionnalité, PR DEV uniquement, résultats Node/PostgreSQL/Playwright aux sept largeurs, captures mobile/tablette/PC, limites et procédure Render. L’éventuelle absence de migration sur le clone doit être affichée explicitement, sans repli vers une action non sécurisée.
 - Lots serveur 1/3/5 préparés : migration `20261117083046_rm012_intelligent_closeout.sql`, créée avec le CLI dans un conteneur sans réseau. Validation locale : 29 groupes PostgreSQL réussis, dont idempotence, concurrence, préservation du jour courant, Europe/Paris/DST, RLS, audit immuable, pagination indépendante des alertes et migration/rollback sous administrateur non-superuser. Aucune application partagée.
 - Lots interface 2/4/6 préparés : espace daté intégré à RM-013, confirmations accessibles, corrections motivées, historique et audit, source RM-014 protégée non effaçable par lecture, reprise idempotente après erreur réseau et blocage de mise à jour PWA pendant une action incertaine. Activation uniquement sur capacité serveur RM-012 ; déclenchement automatique de l’ancienne clôture supprimé.
+
+- Livraison des sept lots : PR [#174](https://github.com/DylanL-Dev/RestoManager/pull/174) vers DEV uniquement, avec commits serveur, interface/notifications, tests et corrections Realtime. Validation locale : syntaxe 148 fichiers, 226 tests Node, 29 groupes PostgreSQL, 21 groupes Playwright RM-012 aux sept largeurs/deux rôles ; non-régressions RM-011/013/014 réussies. [Rapport détaillé, impacts de migration, captures et procédure Render](audits/RM012_CLOSEOUT_20261117.md).
+- Une régression pré-migration Realtime révélée par la CI historique a été corrigée : abonnement au bus de révision déjà publié, sans imposer la publication préalable des archives. CI complète et artefacts à consulter dans la PR avant toute intégration.
+- **Migration non appliquée, PR non fusionnée, RM-012 non publié sur Render**. Revue/autorisation préalable des impacts SQL nécessaire avant la base DEV partagée. Aucun changement V3/MAIN/PROD ni donnée fictive réelle. La recette hébergée par le propriétaire reste en attente ; aucune validation de terrain n’est inventée.
 
 ### RM-014.2 — PUBLIÉE V3 / PUBLIÉE MAIN (17/11/2026)
 

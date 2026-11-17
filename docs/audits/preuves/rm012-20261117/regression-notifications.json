@@ -1,0 +1,78 @@
+{
+  "base": "e3a5daa",
+  "backend": "In-memory boundary, real frontend/auth; external HTTP/WS blocked",
+  "passed": 14,
+  "failed": 0,
+  "results": [
+    {
+      "width": 360,
+      "role": "fb_admin",
+      "status": "passed"
+    },
+    {
+      "width": 360,
+      "role": "reception",
+      "status": "passed"
+    },
+    {
+      "width": 390,
+      "role": "fb_admin",
+      "status": "passed"
+    },
+    {
+      "width": 390,
+      "role": "reception",
+      "status": "passed"
+    },
+    {
+      "width": 430,
+      "role": "fb_admin",
+      "status": "passed"
+    },
+    {
+      "width": 430,
+      "role": "reception",
+      "status": "passed"
+    },
+    {
+      "width": 768,
+      "role": "fb_admin",
+      "status": "passed"
+    },
+    {
+      "width": 768,
+      "role": "reception",
+      "status": "passed"
+    },
+    {
+      "width": 1024,
+      "role": "fb_admin",
+      "status": "passed"
+    },
+    {
+      "width": 1024,
+      "role": "reception",
+      "status": "passed"
+    },
+    {
+      "width": 1440,
+      "role": "fb_admin",
+      "status": "passed"
+    },
+    {
+      "width": 1440,
+      "role": "reception",
+      "status": "passed"
+    },
+    {
+      "width": 1920,
+      "role": "fb_admin",
+      "status": "passed"
+    },
+    {
+      "width": 1920,
+      "role": "reception",
+      "status": "passed"
+    }
+  ]
+}
