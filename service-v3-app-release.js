@@ -64,6 +64,8 @@
   for(const r of verified.releases){
    const article=node('article','rmNcHistoryEntry'),time=node('time','',new Date(r.date+'T12:00:00Z').toLocaleDateString('fr-FR',{timeZone:'Europe/Paris',day:'numeric',month:'long',year:'numeric'}));time.dateTime=r.date;
    article.append(time,node('h3','',r.title));const list=node('ul');for(const change of r.changes)list.append(node('li','',change));article.append(list,node('p','',r.impact));
+   const learning=window.RestoTutorial?.guideForRelease?.(r.version);
+   if(learning)article.append(button('Comprendre cette nouveauté',()=>{window.RestoNotifications?.close?.();window.RestoTutorial?.open?.({topic:learning})},'rmNcSecondary'));
    const installed=r.version===current;article.append(node('p','rmNcMeta',installed?'Version ouverte sur cet appareil':r.version===verified.currentVersion?'Version publiée':'Version précédente'));
    if(!r.requiresReload)article.append(node('p','rmNcMeta','Aucune actualisation nécessaire'));
    if(r.version===verified.currentVersion&&!installed&&onlineVerified&&r.requiresReload)article.append(button('Mettre à jour',async()=>{window.RestoNotifications?.close?.();await window.RestoAppRefresh?.request({kind:'update',expectedVersion:r.version})},'rmNcPrimary'));

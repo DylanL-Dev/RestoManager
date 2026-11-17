@@ -1,6 +1,6 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261117-rm012';
 import {installFeedback} from './service-v3-feedback.js?v=20261116-rm013a3';
-import {installTutorial} from './service-v3-tutorial.js?v=20261108-onboarding1';
+import {installTutorial} from './service-v3-tutorial.js?v=20261117-rm016';
 import {prepareServiceSnapshot} from './service-snapshot.js?v=20261114-rm009-shared-threshold1';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';

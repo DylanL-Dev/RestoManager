@@ -1,5 +1,13 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+
+### RM-016 — Refonte pédagogique du didacticiel — PR DEV / VALIDATION TECHNIQUE (17/11/2026)
+
+- Mission et cahier des charges #175 explicitement autorisés. Branche `feature/rm016-learning-center` depuis DEV `32608cd`, sauvegarde distante `backup/rm016-dev-before-20261117`. PR vers DEV uniquement ; aucune publication V3/MAIN ni modification Supabase dans cette mission.
+- Deux niveaux, guides des vrais écrans, modules métiers par rôle, questions/lexique, progression locale par identité/parcours/version et trois exercices fictifs isolés sans réseau. Navigation et formulaires protégés ; aucun enregistrement de formation dans les données réelles.
+- RM-012 est désormais réellement publiée par #178/#179 : aide conditionnée à la capacité serveur. RM-015 reste masquée ; aide publique future distincte du personnel.
+- [Diagnostic, inventaire des droits et conception](audits/RM016_LEARNING_DESIGN_20261117.md). [Rapport final, 36 captures et procédure de recette Render](audits/RM016_LEARNING_20261117.md). Validation locale : syntaxe 154 fichiers, 235 tests Node, 65 groupes navigateur réussis, deux rôles et sept largeurs. CI de non-régression à consulter dans la PR. Aucun essai humain réel n’est prétendu.
+
 ### RM-012.1 — Promotion V3 puis MAIN autorisée, activation PROD à confirmer (17/11/2026)
 
 - Instruction propriétaire après livraison Render : « Oui si tout est ok tu met à jour V3 et main ». Préparer la livraison ciblée de RM-012 et du correctif RM-012.1 ; ne pas fusionner DEV globalement.
