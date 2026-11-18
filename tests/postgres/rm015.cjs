@@ -67,7 +67,7 @@ async function test(name,fn){await reset();await fn();passed++;results.push(name
  });
  await test('A seated table from yesterday remains unavailable for public bookings',async()=>{
   await db.ok("update public.restaurant_tables set active=false where label<>'Table 1';");
-  const id=randomUUID();await db.ok(`insert into public.reservations(id,restaurant_id,guest_name,party_size,starts_at,ends_at,status,notes) values('${id}','${rid(1)}','Fictif installé',2,clock_timestamp()-interval '1 day',clock_timestamp()-interval '23 hours','seated','');insert into public.reservation_tables(reservation_id,table_id,restaurant_id) select '${id}',id,restaurant_id from public.restaurant_tables where restaurant_id='${rid(1)}' and active;`);
+  const id=randomUUID();await db.ok(`insert into public.reservations(id,restaurant_id,guest_name,party_size,starts_at,ends_at,status,notes) values('${id}','${rid(1)}','Fictif installé',2,('${day(-1)} 19:00'::timestamp at time zone 'Europe/Paris'),('${day(-1)} 20:00'::timestamp at time zone 'Europe/Paris'),'seated','');insert into public.reservation_tables(reservation_id,table_id,restaurant_id) select '${id}',id,restaurant_id from public.restaurant_tables where restaurant_id='${rid(1)}' and active;`);
   await denied('rm015_gateway_v1','hold',{restaurant:settings.slug,key:randomUUID(),proof_hash:hash('p'),token_hash:hash('t'),token_cipher:'v1.fake.cipher',ip_hash:hash('i'),draft:{party:2,date:day(2),service:'dinner',time:'19:00'}},'FULL');
  });
  await test('Arrival percentage is authoritative for Web and uses the existing restaurant setting',async()=>{
