@@ -1,0 +1,11 @@
+PASS public 360
+PASS public 390
+PASS public 430
+PASS public 768
+PASS public 1024
+PASS public 1440
+PASS public 1920
+HTTP 409 {"error":{"code":"EXPIRED","message":"Le maintien a expiré. Revérifiez votre horaire."}}
+PASS staff 390
+PASS staff 768
+PASS staff 1440

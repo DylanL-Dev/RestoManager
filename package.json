@@ -30,7 +30,10 @@
     "test:closeout:browser": "node tests/browser/rm012-closeout.cjs",
     "test:learning:browser": "node tests/browser/rm016-learning.cjs",
     "build:public-demo": "node scripts/build-public-demo.cjs",
-    "test:public-demo:browser": "node tests/browser/rm015-public.cjs"
+    "test:public-demo:browser": "node tests/browser/rm015-public.cjs",
+    "build:public-connected": "node scripts/build-public-connected.cjs",
+    "test:public-connected:postgres": "node tests/postgres/rm015.cjs",
+    "test:public-connected:browser": "node tests/browser/rm015-connected.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.119.0",

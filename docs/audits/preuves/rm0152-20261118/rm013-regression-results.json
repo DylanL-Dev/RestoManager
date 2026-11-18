@@ -1,0 +1,92 @@
+{
+  "baseline": "473b7f423eb06579ab889b40c2d1ebea25e0c657",
+  "passed": 14,
+  "failed": 0,
+  "backend": "In-memory service boundary; real frontend and auth guard; external HTTP and WebSocket blocked",
+  "results": [
+    {
+      "width": 360,
+      "role": "fb_admin",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 360,
+      "role": "reception",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 390,
+      "role": "fb_admin",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 390,
+      "role": "reception",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 430,
+      "role": "fb_admin",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 430,
+      "role": "reception",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 768,
+      "role": "fb_admin",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 768,
+      "role": "reception",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 1024,
+      "role": "fb_admin",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 1024,
+      "role": "reception",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 1440,
+      "role": "fb_admin",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 1440,
+      "role": "reception",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 1920,
+      "role": "fb_admin",
+      "status": "passed",
+      "pageErrors": []
+    },
+    {
+      "width": 1920,
+      "role": "reception",
+      "status": "passed",
+      "pageErrors": []
+    }
+  ]
+}
