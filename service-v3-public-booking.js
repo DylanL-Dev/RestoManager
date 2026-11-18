@@ -37,10 +37,11 @@
   if(name==='maxParty')input.min='1';row.append(text,input);if(help)row.append(el('small','',help));return row;
  }
  function renderSettings(){
-  if(settings.querySelector('form')&&(dirty||settings.dataset.version===String(data.settings.version)))return;
+  const current=settings.querySelector('form');if(current&&dirty){const reload=settings.querySelector('.rmWebReload');if(reload)reload.hidden=Number(current.dataset.version)===data.settings.version;return;}
+  if(current&&settings.dataset.version===String(data.settings.version))return;
   settings.dataset.version=String(data.settings.version);
   settings.replaceChildren();if(role()!=='fb_admin'){settings.append(el('p','rmWebHelp','Les réglages et la confirmation des demandes sont réservés à l’équipe Restaurant.'));return;}
-  const c=data.settings,disclosure=el('details','rmWebConfiguration'),summary=el('summary','','Réglages du portail');summary.tabIndex=0;disclosure.append(summary);const form=el('form','rmWebForm');form.id='rm015WebSettings';
+  const c=data.settings,disclosure=el('details','rmWebConfiguration'),summary=el('summary','','Réglages du portail');summary.tabIndex=0;disclosure.append(summary);const form=el('form','rmWebForm');form.id='rm015WebSettings';form.dataset.version=String(c.version);
   const enabled=el('label','rmWebCheck'),check=el('input');check.type='checkbox';check.name='enabled';check.checked=c.enabled===true;enabled.append(check,document.createTextNode('Accepter les réservations en ligne'));form.append(enabled);
   form.append(field('slug','Adresse publique',c.slug),field('maxParty','Nombre maximal de personnes',c.maxParty,'number','À partir de 4 personnes, une confirmation du Restaurant est nécessaire.'));
   const delay=el('label','rmWebField');delay.append(el('span','','Délai de confirmation'));const select=el('select');select.name='pendingMinutes';select.id='rmWeb-pendingMinutes';for(const value of [15,30,60,90,120,180]){const o=el('option','',value+' minutes');o.value=value;select.append(o)}select.value=String(c.pendingMinutes||60);delay.append(select);form.append(delay);
@@ -48,6 +49,7 @@
   const advanced=el('details','rmWebLegal'),aHead=el('summary','','Conditions et confidentialité');advanced.append(aHead,field('horizonDays','Réserver jusqu’à combien de jours ?',c.horizonDays||60,'number'),field('leadMinutes','Délai minimum avant la venue (minutes)',c.leadMinutes??30,'number'),field('cancellationMinutes','Délai limite d’annulation avant la venue (minutes)',c.cancellationMinutes??0,'number'),field('privacyContact','Contact pour les données personnelles',c.privacyContact));
   for(const [key,label,max]of [['privacyNotice','Informations de confidentialité',3000],['cancellationNotice','Conditions d’annulation',1500]]){const l=el('label','rmWebField'),t=el('textarea');l.append(el('span','',label));t.name=key;t.id='rmWeb-'+key;t.maxLength=max;t.rows=4;t.value=c[key]||'';l.append(t);advanced.append(l);}form.append(advanced);
   const save=el('button','rmWebPrimary','Enregistrer les réglages');save.type='submit';form.append(save);disclosure.append(form);settings.append(disclosure);
+  const reload=button('Recharger les réglages actuels',async()=>{if(!dirty)return;const owner=identity();if(!await window.RestoDialog?.confirm?.('Vos modifications non enregistrées seront remplacées par les réglages actuels.',{title:'Recharger les réglages ?',acceptLabel:'Recharger'}))return;if(owner!==identity())return;dirty=false;settings.dataset.version='';render();settings.querySelector('details').open=true;settings.querySelector('input')?.focus();},'rmWebSecondary rmWebReload');reload.hidden=true;settings.append(reload);
   if(c.slug){const url=new URL('reservation/live.html',location.href);url.searchParams.set('restaurant',c.slug);const link=el('a','rmWebPublicLink','Ouvrir la page publique DEV');link.href=url.href;link.target='_blank';link.rel='noopener noreferrer';settings.append(link);}
  }
  function render(){
@@ -89,7 +91,7 @@
  root.addEventListener('input',e=>{if(e.target.closest('#rm015WebSettings'))dirty=true;});root.addEventListener('change',e=>{if(e.target.closest('#rm015WebSettings'))dirty=true;});
  root.addEventListener('submit',e=>{
   if(e.target.id!=='rm015WebSettings')return;e.preventDefault();if(!writable())return;const f=e.target,v=Object.fromEntries(new FormData(f));
-  const payload={...v,enabled:f.elements.enabled.checked,maxParty:v.maxParty?Number(v.maxParty):null,pendingMinutes:Number(v.pendingMinutes),horizonDays:Number(v.horizonDays),leadMinutes:Number(v.leadMinutes),cancellationMinutes:Number(v.cancellationMinutes),operation:crypto.randomUUID(),version:data.settings.version};
+  const payload={...v,enabled:f.elements.enabled.checked,maxParty:v.maxParty?Number(v.maxParty):null,pendingMinutes:Number(v.pendingMinutes),horizonDays:Number(v.horizonDays),leadMinutes:Number(v.leadMinutes),cancellationMinutes:Number(v.cancellationMinutes),operation:crypto.randomUUID(),version:Number(f.dataset.version)};
   pending={action:'configure',payload,owner:scope};void send();
  });
  for(const event of ['restomanager:supabase-snapshot','restomanager:notification-context','online'])window.addEventListener(event,()=>{sync();if(capable())void load();});
