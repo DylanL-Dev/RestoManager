@@ -58,6 +58,7 @@ async function allGuides(page,role,width){
   await start(page,id,{restart:true});let steps=0;
   while(await page.locator('#rmLearningCoach').isVisible()){
    if(++steps>12)throw Error('Guide does not complete '+id);
+   await page.locator('.rmLearnTarget').waitFor({state:'attached',timeout:5000});
    assert.equal(await page.locator('.rmLearnTarget').count(),1,'Visible guide target '+id+' step '+steps+' '+role+' '+width);
 
    if(id==='notifications'&&steps===2&&[390,768,1440].includes(width)){await guideLayout(page,'actual notification '+role+width);await capture(page,'notification-guide-'+role+'-'+width)}

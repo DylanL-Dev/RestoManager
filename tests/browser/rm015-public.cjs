@@ -58,7 +58,7 @@ async function complete(page) {
       await page.getByLabel('Prénom fictif').fill(''); await page.getByRole('button', { name: 'Vérifier mon exemple' }).click();
       assert.ok(await page.locator('#firstName').getAttribute('aria-invalid')); assert.equal(await page.evaluate(() => document.activeElement.id), 'firstName');
       await page.getByLabel('Prénom fictif').fill('Camille'); await page.getByLabel('J’accepte les conditions').check();
-      await page.getByLabel('Une demande particulière').fill('<script>window.injected=true</script> Une poussette, si possible.');
+      await page.getByLabel('Une demande particulière').fill('Une poussette, si possible.');
       if ([390, 768, 1440].includes(width)) await capture(page, 'contact-' + width);
       await page.getByRole('button', { name: 'Vérifier mon exemple' }).click(); await layout(page); await axe(page, 'review ' + width);
       assert.equal(await page.evaluate(() => window.injected), undefined);
@@ -129,6 +129,9 @@ async function complete(page) {
     }
     {
       const c = await context(), page = await c.newPage(); await page.goto(origin + '/reservation/?restaurant=a-lepicerie-rouen');
+      await chooseTime(page); await page.getByLabel('Une demande particulière').fill('<script>window.injected=true</script>'); await page.getByLabel('J’accepte les conditions').check();
+      await page.getByRole('button', { name: 'Vérifier mon exemple' }).click(); assert.match(await page.locator('.summary').innerText(), /<script>/); assert.equal(await page.evaluate(() => window.injected), undefined);
+      await page.getByRole('button', { name: 'Terminer la réservation fictive' }).click(); assert.equal(await page.evaluate(() => window.injected), undefined);
       const before = received.length;
       const denied = await page.evaluate(async () => {
         const violations = []; document.addEventListener('securitypolicyviolation', e => violations.push(e.effectiveDirective));
@@ -136,7 +139,7 @@ async function complete(page) {
         await new Promise(r => setTimeout(r, 30)); return { blocked, violations };
       });
       assert.equal(denied.blocked, true); assert.ok(denied.violations.includes('connect-src')); assert.ok(!received.slice(before).some(u => u.includes('supabase-service-bridge')));
-      pass('Public CSP blocks internal data fetch at the browser before any HTTP request'); await c.close();
+      pass('HTML notes remain text; public CSP blocks internal data fetch before any HTTP request'); await c.close();
     }
     {
       const c = await context({ serviceWorkers: 'allow' }), page = await c.newPage(); await page.goto(origin + '/__sw-harness');

@@ -34,6 +34,8 @@ La maquette annoncée n’a pas été reçue et n’est pas présente dans l’i
 
 Corrections révélées par les vérifications : contraste des textes secondaires et étapes, structure sémantique de la liste récapitulative, cycle clavier du dialogue, débordement avec texte doublé, et frontière du secours hors connexion. Aucun test n’utilise de vraies données ou identités salariées.
 
+La CI historique RM-016 a également révélé une assertion exécutée pendant la transition asynchrone d’un repère du didacticiel. La vérification attend maintenant l’attachement du repère (délai borné de cinq secondes), puis exige toujours exactement un repère. Aucun comportement du didacticiel n’est modifié, et l’absence réelle du bouton continue de faire échouer le test.
+
 ## Fichiers concernés
 
 | Groupe | Rôle |
@@ -43,6 +45,7 @@ Corrections révélées par les vérifications : contraste des textes secondaire
 | `sw.js` | Exclusion explicite du chemin public des caches, du secours et des vérifications de mise à jour salariés |
 | `scripts/build-public-demo.cjs`, `.gitignore` | Artefact de publication séparé, non activé en production |
 | `tests/rm015-public.test.cjs`, `tests/browser/rm015-public.cjs` | Tests de contrat/sécurité et parcours visuels |
+| `tests/browser/rm016-learning.cjs` | Attente du repère effectivement rendu avant l’assertion de non-régression |
 | `package.json`, `package-lock.json` | Commandes de validation et axe-core 4.10.3, uniquement dépendance de test ; versions Supabase/Playwright inchangées |
 | `.github/workflows/rm015-public-demo.yml` | Recette isolée et artefacts, PR vers DEV uniquement |
 | `docs/audits/RM0151_*`, preuves, `docs/RELEASE_TRACKER.md` | Architecture, résultats, captures, QR de recette et suivi de livraison |

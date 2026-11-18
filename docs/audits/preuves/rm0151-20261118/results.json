@@ -54,7 +54,7 @@
       "status": "passed"
     },
     {
-      "name": "Public CSP blocks internal data fetch at the browser before any HTTP request",
+      "name": "HTML notes remain text; public CSP blocks internal data fetch before any HTTP request",
       "status": "passed"
     },
     {
