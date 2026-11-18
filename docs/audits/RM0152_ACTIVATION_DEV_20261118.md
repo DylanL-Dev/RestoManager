@@ -14,7 +14,7 @@ Fichier : `supabase/migrations/20261118190351_rm015_secure_public_booking.sql`.
 | --- | --- |
 | Rôle technique | `rm015_public_writer`, NOLOGIN, NOINHERIT, sans BYPASSRLS ; aucun compte Auth créé. |
 | Six tables privées | `rm015_settings`, `rm015_requests`, `rm015_operations`, `rm015_audit`, `rm015_mail`, `rm015_rate` ; RLS activée et forcée, aucun accès direct anon/authenticated. |
-| Réservations | Colonne `source_channel` staff/web, valeur par défaut staff ; aucune réservation créée par la migration. |
+| Réservations | Colonnes `source_channel` staff/web et `guest_request_notes` (demande client actuelle, 500 caractères maximum), valeurs par défaut staff et texte vide ; aucune réservation créée par la migration. |
 | Maintiens partagés | `table_holds.web_request_id`, FK tenant/demande et contrainte de propriétaire exclusive. Un maintien salarié conserve `held_by` ; un maintien Web utilise sa demande privée, sans faux salarié. |
 | Anciennes fonctions | Comparaisons `held_by <> …` remplacées par `IS DISTINCT FROM` ; les maintiens Web bloquent aussi les anciennes RPC. Identité, propriétaire, search_path et droits existants sont contrôlés automatiquement avant/après. |
 | Moteur de placement | Réutilisation des ensembles et fusions autorisés ; exclusion du seul maintien Web propre à la demande lors de sa revalidation. Aucun nouveau type de fusion créé. |

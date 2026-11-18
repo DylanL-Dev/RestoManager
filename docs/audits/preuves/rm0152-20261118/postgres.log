@@ -23,5 +23,6 @@ PASS The persistent rate budget rejects excess attempts, including attempts whos
 PASS A stale email lease cannot acknowledge a retry and jobs older than deduplication retention stop
 PASS Staff drafts consume the arrivals budget and Web holds appear in RM-012 blockers
 PASS Paris midnight and both DST transitions reject nonexistent or ambiguous local slots
+PASS Successive guest request changes replace the client text and preserve all internal notes
 PASS Hosted-style non-superuser migration rollback, apply and reapply
-RESULT 26 isolated SQL groups passed
+RESULT 27 isolated SQL groups passed

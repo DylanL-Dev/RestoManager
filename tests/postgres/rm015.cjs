@@ -150,6 +150,13 @@ async function test(name,fn){await reset();await fn();passed++;results.push(name
    }
   }finally{await db.ok("create or replace function private.rm015_now() returns timestamptz language sql volatile security invoker set search_path='' as $$select clock_timestamp()$$;update public.restaurant_hours set weekly_schedule="+db.lit(JSON.stringify(original))+'::jsonb');}
  });
+ await test('Successive guest request changes replace the client text and preserve all internal notes',async()=>{
+  let r=await submit(await hold());const id=await db.ok('select id from public.reservations');await db.ok('update public.reservations set notes='+db.lit('Note interne à conserver intégralement\n[RESTOMANAGER:EXTERIEUR]')+' where id='+db.lit(id));
+  for(const notes of ['A'.repeat(500),'B'.repeat(500),'']){
+   const value=await okCall('rm015_gateway_v1','modify',{restaurant:settings.slug,token_hash:r.token,operation:randomUUID(),version:r.data.version,draft:r.draft,contact:{...contact,notes}});r={...r,data:value.data};
+   const row=await db.json('select to_jsonb(r) from public.reservations r');assert.equal(row.guest_request_notes,notes);assert.equal(row.notes,'Note interne à conserver intégralement\n[RESTOMANAGER:EXTERIEUR]');assert.equal(r.data.contact.notes,notes);assert.ok(!JSON.stringify(r.data).includes('Note interne'));
+  }
+ });
  const body=db.body,preservedFunctions=db.preservedFunctions;await db.stop();db=await require('./rm012-support.cjs').start();
  await db.ok('create role rm015_hosted_admin nosuperuser createrole createdb bypassrls;grant postgres to rm015_hosted_admin;');
  const injected=body.replace(/commit;\s*$/i,"do $$begin raise exception 'RM015_TEST_ROLLBACK';end$$;commit;");const rolled=await db.sql('set role rm015_hosted_admin;'+injected);assert.notEqual(rolled.code,0);assert.match(rolled.stderr,/RM015_TEST_ROLLBACK/);assert.equal(await db.ok("select to_regclass('private.rm015_requests') is null"),'t');assert.equal(await db.ok("select not exists(select 1 from information_schema.columns where table_schema='public' and table_name='reservations' and column_name='source_channel')"),'t');

@@ -48,7 +48,8 @@ create table if not exists private.rm015_rate (
  restaurant_id uuid not null,bucket text not null,fingerprint text not null,since timestamptz not null,count integer not null,primary key(restaurant_id,bucket,fingerprint)
 );
 alter table public.reservations add column if not exists source_channel text not null default 'staff' check(source_channel in ('staff','web'));
-grant select(source_channel) on public.reservations to authenticated;
+alter table public.reservations add column if not exists guest_request_notes text not null default '' check(length(guest_request_notes)<=500);
+grant select(source_channel,guest_request_notes) on public.reservations to authenticated;
 alter table public.table_holds add column if not exists web_request_id uuid;
 alter table public.table_holds alter column held_by drop not null;
 do $$begin
@@ -198,12 +199,11 @@ begin
  -- Keep the original reservation until this transaction can commit the complete replacement.
  update private.rm015_requests set state='confirmed',last_result=null,expires_at=private.rm015_now(),updated_at=private.rm015_now() where id=p_id;
  note:=coalesce(b.notes,'[RESTOMANAGER:EXTERIEUR]');
- if nullif(r.contact->>'notes','') is not null and position(r.contact->>'notes' in note)=0 then note:=note||E'\nDemande en ligne : '||(r.contact->>'notes');end if;
  if b.id is null then
-  insert into public.reservations(id,restaurant_id,guest_name,hotel_room,party_size,starts_at,ends_at,status,notes,created_by,confirmed_at,source_channel)
-  values(r.id,r.restaurant_id,(r.contact->>'firstName')||' '||(r.contact->>'lastName'),null,(r.draft->>'party')::integer,(p_slot->>'starts_at')::timestamptz,(p_slot->>'ends_at')::timestamptz,'confirmed',note,null,private.rm015_now(),'web');
+  insert into public.reservations(id,restaurant_id,guest_name,hotel_room,party_size,starts_at,ends_at,status,notes,created_by,confirmed_at,source_channel,guest_request_notes)
+  values(r.id,r.restaurant_id,(r.contact->>'firstName')||' '||(r.contact->>'lastName'),null,(r.draft->>'party')::integer,(p_slot->>'starts_at')::timestamptz,(p_slot->>'ends_at')::timestamptz,'confirmed',note,null,private.rm015_now(),'web',coalesce(r.contact->>'notes',''));
  else
-  update public.reservations set guest_name=(r.contact->>'firstName')||' '||(r.contact->>'lastName'),party_size=(r.draft->>'party')::integer,starts_at=(p_slot->>'starts_at')::timestamptz,ends_at=(p_slot->>'ends_at')::timestamptz,notes=note,status='confirmed',confirmed_at=private.rm015_now() where id=b.id;
+  update public.reservations set guest_name=(r.contact->>'firstName')||' '||(r.contact->>'lastName'),party_size=(r.draft->>'party')::integer,starts_at=(p_slot->>'starts_at')::timestamptz,ends_at=(p_slot->>'ends_at')::timestamptz,notes=note,guest_request_notes=coalesce(r.contact->>'notes',''),status='confirmed',confirmed_at=private.rm015_now() where id=b.id;
   delete from public.reservation_tables where reservation_id=b.id;
  end if;
  insert into public.reservation_tables(restaurant_id,reservation_id,table_id) select r.restaurant_id,r.id,x from unnest(ids) x;

@@ -23,7 +23,7 @@ export function prepareServiceSnapshot(snapshot,decodeBookingDetails){
   const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(dt);
   const details=decodeBookingDetails(r.notes,r.hotel_room);
   return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts.year+'-'+parts.month+'-'+parts.day,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status==='departed'?'released':r.status,
-   channel:r.source_channel==='web'?'web':null,walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
+   channel:r.source_channel==='web'?'web':null,guestRequestNotes:r.source_channel==='web'?String(r.guest_request_notes||''):'',walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||'',editVersion:r.edit_version||null};
  });
  return {plan:{version:1,rooms,tables},values:{

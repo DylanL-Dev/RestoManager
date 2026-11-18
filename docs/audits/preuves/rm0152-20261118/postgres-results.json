@@ -1,5 +1,5 @@
 {
-  "passed": 26,
+  "passed": 27,
   "failed": 0,
   "results": [
     "Isolated migration applies twice; no account or existing restaurant setting is created by activation",
@@ -27,6 +27,7 @@
     "A stale email lease cannot acknowledge a retry and jobs older than deduplication retention stop",
     "Staff drafts consume the arrivals budget and Web holds appear in RM-012 blockers",
     "Paris midnight and both DST transitions reject nonexistent or ambiguous local slots",
+    "Successive guest request changes replace the client text and preserve all internal notes",
     "Hosted-style non-superuser migration rollback, apply and reapply"
   ],
   "preservedFunctions": [
