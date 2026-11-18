@@ -1,0 +1,16 @@
+[
+  {
+    "restaurant": "a-lepicerie-rouen",
+    "url": "https://restomanager-v3-supabase-integration.onrender.com/reservation/?restaurant=a-lepicerie-rouen",
+    "file": "qr-a-lepicerie-rouen.svg",
+    "generator": "python-qrcode 8.2, SVG, M, 4-module quiet zone",
+    "sha256": "4bbbf3e2c3c42a0e66bf93d120f1cb4a2ef262b8288b71a2ad8ee1952f9947f7"
+  },
+  {
+    "restaurant": "le-jardin-demo",
+    "url": "https://restomanager-v3-supabase-integration.onrender.com/reservation/?restaurant=le-jardin-demo",
+    "file": "qr-le-jardin-demo.svg",
+    "generator": "python-qrcode 8.2, SVG, M, 4-module quiet zone",
+    "sha256": "78eb3f80d623aa34fa66bff5002676dcacdb70ee6d16bd19a601444cab7ba88a"
+  }
+]

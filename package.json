@@ -28,10 +28,13 @@
     "test:audit:dev:supabase": "node tests/supabase/mission3.cjs --dev-snapshot",
     "test:closeout:postgres": "node tests/postgres/rm012.cjs",
     "test:closeout:browser": "node tests/browser/rm012-closeout.cjs",
-    "test:learning:browser": "node tests/browser/rm016-learning.cjs"
+    "test:learning:browser": "node tests/browser/rm016-learning.cjs",
+    "build:public-demo": "node scripts/build-public-demo.cjs",
+    "test:public-demo:browser": "node tests/browser/rm015-public.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.119.0",
+    "axe-core": "4.10.3",
     "playwright": "1.56.1"
   }
 }

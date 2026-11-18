@@ -1,0 +1,67 @@
+{
+  "widths": [
+    360,
+    390,
+    430,
+    768,
+    1024,
+    1440,
+    1920
+  ],
+  "results": [
+    {
+      "name": "Complete public demo, validation, back, refresh, edit, cancellation, axe and no internal requests 360",
+      "status": "passed"
+    },
+    {
+      "name": "Complete public demo, validation, back, refresh, edit, cancellation, axe and no internal requests 390",
+      "status": "passed"
+    },
+    {
+      "name": "Complete public demo, validation, back, refresh, edit, cancellation, axe and no internal requests 430",
+      "status": "passed"
+    },
+    {
+      "name": "Complete public demo, validation, back, refresh, edit, cancellation, axe and no internal requests 768",
+      "status": "passed"
+    },
+    {
+      "name": "Complete public demo, validation, back, refresh, edit, cancellation, axe and no internal requests 1024",
+      "status": "passed"
+    },
+    {
+      "name": "Complete public demo, validation, back, refresh, edit, cancellation, axe and no internal requests 1440",
+      "status": "passed"
+    },
+    {
+      "name": "Complete public demo, validation, back, refresh, edit, cancellation, axe and no internal requests 1920",
+      "status": "passed"
+    },
+    {
+      "name": "Keyboard, skip link, focus return, dialog trap, reduced motion and enlarged text",
+      "status": "passed"
+    },
+    {
+      "name": "Closures, unknown/missing restaurant, independent venue settings, foreign tenant/session links",
+      "status": "passed"
+    },
+    {
+      "name": "Expired demo link fails closed and erases its local record",
+      "status": "passed"
+    },
+    {
+      "name": "Storage refusal remains usable in memory, explains limitations, restart clears example",
+      "status": "passed"
+    },
+    {
+      "name": "Public CSP blocks internal data fetch at the browser before any HTTP request",
+      "status": "passed"
+    },
+    {
+      "name": "Actual employee service worker excludes public cache, offline staff fallback and update acknowledgements",
+      "status": "passed"
+    }
+  ],
+  "privacy": "Fictitious browser-only records; no credentials, APIs or business writes",
+  "limitation": "Automated accessibility and simulated journeys; no human usability study"
+}

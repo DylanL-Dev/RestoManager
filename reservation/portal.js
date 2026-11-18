@@ -8,6 +8,20 @@
   const icon = name => `<i data-lucide="${name}" aria-hidden="true"></i>`;
   const icons = () => window.lucide.createIcons();
   const card = $('booking');
+  $('privacy').addEventListener('click', () => showInfo('privacy'));
+  $('conditions').addEventListener('click', () => showInfo('terms'));
+  $('closeInfo').addEventListener('click', () => $('infoDialog').close());
+  $('infoDialog').addEventListener('keydown', event => {
+    if (event.key !== 'Tab') return;
+    const controls = [...$('infoDialog').querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled)')];
+    const first = controls[0], last = controls[controls.length - 1];
+    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+  });
+  $('acceptInfo').addEventListener('click', () => {
+    const cancel = $('acceptInfo').dataset.confirmCancel === 'yes'; $('infoDialog').close();
+    if (cancel) { try { record = adapter.cancel(record.token, record.revision); dirty = false; render(); announce('Exemple annulé. Aucune réservation réelle concernée.'); } catch (error) { fail(error); } }
+  });
   if (!config) {
     $('restaurantName').textContent = 'Retrouvez votre restaurant';
     $('restaurantSubtitle').textContent = 'Le lien de cet établissement est incomplet ou inconnu.';
@@ -135,20 +149,6 @@
       try { await navigator.clipboard.writeText(url.href); announce('Lien de démonstration copié.'); event.target.closest('button').textContent = 'Lien copié'; }
       catch { showInfo('copy'); $('infoTitle').textContent = 'Votre lien de démonstration'; $('infoBody').textContent = url.href; $('infoBody').classList.add('hint'); }
     }
-  });
-  $('privacy').addEventListener('click', () => showInfo('privacy'));
-  $('conditions').addEventListener('click', () => showInfo('terms'));
-  $('closeInfo').addEventListener('click', () => $('infoDialog').close());
-  $('infoDialog').addEventListener('keydown', event => {
-    if (event.key !== 'Tab') return;
-    const controls = [...$('infoDialog').querySelectorAll('button:not(:disabled), a[href], input:not(:disabled), textarea:not(:disabled)')];
-    const first = controls[0], last = controls[controls.length - 1];
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-  });
-  $('acceptInfo').addEventListener('click', () => {
-    const cancel = $('acceptInfo').dataset.confirmCancel === 'yes'; $('infoDialog').close();
-    if (cancel) { try { record = adapter.cancel(record.token, record.revision); dirty = false; render(); announce('Exemple annulé. Aucune réservation réelle concernée.'); } catch (error) { fail(error); } }
   });
   window.addEventListener('hashchange', () => { if (location.hash) readManaged(); else if (record) { stage = 'finished'; render(); } });
   window.addEventListener('beforeunload', event => { if (dirty && (stage === 2 || stage === 3 || editing)) { event.preventDefault(); event.returnValue = ''; } });

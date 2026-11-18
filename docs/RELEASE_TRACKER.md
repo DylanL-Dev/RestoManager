@@ -1,5 +1,13 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-015.1 — Portail public de démonstration — RECETTE DEV (18/11/2026)
+
+- Mission propriétaire explicite après lecture du cahier des charges #173. Départ DEV `62d8fda`, branche `feature/rm015-public-demo`, sauvegarde distante `backup/rm0151-dev-before-20261118`. Aperçu Render DEV autorisé par cette mission ; aucune promotion V3/MAIN ni activation publique de production.
+- Entrée `/reservation/` indépendante, configurations par restaurant, parcours complet et gestion d’un exemple local. Aucune réservation réelle, email, maintien, donnée partagée ou connexion Supabase ; pas de migration. L’Épicerie est une configuration de démonstration, pas une règle d’architecture.
+- La maquette annoncée n’a pas été reçue et n’est pas dans l’issue : proposition conforme aux contraintes écrites, comparaison visuelle en attente. Illustration originale identifiée ; aucune photographie, coordonnées ou disponibilité officielle inventée.
+- Validation locale : syntaxe 160 fichiers, 247 tests Node, 13 groupes Playwright aux sept largeurs, 36 audits axe sans violation détectée. Captures mobile/tablette/PC, QR par restaurant et limites des liens locaux documentés. Non-régressions historiques à vérifier dans les CI de la PR avant intégration DEV et contrôle du clone réel.
+- [Rapport, captures et recette](audits/RM0151_PUBLIC_PORTAL_20261118.md) · [Architecture et travaux RM-015.2](audits/RM0151_PUBLIC_ARCHITECTURE_20261118.md). Statut de déploiement final et SHA exact consignés dans la PR ; la recette humaine et la comparaison avec la maquette ne sont pas inventées.
+
 
 ### RM-016.1 — Recette Render validée, correction du bouton Nouveautés et promotion V3/MAIN autorisée (17/11/2026)
 
