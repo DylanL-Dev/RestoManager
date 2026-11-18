@@ -7,6 +7,10 @@ do $$begin
  if not exists(select 1 from pg_roles where rolname='rm015_public_writer') then create role rm015_public_writer nologin noinherit nobypassrls;end if;
  if exists(select 1 from pg_roles where rolname='rm015_public_writer' and (rolsuper or rolbypassrls or rolcanlogin)) then raise exception 'RM015 unsafe role';end if;
 end $$;
+-- PostgreSQL 17 does not automatically grant SET on a newly created role.
+-- The privileged installer inherits ownership only inside this DDL transaction.
+-- Final membership permits SET for maintenance, with inheritance disabled.
+do $$begin execute format('grant rm015_public_writer to %I with inherit true, set true',current_user);end $$;
 -- The remainder of the API is defined below the schema/availability foundation.
 grant usage,create on schema public,private to rm015_public_writer;
 grant usage on schema auth to rm015_public_writer;
@@ -421,4 +425,5 @@ revoke create on schema public,private from rm015_public_writer;
 -- Audit changes share the existing tenant revision bus, without a new Realtime publication.
 drop trigger if exists rm015_audit_revision on private.rm015_audit;
 create trigger rm015_audit_revision after insert on private.rm015_audit for each row execute function private.signal_restaurant_change();
+do $$begin execute format('grant rm015_public_writer to %I with inherit false, set true',current_user);end $$;
 commit;

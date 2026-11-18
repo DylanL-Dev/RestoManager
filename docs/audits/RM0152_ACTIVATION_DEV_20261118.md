@@ -23,7 +23,7 @@ Fichier : `supabase/migrations/20261118190351_rm015_secure_public_booking.sql`.
 | Synchronisation | Capacité additive `public_booking:1` et signalement sur le bus de révision existant ; pas de nouvelle publication Realtime. |
 | Traçabilité | Audit privé append-only, utilisateur pour les actions salariées, source système pour les expirations. |
 
-La migration est transactionnelle et rejoue deux fois dans les tests. Ses prérequis vérifient le moteur existant, RM-012 et le pourcentage d’arrivées. Une dérive de catalogue provoque l’arrêt et le rollback. Aucun établissement n’est activé, aucun horaire ni pourcentage existant n’est modifié. Le rôle technique perd CREATE après installation.
+La migration est transactionnelle et rejoue deux fois dans les tests. Ses prérequis vérifient le moteur existant, RM-012 et le pourcentage d’arrivées. Une dérive de catalogue provoque l’arrêt et le rollback. Aucun établissement n’est activé, aucun horaire ni pourcentage existant n’est modifié. Le rôle technique perd CREATE après installation. L’administrateur installateur reçoit une appartenance SET sans héritage au rôle technique, nécessaire au transfert de propriété sous PostgreSQL 17 (héritage temporaire uniquement dans la transaction DDL pour permettre aussi une réapplication) ; aucun rôle anon/authenticated/service_role ne la reçoit.
 
 ## Règles métier
 
