@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <meta name="theme-color" content="#146c55">
+  <title>Réserver une table — RestoManager · Démonstration</title>
+  <link rel="icon" href="../pwa-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="portal.css?v=20261118-rm0151">
+  <script defer src="../lucide-local.js?v=20261116-rm014"></script>
+  <script defer src="model.js?v=20261118-rm0151"></script>
+  <script defer src="demo.js?v=20261118-rm0151"></script>
+  <script defer src="portal.js?v=20261118-rm0151"></script>
+</head>
+<body>
+  <a class="skip" href="#booking">Aller à la réservation</a>
+  <div class="demo-banner"><span class="demo-dot" aria-hidden="true"></span><strong>Démonstration</strong><span>Aucune réservation réelle · Aucun email envoyé</span></div>
+  <header class="site-header wrap">
+    <a class="brand" id="homeLink" href="?restaurant=a-lepicerie-rouen" aria-label="Présentation du restaurant"><span class="brand-mark" aria-hidden="true"><i data-lucide="utensils"></i></span><span>RestoManager<small>UNE TABLE, UN BON MOMENT</small></span></a>
+    <a class="header-action" href="#booking"><i data-lucide="calendar-days"></i>Réserver une table</a>
+  </header>
+  <main class="wrap" id="main">
+    <section class="restaurant-intro" aria-labelledby="restaurantName" id="restaurantIntro">
+      <div class="eyebrow"><i data-lucide="map-pin"></i><span id="locality"></span></div>
+      <h1 id="restaurantName"></h1><p class="restaurant-subtitle" id="restaurantSubtitle"></p>
+    </section>
+    <div class="portal-layout" id="portalLayout">
+      <section class="restaurant-story" aria-label="Présentation du restaurant" id="story">
+        <div class="cover"><img src="dining.svg" width="800" height="540" alt="Illustration d’une table dressée dans un intérieur végétal"><span class="cover-caption">ILLUSTRATION · APERÇU DE DÉMONSTRATION</span><span class="cover-label"><i data-lucide="utensils"></i>Le plaisir de se retrouver</span></div>
+        <div class="story-text"><span class="eyebrow">BIENVENUE À VOTRE TABLE</span><h2 id="introduction"></h2><p id="description"></p>
+          <div class="story-features"><span><i data-lucide="calendar-days"></i>Votre date, votre horaire</span><span><i data-lucide="users-round"></i>À deux ou à plusieurs</span></div>
+        </div>
+        <div class="reassurance"><span class="soft-icon"><i data-lucide="check-circle-2"></i></span><div><strong>Simple, du début à la fin</strong><p>Choisissez votre venue, renseignez vos coordonnées et retrouvez le récapitulatif en quelques instants.</p></div></div>
+      </section>
+      <section class="booking-card" id="booking" aria-label="Réserver une table" tabindex="-1"></section>
+    </div>
+    <section class="practical" aria-label="À savoir"><div><i data-lucide="clock-3"></i><h2>À votre rythme</h2><p>Revenez à l’étape précédente pour vérifier ou ajuster votre choix.</p></div><div><i data-lucide="link-2"></i><h2>Gardez la main</h2><p>Un lien personnel permet de retrouver, modifier ou annuler votre exemple.</p></div><div><i data-lucide="circle-help"></i><h2>Un aperçu sans engagement</h2><p>Horaires et conditions sont fictifs. Cet aperçu ne contacte pas le restaurant.</p></div></section>
+  </main>
+  <footer class="wrap site-footer"><span>Une expérience proposée par <strong>RestoManager</strong></span><div><button type="button" id="privacy">Confidentialité</button><button type="button" id="conditions">Conditions de l’exemple</button></div><small>RM-015.1 · Portail de démonstration</small></footer>
+  <dialog id="infoDialog" aria-labelledby="infoTitle"><div class="dialog-head"><h2 id="infoTitle"></h2><button type="button" id="closeInfo" class="icon-button" aria-label="Fermer"><i data-lucide="x"></i></button></div><div id="infoBody"></div><button type="button" id="acceptInfo" class="primary">J’ai compris</button></dialog>
+  <p class="sr-only" role="status" id="live"></p>
+  <noscript><p class="noscript">Activez JavaScript pour essayer ce parcours de démonstration. Aucune réservation ne peut être effectuée sur cette page.</p></noscript>
+</body>
+</html>
