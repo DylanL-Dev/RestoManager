@@ -15,7 +15,7 @@ self.addEventListener('activate',event=>{
  }));
 });
 async function checkClients(){
- const clients=(await self.clients.matchAll({type:'window',includeUncontrolled:true})).filter(client=>new URL(client.url).pathname.startsWith(ROOT));
+ const clients=(await self.clients.matchAll({type:'window',includeUncontrolled:true})).filter(client=>{const path=new URL(client.url).pathname;return path.startsWith(ROOT)&&!isPublicPortal(path)});
  const answers=await Promise.all(clients.map(client=>new Promise(resolve=>{
   const channel=new MessageChannel(),timer=setTimeout(()=>{channel.port1.close();resolve(false)},2200);
   channel.port1.onmessage=event=>{clearTimeout(timer);channel.port1.close();const state=event.data;resolve(state?.type==='RESTO_UPDATE_STATE'&&!state.dirty&&!state.busy)};
@@ -31,10 +31,12 @@ self.addEventListener('message',event=>{
   event.ports[0].postMessage({ok,message:ok?'':'Une autre fenêtre contient une saisie ou ne répond pas.'});
  })());
 });
+// The independent public demo must never receive the authenticated shell as offline fallback.
+function isPublicPortal(path){return path===ROOT+'reservation'||path.startsWith(ROOT+'reservation/')}
 self.addEventListener('fetch',event=>{
  const request=event.request;if(request.method!=='GET')return;
  const url=new URL(request.url);
- if(url.origin!==self.location.origin||!url.pathname.startsWith(ROOT))return;
+ if(url.origin!==self.location.origin||!url.pathname.startsWith(ROOT)||isPublicPortal(url.pathname))return;
  if(url.pathname.endsWith('/app-release.json')||url.searchParams.has('release-check')||url.searchParams.has('check'))return;
  if(request.mode!=='navigate'&&!/\.(?:js|css|svg|png|webmanifest|json)$/.test(url.pathname))return;
  event.respondWith(fetch(request).then(response=>{

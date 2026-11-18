@@ -1,0 +1,28 @@
+name: RM-015.1 Public demo - isolated client journey
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  public-demo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:syntax
+      - run: npm test
+      - run: npm run build:public-demo
+      - name: Seven widths, keyboard, links, isolation, offline and accessible forms
+        run: npm run test:public-demo:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm0151-public-demo-responsive-and-results
+          path: test-results/rm0151-public/
