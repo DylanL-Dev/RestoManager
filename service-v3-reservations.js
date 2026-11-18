@@ -429,7 +429,7 @@ function render(){
  guestCount.setAttribute('aria-label',String(r.guests)+' couvert'+(Number(r.guests)>1?'s':''));line.append(guestCount);
  const tableLabel=r.tables.length>1?'Fusion '+r.tables.join(' + '):'Table '+(r.tables[0]??'—');
  const tableCell=el('span',undefined,'rmBookingTable');tableCell.append(icon('armchair'),el('span',tableLabel));line.append(tableCell);
- const origin=el('span',undefined,'rmBookingOrigin');origin.append(icon(r.type==='hotel'?'hotel':'user-round'),el('span',r.type==='hotel'?'Hôtel':'Extérieur'));line.append(origin);
+ const origin=el('span',undefined,'rmBookingOrigin');origin.append(icon(r.type==='hotel'?'hotel':'user-round'),el('span',r.type==='hotel'?'Hôtel':'Extérieur'));if(r.channel==='web')origin.append(el('span','Web','rmWebBadge'));line.append(origin);
  const status=el('span',undefined,'rmBookingStatus');status.dataset.status=r.status;
  const fullStatus=statuses[r.status]||r.status;
  // List badges stay concise on PC/tablet/phone. The full operational

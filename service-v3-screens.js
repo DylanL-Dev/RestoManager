@@ -150,7 +150,7 @@ function commit(id,mode='push'){
 function hasUnsavedChanges(){
  const assistance=document.getElementById('reportIssueForm');
  const assistanceDirty=assistance&&['reportIssueTitle','reportIssueDescription','reportIssueContact'].some(id=>document.getElementById(id)?.value?.trim());
- return Boolean(editDirty()||bookingDirty()||walkinDirty()||assistanceDirty);
+ return Boolean(editDirty()||bookingDirty()||walkinDirty()||assistanceDirty||window.RestoPublicBookings?.isDirty?.());
 }
 async function mayLeave(options={}){
  if(options.preserveDraft&&hasUnsavedChanges()){
