@@ -1,0 +1,19 @@
+{
+  "passed": 4,
+  "accessibilityAudits": 5,
+  "results": [
+    "Publication 390: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights",
+    "Proposed legal texts 390: safe defaults, explicit retention, configured cutoff, custom preservation and client display",
+    "Proposed legal texts 768: safe defaults, explicit retention, configured cutoff, custom preservation and client display",
+    "Proposed legal texts 1440: safe defaults, explicit retention, configured cutoff, custom preservation and client display"
+  ],
+  "audits": [
+    "publication-390",
+    "publication-reception-390",
+    "proposed-legal-390",
+    "proposed-legal-768",
+    "proposed-legal-1440"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Fictional auth, venue and contacts only. No external email."
+}

@@ -1,0 +1,12 @@
+{
+  "unitCases": 285,
+  "unitFailed": 0,
+  "npmTestFiles": 61,
+  "syntaxFiles": 182,
+  "syntaxFailed": 0,
+  "publicDemoAssets": 8,
+  "publicConnectedAssets": 13,
+  "postgres": "17 disposable, network none",
+  "sharedDatabaseWrites": 0,
+  "version": "2026.11.19-rm015.4-dev"
+}
