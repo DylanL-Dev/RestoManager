@@ -1,0 +1,104 @@
+{
+  "project": "lykoybacslvmhtzftqsf",
+  "projectName": "RestoManager-DEV",
+  "capturedAt": "2026-11-19T05:48:09.827Z",
+  "dataFingerprints": [
+    {
+      "name": "reservations",
+      "rows": 81,
+      "fingerprint": "89726e9f4cdfe5a95173cfa545713743"
+    },
+    {
+      "name": "reservation_tables",
+      "rows": 110,
+      "fingerprint": "d2e4c31c164ce83c8e54b13524ddad6f"
+    },
+    {
+      "name": "restaurant_tables",
+      "rows": 23,
+      "fingerprint": "8cba4c6137c24a52894d64ea2bb6fb96"
+    },
+    {
+      "name": "restaurant_hours",
+      "rows": 2,
+      "fingerprint": "09c9590f8140cdf8ac3ed4dcdd172924"
+    },
+    {
+      "name": "table_holds",
+      "rows": 4,
+      "fingerprint": "3fb66a4c131f358bf0e19d86f261cdd8"
+    },
+    {
+      "name": "service_closures",
+      "rows": 7,
+      "fingerprint": "e87028109b1b1974311c3c45bc93108d"
+    },
+    {
+      "name": "staff_profiles",
+      "rows": 2,
+      "fingerprint": "e46764009fd50bf8436498a6758c7cf3"
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{resto_service_writer=X/resto_service_writer}",
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.acquire_table_hold(uuid,timestamp with time zone,timestamp with time zone)",
+      "definition": "CREATE OR REPLACE FUNCTION private.acquire_table_hold(p_table_id uuid, p_starts_at timestamp with time zone, p_ends_at timestamp with time zone)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_user uuid := auth.uid(); v_hold uuid; v_conflict boolean;\nbegin\n if v_user is null or (select private.current_staff_role()) not in ('reception','fb_admin') then\n  raise exception 'Accès non autorisé' using errcode='42501',detail='FORBIDDEN';\n end if;\n if p_table_id is null or p_starts_at is null or p_ends_at is null\n or p_ends_at<=p_starts_at or p_ends_at-p_starts_at>interval '6 hours'\n or p_starts_at<now()-interval '5 minutes' then\n  raise exception 'Créneau invalide' using errcode='22023',detail='INVALID_INPUT';\n end if;\n perform pg_advisory_xact_lock(hashtextextended(p_table_id::text,0));\n if not exists(select 1 from public.restaurant_tables t where t.id=p_table_id and t.active\n   and exists(select 1 from public.restaurant_rooms m where m.id=t.room_id and m.active)) then\n  raise exception 'Table indisponible' using errcode='22023',detail='INVALID_INPUT';\n end if;\n select exists(\n  select 1 from public.reservation_tables rt\n  join public.reservations r on r.id=rt.reservation_id\n  where rt.table_id=p_table_id and r.status in ('reserved','confirmed','late','arrived','seated')\n  and r.starts_at<p_ends_at and r.ends_at>p_starts_at\n ) into v_conflict;\n if v_conflict then raise exception 'Table déjà réservée' using errcode='23P01',detail='TABLE_CONFLICT'; end if;\n select h.id into v_hold from public.table_holds h\n where h.table_id=p_table_id and h.expires_at>clock_timestamp()\n and h.starts_at<p_ends_at and h.ends_at>p_starts_at\n and h.held_by=v_user\n order by h.created_at desc limit 1;\n if exists(select 1 from public.table_holds h\n where h.table_id=p_table_id and h.expires_at>clock_timestamp()\n and h.starts_at<p_ends_at and h.ends_at>p_starts_at\n and h.held_by<>v_user) then\n  raise exception 'Table temporairement bloquée par un collègue' using errcode='23P01',detail='HOLD_CONFLICT';\n end if;\n if v_hold is not null then\n  update public.table_holds set starts_at=p_starts_at,ends_at=p_ends_at,\n  expires_at=clock_timestamp()+interval '3 minutes' where id=v_hold;\n else\n  insert into public.table_holds(table_id,held_by,starts_at,ends_at,expires_at)\n  values(p_table_id,v_user,p_starts_at,p_ends_at,clock_timestamp()+interval '3 minutes')\n  returning id into v_hold;\n end if;\n return v_hold;\nend $function$\n"
+    },
+    {
+      "acl": "{resto_service_writer=X/resto_service_writer}",
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.confirm_reservation(text,text,integer,timestamp with time zone,timestamp with time zone,uuid[],text)",
+      "definition": "CREATE OR REPLACE FUNCTION private.confirm_reservation(p_guest_name text, p_hotel_room text, p_party_size integer, p_starts_at timestamp with time zone, p_ends_at timestamp with time zone, p_table_ids uuid[], p_notes text DEFAULT NULL::text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare\n v_user uuid := auth.uid();\n v_role text;\n v_table uuid;\n v_id uuid;\n v_count integer;\n v_seats integer;\n v_room text := nullif(btrim(p_hotel_room),'');\nbegin\n perform private.validate_booking_identity_v1(p_hotel_room,p_notes);\n v_role := private.current_staff_role();\n if v_user is null or v_role is null or v_role not in ('reception','fb_admin') then\n  raise exception 'Accès non autorisé' using errcode='42501',detail='FORBIDDEN';\n end if;\n if p_guest_name is null or length(btrim(p_guest_name)) not between 1 and 160\n or p_party_size is null or p_party_size not between 1 and 50\n or p_starts_at is null or p_ends_at is null\n or p_ends_at <= p_starts_at or p_ends_at-p_starts_at > interval '6 hours'\n or p_starts_at < now()-interval '5 minutes'\n or p_table_ids is null or cardinality(p_table_ids) not between 1 and 4\n or array_position(p_table_ids,null) is not null then\n  raise exception 'Réservation invalide' using errcode='22023',detail='INVALID_INPUT';\n end if;\n if v_room is not null and length(v_room)>40 then\n  raise exception 'Numéro de chambre invalide' using errcode='22023',detail='INVALID_INPUT';\n end if;\n select count(*) into v_count from (select distinct x from unnest(p_table_ids) x) q;\n if v_count <> cardinality(p_table_ids) then\n  raise exception 'Tables en double' using errcode='22023',detail='INVALID_INPUT';\n end if;\n -- Lock all table IDs in stable order: acquisition uses the same advisory lock.\n for v_table in select distinct x from unnest(p_table_ids) x order by x loop\n  perform pg_advisory_xact_lock(hashtextextended(v_table::text,0));\n end loop;\n -- Lock hotel-room identity to serialize duplicate-room checks.\n if v_room is not null then\n  perform pg_advisory_xact_lock(hashtextextended('hotel-room:'||private.staff_restaurant()::text||':'||lower(v_room),0));\n end if;\n select count(*),coalesce(sum(seats),0) into v_count,v_seats\n from public.restaurant_tables t where t.id=any(p_table_ids) and t.active\n  and exists(select 1 from public.restaurant_rooms m where m.id=t.room_id and m.active);\n if v_count <> cardinality(p_table_ids) or v_seats < p_party_size then\n  raise exception 'Tables inexistantes, désactivées ou capacité insuffisante' using errcode='22023',detail='INVALID_INPUT';\n end if;\n -- Every selected table must have an unexpired hold owned by this user\n -- for exactly this booking interval.\n if exists (\n  select 1 from unnest(p_table_ids) x\n  where not exists(\n   select 1 from public.table_holds h\n   where h.table_id=x and h.held_by=v_user and h.expires_at>clock_timestamp()\n   and h.starts_at=p_starts_at and h.ends_at=p_ends_at\n  )\n ) then\n  raise exception 'Verrouillage expiré ou absent : sélectionnez à nouveau les tables' using errcode='23P01',detail='HOLD_EXPIRED';\n end if;\n if exists (\n  select 1 from public.reservation_tables rt\n  join public.reservations r on r.id=rt.reservation_id\n  where rt.table_id=any(p_table_ids)\n  and r.status in ('reserved','confirmed','late','arrived','seated')\n  and r.starts_at<p_ends_at and r.ends_at>p_starts_at\n ) or exists (\n  select 1 from public.table_holds h\n  where h.table_id=any(p_table_ids) and h.held_by<>v_user\n  and h.expires_at>clock_timestamp()\n  and h.starts_at<p_ends_at and h.ends_at>p_starts_at\n ) then\n  raise exception 'Conflit de disponibilité des tables' using errcode='23P01',detail='TABLE_CONFLICT';\n end if;\n if v_room is not null and not (v_role='fb_admin' and p_notes='[RM:WALKIN_SEPARATE_OCCUPANT_V1]' and current_setting('restomanager.second_occupant_confirmed',true)='yes') and exists (\n  select 1 from public.reservations r\n  where lower(btrim(r.hotel_room))=lower(v_room)\n  and r.status in ('reserved','confirmed','late','arrived','seated')\n  and r.starts_at<p_ends_at and r.ends_at>p_starts_at\n ) then\n  raise exception 'Cette chambre possède déjà une réservation sur ce créneau' using errcode='23P01',detail='ROOM_CONFLICT';\n end if;\n insert into public.reservations(guest_name,hotel_room,party_size,starts_at,ends_at,notes,created_by)\n values(btrim(p_guest_name),v_room,p_party_size,p_starts_at,p_ends_at,p_notes,v_user)\n returning id into v_id;\n insert into public.reservation_tables(reservation_id,table_id)\n select v_id,x from unnest(p_table_ids) x;\n delete from public.table_holds\n where held_by=v_user and table_id=any(p_table_ids)\n and starts_at=p_starts_at and ends_at=p_ends_at;\n return v_id;\nend $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,resto_service_writer=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": false,
+      "signature": "private.ranked_booking_sets(uuid,uuid[],integer,timestamp with time zone,timestamp with time zone)",
+      "definition": "CREATE OR REPLACE FUNCTION private.ranked_booking_sets(p_reservation uuid, previous uuid[], p_guests integer, p_start timestamp with time zone, p_end timestamp with time zone)\n RETURNS TABLE(ids uuid[])\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$\n   with available as (\n    select t.id,t.seats,t.label from public.restaurant_tables t join public.restaurant_rooms m on m.id=t.room_id\n    where t.active and m.active and not exists(\n     select from public.reservation_tables a join public.reservations r on r.id=a.reservation_id\n     where a.table_id=t.id and r.id is distinct from p_reservation and r.status in ('reserved','confirmed','late','arrived','seated')\n     and r.starts_at<p_end and r.ends_at>p_start)\n     and not exists(select from public.table_holds h where h.table_id=t.id and h.expires_at>clock_timestamp() and h.starts_at<p_end and h.ends_at>p_start)\n   ), links as (\n    select f.table_a a,f.table_b b from public.table_fusion_links f\n    join available a on a.id=f.table_a join available b on b.id=f.table_b\n   ), adjacent as (\n    select a,b from links union all select b,a from links\n   ), triples as (\n    select distinct array(select x from unnest(array[l.b,l.a,r.b]) x order by x) ids\n    from adjacent l join adjacent r on r.a=l.a and l.b<r.b\n   ), choices as (\n    select array[id] ids,seats,label from available\n    union all select array[least(a.id,b.id),greatest(a.id,b.id)],a.seats+b.seats,a.label\n      from public.table_fusion_links f join available a on a.id=f.table_a join available b on b.id=f.table_b\n    union all select tr.ids,sum(t.seats)::integer,min(t.label)\n     from triples tr join available t on t.id=any(tr.ids) group by tr.ids\n    union all select previous,sum(seats)::integer,min(label) from available where id=any(previous)\n      having count(*)=cardinality(previous)\n   )\n   select ids from choices c where seats>=p_guests\n   order by\n     -- Preserve assignment for unchanged passenger counts; prioritize fit on count change.\n     case\n       when coalesce(\n         (select r.party_size is distinct from p_guests\n            from public.reservations r where r.id=p_reservation), false\n       ) then 0\n       when ids=previous then 0\n       else 1\n     end,\n     seats,cardinality(ids),\n     array(select coalesce(substring(t.label from '[0-9]+')::numeric,9999999999)\n           from available t where t.id=any(c.ids) order by 1),ids\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres,resto_service_writer=X/postgres}",
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.staff_restaurant()",
+      "definition": "CREATE OR REPLACE FUNCTION private.staff_restaurant()\n RETURNS uuid\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n  select restaurant_id from public.staff_profiles where user_id = (select auth.uid()) and active\n$function$\n"
+    },
+    {
+      "acl": "{resto_service_writer=X/resto_service_writer}",
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.update_reservation_v4(uuid,uuid,text,text,integer,timestamp with time zone,timestamp with time zone,uuid[],text)",
+      "definition": "CREATE OR REPLACE FUNCTION private.update_reservation_v4(p_reservation_id uuid, p_expected_version uuid, p_guest_name text, p_hotel_room text, p_party_size integer, p_starts_at timestamp with time zone, p_ends_at timestamp with time zone, p_table_ids uuid[], p_notes text)\n RETURNS uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare v_status text;v_version uuid;v_old_room text;v_room text:=nullif(btrim(p_hotel_room),'');\n v_table uuid;v_lock_room text;v_count integer;v_seats integer;\nbegin\n perform private.lock_restaurant_mutation_v1();\n if auth.uid() is null or coalesce(private.current_staff_role(),'') not in ('reception','fb_admin') then\n  raise exception 'Accès refusé' using errcode='42501',detail='FORBIDDEN';\n end if;\n if p_expected_version is null then\n  raise exception 'Actualisez la fiche avant de la modifier.' using errcode='RM002',detail='MISSING_VERSION';\n end if;\n if p_guest_name is null or length(btrim(p_guest_name)) not between 1 and 160\n    or p_party_size is null or p_party_size not between 1 and 50\n    or p_starts_at is null or p_ends_at is null or p_ends_at<=p_starts_at\n    or p_ends_at-p_starts_at>interval '6 hours' or (v_room is not null and length(v_room)>40)\n    or p_table_ids is null or cardinality(p_table_ids) not between 1 and 20\n    or array_position(p_table_ids,null) is not null\n    or (select count(distinct x) from unnest(p_table_ids) x)<>cardinality(p_table_ids) then\n  raise exception 'Données invalides' using errcode='22023',detail='INVALID_INPUT';\n end if;\n -- RLS applies to this non-owner, non-BYPASSRLS function owner.\n select status,hotel_room,edit_version into v_status,v_old_room,v_version\n  from public.reservations where id=p_reservation_id for update;\n if not found then raise exception 'Réservation introuvable' using errcode='P0002';end if;\n if v_version is distinct from p_expected_version then\n  raise exception 'Cette réservation a été modifiée. Votre saisie n’a pas été enregistrée.' using errcode='RM001',detail='STALE_VERSION';\n end if;\n if v_status not in ('reserved','confirmed','late','arrived') then\n  raise exception 'Statut non modifiable' using errcode='22023',detail='INVALID_INPUT';\n end if;\n perform private.validate_booking_identity_v1(p_hotel_room,p_notes,v_old_room,true);\n -- Serialize all mutations before rows, then lock the complete table set.\n for v_table in select distinct x from (\n   select table_id x from public.reservation_tables where reservation_id=p_reservation_id\n   union select unnest(p_table_ids)) z order by x loop\n  perform pg_advisory_xact_lock(hashtextextended(v_table::text,0));\n end loop;\n if not private.check_fusion_selection(p_table_ids) then\n  raise exception 'Tables non fusionnables' using errcode='22023',detail='INVALID_INPUT';\n end if;\n -- Same room lock namespace as creation. Lock both old/new identities in order.\n for v_lock_room in select distinct lower(btrim(x)) from unnest(array[v_old_room,v_room]) x\n                    where nullif(btrim(x),'') is not null order by 1 loop\n  perform pg_advisory_xact_lock(hashtextextended('hotel-room:'||private.staff_restaurant()::text||':'||v_lock_room,0));\n end loop;\n select count(*),coalesce(sum(seats),0) into v_count,v_seats\n  from public.restaurant_tables t where t.id=any(p_table_ids) and t.active\n   and exists(select 1 from public.restaurant_rooms m where m.id=t.room_id and m.active);\n if v_count<>cardinality(p_table_ids) or v_seats<p_party_size then\n  raise exception 'Capacité ou table invalide' using errcode='22023',detail='INVALID_INPUT';\n end if;\n if exists(select 1 from public.reservation_tables rt join public.reservations r on r.id=rt.reservation_id\n   where rt.table_id=any(p_table_ids) and r.id<>p_reservation_id\n   and r.status in ('reserved','confirmed','late','arrived','seated')\n   and r.starts_at<p_ends_at and r.ends_at>p_starts_at)\n or exists(select 1 from public.table_holds h where h.table_id=any(p_table_ids)\n   and (h.draft_role is not null or h.held_by<>auth.uid()) and h.expires_at>clock_timestamp()\n   and h.starts_at<p_ends_at and h.ends_at>p_starts_at) then\n  raise exception 'Table occupée sur ce créneau' using errcode='23P01',detail='TABLE_CONFLICT';\n end if;\n if v_room is not null and exists(select 1 from public.reservations r where r.id<>p_reservation_id\n   and lower(btrim(r.hotel_room))=lower(v_room) and r.status in ('reserved','confirmed','late','arrived','seated')\n   and r.starts_at<p_ends_at and r.ends_at>p_starts_at) then\n  raise exception 'Chambre déjà réservée sur ce créneau' using errcode='23P01',detail='ROOM_CONFLICT';\n end if;\n update public.reservations set guest_name=btrim(p_guest_name),hotel_room=v_room,party_size=p_party_size,\n  starts_at=p_starts_at,ends_at=p_ends_at,notes=p_notes,updated_at=clock_timestamp() where id=p_reservation_id;\n delete from public.reservation_tables where reservation_id=p_reservation_id;\n insert into public.reservation_tables(reservation_id,table_id) select p_reservation_id,x from unnest(p_table_ids) x;\n select edit_version into v_version from public.reservations where id=p_reservation_id;\n return v_version;\nend $function$\n"
+    },
+    {
+      "acl": "{resto_service_writer=X/resto_service_writer,authenticated=X/resto_service_writer}",
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.rm012_sync_api()",
+      "definition": "CREATE OR REPLACE FUNCTION private.rm012_sync_api()\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare rid uuid:=private.staff_restaurant();rev text;begin\n if auth.uid() is null or rid is null or coalesce(private.current_staff_role(),'') not in ('fb_admin','reception') then raise exception 'Compte non autorisé.' using errcode='42501';end if;\n select revision::text into rev from public.restaurant_service_changes where restaurant_id=rid;\n return jsonb_build_object('revision',coalesce(rev,'0'),'server_time',clock_timestamp(),'capabilities',jsonb_build_object('reservation_edits',4,'booking_recovery',1,'snapshot',1,'service_regularization',1));\nend $function$\n"
+    }
+  ]
+}
