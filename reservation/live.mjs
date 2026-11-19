@@ -1,4 +1,5 @@
 import {createBookingClient,BookingError} from './client.mjs';
+import {presentCover} from './media.mjs';
 import {paris,addDays,dateLabel,deadline} from './dates.mjs';
 const $=id=>document.getElementById(id),card=$('booking'),slug=new URLSearchParams(location.search).get('restaurant');
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -95,7 +96,7 @@ async function start(){
   api=createBookingClient({endpoint:runtime.api,allowedOrigin:runtime.allowedApiOrigin,base:location.href,restaurant:slug,storage});
   token=new URLSearchParams(location.hash.slice(1)).get('manage')||'';
   profile=await api.profile(token||undefined);if(!profile.name||!Number.isInteger(profile.maxParty)||!profile.today)throw new BookingError('Les informations du restaurant sont indisponibles.');
-  $('restaurantName').textContent=profile.name;$('restaurantSubtitle').textContent='Réservez directement auprès de votre restaurant';$('locality').textContent='Votre restaurant';$('introduction').textContent='Un moment à partager, une table à retrouver.';$('description').textContent='Choisissez votre venue et retrouvez votre réservation avec votre lien personnel.';
+  presentCover(profile,runtime.allowedApiOrigin);$('restaurantName').textContent=profile.name;$('restaurantSubtitle').textContent='Réservez directement auprès de votre restaurant';$('locality').textContent='Votre restaurant';$('introduction').textContent='Un moment à partager, une table à retrouver.';$('description').textContent='Choisissez votre venue et retrouvez votre réservation avec votre lien personnel.';
   $('liveBanner').textContent='DEV · Données de l’établissement · Emails désactivés';$('privacy').disabled=false;$('conditions').disabled=false;
   draft.party=Math.min(2,profile.maxParty);draft.date=addDays(profile.today,1);
   token=new URLSearchParams(location.hash.slice(1)).get('manage')||'';

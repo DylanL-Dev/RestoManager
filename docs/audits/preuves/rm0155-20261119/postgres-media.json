@@ -1,0 +1,16 @@
+{
+  "passed": 10,
+  "results": [
+    "Idempotent additive migration; bounded WebP bucket and no role bypass",
+    "Restaurant may upload its own image; Reception, another tenant, inactive and absent identities are refused",
+    "Unsafe filenames, active overwrites and forged app tenant settings cannot bypass policies",
+    "Only an existing own WebP of at most 2 MiB can be published",
+    "Versioned publication, idempotent retry, public profile and audit preserve identity",
+    "Published image cannot be deleted; explicit removal restores fallback and permits cleanup",
+    "Two employees publishing from the same settings version cannot overwrite each other",
+    "Twenty-object tenant limit bounds abandoned uploads without affecting another tenant",
+    "Restrictive bucket guards survive unrelated broad storage policies",
+    "Concurrent cleanup and publication use the same tenant lock"
+  ],
+  "transport": "Real disposable PostgreSQL 17 and Storage schema/RLS fixture. Hosted Storage byte transport is not claimed."
+}

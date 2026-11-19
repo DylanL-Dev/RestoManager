@@ -1,5 +1,5 @@
 'use strict';
-const {start}=require('./rm015-support.cjs'),{rid,uid}=require('./rm012-support.cjs');
+const {start}=require(process.env.RM015_MEDIA_SCHEMA==='1'?'./rm015-media-support.cjs':'./rm015-support.cjs'),{rid,uid}=require('./rm012-support.cjs');
 const {randomUUID,createHash}=require('node:crypto'),assert=require('node:assert/strict');
 const day=offset=>{const p=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts().map(x=>[x.type,x.value]));const d=new Date(`${p.year}-${p.month}-${p.day}T12:00Z`);d.setUTCDate(d.getUTCDate()+offset);return d.toISOString().slice(0,10)};
 const hash=s=>createHash('sha256').update(s).digest('hex');

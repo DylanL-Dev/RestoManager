@@ -7,8 +7,8 @@
   document.body.appendChild(dialog);
   const items=dialog.querySelector('.v3-picker-items');
   let source=null,choice=null,focusBefore=null;
-  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker','v3-percent-picker','v3-theme-picker','v3-duration-picker','v3-table-choice-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
-  function render(){items.querySelectorAll('button').forEach(b=>{const yes=b.dataset.value===choice;b.classList.toggle('selected',yes);b.setAttribute('aria-checked',String(yes));});}
+  function close(){dialog.hidden=true;dialog.classList.remove('v3-rush-period-picker','v3-percent-picker','v3-theme-picker','v3-duration-picker','v3-table-choice-picker','v3-portal-picker');document.body.classList.remove('v3-picker-open');source=null;focusBefore?.focus?.({preventScroll:true});}
+  function render(){items.querySelectorAll('button').forEach(b=>{const yes=b.dataset.value===choice;b.classList.toggle('selected',yes);b.setAttribute('aria-checked',String(yes));if(dialog.classList.contains('v3-portal-picker'))b.tabIndex=yes?0:-1;});}
   function open(select){
     source=select;focusBefore=document.activeElement;choice=select.value;
     const rushMode=select.getAttribute('aria-label')==='Choisir une plage horaire';
@@ -16,7 +16,9 @@
     const themeMode=select.id==='themeMode';
     const durationMode=select.id==='restaurantDefaultDuration';
     const tableChoiceMode=select.getAttribute('aria-label')==='Table réellement choisie';
-    const instantMode=rushMode||percentMode||themeMode||durationMode;
+    const portalMode=select.dataset.portalChoice==='true';if(portalMode)focusBefore=select;
+    const instantMode=rushMode||percentMode||themeMode||durationMode||portalMode;
+    dialog.classList.toggle('v3-portal-picker',portalMode);
     dialog.classList.toggle('v3-rush-period-picker',rushMode);
     dialog.classList.toggle('v3-percent-picker',percentMode);
     dialog.classList.toggle('v3-theme-picker',themeMode);
@@ -25,7 +27,9 @@
     const associated=select.labels?.[0];
     const explicit=select.getAttribute('aria-label')?.trim();
     const labelText=associated ? Array.from(associated.childNodes).filter(node=>node!==select).map(node=>node.textContent||'').join(' ').replace(/\s+/g,' ').trim() : '';
-    const label=explicit||labelText||'Choisir une option';
+    const linked=(select.getAttribute('aria-labelledby')||'').split(/\s+/).map(id=>document.getElementById(id)?.textContent||'').join(' ').trim();
+    const label=explicit||linked||labelText||'Choisir une option';
+    dialog.querySelector('[role=dialog]').setAttribute('aria-label',label);items.setAttribute('aria-label',label);
     dialog.querySelector('header strong').textContent=label;
     items.replaceChildren();
     let lastGroup='';
@@ -56,7 +60,7 @@
         choice=o.value;
         if(instantMode){
           const current=source;
-          if(!current)return;
+          if(!current?.isConnected||current.disabled){close();return;}
           const changed=current.value!==choice;
           current.value=choice;
           if(changed){
@@ -70,7 +74,7 @@
     });
     items.setAttribute('role','radiogroup');render();dialog.hidden=false;
     document.body.classList.add('v3-picker-open');
-    if(instantMode)items.querySelector('button.selected')?.focus({preventScroll:true});
+    if(instantMode)(items.querySelector('button.selected:not(:disabled)')||items.querySelector('button:not(:disabled)')||dialog.querySelector('[data-close]')).focus({preventScroll:true});
     else dialog.querySelector('[data-confirm]').focus();
   }
   window.RestoOpenSelectPicker=open;
@@ -81,13 +85,13 @@
     e.preventDefault();open(s);
   },true);
   document.addEventListener('keydown',e=>{
-    if(!dialog.hidden){if(e.key==='Escape'){e.preventDefault();close();}return;}
+    if(!dialog.hidden){if(e.key==='Escape'){e.preventDefault();close();return;}if(dialog.classList.contains('v3-portal-picker')){const options=Array.from(items.querySelectorAll('button:not(:disabled)'));if(['ArrowDown','ArrowRight','ArrowUp','ArrowLeft','Home','End'].includes(e.key)){e.preventDefault();let i=options.indexOf(document.activeElement);i=e.key==='Home'?0:e.key==='End'?options.length-1:(i+(['ArrowUp','ArrowLeft'].includes(e.key)?-1:1)+options.length)%options.length;if(options[i]){choice=options[i].dataset.value;render();options[i].focus();}}if(e.key==='Tab'){e.preventDefault();const closeButton=dialog.querySelector('[data-close]'),selected=items.querySelector('button.selected:not(:disabled)')||options[0];(document.activeElement===closeButton?selected:closeButton)?.focus();}}return;}
     if(eligible(e.target)&&['Enter',' '].includes(e.key)){e.preventDefault();open(e.target);}
   },true);
   dialog.querySelector('[data-close]').addEventListener('click',close);
   dialog.querySelector('[data-cancel]').addEventListener('click',close);
   dialog.querySelector('[data-confirm]').addEventListener('click',()=>{
-    if(!source)return;
+    if(!source?.isConnected||source.disabled){close();return;}
     const changed=source.value!==choice;source.value=choice;
     if(changed){source.dispatchEvent(new Event('input',{bubbles:true}));source.dispatchEvent(new Event('change',{bubbles:true}));}
     close();

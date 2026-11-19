@@ -1,0 +1,11 @@
+{
+  "unitCases": 290,
+  "npmFiles": 62,
+  "syntaxFiles": 187,
+  "demoAssets": 8,
+  "connectedAssets": 14,
+  "deno": "2.5.6: both Edge entrypoints pass --no-remote",
+  "sharedMutations": 0,
+  "migration": "prepared, isolated only",
+  "storageTransport": "controlled browser fixture + actual SQL RLS, local public image HTTP, no hosted Storage upload"
+}

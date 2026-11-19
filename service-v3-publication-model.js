@@ -3,6 +3,7 @@
  const limits={maxParty:[1,50],pendingMinutes:[15,180],horizonDays:[1,180],leadMinutes:[0,1440],cancellationMinutes:[0,2880]};
  const slugPattern=/^[a-z0-9]+(-[a-z0-9]+)*$/;
  const validSlug=value=>typeof value==='string'&&value.length>=3&&value.length<=80&&slugPattern.test(value);
+ const normalizeSlug=value=>String(value??'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/œ/g,'oe').replace(/æ/g,'ae').replace(/ß/g,'ss').replace(/['’‘`]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
  const integer=(value,min,max)=>Number.isInteger(value)&&value>=min&&value<=max;
  const retentionMarker='[À COMPLÉTER : durée de conservation]',retentionLine=/^Durée de conservation : (.*)$/m;
  const hasDraftMarker=text=>/\[(?:À|A)\s+COMPL(?:É|E)TER\b[^\]]*\]/i.test(String(text||''));
@@ -19,7 +20,7 @@
  function withRetention(text,value){const duration=String(value||'').replace(/[\r\n]+/g,' ').trim().slice(0,160)||retentionMarker;return String(text||'').replace(retentionLine,()=> 'Durée de conservation : '+duration);}
  function validate(value,{opening=value.enabled===true}={}){
   const errors={};
-  if(value.slug!==null&&value.slug!==''&&!validSlug(value.slug)||opening&&!validSlug(value.slug))errors.slug='Utilisez 3 à 80 caractères : lettres minuscules, chiffres et tirets entre les mots.';
+  if(value.slug!==null&&value.slug!==''&&!validSlug(value.slug)||opening&&!validSlug(value.slug))errors.slug='Indiquez un nom de 3 à 80 caractères pour le lien. Les accents et espaces sont convertis automatiquement ; ne collez pas une adresse https://.';
   for(const [key,[min,max]]of Object.entries(limits))if(!(key==='maxParty'&&!opening&&value[key]===null)&&!integer(value[key],min,max))errors[key]={maxParty:'Choisissez un nombre entier de personnes entre 1 et 50.',pendingMinutes:'Choisissez un délai entre 15 et 180 minutes.',horizonDays:'Choisissez un horizon entre 1 et 180 jours.',leadMinutes:'Choisissez un délai entre 0 et 1 440 minutes.',cancellationMinutes:'Choisissez un délai entre 0 et 2 880 minutes.'}[key];
   for(const [key,min,max,label]of [['privacyContact',5,500,'le contact pour les données personnelles'],['privacyNotice',30,3000,'les informations de confidentialité'],['cancellationNotice',20,1500,'les conditions d’annulation']]){
    const text=value[key];if(typeof text!=='string'||text.length>max||opening&&text.trim().length<min)errors[key]='Renseignez '+label+' ('+(opening?min+' à ':'')+max+' caractères maximum).';
@@ -28,9 +29,10 @@
   return errors;
  }
  function fromForm(entries,enabled,version){
-  const value={slug:entries.slug?.trim()||null,enabled:enabled===true,version};
+  const raw=String(entries.slug??'').trim(),slug=/https?:|www\.|[/?#]/i.test(raw)?raw:normalizeSlug(raw)||raw;const value={slug:slug||null,enabled:enabled===true,version};
   for(const name of Object.keys(limits)){const raw=String(entries[name]??'').trim();value[name]=raw?Number(raw):name==='maxParty'?null:NaN;}
   for(const name of ['privacyContact','privacyNotice','cancellationNotice'])value[name]=String(entries[name]??'');
+  if(Object.hasOwn(entries,'coverPath')){value.coverPath=entries.coverPath||null;value.coverAlt=String(entries.coverAlt??'');}
   return value;
  }
  function readiness(settings){
@@ -47,5 +49,5 @@
   if(typeof generator!=='function')throw Error('QR generator unavailable');
   const qr=generator(0,'M');qr.addData(url,'Byte');qr.make();const count=qr.getModuleCount();return Array.from({length:count},(_,y)=>Array.from({length:count},(_,x)=>qr.isDark(y,x)));
  }
- return Object.freeze({limits:Object.freeze(limits),validSlug,validate,fromForm,readiness,publicURL,qrMatrix,privacyDefault,cancellationDefault,hasDraftMarker,hasRetentionLine,retentionFrom,withRetention});
+ return Object.freeze({limits:Object.freeze(limits),validSlug,normalizeSlug,validate,fromForm,readiness,publicURL,qrMatrix,privacyDefault,cancellationDefault,hasDraftMarker,hasRetentionLine,retentionFrom,withRetention});
 });
