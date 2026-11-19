@@ -1,0 +1,32 @@
+{
+  "passed": 7,
+  "accessibilityAudits": 15,
+  "results": [
+    "Publication 360: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights",
+    "Publication 390: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights",
+    "Publication 430: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights",
+    "Publication 768: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights",
+    "Publication 1024: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights",
+    "Publication 1440: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights",
+    "Publication 1920: closed preparation, canonical copy, decoded PNG, protected opening/closing and Reception rights"
+  ],
+  "audits": [
+    "publication-360",
+    "publication-reception-360",
+    "publication-390",
+    "publication-reception-390",
+    "publication-430",
+    "publication-reception-430",
+    "publication-768",
+    "publication-reception-768",
+    "publication-1024",
+    "publication-reception-1024",
+    "publication-1440",
+    "publication-dark-1440",
+    "publication-reception-1440",
+    "publication-1920",
+    "publication-reception-1920"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Fictional auth, venue and contacts only. No external email."
+}
