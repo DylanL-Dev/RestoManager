@@ -1,0 +1,90 @@
+{
+  "project": "lykoybacslvmhtzftqsf",
+  "legacy_metadata": [
+    {
+      "acl": [
+        "resto_service_writer=X/resto_service_writer"
+      ],
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.acquire_table_hold(uuid,timestamp with time zone,timestamp with time zone)"
+    },
+    {
+      "acl": [
+        "resto_service_writer=X/resto_service_writer"
+      ],
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.confirm_reservation(text,text,integer,timestamp with time zone,timestamp with time zone,uuid[],text)"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres"
+      ],
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": false,
+      "signature": "private.lock_direct_service_mutation_v1()"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "resto_service_writer=X/postgres",
+        "rm015_public_writer=X/postgres"
+      ],
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": false,
+      "signature": "private.ranked_booking_sets(uuid,uuid[],integer,timestamp with time zone,timestamp with time zone)"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "authenticated=X/postgres",
+        "resto_service_writer=X/postgres",
+        "rm015_public_writer=X/postgres"
+      ],
+      "owner": "postgres",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.staff_restaurant()"
+    },
+    {
+      "acl": [
+        "resto_service_writer=X/resto_service_writer"
+      ],
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.update_reservation_v4(uuid,uuid,text,text,integer,timestamp with time zone,timestamp with time zone,uuid[],text)"
+    },
+    {
+      "acl": [
+        "resto_service_writer=X/resto_service_writer",
+        "authenticated=X/resto_service_writer"
+      ],
+      "owner": "resto_service_writer",
+      "config": [
+        "search_path=\"\""
+      ],
+      "definer": true,
+      "signature": "private.rm012_sync_api()"
+    }
+  ],
+  "writer_auth_usage": false,
+  "writer_memberships": 0
+}

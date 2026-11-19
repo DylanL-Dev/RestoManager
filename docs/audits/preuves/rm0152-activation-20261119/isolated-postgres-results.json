@@ -1,0 +1,43 @@
+{
+  "passed": 27,
+  "failed": 0,
+  "results": [
+    "Isolated migration applies twice; no account or existing restaurant setting is created by activation",
+    "Public and authenticated roles cannot call backend RPC or read private records",
+    "Custom tenant settings do not bypass staff tenant isolation or grant a staff role to the backend",
+    "One to three people commit one confirmed Web reservation without arriving or installing",
+    "Same confirmation retries return one reference; changed payload under the same operation is refused",
+    "Group of four waits for Restaurant, holds for one hour, Reception cannot approve",
+    "Pending Web hold blocks the legacy employee hold API even without an employee owner",
+    "Pending expiry releases its hold; a rejected request does not create a booking",
+    "A seated table from yesterday remains unavailable for public bookings",
+    "Arrival percentage is authoritative for Web and uses the existing restaurant setting",
+    "Unknown and foreign-restaurant tokens expose no reservation",
+    "Customer group change preserves original confirmed reservation until Restaurant approves",
+    "Expired or cancelled management link is refused; valid cancellation never seats or deletes a guest",
+    "Mail is queued privately, claimed once and acknowledged with a matching lease",
+    "Two Web clients racing for the last table cannot both obtain a hold",
+    "A simultaneous staff draft and Web hold serialize on the shared restaurant mutex",
+    "Restaurant double approval and stale settings saves never duplicate or overwrite a booking",
+    "Current settings are revalidated before approval, without destroying the pending request",
+    "Expiry of a group modification restores the actual original date and keeps a system audit",
+    "Employee changes supersede a pending proposal and synchronize the secure guest link",
+    "Closing the public channel stops new bookings but keeps existing guest cancellations available",
+    "The persistent rate budget rejects excess attempts, including attempts whose booking fails",
+    "A stale email lease cannot acknowledge a retry and jobs older than deduplication retention stop",
+    "Staff drafts consume the arrivals budget and Web holds appear in RM-012 blockers",
+    "Paris midnight and both DST transitions reject nonexistent or ambiguous local slots",
+    "Successive guest request changes replace the client text and preserve all internal notes",
+    "Hosted-style non-superuser migration rollback, apply and reapply"
+  ],
+  "preservedFunctions": [
+    "private.acquire_table_hold(uuid,timestamp with time zone,timestamp with time zone)",
+    "private.confirm_reservation(text,text,integer,timestamp with time zone,timestamp with time zone,uuid[],text)",
+    "private.ranked_booking_sets(uuid,uuid[],integer,timestamp with time zone,timestamp with time zone)",
+    "private.staff_restaurant()",
+    "private.update_reservation_v4(uuid,uuid,text,text,integer,timestamp with time zone,timestamp with time zone,uuid[],text)",
+    "private.rm012_sync_api()"
+  ],
+  "network": "none",
+  "remoteDatabaseWrites": 0
+}

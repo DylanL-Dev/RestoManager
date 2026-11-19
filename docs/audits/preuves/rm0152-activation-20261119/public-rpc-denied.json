@@ -1,0 +1,22 @@
+[
+  {
+    "rpc": "rm015_runtime_config_v1",
+    "status": 401,
+    "code": "42501"
+  },
+  {
+    "rpc": "rm015_gateway_v1",
+    "status": 401,
+    "code": "42501"
+  },
+  {
+    "rpc": "rm015_rate_v1",
+    "status": 401,
+    "code": "42501"
+  },
+  {
+    "rpc": "rm015_mail_v1",
+    "status": 401,
+    "code": "42501"
+  }
+]

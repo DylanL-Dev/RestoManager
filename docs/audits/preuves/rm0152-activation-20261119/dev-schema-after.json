@@ -1,0 +1,102 @@
+{
+  "project": "lykoybacslvmhtzftqsf",
+  "rls": [
+    {
+      "table": "rm015_audit",
+      "forced": true,
+      "enabled": true
+    },
+    {
+      "table": "rm015_mail",
+      "forced": true,
+      "enabled": true
+    },
+    {
+      "table": "rm015_operations",
+      "forced": true,
+      "enabled": true
+    },
+    {
+      "table": "rm015_rate",
+      "forced": true,
+      "enabled": true
+    },
+    {
+      "table": "rm015_requests",
+      "forced": true,
+      "enabled": true
+    },
+    {
+      "table": "rm015_settings",
+      "forced": true,
+      "enabled": true
+    }
+  ],
+  "rpc": [
+    {
+      "anon": false,
+      "name": "rm015_gateway_v1",
+      "staff": false,
+      "backend": true
+    },
+    {
+      "anon": false,
+      "name": "rm015_mail_v1",
+      "staff": false,
+      "backend": true
+    },
+    {
+      "anon": false,
+      "name": "rm015_rate_v1",
+      "staff": false,
+      "backend": true
+    },
+    {
+      "anon": false,
+      "name": "rm015_staff_v1",
+      "staff": true,
+      "backend": false
+    }
+  ],
+  "data": [
+    {
+      "name": "reservations",
+      "rows": 81,
+      "fingerprint": "89726e9f4cdfe5a95173cfa545713743"
+    },
+    {
+      "name": "reservation_tables",
+      "rows": 110,
+      "fingerprint": "d2e4c31c164ce83c8e54b13524ddad6f"
+    },
+    {
+      "name": "restaurant_tables",
+      "rows": 23,
+      "fingerprint": "8cba4c6137c24a52894d64ea2bb6fb96"
+    },
+    {
+      "name": "restaurant_hours",
+      "rows": 2,
+      "fingerprint": "09c9590f8140cdf8ac3ed4dcdd172924"
+    },
+    {
+      "name": "table_holds",
+      "rows": 4,
+      "fingerprint": "3fb66a4c131f358bf0e19d86f261cdd8"
+    },
+    {
+      "name": "service_closures",
+      "rows": 7,
+      "fingerprint": "e87028109b1b1974311c3c45bc93108d"
+    },
+    {
+      "name": "staff_profiles",
+      "rows": 2,
+      "fingerprint": "e46764009fd50bf8436498a6758c7cf3"
+    }
+  ],
+  "writer": {
+    "login": false,
+    "bypassrls": false
+  }
+}

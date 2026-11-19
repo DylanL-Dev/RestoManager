@@ -1,5 +1,7 @@
 # RM-015.2 — Impacts et activation DEV
 
+> État de préparation du 18 novembre. Pour l’activation autorisée du 19 novembre et les preuves réelles, voir [le rapport d’activation](RM0152_DEV_ACTIVATION_20261119.md).
+
 ## État livré
 
 Le moteur, l’API, le suivi Restaurant et le parcours public connecté sont développés. Leur validation utilise exclusivement PostgreSQL éphémère, des identités fictives et une API HTTP locale. Le dépôt et Render DEV restent **en préparation**, sans activation publique des réservations ni des emails. La démonstration RM-015.1 reste indépendante.
