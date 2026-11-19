@@ -96,12 +96,12 @@ async function start(){
   token=new URLSearchParams(location.hash.slice(1)).get('manage')||'';
   profile=await api.profile(token||undefined);if(!profile.name||!Number.isInteger(profile.maxParty)||!profile.today)throw new BookingError('Les informations du restaurant sont indisponibles.');
   $('restaurantName').textContent=profile.name;$('restaurantSubtitle').textContent='Réservez directement auprès de votre restaurant';$('locality').textContent='Votre restaurant';$('introduction').textContent='Un moment à partager, une table à retrouver.';$('description').textContent='Choisissez votre venue et retrouvez votre réservation avec votre lien personnel.';
-  $('liveBanner').textContent='Recette DEV · Données fictives de test uniquement · Emails non envoyés';
+  $('liveBanner').textContent='DEV · Données de l’établissement · Emails désactivés';$('privacy').disabled=false;$('conditions').disabled=false;
   draft.party=Math.min(2,profile.maxParty);draft.date=addDays(profile.today,1);
   token=new URLSearchParams(location.hash.slice(1)).get('manage')||'';
   if(token){adopt(await api.read(token));return;}
   if(api.hasPending()){try{const r=await api.recover();if(r&&!['expired','cancelled','rejected'].includes(r.state)){adopt(r);return;}api.clearRecovery();}catch(e){if(e.code==='TOKEN')api.clearRecovery();else throw e;}}
   await times();symbols();
- }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p>';symbols();}
+ }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p><a class="primary" href="index.html">Essayer la démonstration</a>';symbols();}
 }
 void start();

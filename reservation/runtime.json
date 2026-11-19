@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "channel": "dev",
-  "activated": false,
-  "api": null,
-  "allowedApiOrigin": null
+  "activated": true,
+  "api": "https://lykoybacslvmhtzftqsf.supabase.co/functions/v1/rm015-public",
+  "allowedApiOrigin": "https://lykoybacslvmhtzftqsf.supabase.co"
 }
