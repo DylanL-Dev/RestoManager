@@ -67,7 +67,7 @@ export function createPublicHandler({rpc,keys,activeKey,rateSecret,allowedOrigin
    }
    let data=result.data;
    if(data?.secret_cipher){const token=await decryptToken(keys,body.restaurant,data.secret_cipher);data={...safeRecord(data.data),managementToken:token};}
-   else if(body.action==='profile')data=pick(data,['name','slug','timezone','maxParty','horizonDays','leadMinutes','pendingMinutes','manualFrom','privacyNotice','privacyContact','cancellationNotice','today','serverTime']);
+   else if(body.action==='profile')data=pick(data,['name','slug','timezone','maxParty','horizonDays','leadMinutes','pendingMinutes','manualFrom','privacyNotice','privacyContact','cancellationNotice','coverPath','coverAlt','today','serverTime']);
    else if(body.action==='availability')data={slots:(data?.slots||[]).map(s=>pick(s,['time','available','level','manual'])),serverTime:data?.serverTime};
    return response({data,environment,emailDelivery:'not-activated'});
   }catch(error){
