@@ -9,3 +9,5 @@
 .brand>span:last-child{min-width:0}
 
 @media(max-width:1023px){.steps li{flex-direction:column;align-items:flex-start;gap:6px}}
+/* Connected DEV journey; existing demo styles remain unchanged. */
+#booking .rmLiveMore{margin-top:16px}#booking select{max-width:100%;min-height:46px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:white;color:var(--ink);font:inherit}#infoBody{white-space:pre-wrap;overflow-wrap:anywhere}#booking[aria-busy=true] .primary{cursor:wait}

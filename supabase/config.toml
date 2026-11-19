@@ -1,0 +1,6 @@
+# Prepared local function configuration. No hosted deployment is automatic.
+project_id = "restomanager-rm015-isolated"
+[functions.rm015-public]
+verify_jwt = false
+[functions.rm015-mail]
+verify_jwt = false

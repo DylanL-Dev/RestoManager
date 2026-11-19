@@ -414,7 +414,7 @@ function render(){
  const toggleDetails=()=>{expanded=expanded===r.id?null:r.id;render()};
  detailButton.addEventListener('click',toggleDetails);
  clientText.append(detailButton);
- clientText.append(el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub'));
+ const originLabel=el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub');if(r.channel==='web')originLabel.append(document.createTextNode(' '),el('span','Web','rmWebBadge'));clientText.append(originLabel);
  client.append(clientText);
  // The phone reference includes a separate, accessible detail chevron.
  // It is visually hidden outside of narrow cards; the original name
@@ -439,7 +439,7 @@ function render(){
  status.append(icon(['completed','released'].includes(r.status)?'check-circle-2':r.status==='seated'?'users-round':r.status==='late'?'clock-alert':r.status==='cancelled'?'x-circle':'clock-3'),
   el('span',shortStatus));line.append(status);
  const flags=el('div',undefined,'rmBookingFlags');
- if(publicNotes(r)){
+ if(publicNotes(r)||r.guestRequestNotes){
   const note=el('button',undefined,'rmBookingFlag rmBookingFlagNote');note.type='button';
   note.setAttribute('title','Consulter la note');note.setAttribute('aria-label','Note présente : ouvrir la fiche');
   note.append(icon('notebook-pen'),el('span','Note','rmBookingNoteLabel'));
@@ -461,6 +461,7 @@ function render(){
  details.append(el('h3','Suivi de la réservation'));
  details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
  if(r.allergies)details.append(el('p','Allergies signalées : '+r.allergies,'reservationAllergy'));
+ if(r.guestRequestNotes)details.append(el('p','Demande client en ligne : '+r.guestRequestNotes,'reservationNotes'));
  if(publicNotes(r))details.append(el('p','Note : '+publicNotes(r),'reservationNotes'));
  if(r.confirmedAt)details.append(el('p','Confirmée le '+new Date(r.confirmedAt).toLocaleString('fr-FR')));
  if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}

@@ -1,0 +1,5 @@
+
+> restomanager@1.0.0 build:public-connected
+> node scripts/build-public-connected.cjs
+
+Public connected DEV artifact: 13 static assets, activation off, emails off.

@@ -1,0 +1,36 @@
+name: RM-015.2 Secure public booking - isolated server and UI
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  public-booking:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:syntax && npm test
+      - run: npm run build:public-connected
+      - name: Edge entrypoint type validation (Deno 2.5.6)
+        run: npx --yes deno@2.5.6 check --no-remote supabase/functions/rm015-public/index.ts supabase/functions/rm015-mail/index.ts
+      - name: PostgreSQL 17, RLS, booking conflicts, idempotence and email leases
+        run: npm run test:public-connected:postgres
+      - name: Existing closeout rules against the new schema
+        env:
+          RM015_SCHEMA: '1'
+          RM012_POLICY: '1'
+        run: npm run test:closeout:postgres
+      - name: Public HTTP, real disposable PostgreSQL, employee auth fixture, seven widths and axe
+        run: npm run test:public-connected:browser
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm0152-connected-isolated-evidence
+          path: test-results/rm0152*/

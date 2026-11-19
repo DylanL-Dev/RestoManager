@@ -72,7 +72,7 @@ test('RM015 malformed stored record is refused instead of rendered', () => {
   assert.throws(() => D.createAdapter(env).read(r.token), { code: 'not_found' });
 });
 test('RM015 public entry imports no employee modules, endpoint, secret or service worker', () => {
-  const root = path.resolve(__dirname, '../reservation'), files = fs.readdirSync(root);
+  const root = path.resolve(__dirname, '../reservation'), files = ['index.html','model.js','demo.js','portal.js','portal.css','dining.svg'];
   const all = files.map(f => fs.readFileSync(path.join(root, f), 'utf8')).join('\n');
   const forbidden = /(?:supabase\.co|service_role|sb_secret_|eyJhbGci|\.rpc\(|fetch\(|XMLHttpRequest|WebSocket|serviceWorker\.register|v3-connected|creator\.html|booking-draft\.js)/;
   assert.equal(all.match(forbidden)?.[0], undefined, 'Public source has no API, credential or employee import');

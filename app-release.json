@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.17-rm016.1",
+  "currentVersion": "2026.11.18-rm015.2-dev",
   "releases": [
+    {
+      "version": "2026.11.18-rm015.2-dev",
+      "date": "2026-11-18",
+      "title": "Préparation des réservations en ligne sur DEV",
+      "changes": [
+        "Le parcours client relié au serveur et le suivi Restaurant sont préparés.",
+        "Les demandes de quatre personnes ou plus nécessitent une confirmation, avec un maintien d’une heure réglable.",
+        "L’activation du portail reste soumise à la validation serveur dédiée."
+      ],
+      "impact": "Aucune réservation publique ni aucun email réel avant activation explicite sur DEV.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.17-rm016.1",
       "date": "2026-11-17",
