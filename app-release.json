@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.19-rm015.4-dev",
+  "currentVersion": "2026.11.19-rm015.5-dev",
   "releases": [
+    {
+      "version": "2026.11.19-rm015.5-dev",
+      "date": "2026-11-19",
+      "title": "Un lien de réservation plus facile à préparer",
+      "changes": [
+        "Écrivez le nom du restaurant et voyez immédiatement le lien complet, avant de l’enregistrer.",
+        "Les réglages et le choix du délai adoptent les cartes et boutons de Gestion.",
+        "La personnalisation de la photo client est préparée ; elle sera proposée après activation du stockage dédié sur DEV."
+      ],
+      "impact": "DEV uniquement. Les liens déjà partagés restent inchangés avant enregistrement. Emails désactivés.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.19-rm015.4-dev",
       "date": "2026-11-19",
