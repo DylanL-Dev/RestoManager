@@ -40,7 +40,7 @@ async function start({applyMigration=true,withPolicy=false}={}){
   await ok('set check_function_bodies=on;');
   const body=fs.readFileSync(path.join(root,'supabase/migrations',migration),'utf8');
   if(applyMigration){await ok(body);await ok(body)}
-  if(process.env.RM015_SCHEMA==='1'&&applyMigration){const web=fs.readdirSync(path.join(root,'supabase/migrations')).find(f=>f.endsWith('_rm015_secure_public_booking.sql'));await apply('supabase/migrations/'+web);await apply('supabase/migrations/'+web)}
+  if(process.env.RM015_SCHEMA==='1'&&applyMigration){for(const suffix of ['_rm015_secure_public_booking.sql','_rm015_backend_auth_permissions.sql']){const web=fs.readdirSync(path.join(root,'supabase/migrations')).find(f=>f.endsWith(suffix));await apply('supabase/migrations/'+web);await apply('supabase/migrations/'+web)}}
   const policyMigration=fs.readdirSync(path.join(root,'supabase/migrations')).find(f=>f.endsWith('_rm012_activation_and_automatic_close.sql'));
   const policyBody=withPolicy?fs.readFileSync(path.join(root,'supabase/migrations',policyMigration),'utf8'):null;
   if(withPolicy){assert.ok(applyMigration);await ok(policyBody);await ok(policyBody)}
