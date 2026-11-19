@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.19-rm015.3-dev",
+  "currentVersion": "2026.11.19-rm015.4-dev",
   "releases": [
+    {
+      "version": "2026.11.19-rm015.4-dev",
+      "date": "2026-11-19",
+      "title": "Des textes proposés pour préparer votre portail",
+      "changes": [
+        "La confidentialité et les conditions d’annulation sont proposées dans les champs encore vides.",
+        "Complétez simplement le contact du restaurant et sa durée réelle de conservation des données.",
+        "Vos textes existants sont conservés ; remplacer un texte personnalisé demande une confirmation."
+      ],
+      "impact": "Modèles modifiables sur DEV. Aucun établissement n’est ouvert automatiquement et les emails restent désactivés.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.19-rm015.3-dev",
       "date": "2026-11-19",

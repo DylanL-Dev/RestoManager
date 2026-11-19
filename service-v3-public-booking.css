@@ -28,3 +28,5 @@ html[data-theme=dark] :is(.rmWeb,.rmWebDialog){--wb-bg:#173b31;--wb-soft:#204b3d
 html[data-theme=dark] .rmWebValidation{background:#4d2a24;color:#ffd5cc;border-color:#b67b6a}html[data-theme=dark] .rmWebFieldError{color:#ffd5cc}
 @media(max-width:850px){.rmWebShare{grid-template-columns:minmax(0,1fr)}.rmWebQR{padding-top:12px}.rmWebShareActions>*{flex:1}}
 @media(max-width:450px){.rmWebPublication{padding:18px 16px}.rmWebChecklist{grid-template-columns:minmax(0,1fr)}.rmWebPublication h3{font-size:19px}.rmWebShareActions{flex-direction:column}}
+
+.rmWebDefaults{padding:16px;border:1px solid var(--wb-line);border-radius:12px;background:var(--wb-soft);margin:12px 0}.rmWebDefaults strong{font-size:14px}.rmWebDefaults p{margin:8px 0 12px}.rmWebRetention{padding:14px;border-left:3px solid #287b60;background:var(--wb-soft);border-radius:0 10px 10px 0}
