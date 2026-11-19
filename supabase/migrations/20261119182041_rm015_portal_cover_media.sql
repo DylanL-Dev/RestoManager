@@ -9,7 +9,10 @@ do $$begin
  end if;
 end$$;
 -- Dedicated public bucket: no private documents or reservation attachments belong here.
-insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('rm015-covers','rm015-covers',true,2097152,array['image/webp']) on conflict(id) do update set public=true,file_size_limit=2097152,allowed_mime_types=array['image/webp'];
+do $$begin
+ if exists(select 1 from storage.buckets where id='rm015-covers' and (name is distinct from 'rm015-covers' or public is distinct from true or file_size_limit is distinct from 2097152 or allowed_mime_types is distinct from array['image/webp'])) then raise exception 'RM015 cover bucket already exists with incompatible settings; review before activation';end if;
+end$$;
+insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('rm015-covers','rm015-covers',true,2097152,array['image/webp']) on conflict(id) do nothing;
 grant create on schema private to rm015_public_writer;
 grant usage on schema storage to rm015_public_writer;
 grant select on storage.objects to rm015_public_writer;
