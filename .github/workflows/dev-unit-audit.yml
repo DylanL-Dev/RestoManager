@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+      - name: Install pinned test dependencies
+        run: npm ci
       - name: JavaScript syntax check
         run: npm run test:syntax
       - name: Unit tests (isolated, no Supabase PROD access)

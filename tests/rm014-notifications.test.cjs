@@ -101,3 +101,9 @@ test('connection problems and available updates cannot be hidden through stale d
  }
  assert.equal(m.dismissible({source:'release',update:false}),true);
 });
+
+test('published release identity matches the served entry before an update can be announced',()=>{
+ const fs=require('node:fs'),manifest=JSON.parse(fs.readFileSync('app-release.json','utf8')),html=fs.readFileSync('v3-connected.html','utf8');
+ const version=html.match(/name="restomanager-version" content="([^"]+)"/)[1],channel=html.match(/name="restomanager-channel" content="([^"]+)"/)[1];
+ assert.equal(manifest.currentVersion,version);assert.equal(manifest.channel,channel);assert.equal(manifest.releases[0].version,version);
+});

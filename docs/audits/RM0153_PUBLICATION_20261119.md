@@ -74,3 +74,9 @@ Largeurs : 360, 390, 430, 768, 1024, 1440, 1920 pixels. Les captures utilisent u
 ## Limites conservées
 
 Ce lot prépare le partage sur DEV ; il ne publie aucun portail officiel sur MAIN/V3/PROD. Les mentions juridiques, la conservation, le domaine public et un éventuel prestataire email restent des décisions de l’établissement. Un QR marque une URL et ne certifie pas que le canal est ouvert ni qu’un créneau est disponible. La disponibilité et la réservation sont toujours vérifiées par le serveur. Les notifications, demandes de groupe et le maintien d’une heure suivent les mécanismes déjà livrés.
+
+## Corrections de la première campagne CI
+
+La première campagne n’est pas comptée comme réussie : le workflow unitaire historique n’installait pas les dépendances de décodage QR et le numéro de version de l’entrée HTML n’avait pas encore été aligné sur le nouveau manifeste. Le workflow installe désormais le lockfile avec npm ci. La page et le manifeste portent la même version ; un contrôle unitaire vérifie aussi leur canal et leur identité avant livraison. Les protections de preuve de publication RM-014 restent inchangées.
+
+Après correction : **280 tests unitaires passent**, ainsi que les **14 parcours RM-014** (deux rôles × sept largeurs), incluant navigation vers les nouveautés, états de lecture, historique, clavier, contrastes et thème sombre.
