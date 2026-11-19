@@ -75,10 +75,16 @@ Après activation, aucun avertissement anon sur une nouvelle RPC. Le contrôle s
 2. Gestion → Réservations en ligne : le nouvel espace apparaît grâce à la capacité serveur. Consulter les réglages. Ne pas enregistrer de valeurs de démonstration dans l’établissement partagé.
 3. Le responsable peut renseigner ses véritables maximum, adresse publique, confidentialité, contact et conditions. Le délai par défaut est 60 minutes ; horaires et pourcentage restent ceux de Gestion. L’ouverture exige une action explicite.
 4. Ouvrir la page publique via le lien de Gestion après cette configuration. Tant que le Restaurant n’est pas configuré/ouvert, https://restomanager-v3-supabase-integration.onrender.com/reservation/live.html?restaurant=a-lepicerie-rouen affiche un état indisponible sans créer de demande. Ce slug dans l’URL est une référence d’aperçu, pas un restaurant inscrit automatiquement en base.
-5. Pour essayer librement sans écriture partagée : https://restomanager-v3-supabase-integration.onrender.com/reservation/ conserve la démonstration RM-015.1 entièrement isolée. Les captures du parcours connecté complet proviennent du banc de test isolé.
+5. Pour essayer librement sans écriture partagée : https://restomanager-v3-supabase-integration.onrender.com/reservation/?restaurant=a-lepicerie-rouen conserve la démonstration RM-015.1 entièrement isolée. Les captures du parcours connecté complet proviennent du banc de test isolé.
 6. Aucune tentative de réservation, modification, annulation ou clôture fictive sur DEV partagé. Les recettes avec écritures sont exécutées par les tests locaux/CI ou dans un futur établissement de bac à sable réellement séparé.
 
 ## Désactivation et rotation
 
 Fermer les nouvelles demandes dans Gestion conserve les liens de gestion existants. En incident, un administrateur peut mettre `enabled:false` dans le seul secret Vault RM015 (effet après au plus 30 secondes), ou utiliser `RM015_ENABLED=false` dans les secrets Edge pour une coupure immédiate. Ne jamais copier ce secret dans Git/Render statique ni l’afficher dans un terminal partagé. Pour une rotation AES, ajouter une nouvelle version et changer activeKey ; conserver les anciennes clés tant que des liens en dépendent. Ne pas supprimer la migration ni les données pour revenir à un ancien frontend.
 
+
+## Correctif de la recette Render
+
+La recette en ligne a repéré un détour dans le lien de repli : sans slug, la démonstration demandait encore de choisir un restaurant. Les deux liens du parcours connecté ciblent désormais explicitement l’établissement de démonstration existant. Ce choix concerne uniquement le bac à sable local, pas la configuration multi-établissements du serveur. Le script est versionné pour renouveler son cache. Un scénario Playwright supplémentaire vérifie qu’un restaurant fermé propose ce repli, puis ouvre directement le nombre de personnes, sans réservation en base.
+
+Après ce correctif : **14 scénarios connectés et 28 audits axe passent** sur PostgreSQL éphémère, ainsi que 178 contrôles syntaxiques et le build DEV. Preuve : `preuves/rm0152-activation-20261119/isolated-browser-results-after-links.json`.

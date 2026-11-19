@@ -102,6 +102,6 @@ async function start(){
   if(token){adopt(await api.read(token));return;}
   if(api.hasPending()){try{const r=await api.recover();if(r&&!['expired','cancelled','rejected'].includes(r.state)){adopt(r);return;}api.clearRecovery();}catch(e){if(e.code==='TOKEN')api.clearRecovery();else throw e;}}
   await times();symbols();
- }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p><a class="primary" href="index.html">Essayer la démonstration</a>';symbols();}
+ }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p><a class="primary" href="index.html?restaurant=a-lepicerie-rouen">Essayer la démonstration</a>';symbols();}
 }
 void start();
