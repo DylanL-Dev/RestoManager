@@ -7,8 +7,15 @@ async function start(){
  const body=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations',migration),'utf8');
  let preservedFunctions;
  try{
-  const before=await base.json("select jsonb_agg(jsonb_build_object('oid',p.oid,'name',p.oid::regprocedure::text,'owner',p.proowner,'config',p.proconfig,'definer',p.prosecdef,'anon',has_function_privilege('anon',p.oid,'execute'),'authenticated',has_function_privilege('authenticated',p.oid,'execute'),'service_role',has_function_privilege('service_role',p.oid,'execute')) order by p.oid) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.prokind='f' and (p.prosrc ~ 'held_by[[:space:]]*<>' or p.proname in ('staff_restaurant','ranked_booking_sets','rm012_sync_api'))");
+  const before=await base.json("select jsonb_agg(jsonb_build_object('oid',p.oid,'name',p.oid::regprocedure::text,'owner',p.proowner,'config',p.proconfig,'definer',p.prosecdef,'anon',has_function_privilege('anon',p.oid,'execute'),'authenticated',has_function_privilege('authenticated',p.oid,'execute'),'service_role',has_function_privilege('service_role',p.oid,'execute')) order by p.oid) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','private') and p.prokind='f' and (p.prosrc ~ 'held_by[[:space:]]*<>' or p.proname in ('staff_restaurant','ranked_booking_sets','rm012_sync_api','lock_direct_service_mutation_v1'))");
   await base.ok(body);await base.ok(body);
+  // Reproduce hosted auth ACLs: no implicit PUBLIC schema access.
+  await base.ok('revoke usage on schema auth from public,rm015_public_writer;grant usage on schema auth to anon,authenticated,service_role,resto_service_writer;');
+  const permissions=fs.readdirSync(path.resolve(__dirname,'../../supabase/migrations')).find(f=>f.endsWith('_rm015_backend_auth_permissions.sql'));
+  const permissionBody=fs.readFileSync(path.resolve(__dirname,'../../supabase/migrations',permissions),'utf8');
+  assert.equal(await base.json("select to_json(has_schema_privilege('rm015_public_writer','auth','usage'))"),false);
+  await base.ok(permissionBody);await base.ok(permissionBody);
+  assert.equal(await base.json("select to_json(has_schema_privilege('rm015_public_writer','auth','usage'))"),false);
   const ids=before.map(f=>Number(f.oid)).join(',');
   const after=await base.json("select jsonb_agg(jsonb_build_object('oid',p.oid,'name',p.oid::regprocedure::text,'owner',p.proowner,'config',p.proconfig,'definer',p.prosecdef,'anon',has_function_privilege('anon',p.oid,'execute'),'authenticated',has_function_privilege('authenticated',p.oid,'execute'),'service_role',has_function_privilege('service_role',p.oid,'execute')) order by p.oid) from pg_proc p where p.oid in ("+ids+")");
   assert.deepEqual(after,before,'Legacy identity, ownership, search_path and existing role grants are preserved');preservedFunctions=before.map(f=>f.name);

@@ -79,7 +79,7 @@ export function createPublicHandler({rpc,keys,activeKey,rateSecret,allowedOrigin
 export function createDatabaseRpc({url,secret,fetcher=fetch}){
  const parsed=new URL(url);if(parsed.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(parsed.hostname))throw Error('Secure backend URL required');
  return async(name,args)=>{
-  if(!['rm015_rate_v1','rm015_gateway_v1','rm015_mail_v1'].includes(name))throw Error('Backend RPC not allowed');
+  if(!['rm015_rate_v1','rm015_gateway_v1','rm015_mail_v1','rm015_runtime_config_v1'].includes(name))throw Error('Backend RPC not allowed');
   const headers={'apikey':secret,'Content-Type':'application/json'};
   // Legacy service-role keys are JWTs; new secret keys are never bearer JWTs.
   if(secret?.startsWith('eyJ'))headers.Authorization='Bearer '+secret;
