@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.18-rm015.2-dev",
+  "currentVersion": "2026.11.19-rm015.3-dev",
   "releases": [
+    {
+      "version": "2026.11.19-rm015.3-dev",
+      "date": "2026-11-19",
+      "title": "Préparer et partager votre portail de réservation",
+      "changes": [
+        "Un contrôle vous guide dans les réglages avant une ouverture explicite sur DEV.",
+        "Copiez le lien enregistré ou téléchargez son QR code, calculé localement et marqué DEV.",
+        "Les modifications en cours sont protégées ; les horaires et le pourcentage d’arrivées restent ceux de Gestion."
+      ],
+      "impact": "Développement DEV uniquement. Les emails restent désactivés et aucun établissement n’est ouvert automatiquement.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.18-rm015.2-dev",
       "date": "2026-11-18",
