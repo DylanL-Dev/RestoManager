@@ -1,0 +1,14 @@
+{
+  "passed": 1,
+  "accessibilityAudits": 3,
+  "results": [
+    "Portal clarity and photo 390: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings"
+  ],
+  "audits": [
+    "portal-picker-390",
+    "portal-form-390",
+    "portal-photo-client-390"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Storage byte upload is a controlled browser transport fixture backed by actual SQL RLS; public image GET is local HTTP. Hosted Storage service is not exercised. Fictional auth, venue and contacts only. No external email."
+}

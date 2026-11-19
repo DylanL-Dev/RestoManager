@@ -1,0 +1,35 @@
+{
+  "passed": 7,
+  "accessibilityAudits": 18,
+  "results": [
+    "Portal clarity and photo 360: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings",
+    "Portal clarity and photo 390: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings",
+    "Portal clarity and photo 430: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings",
+    "Portal clarity and photo 768: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings",
+    "Portal clarity and photo 1024: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings",
+    "Portal clarity and photo 1440: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings",
+    "Portal clarity and photo 1920: human name, live canonical preview, keyboard picker, isolated image upload/publication/removal and unchanged bookings"
+  ],
+  "audits": [
+    "portal-picker-360",
+    "portal-form-360",
+    "portal-picker-390",
+    "portal-form-390",
+    "portal-photo-client-390",
+    "portal-picker-430",
+    "portal-form-430",
+    "portal-picker-768",
+    "portal-form-768",
+    "portal-photo-client-768",
+    "portal-picker-1024",
+    "portal-form-1024",
+    "portal-picker-1440",
+    "portal-form-1440",
+    "portal-photo-client-1440",
+    "portal-picker-dark",
+    "portal-picker-1920",
+    "portal-form-1920"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Storage byte upload is a controlled browser transport fixture backed by actual SQL RLS; public image GET is local HTTP. Hosted Storage service is not exercised. Fictional auth, venue and contacts only. No external email."
+}
