@@ -1,0 +1,39 @@
+{
+  "passed": 7,
+  "accessibilityAudits": 21,
+  "fixtureRequestsOutstanding": 0,
+  "results": [
+    "Privacy and conditions 360: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 390: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 430: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 768: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 1024: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 1440: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 1920: real template, multiline contact, safe links, keyboard and no reservation"
+  ],
+  "audits": [
+    "privacy-settings-360",
+    "privacy-dialog-360",
+    "booking-conditions-360",
+    "privacy-settings-390",
+    "privacy-dialog-390",
+    "booking-conditions-390",
+    "privacy-settings-430",
+    "privacy-dialog-430",
+    "booking-conditions-430",
+    "privacy-settings-768",
+    "privacy-dialog-768",
+    "booking-conditions-768",
+    "privacy-settings-1024",
+    "privacy-dialog-1024",
+    "booking-conditions-1024",
+    "privacy-settings-1440",
+    "privacy-dialog-1440",
+    "booking-conditions-1440",
+    "privacy-settings-1920",
+    "privacy-dialog-1920",
+    "booking-conditions-1920"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Storage byte upload is a controlled browser transport fixture backed by actual SQL RLS; public image GET is local HTTP. Hosted Storage service is not exercised. Fictional auth, venue and contacts only. No external email."
+}

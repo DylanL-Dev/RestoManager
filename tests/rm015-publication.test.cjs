@@ -52,3 +52,10 @@ test('RM015 proposed cancellation text follows the actual configured cutoff',()=
 test('RM015 template helper fields never enter the backend settings payload',()=>{
  const data=M.fromForm({...good(),_templateRetention:'Durée fictive'},true,4);assert.equal(Object.hasOwn(data,'_templateRetention'),false);assert.equal(data.version,4);
 });
+
+test('RM015 complete notices explain contract, optional data, anti-abuse, session recovery and private links',()=>{
+ const text=M.privacyDefault('Restaurant fictif');for(const term of ['mesures précontractuelles','intérêt légitime','empreinte de l’adresse IP','session de l’onglet','ne contient pas vos coordonnées','Son expiration ne supprime pas','Google Maps','CNIL'])assert.ok(text.includes(term),term);assert.ok(M.privacyDefault('x'.repeat(180)).length<=3000);assert.ok(M.validate({...good(),privacyContact:'0000000'}).privacyContact);assert.deepEqual(M.validate({...good(),privacyContact:'Restaurant fictif\nEmail : privacy@example.test\nTéléphone : +33 2 00 00 00 00'}),{});
+});
+test('RM015 booking conditions distinguish a pending change from the preserved original reservation',()=>{
+ const text=M.cancellationDefault(0);assert.match(text,/réservation initiale est conservée/);assert.match(text,/un repas au restaurant/);assert.match(text,/Aucun numéro de table précis/);assert.ok(text.length<=1500);
+});
