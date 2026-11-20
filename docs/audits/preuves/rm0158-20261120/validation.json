@@ -49,5 +49,8 @@
   "demoBrowserScenarios": 13,
   "emailCollectionEnabled": false,
   "anonymousEmailStoredAs": null,
-  "anonymousMailJobs": 0
+  "anonymousMailJobs": 0,
+  "supplementaryBrowserScenarios": 3,
+  "supplementaryAxeAudits": 9,
+  "anonymousFirstEmailEditableWhenReenabled": true
 }

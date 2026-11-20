@@ -1,0 +1,23 @@
+{
+  "passed": 3,
+  "accessibilityAudits": 9,
+  "fixtureRequestsOutstanding": 0,
+  "results": [
+    "Hotel guest journey 390: committed mode, Hotel QR, Exterior choice, room validation, Web classification, Reception rights and existing links",
+    "Staff correction of Hotel to Exterior uses the real secure edit RPC and synchronizes the guest link",
+    "Server collection policy restores required email only in simulation; disabling hides it and preserves a legacy address on edit without enabling mail"
+  ],
+  "audits": [
+    "hotel-publication-390",
+    "hotel-venue-390",
+    "hotel-contact-390",
+    "hotel-confirmed-390",
+    "hotel-staff-correction",
+    "hotel-staff-correction-dark",
+    "email-policy-first-address",
+    "email-policy-restored-review",
+    "email-policy-off-existing-edit"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Storage byte upload is a controlled browser transport fixture backed by actual SQL RLS; public image GET is local HTTP. Hosted Storage service is not exercised. Fictional auth, venue and contacts only. No external email."
+}

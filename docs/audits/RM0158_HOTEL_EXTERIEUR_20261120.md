@@ -24,7 +24,7 @@ La politique est privée et appartient au serveur ; aucun paramètre du visiteur
 
 Un ancien backend qui ne connaît pas `emailRequired` conserve le formulaire requis, afin de ne pas cacher le champ alors que son API l’exige encore. Les mentions standards de confidentialité s’adaptent au mode effectif ; seuls les passages standards connus sont remplacés à l’affichage, sans écraser les paragraphes juridiques personnalisés. Une notice entièrement personnalisée reste à vérifier par l’établissement avant publication.
 
-La démonstration passe **13 scénarios** aux sept largeurs, incluant l’absence d’appel aux données internes, le refus du stockage et le lien expiré. Le parcours connecté ciblé couvre le mode sans email sur les sept formats, puis le retour simulé du champ et la préservation d’une adresse existante. Les résultats de campagne complète sur le dernier commit figurent dans la PR.
+La démonstration passe **13 scénarios** aux sept largeurs, incluant l’absence d’appel aux données internes, le refus du stockage et le lien expiré. Le parcours connecté ciblé couvre le mode sans email sur les sept formats, puis le retour simulé du champ et la préservation d’une adresse existante. Un complément de **3 scénarios / 9 audits axe réussis à 390 px** vérifie aussi qu’une ancienne réservation anonyme peut saisir sa première adresse lorsque la collecte est réactivée en simulation ; ce champ devient modifiable uniquement si aucune adresse n’était enregistrée. Les adresses existantes restent en lecture seule. Les résultats de campagne complète sur le dernier commit figurent dans la PR.
 
 ## Avant / après
 
