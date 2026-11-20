@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.19-rm015.5-dev",
+  "currentVersion": "2026.11.20-rm015.6-dev",
   "releases": [
+    {
+      "version": "2026.11.20-rm015.6-dev",
+      "date": "2026-11-20",
+      "title": "Une fiche restaurant plus complète pour vos clients",
+      "changes": [
+        "Présentez votre restaurant, son adresse et son téléphone depuis Gestion.",
+        "Les clients consultent les plages de réservation déjà définies dans les horaires du service.",
+        "Les modèles d’emails sont améliorés ; leur envoi reste désactivé en attendant le choix du prestataire et de l’expéditeur."
+      ],
+      "impact": "Développement DEV uniquement. Les réservations, les tables et les horaires sont conservés.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.19-rm015.5-dev",
       "date": "2026-11-19",

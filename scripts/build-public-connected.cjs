@@ -11,5 +11,5 @@ if(mode==='dev'){
 }
 fs.rmSync(out,{force:true,recursive:true});fs.mkdirSync(path.join(out,'reservation'),{recursive:true});
 for(const file of assets)fs.copyFileSync(path.join(root,'reservation',file),path.join(out,'reservation',file));
-for(const file of ['lucide-local.js','pwa-icon.svg'])fs.copyFileSync(path.join(root,file),path.join(out,file));
-console.log('Public connected DEV artifact: 14 static assets, API '+mode+', emails off.');
+for(const file of ['lucide-local.js','pwa-icon.svg','public-restaurant-profile.mjs'])fs.copyFileSync(path.join(root,file),path.join(out,file));
+console.log('Public connected DEV artifact: 15 static assets, API '+mode+', emails off.');

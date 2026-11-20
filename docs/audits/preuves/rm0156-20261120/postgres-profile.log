@@ -1,0 +1,10 @@
+PASS Additive migration applies twice; profile defaults remain empty and technical role stays restricted
+PASS Restaurant can publish its own profile; Reception and another tenant cannot change it
+PASS Server rejects unknown keys, wrong types, oversized values and invalid phone links
+PASS Version and idempotence preserve exactly one profile audit; older clients keep custom public information
+PASS Two users cannot replace the same profile version silently
+PASS Public projection contains only editorial fields and configured arrival windows
+PASS Hours follow the authoritative weekly plan and publish no invented legacy fallback
+PASS Empty optional fields restore the establishment name without renaming it or changing its link
+PASS Queued emails use the same published name and contacts; no email delivery is enabled
+{"passed":9,"results":["Additive migration applies twice; profile defaults remain empty and technical role stays restricted","Restaurant can publish its own profile; Reception and another tenant cannot change it","Server rejects unknown keys, wrong types, oversized values and invalid phone links","Version and idempotence preserve exactly one profile audit; older clients keep custom public information","Two users cannot replace the same profile version silently","Public projection contains only editorial fields and configured arrival windows","Hours follow the authoritative weekly plan and publish no invented legacy fallback","Empty optional fields restore the establishment name without renaming it or changing its link","Queued emails use the same published name and contacts; no email delivery is enabled"],"sharedDatabaseWrites":0,"emailDeliveryEnabled":false}
