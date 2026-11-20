@@ -1,0 +1,8 @@
+{
+  "supabase/migrations/20261120074140_rm015_public_restaurant_profile.sql": "2e468b54629a9a1f84ecccb78ad5f45314750db34c9a73c6f7db0ce61a2e5aa7",
+  "supabase/functions/_shared/rm015-gateway.mjs": "0aec97c3d9b23998e159fb66e658a8ad9f09d8d26c6224a866546973f2eee365",
+  "supabase/functions/_shared/rm015-mail.mjs": "d0cdcafabdd8d3073f86a3db3b45187559f17ef214147893a03eb77e5746b628",
+  "public-restaurant-profile.mjs": "c446c62535c894f874be6b8533ad97e1dba51153cc6e6e6f905860882d6c1cef",
+  "service-v3-portal-profile.js": "c60504bbfc442f6591ea624b9fe5e85458f8f4c632a58904e416c09b2397fdd3",
+  "sw.js": "5d792ba2cf003655dc70cb99c32b21cd5b8eed508c5f28f7ebbad84dcaa5a57e"
+}
