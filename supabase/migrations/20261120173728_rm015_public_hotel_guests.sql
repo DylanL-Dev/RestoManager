@@ -41,7 +41,7 @@ begin
 end $$;
 
 create or replace function private.rm015_commit(p_id uuid,p_slot jsonb) returns void language plpgsql security invoker set search_path='' as $$
-declare r private.rm015_requests;b public.reservations;ids uuid[];note text;oldstate text;
+declare r private.rm015_requests;b public.reservations;ids uuid[];note text;marker text;oldstate text;
 begin
  select * into strict r from private.rm015_requests where id=p_id for update;oldstate:=r.state;
  select array_agg(value::uuid order by value) into ids from jsonb_array_elements_text(p_slot->'ids');
@@ -51,7 +51,10 @@ begin
  delete from public.table_holds where web_request_id=p_id;
  -- Keep the original reservation until this transaction can commit the complete replacement.
  update private.rm015_requests set state='confirmed',last_result=null,expires_at=private.rm015_now(),updated_at=private.rm015_now() where id=p_id;
- note:=btrim(replace(replace(coalesce(b.notes,''),'[RESTOMANAGER:HOTEL]',''),'[RESTOMANAGER:EXTERIEUR]',''))||E'\n'||case when r.contact->>'guestType'='hotel' then '[RESTOMANAGER:HOTEL]' else '[RESTOMANAGER:EXTERIEUR]' end;
+ -- Replace only the classification marker; keep internal text and whitespace verbatim.
+ marker:=case when r.contact->>'guestType'='hotel' then '[RESTOMANAGER:HOTEL]' else '[RESTOMANAGER:EXTERIEUR]' end;
+ note:=replace(coalesce(b.notes,''),case when r.contact->>'guestType'='hotel' then '[RESTOMANAGER:EXTERIEUR]' else '[RESTOMANAGER:HOTEL]' end,marker);
+ if position(marker in note)=0 then note:=note||case when note='' or right(note,1)=E'\n' then '' else E'\n' end||marker;end if;
  if b.id is null then
   insert into public.reservations(id,restaurant_id,guest_name,hotel_room,party_size,starts_at,ends_at,status,notes,created_by,confirmed_at,source_channel,guest_request_notes)
   values(r.id,r.restaurant_id,(r.contact->>'firstName')||' '||(r.contact->>'lastName'),case when r.contact->>'guestType'='hotel' then nullif(r.contact->>'hotelRoom','') else null end,(r.draft->>'party')::integer,(p_slot->>'starts_at')::timestamptz,(p_slot->>'ends_at')::timestamptz,'confirmed',note,null,private.rm015_now(),'web',coalesce(r.contact->>'notes',''));
