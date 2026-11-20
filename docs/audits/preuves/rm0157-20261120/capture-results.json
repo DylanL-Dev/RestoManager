@@ -1,0 +1,23 @@
+{
+  "passed": 3,
+  "accessibilityAudits": 9,
+  "fixtureRequestsOutstanding": 0,
+  "results": [
+    "Privacy and conditions 390: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 768: real template, multiline contact, safe links, keyboard and no reservation",
+    "Privacy and conditions 1440: real template, multiline contact, safe links, keyboard and no reservation"
+  ],
+  "audits": [
+    "privacy-settings-390",
+    "privacy-dialog-390",
+    "booking-conditions-390",
+    "privacy-settings-768",
+    "privacy-dialog-768",
+    "booking-conditions-768",
+    "privacy-settings-1440",
+    "privacy-dialog-1440",
+    "booking-conditions-1440"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Storage byte upload is a controlled browser transport fixture backed by actual SQL RLS; public image GET is local HTTP. Hosted Storage service is not exercised. Fictional auth, venue and contacts only. No external email."
+}

@@ -1,0 +1,5 @@
+
+> restomanager@1.0.0 build:public-demo
+> node scripts/build-public-demo.cjs
+
+Public demonstration artifact: dist/public-demo (8 static files; no backend)
