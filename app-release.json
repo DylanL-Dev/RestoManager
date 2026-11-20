@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.20-rm015.6-dev",
+  "currentVersion": "2026.11.20-rm015.7-dev",
   "releases": [
+    {
+      "version": "2026.11.20-rm015.7-dev",
+      "date": "2026-11-20",
+      "title": "Confidentialité et conditions de réservation",
+      "changes": [
+        "Les informations de confidentialité expliquent les données demandées, le lien personnel, le stockage de session et la protection anti-abus.",
+        "Les contacts multiligne, emails et téléphones sont plus faciles à lire dans les informations de confidentialité.",
+        "Les conditions distinguent la confirmation, les demandes de groupe et les modifications en attente."
+      ],
+      "impact": "Développement DEV uniquement. Les réservations, les tables et les horaires sont conservés.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.20-rm015.6-dev",
       "date": "2026-11-20",
