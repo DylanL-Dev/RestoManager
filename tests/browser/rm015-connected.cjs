@@ -8,6 +8,8 @@ const settings={version:0,operation:require('node:crypto').randomUUID(),enabled:
 let db,baselineSchedule,browser,server,origin,loseResponse=false,failWebRead=false,ip=0;const results=[],audits=[],external=[],images=new Map(),inFlight=new Set();let failPhotoUpload=false;const dateOnly=process.env.RM015_DATE_ONLY==='1',hotelOnly=process.env.RM015_HOTEL_ONLY==='1',legalOnly=process.env.RM015_LEGAL_ONLY==='1',profileOnly=process.env.RM015_PROFILE_ONLY==='1'||legalOnly||hotelOnly||dateOnly;
 function track(work){const promise=Promise.resolve().then(work);inFlight.add(promise);promise.then(()=>inFlight.delete(promise),()=>inFlight.delete(promise));return promise;}
 async function drain(){while(inFlight.size){const done=await Promise.allSettled([...inFlight]);const failed=done.find(r=>r.status==='rejected');if(failed)throw failed.reason;}}
+// Track each entire HTTP handler, not just its individual RPCs: drain must
+// also cover body parsing and the gaps between sequential gateway RPCs.
 // Profile scenarios deliberately edit weekly hours. Restore the seeded schedule
 // before the next independent scenario, including late-night date selection.
 async function reset(){await drain();images.clear();await db.ok('delete from public.table_holds;delete from public.reservation_tables;delete from public.reservations;truncate storage.objects,private.rm015_mail,private.rm015_operations,private.rm015_audit,private.rm015_requests,private.rm015_settings,private.rm015_rate cascade;delete from public.service_closures;update public.restaurant_tables set active=true,seats=6;update public.restaurant_hours set arrival_limit_percent=60;');await db.ok('update public.restaurant_hours set weekly_schedule='+db.lit(JSON.stringify(baselineSchedule))+'::jsonb where restaurant_id='+db.lit(rid(1)));const r=await db.rpc('rm015_staff_v1','configure',settings,1);assert.equal(r.error,null,JSON.stringify(r.error));}
@@ -43,12 +45,12 @@ async function staffApp(width,role='fb_admin',time=new Date().toISOString()){
  server=http.createServer(async(req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
   if(pathname.startsWith('/storage/v1/object/public/rm015-covers/')){const name=pathname.slice('/storage/v1/object/public/rm015-covers/'.length),bytes=images.get(name);if(!bytes){res.writeHead(404).end();return;}res.writeHead(200,{'Content-Type':'image/webp','X-Content-Type-Options':'nosniff'});res.end(bytes);return;}
-  if(pathname==='/__rm015'){
+  if(pathname==='/__rm015')return track(async()=>{
    const chunks=[];for await(const c of req)chunks.push(c);const body=Buffer.concat(chunks);const request=new Request(origin+pathname,{method:req.method,headers:req.headers,...(body.length?{body}:{} )});
    const value=await handler(request);let action;try{action=JSON.parse(body).action}catch{}
    if(loseResponse&&action==='submit'&&value.status===200){loseResponse=false;res.destroy();return;}
    res.writeHead(value.status,Object.fromEntries(value.headers));res.end(Buffer.from(await value.arrayBuffer()));return;
-  }
+  });
   if(pathname==='/__axe.js'){res.writeHead(200,{'Content-Type':'text/javascript'});res.end(fs.readFileSync(require.resolve('axe-core/axe.min.js')));return;}
   if(pathname==='/reservation/runtime.json'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});res.end(JSON.stringify({schema:1,channel:'dev',activated:true,api:'/__rm015',allowedApiOrigin:origin}));return;}
   if(pathname.includes('..')||pathname.split('/').some(p=>p.startsWith('.'))){res.writeHead(404).end();return;}
