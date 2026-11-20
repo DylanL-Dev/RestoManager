@@ -1,0 +1,23 @@
+{
+  "passed": 17,
+  "results": [
+    "Reapplying the migration preserves an already enabled Hotel mode and all custom settings",
+    "Hosted-style non-superuser migration rolls back safely and preserves data on apply and reapply",
+    "Mode is optional, tenant-scoped and Restaurant-only; older clients preserve its saved value",
+    "Hotel room commits as Hotel and Web without installing a guest",
+    "Hotel without an assigned room remains Hotel with a room to complete",
+    "Exterior and legacy clients remain Exterior and Web",
+    "Server rejects malformed guest declarations, room injection and external rooms",
+    "Disabled mode rejects a new Hotel submission even with a forged client or QR hint",
+    "Groups keep one-hour holds; Reception sees stay details but cannot approve",
+    "Pending profile changes preserve the original until approval, and rejection restores its profile",
+    "Approved reclassification clears the old room and preserves internal notes",
+    "Old clients cannot silently turn an existing Hotel booking into Exterior",
+    "Employee room correction and reclassification synchronize the guest link without exposing notes",
+    "Expiry of a proposed stay change restores the original Hotel profile",
+    "Disabling new Hotel entry preserves an existing Hotel management link and its cancellation",
+    "Legacy Hotel records without new contact fields retain their actual profile after mode is disabled",
+    "Public profile exposes no rooms or guests, and technical permissions stay restricted"
+  ],
+  "sharedWrites": 0
+}

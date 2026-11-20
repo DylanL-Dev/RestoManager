@@ -1,0 +1,45 @@
+{
+  "version": "2026.11.20-rm015.8-dev",
+  "unitCases": 311,
+  "unitFiles": 64,
+  "syntax": {
+    "checked": 196,
+    "failed": 0
+  },
+  "publicDemoAssets": 8,
+  "publicConnectedAssets": 16,
+  "denoEntrypoints": 2,
+  "postgresHotelGroups": 17,
+  "postgresRegressionGroups": 27,
+  "focusedBrowserScenarios": 2,
+  "focusedAxeAudits": 6,
+  "sharedDatabaseTestWrites": 0,
+  "sharedMigrationApplied": false,
+  "emailsEnabled": false,
+  "protectedBranchesChanged": false,
+  "readOnlyDevPreflight": {
+    "hotelModeColumnPresent": false,
+    "writerSchemaCreate": false,
+    "writerAuthUsage": false,
+    "migrationRoleSuperuser": false,
+    "migrationRoleCreateRole": true,
+    "writerAdmin": true,
+    "writerInherit": false
+  },
+  "screenshots": {
+    "hotel-client-1440.png": "7599a1a0d8841f4743ef15eabf5f2e90bd388d7062ebdfc4c2e9ac616353631e",
+    "hotel-client-390.png": "0c9c66d42aaed82cbb9b3a814fe3dcc3721aa46e4e29edd706122539bbee0cd5",
+    "hotel-client-768.png": "23c3891843f175735fffcc707c85624ae527f35f12cd40de36e4faf9e4e1589c",
+    "hotel-confirmed-1440.png": "af113d3351e303a549b4c971dbe779f03d25e0064dca957a2bbbe13f23a1b0eb",
+    "hotel-confirmed-390.png": "2fb479458a7a046283b4b2d232070dd0e17b66c422e7c242e081be4892c473a5",
+    "hotel-confirmed-768.png": "1813ec08769663469cf0c552263159c6106ed36f044c47273d64420bb802412e",
+    "hotel-coordinates-1440.png": "8234f38aaf096376c4e2c9ee02858479b8d74aec2d178232fd8fd233dc18264e",
+    "hotel-coordinates-390.png": "050d419f313c70350048279242bdca672907d144b5c51b98da9e02fdfd0c9840",
+    "hotel-coordinates-768.png": "1393527ad52295965b3995b6e25ffd547fa34b03855090954975c3e602c41a6d",
+    "hotel-qr-1440.png": "936af4334c63c5902035ba881776a8e19a2b257f32cf4bd253a237ff05650239",
+    "hotel-qr-390.png": "fdd1348bcfb98618c7006c7c480f02832b650d454a2811581e179015a36e2ee0",
+    "hotel-qr-768.png": "21960523885dd8ea5d34ac3306d78a9e229cc435dce651a2dbb4d58e4336d4d9",
+    "hotel-staff-correction-390.png": "eb71b3c0c73cd3c2e1388d56733cc2ce367888ef47b22f92316d3cf91fb91fff",
+    "hotel-staff-correction-dark-390.png": "71e87daac0e96742ed2d263446e8dad1cefc04498eef1e56cd4e741e2649cc38"
+  }
+}
