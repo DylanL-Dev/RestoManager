@@ -6,7 +6,7 @@ Demande : distinguer les clients hébergés des clients extérieurs dans un port
 
 Un seul portail par établissement. Lorsque le Restaurant active le parcours Hôtel, le client choisit « Client de l’hôtel » ou « Client extérieur ». Un lien et un QR Hôtel distincts présélectionnent le premier choix ; ils ne contiennent ni chambre, ni coordonnées, ni privilège salarié. Le lien général reste disponible. Le client peut changer son choix avant envoi.
 
-Le client Hôtel indique sa chambre ou coche « Je n’ai pas encore mon numéro de chambre ». Le récapitulatif et le lien personnel affichent ce choix. Les demandes en attente distinguent le profil proposé de la réservation initiale. Un refus ou une expiration restaure le profil initial. La chambre déclarée n’est jamais recherchée dans un annuaire d’autres clients.
+Conformément à la précision utilisateur, **le nom et le numéro de chambre sont obligatoires pour réserver comme client Hôtel**. Le prénom et l’email déjà requis restent requis. L’option « Je n’ai pas encore mon numéro de chambre » est retirée. Les champs portent une indication obligatoire accessible. Le récapitulatif et le lien personnel affichent la chambre. Les demandes en attente distinguent le profil proposé de la réservation initiale. Un refus ou une expiration restaure le profil initial. La chambre déclarée n’est jamais recherchée dans un annuaire d’autres clients.
 
 Le séjour est **déclaratif** : ce parcours ne vérifie pas l’hébergement et ne constitue pas un accès privilégié. Hôtel et Extérieur restent soumis aux mêmes tables disponibles, horaires, répartition des arrivées, maintiens et contrôles transactionnels du canal Web. À partir de quatre personnes, la validation Restaurant et son délai configuré restent applicables. Une réservation confirmée reste attendue ; aucune installation automatique n’est ajoutée.
 
@@ -17,7 +17,7 @@ Le Restaurant peut corriger le profil d’une réservation Web dans la fiche exi
 | Situation | Avant | Après |
 | --- | --- | --- |
 | Réservation publique d’un client hébergé | Profil Extérieur par défaut | Profil Hôtel explicite, origine Web conservée |
-| Chambre inconnue au moment de réserver | Pas de parcours dédié | Option explicite et indication « Chambre à compléter » |
+| Chambre inconnue au moment de réserver | Pas de parcours dédié | Réservation Hôtel impossible sans chambre ; message explicite |
 | QR dans une chambre ou à la réception | Portail général | Même portail avec Hôtel présélectionné |
 | Restaurant indépendant | Parcours général | Parcours Extérieur inchangé, mode Hôtel désactivé par défaut |
 | Statistiques | Pas de distinction Hôtel déclarée en ligne | Couverts Hôtel et Extérieur distincts, sans double comptage du canal Web |
@@ -31,7 +31,7 @@ Migration : [`20261120173728_rm015_public_hotel_guests.sql`](../../supabase/migr
 - Métadonnées déclarées dans le JSON privé existant du contact : `guestType`, `hotelRoom`, `roomPending`.
 - Projection vers les champs et marqueurs métier existants : `hotel_room`, Hôtel/Extérieur et `source_channel = web`. Aucune nouvelle table publique ou politique `anon`.
 - Mise à jour de sept fonctions existantes, sans nouvelle signature ni modification permanente de propriétaire, droits ou RLS. Les permissions temporaires de migration sont retirées dans la transaction.
-- Validation stricte côté serveur : types JSON, chambre de 1 à 20 caractères autorisés, absence de chambre pour Extérieur, absence d’injection de marqueur métier, activation de l’établissement.
+- Validation stricte côté serveur : types JSON, nom et prénom non vides (espaces, tabulations et retours à la ligne seuls refusés), chambre Hôtel obligatoire de 1 à 20 caractères autorisés, ancien indicateur `roomPending=true` refusé, absence de chambre pour Extérieur, absence d’injection de marqueur métier, activation de l’établissement.
 - Les anciens clients qui omettent ces champs conservent le profil réel d’une réservation Hôtel existante. Une nouvelle réservation ancienne reste Extérieur.
 - Audit des changements de profil public et du réglage Hôtel. Les corrections salariées conservent la traçabilité et le contrôle de concurrence de la modification existante.
 
@@ -46,9 +46,9 @@ L’Edge Function ajoute seulement les nouveaux champs aux listes explicites d�
 - **311 cas unitaires**, **64 fichiers `npm test`** : réussis.
 - **196 fichiers** contrôlés sans erreur de syntaxe ; entrée publique et worker email validés par Deno 2.5.6.
 - Builds : **8 assets** pour la démonstration, **16 assets** pour le portail connecté. Aucun dashboard ou secret ajouté à l’artefact public.
-- **17 groupes PostgreSQL dédiés** : isolation par établissement et rôle, déclarations invalides, chambre inconnue, changements soumis à validation, refus/expiration, compatibilité des anciens clients, désactivation et réapplication de migration.
+- **19 groupes PostgreSQL dédiés** : isolation par établissement et rôle, déclarations invalides, refus des noms/chambres manquants, protection des anciens liens sans chambre, approbation de groupes revalidée, changements soumis à validation, refus/expiration, compatibilité des anciens clients, désactivation et réapplication de migration.
 - **27 groupes historiques PostgreSQL réussis** contre le nouveau schéma. Campagne Playwright complète et vérifications CI : résultats finaux consignés dans la Pull Request sur son dernier commit.
-- Parcours ciblé final : **2 scénarios / 6 audits axe réussis**, incluant le véritable RPC salarié et les thèmes clair/sombre après correction. Aucune requête extérieure ni écriture de test partagée.
+- Parcours ciblé final : **8 scénarios / 30 audits axe réussis**, sur les sept largeurs, incluant les tentatives sans nom et sans chambre, le véritable RPC salarié et les thèmes clair/sombre. Aucune requête extérieure ni écriture de test partagée.
 - Sept largeurs couvertes : **360, 390, 430, 768, 1024, 1440 et 1920 px**. Vérifications des débordements, champs accessibles, navigation au clavier, focus après erreur, saisie conservée, droits, lien et décodage du QR Hôtel.
 - Le scénario de correction salariée utilise le **vrai RPC SQL de modification**. Le transport du test a été étendu explicitement à ce RPC ; la réponse UUID est convertie en JSON par la fixture. Les accès directs salariés aux tables restent interdits.
 - Les audits axe du formulaire de correction ont révélé un contraste insuffisant des anciens textes d’aide : couleur corrigée en thème clair. Une transition du bouton de table pouvait aussi afficher du texte clair avant le fond sombre ; les couleurs basculent désormais ensemble. Contrôle répété en clair et sombre, sans désactiver de règle axe. Un test de version CSS a été actualisé avec la nouvelle ressource.
@@ -59,7 +59,7 @@ Toutes les données d’essai sont fictives et isolées. Les tests utilisent Chr
 
 Les captures utilisent exclusivement un restaurant et des clients fictifs.
 
-| Format | Choix Hôtel / Extérieur | Chambre / chambre inconnue | Confirmation | QR Hôtel dans Gestion |
+| Format | Choix Hôtel / Extérieur | Chambre obligatoire | Confirmation | QR Hôtel dans Gestion |
 | --- | --- | --- | --- | --- |
 | Mobile 390 | [Voir](preuves/rm0158-20261120/hotel-client-390.png) | [Voir](preuves/rm0158-20261120/hotel-coordinates-390.png) | [Voir](preuves/rm0158-20261120/hotel-confirmed-390.png) | [Voir](preuves/rm0158-20261120/hotel-qr-390.png) |
 | Tablette 768 | [Voir](preuves/rm0158-20261120/hotel-client-768.png) | [Voir](preuves/rm0158-20261120/hotel-coordinates-768.png) | [Voir](preuves/rm0158-20261120/hotel-confirmed-768.png) | [Voir](preuves/rm0158-20261120/hotel-qr-768.png) |
@@ -73,7 +73,9 @@ Correction salariée : [clair](preuves/rm0158-20261120/hotel-staff-correction-39
 
 Après accord explicite pour cette migration et l’API DEV : appliquer la migration au projet DEV uniquement, vérifier le catalogue et les droits, déployer l’Edge Function `rm015-public` avec ses réglages existants et les emails désactivés, fusionner la PR vers DEV, puis déployer le frontend sur le clone Render. Ne pas publier le frontend seul avant le backend. Vérifier la version `2026.11.20-rm015.8-dev` et les ressources réellement servies.
 
-Sur le clone [Render DEV](https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html), Restaurant → Gestion → Réservations en ligne → Réglages : cocher « Proposer le parcours Client de l’hôtel », enregistrer, puis ouvrir le lien général et le lien Hôtel enregistré. Pour un restaurant indépendant, laisser la case décochée. L’activation de l’hôtel actuel peut se faire dans l’interface par le Restaurant ; aucun autre établissement ne doit être activé automatiquement.
+Sur le clone [Render DEV](https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html), Restaurant → Gestion → Réservations en ligne → Réglages : cocher « Proposer le parcours Client de l’hôtel », enregistrer, puis ouvrir le lien général et le lien Hôtel enregistré. Pour un restaurant indépendant, laisser la case décochée. La nouvelle règle ne réécrit pas les réservations existantes : un ancien lien Hôtel sans chambre reste consultable et annulable, mais une nouvelle modification publique doit fournir une chambre. Une ancienne demande de groupe incomplète ne peut pas être approuvée ; elle peut toujours être refusée ou annulée sans inventer une chambre. Le libellé historique « Chambre à compléter » reste un état de lecture, jamais une option de création. Les parcours internes Restaurant/Réception existants gardent leurs règles et droits.
+
+L’activation de l’hôtel actuel peut se faire dans l’interface par le Restaurant ; aucun autre établissement ne doit être activé automatiquement.
 
 Vérifier visuellement la sélection, la chambre ou son absence explicite, le récapitulatif, les mentions de confidentialité, le lien et le QR. **Ne pas confirmer de réservation fictive dans les données partagées.** Utiliser la démonstration isolée pour s’entraîner ; les scénarios transactionnels sont déjà couverts par les bases jetables.
 

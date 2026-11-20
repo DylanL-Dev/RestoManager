@@ -1,11 +1,13 @@
 {
-  "passed": 17,
+  "passed": 19,
   "results": [
     "Reapplying the migration preserves an already enabled Hotel mode and all custom settings",
     "Hosted-style non-superuser migration rolls back safely and preserves data on apply and reapply",
     "Mode is optional, tenant-scoped and Restaurant-only; older clients preserve its saved value",
     "Hotel room commits as Hotel and Web without installing a guest",
-    "Hotel without an assigned room remains Hotel with a room to complete",
+    "Hotel requires both names and a room; pending-room and blank-name bypasses are refused",
+    "Legacy Hotel booking without a room stays readable and cancelable but cannot be modified without a room",
+    "Restaurant cannot approve a legacy group with a missing Hotel room",
     "Exterior and legacy clients remain Exterior and Web",
     "Server rejects malformed guest declarations, room injection and external rooms",
     "Disabled mode rejects a new Hotel submission even with a forged client or QR hint",

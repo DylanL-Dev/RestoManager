@@ -9,7 +9,7 @@
       "title": "Un accueil adapté aux clients de l’hôtel",
       "changes": [
         "Chaque établissement peut proposer les parcours Hôtel et Extérieur depuis Gestion.",
-        "Un lien et un QR dédiés préselectionnent le parcours Hôtel. La chambre peut être renseignée ou complétée plus tard.",
+        "Un lien et un QR dédiés préselectionnent le parcours Hôtel. Le nom et le numéro de chambre sont obligatoires pour les clients Hôtel.",
         "Les réservations conservent leur origine Web et les contrôles de disponibilités. Les emails restent désactivés."
       ],
       "impact": "Développement DEV uniquement. Les réservations, les tables et les horaires sont conservés.",

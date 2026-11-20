@@ -7,14 +7,14 @@ grant create on schema private to rm015_public_writer;
 alter table private.rm015_settings add column if not exists hotel_guests_enabled boolean not null default false;
 create or replace function private.rm015_contact(p jsonb) returns jsonb language plpgsql security invoker set search_path='' as $$declare kind text;room text;pending boolean;begin
  if jsonb_typeof(p) is distinct from 'object' or p->'accepted' is distinct from 'true'::jsonb
- or jsonb_typeof(p->'firstName') is distinct from 'string' or length(btrim(p->>'firstName')) not between 1 and 80
- or jsonb_typeof(p->'lastName') is distinct from 'string' or length(btrim(p->>'lastName')) not between 1 and 80
+ or jsonb_typeof(p->'firstName') is distinct from 'string' or length(btrim(p->>'firstName')) not between 1 and 80 or p->>'firstName' !~ '[^[:space:]]'
+ or jsonb_typeof(p->'lastName') is distinct from 'string' or length(btrim(p->>'lastName')) not between 1 and 80 or p->>'lastName' !~ '[^[:space:]]'
  or jsonb_typeof(p->'email') is distinct from 'string' or length(p->>'email')>254 or p->>'email' !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
  or length(coalesce(p->>'phone',''))>30 or length(coalesce(p->>'notes',''))>500
  or position('[RESTOMANAGER:' in upper(coalesce(p->>'notes','')))>0 then raise exception 'Coordonnées invalides' using errcode='RM015',detail='INVALID';end if;
  kind:=coalesce(p->>'guestType','external');room:=btrim(coalesce(p->>'hotelRoom',''));pending:=case when jsonb_typeof(p->'roomPending')='boolean' then (p->>'roomPending')::boolean else false end;
  if kind not in ('hotel','external') or (p ? 'guestType' and jsonb_typeof(p->'guestType') is distinct from 'string') or (p ? 'hotelRoom' and jsonb_typeof(p->'hotelRoom') is distinct from 'string') or (p ? 'roomPending' and jsonb_typeof(p->'roomPending') is distinct from 'boolean')
- or (kind='external' and (room<>'' or pending)) or (kind='hotel' and ((pending and room<>'') or (not pending and (room='' or length(room)>20 or room !~ '^[[:alnum:] ._-]+$')))) then raise exception 'Informations du séjour invalides' using errcode='RM015',detail='INVALID';end if;
+ or (kind='external' and (room<>'' or pending)) or (kind='hotel' and (pending or room='' or length(room)>20 or room !~ '^[[:alnum:] ._-]+$')) then raise exception 'Informations du séjour invalides' using errcode='RM015',detail='INVALID';end if;
  return jsonb_build_object('firstName',btrim(p->>'firstName'),'lastName',btrim(p->>'lastName'),'email',lower(btrim(p->>'email')),'phone',coalesce(p->>'phone',''),'notes',coalesce(p->>'notes',''),'accepted',true,'guestType',kind,'hotelRoom',room,'roomPending',pending);
 end $$;
 
@@ -44,6 +44,8 @@ create or replace function private.rm015_commit(p_id uuid,p_slot jsonb) returns 
 declare r private.rm015_requests;b public.reservations;ids uuid[];note text;marker text;oldstate text;
 begin
  select * into strict r from private.rm015_requests where id=p_id for update;oldstate:=r.state;
+ -- Validate again when approving a previously submitted request.
+ perform private.rm015_contact(r.contact);
  select array_agg(value::uuid order by value) into ids from jsonb_array_elements_text(p_slot->'ids');
  if not coalesce((p_slot->>'available')::boolean,false) or coalesce(cardinality(ids),0)=0 or not private.check_fusion_selection(ids) then raise exception 'Créneau indisponible' using errcode='RM015',detail='FULL';end if;
  select * into b from public.reservations where id=r.reservation_id for update;
