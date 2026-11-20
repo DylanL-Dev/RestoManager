@@ -38,7 +38,7 @@ self.addEventListener('fetch',event=>{
  const url=new URL(request.url);
  if(url.origin!==self.location.origin||!url.pathname.startsWith(ROOT)||isPublicPortal(url.pathname))return;
  if(url.pathname.endsWith('/app-release.json')||url.searchParams.has('release-check')||url.searchParams.has('check'))return;
- if(request.mode!=='navigate'&&!/\.(?:js|css|svg|png|webmanifest|json)$/.test(url.pathname))return;
+ if(request.mode!=='navigate'&&!/\.(?:m?js|css|svg|png|webmanifest|json)$/.test(url.pathname))return;
  event.respondWith(fetch(request).then(response=>{
   if(response.ok){const copy=response.clone();event.waitUntil(caches.open(CACHE).then(cache=>cache.put(request,copy)))}return response;
  }).catch(async()=>await caches.match(request)||await caches.match(url.pathname)||(request.mode==='navigate'?await caches.match(ROOT+'v3-connected.html'):null)||Response.error()));
