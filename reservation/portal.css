@@ -18,3 +18,5 @@
 #infoBody.legal-content{white-space:normal}.legal-content>p{white-space:pre-line;margin:0 0 18px}.legal-contact{border:1px solid var(--line);border-radius:14px;padding:18px;background:var(--tint);margin:20px 0}.legal-contact h3{font-size:1rem;margin:0 0 10px}.legal-contact p{margin:5px 0;overflow-wrap:anywhere}.legal-contact a{display:inline-block;min-height:30px;color:var(--green);font-weight:650}
 
 .legal-content>h3{font-size:.95rem;line-height:1.5;margin:22px 0 7px;color:var(--ink)}
+
+.guest-choice{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--tint)}.guest-choice .choice-row{grid-template-columns:1fr 1fr}.guest-choice label{font-size:.8rem;gap:6px;min-height:56px}.guest-choice svg{width:18px;height:18px}.guest-choice .hint{margin:10px 0 0}.hotel-stay{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--tint);margin:20px 0}.hotel-stay h3{font-size:1rem;margin:0 0 14px}
