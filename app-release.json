@@ -1,8 +1,21 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.20-rm015.8-dev",
+  "currentVersion": "2026.11.20-rm015.9-dev",
   "releases": [
+    {
+      "version": "2026.11.20-rm015.9-dev",
+      "date": "2026-11-20",
+      "title": "Des dates et horaires de réservation plus clairs",
+      "changes": [
+        "Le portail propose aujourd’hui lorsqu’un créneau reste réservable, selon les disponibilités du serveur.",
+        "Le passage à demain est clairement annoncé ; aucune heure n’est sélectionnée sans votre choix.",
+        "Les réservations existantes et les saisies en cours conservent leur date.",
+        "Les réservations affichent leur date de service. Les calendriers reflètent aussi les changements par recherche et notification."
+      ],
+      "impact": "Correction DEV du choix initial. Aucun horaire ou réglage restaurant modifié.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.20-rm015.8-dev",
       "date": "2026-11-20",
