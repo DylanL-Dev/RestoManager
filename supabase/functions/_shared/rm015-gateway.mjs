@@ -9,9 +9,10 @@ function draft(value,hasTime){
  return pick(value,hasTime?['party','date','service','time']:['party','date','service']);
 }
 function contact(value){
- if(!value||value.accepted!==true||typeof value.firstName!=='string'||!value.firstName.trim()||value.firstName.length>80||typeof value.lastName!=='string'||!value.lastName.trim()||value.lastName.length>80||typeof value.email!=='string'||value.email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email))invalid();
+ if(!value||value.accepted!==true||typeof value.firstName!=='string'||!value.firstName.trim()||value.firstName.length>80||typeof value.lastName!=='string'||!value.lastName.trim()||value.lastName.length>80||value.email!=null&&(typeof value.email!=='string'||value.email.length>254||value.email!==''&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)))invalid();
  if(value.phone!==undefined&&(typeof value.phone!=='string'||value.phone.length>30)||value.notes!==undefined&&(typeof value.notes!=='string'||value.notes.length>500))invalid();
- return {...pick(value,['firstName','lastName','email','phone','notes']),accepted:true};
+ if(value.guestType!==undefined&&!['hotel','external'].includes(value.guestType)||value.hotelRoom!==undefined&&(typeof value.hotelRoom!=='string'||value.hotelRoom.length>20)||value.roomPending!==undefined&&typeof value.roomPending!=='boolean')invalid();
+ return {...pick(value,['firstName','lastName','email','phone','notes','guestType','hotelRoom','roomPending']),accepted:true};
 }
 async function jsonBody(request){
  if(!request.headers.get('content-type')?.toLowerCase().startsWith('application/json'))throw Object.assign(Error('Format de requête non accepté.'),{status:415,code:'FORMAT'});
@@ -25,8 +26,8 @@ async function jsonBody(request){
 function safeRecord(value){
  const result=pick(value,['reference','state','version','deadline','tokenExpiresAt','canModify','canCancel','lastResult','emailStatus']);
  if(value.draft)result.draft=pick(value.draft,['party','date','time','service']);
- if(value.booking)result.booking=pick(value.booking,['party','date','time','service','name']);
- if(value.contact)result.contact=pick(value.contact,['firstName','lastName','email','phone','notes','accepted']);
+ if(value.booking)result.booking=pick(value.booking,['party','date','time','service','name','guestType','hotelRoom','roomPending']);
+ if(value.contact)result.contact=pick(value.contact,['firstName','lastName','email','phone','notes','accepted','guestType','hotelRoom','roomPending']);
  return result;
 }
 export function createPublicHandler({rpc,keys,activeKey,rateSecret,allowedOrigins=/** @type {string[]} */([]),ipForRequest,enabled=false,environment='dev',verifyChallenge=async(_token,_ip)=>false}){
@@ -67,7 +68,7 @@ export function createPublicHandler({rpc,keys,activeKey,rateSecret,allowedOrigin
    }
    let data=result.data;
    if(data?.secret_cipher){const token=await decryptToken(keys,body.restaurant,data.secret_cipher);data={...safeRecord(data.data),managementToken:token};}
-   else if(body.action==='profile')data=pick(data,['name','slug','timezone','maxParty','horizonDays','leadMinutes','pendingMinutes','manualFrom','privacyNotice','privacyContact','cancellationNotice','coverPath','coverAlt','publicProfile','openingHours','today','serverTime']);
+   else if(body.action==='profile')data=pick(data,['name','slug','timezone','maxParty','horizonDays','leadMinutes','pendingMinutes','manualFrom','emailRequired','hotelGuestsEnabled','privacyNotice','privacyContact','cancellationNotice','coverPath','coverAlt','publicProfile','openingHours','today','serverTime']);
    else if(body.action==='availability')data={slots:(data?.slots||[]).map(s=>pick(s,['time','available','level','manual'])),serverTime:data?.serverTime};
    return response({data,environment,emailDelivery:'not-activated'});
   }catch(error){

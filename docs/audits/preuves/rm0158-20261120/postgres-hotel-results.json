@@ -1,0 +1,30 @@
+{
+  "passed": 24,
+  "results": [
+    "Reapplying the migration preserves an already enabled Hotel mode and all custom settings",
+    "Hosted-style non-superuser migration rolls back safely and preserves data on apply and reapply",
+    "Mode is optional, tenant-scoped and Restaurant-only; older clients preserve its saved value",
+    "Hotel room commits as Hotel and Web without installing a guest",
+    "Hotel requires both names and a room; pending-room and blank-name bypasses are refused",
+    "Legacy Hotel booking without a room stays readable and cancelable but cannot be modified without a room",
+    "Restaurant cannot approve a legacy group with a missing Hotel room",
+    "Exterior and legacy clients remain Exterior and Web",
+    "Server rejects malformed guest declarations, room injection and external rooms",
+    "Disabled mode rejects a new Hotel submission even with a forged client or QR hint",
+    "Groups keep one-hour holds; Reception sees stay details but cannot approve",
+    "Pending profile changes preserve the original until approval, and rejection restores its profile",
+    "Approved reclassification clears the old room and preserves internal notes",
+    "Old clients cannot silently turn an existing Hotel booking into Exterior",
+    "Employee room correction and reclassification synchronize the guest link without exposing notes",
+    "Expiry of a proposed stay change restores the original Hotel profile",
+    "Disabling new Hotel entry preserves an existing Hotel management link and its cancellation",
+    "Legacy Hotel records without new contact fields retain their actual profile after mode is disabled",
+    "No-email mode stores null without a fake address or a shared empty-email quota",
+    "Anonymous group approval, modification and cancellation preserve the personal link without mail jobs",
+    "An omitted email preserves a legacy address, and a supplied replacement remains forbidden",
+    "Simulated server reactivation requires a real email and permits its first addition to an old anonymous booking",
+    "Optional email still validates supplied values and the collection policy is not executable by clients",
+    "Public profile exposes no rooms or guests, and technical permissions stay restricted"
+  ],
+  "sharedWrites": 0
+}
