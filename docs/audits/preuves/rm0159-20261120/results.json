@@ -1,0 +1,41 @@
+{
+  "passed": 10,
+  "accessibilityAudits": 20,
+  "fixtureRequestsOutstanding": 0,
+  "results": [
+    "Initial date 360: server Paris 20:50, no past selection, explicit tomorrow, manual date and recovered draft preserved",
+    "Initial date 390: server Paris 20:50, no past selection, explicit tomorrow, manual date and recovered draft preserved",
+    "Initial date 430: server Paris 20:50, no past selection, explicit tomorrow, manual date and recovered draft preserved",
+    "Initial date 768: server Paris 20:50, no past selection, explicit tomorrow, manual date and recovered draft preserved",
+    "Initial date 1024: server Paris 20:50, no past selection, explicit tomorrow, manual date and recovered draft preserved",
+    "Initial date 1440: server Paris 20:50, no past selection, explicit tomorrow, manual date and recovered draft preserved",
+    "Initial date 1920: server Paris 20:50, no past selection, explicit tomorrow, manual date and recovered draft preserved",
+    "Staff coherence 390: Web assignment, revision, current-day tables and arrivals, Hotel/time/date edits, two snapshots, search and notification calendar labels",
+    "Staff coherence 768: Web assignment, revision, current-day tables and arrivals, Hotel/time/date edits, two snapshots, search and notification calendar labels",
+    "Staff coherence 1440: Web assignment, revision, current-day tables and arrivals, Hotel/time/date edits, two snapshots, search and notification calendar labels"
+  ],
+  "audits": [
+    "initial-today-360",
+    "initial-tomorrow-360",
+    "initial-today-390",
+    "initial-tomorrow-390",
+    "initial-today-430",
+    "initial-tomorrow-430",
+    "initial-today-768",
+    "initial-tomorrow-768",
+    "initial-today-1024",
+    "initial-tomorrow-1024",
+    "initial-today-1440",
+    "initial-tomorrow-1440",
+    "initial-today-1920",
+    "initial-tomorrow-1920",
+    "calendar-coherence-390",
+    "calendar-coherence-dark-390",
+    "calendar-coherence-768",
+    "calendar-coherence-dark-768",
+    "calendar-coherence-1440",
+    "calendar-coherence-dark-1440"
+  ],
+  "externalRequests": [],
+  "backend": "Actual disposable PostgreSQL 17 --network none + public HTTP handler. Storage byte upload is a controlled browser transport fixture backed by actual SQL RLS; public image GET is local HTTP. Hosted Storage service is not exercised. Fictional auth, venue and contacts only. No external email."
+}
