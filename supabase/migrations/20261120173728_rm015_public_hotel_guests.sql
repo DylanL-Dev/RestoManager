@@ -5,17 +5,28 @@ set local lock_timeout='5s';set local statement_timeout='30s';
 do $$begin execute format('grant rm015_public_writer to %I with inherit true, set true',current_user);end$$;
 grant create on schema private to rm015_public_writer;
 alter table private.rm015_settings add column if not exists hotel_guests_enabled boolean not null default false;
-create or replace function private.rm015_contact(p jsonb) returns jsonb language plpgsql security invoker set search_path='' as $$declare kind text;room text;pending boolean;begin
+-- Temporary collection policy. Re-enable only with a reviewed email activation release.
+-- This flag is server-owned, never a request parameter or a staff/public setting.
+create or replace function private.rm015_email_required() returns boolean language sql stable security invoker set search_path='' as $$select false$$;
+alter function private.rm015_email_required() owner to rm015_public_writer;
+revoke all on function private.rm015_email_required() from public,anon,authenticated,service_role;
+create or replace function private.rm015_enqueue(p_id uuid,p_event text) returns void language sql security invoker set search_path='' as $$
+ insert into private.rm015_mail(restaurant_id,request_id,version,event)
+ select restaurant_id,id,version,p_event from private.rm015_requests
+ where id=p_id and contact is not null and nullif(btrim(contact->>'email'),'') is not null on conflict do nothing
+$$;
+create or replace function private.rm015_contact(p jsonb) returns jsonb language plpgsql security invoker set search_path='' as $$declare kind text;room text;pending boolean;mail text;begin
+ mail:=nullif(lower(btrim(p->>'email')),'');
  if jsonb_typeof(p) is distinct from 'object' or p->'accepted' is distinct from 'true'::jsonb
  or jsonb_typeof(p->'firstName') is distinct from 'string' or length(btrim(p->>'firstName')) not between 1 and 80 or p->>'firstName' !~ '[^[:space:]]'
  or jsonb_typeof(p->'lastName') is distinct from 'string' or length(btrim(p->>'lastName')) not between 1 and 80 or p->>'lastName' !~ '[^[:space:]]'
- or jsonb_typeof(p->'email') is distinct from 'string' or length(p->>'email')>254 or p->>'email' !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$'
+ or (p ? 'email' and jsonb_typeof(p->'email') not in ('string','null')) or (mail is not null and (length(mail)>254 or mail !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$')) or (private.rm015_email_required() and mail is null)
  or length(coalesce(p->>'phone',''))>30 or length(coalesce(p->>'notes',''))>500
  or position('[RESTOMANAGER:' in upper(coalesce(p->>'notes','')))>0 then raise exception 'Coordonnées invalides' using errcode='RM015',detail='INVALID';end if;
  kind:=coalesce(p->>'guestType','external');room:=btrim(coalesce(p->>'hotelRoom',''));pending:=case when jsonb_typeof(p->'roomPending')='boolean' then (p->>'roomPending')::boolean else false end;
  if kind not in ('hotel','external') or (p ? 'guestType' and jsonb_typeof(p->'guestType') is distinct from 'string') or (p ? 'hotelRoom' and jsonb_typeof(p->'hotelRoom') is distinct from 'string') or (p ? 'roomPending' and jsonb_typeof(p->'roomPending') is distinct from 'boolean')
  or (kind='external' and (room<>'' or pending)) or (kind='hotel' and (pending or room='' or length(room)>20 or room !~ '^[[:alnum:] ._-]+$')) then raise exception 'Informations du séjour invalides' using errcode='RM015',detail='INVALID';end if;
- return jsonb_build_object('firstName',btrim(p->>'firstName'),'lastName',btrim(p->>'lastName'),'email',lower(btrim(p->>'email')),'phone',coalesce(p->>'phone',''),'notes',coalesce(p->>'notes',''),'accepted',true,'guestType',kind,'hotelRoom',room,'roomPending',pending);
+ return jsonb_build_object('firstName',btrim(p->>'firstName'),'lastName',btrim(p->>'lastName'),'email',mail,'phone',coalesce(p->>'phone',''),'notes',coalesce(p->>'notes',''),'accepted',true,'guestType',kind,'hotelRoom',room,'roomPending',pending);
 end $$;
 
 create or replace function private.rm015_booking_draft(b public.reservations) returns jsonb language sql stable security invoker set search_path='' as $$
@@ -136,7 +147,7 @@ begin
  end if;
  if p_action in ('profile','availability','hold') and not c.enabled and r.id is null then raise exception 'Réservations en ligne fermées' using errcode='RM015',detail='UNAVAILABLE';end if;
  if p_action='profile' then
-  return jsonb_build_object('name',coalesce(nullif(c.public_profile->>'name',''),(select name from public.restaurants where id=c.restaurant_id)),'slug',c.slug,'timezone','Europe/Paris','maxParty',c.max_party,'horizonDays',c.horizon_days,'leadMinutes',c.lead_minutes,'pendingMinutes',c.pending_minutes,'manualFrom',4,'hotelGuestsEnabled',c.hotel_guests_enabled,'privacyNotice',c.privacy_notice,'privacyContact',c.privacy_contact,'cancellationNotice',c.cancellation_notice,'coverPath',c.cover_path,'coverAlt',c.cover_alt,'publicProfile',c.public_profile,'openingHours',private.rm015_public_hours(c.restaurant_id),'today',(private.rm015_now() at time zone 'Europe/Paris')::date,'serverTime',private.rm015_now());
+  return jsonb_build_object('name',coalesce(nullif(c.public_profile->>'name',''),(select name from public.restaurants where id=c.restaurant_id)),'slug',c.slug,'timezone','Europe/Paris','maxParty',c.max_party,'horizonDays',c.horizon_days,'leadMinutes',c.lead_minutes,'pendingMinutes',c.pending_minutes,'manualFrom',4,'emailRequired',private.rm015_email_required(),'hotelGuestsEnabled',c.hotel_guests_enabled,'privacyNotice',c.privacy_notice,'privacyContact',c.privacy_contact,'cancellationNotice',c.cancellation_notice,'coverPath',c.cover_path,'coverAlt',c.cover_alt,'publicProfile',c.public_profile,'openingHours',private.rm015_public_hours(c.restaurant_id),'today',(private.rm015_now() at time zone 'Europe/Paris')::date,'serverTime',private.rm015_now());
  end if;
  if p_action in ('read','modify','cancel') then
   select * into r from private.rm015_requests where restaurant_id=c.restaurant_id and token_hash=p_payload->>'token_hash' for update;
@@ -191,10 +202,13 @@ begin
   if p_action='submit' and r.state is distinct from 'draft' then raise exception 'Cette saisie a déjà été traitée' using errcode='RM015',detail='LOCKED';end if;
   if p_action='submit' and (r.expires_at<=private.rm015_now() or r.draft is distinct from d) then raise exception 'Maintien expiré. Vérifiez votre horaire.' using errcode='RM015',detail='EXPIRED';end if;
   if p_action='modify' then result:=private.rm015_view(r.id);if not coalesce((result->'data'->>'canModify')::boolean,false) then raise exception 'Modification impossible. Contactez le restaurant.' using errcode='RM015',detail='LOCKED';end if;end if;
-  v_contact:=private.rm015_contact(case when r.contact is not null and not (p_payload->'contact' ? 'guestType') then (p_payload->'contact')||coalesce(case when r.state='confirmed' then (select private.rm015_booking_draft(actual)-array['party','date','time','service'] from public.reservations actual where actual.id=r.reservation_id and actual.restaurant_id=r.restaurant_id) end,jsonb_build_object('guestType',coalesce(r.contact->>'guestType','external'),'hotelRoom',coalesce(r.contact->>'hotelRoom',''),'roomPending',coalesce((r.contact->>'roomPending')::boolean,false))) else p_payload->'contact' end);
+  v_contact:=p_payload->'contact';
+  -- Omitted email on a personal-link edit preserves an existing address.
+  if r.contact is not null and not (v_contact ? 'email') then v_contact:=v_contact||jsonb_build_object('email',r.contact->'email');end if;
+  v_contact:=private.rm015_contact(case when r.contact is not null and not (v_contact ? 'guestType') then (v_contact)||coalesce(case when r.state='confirmed' then (select private.rm015_booking_draft(actual)-array['party','date','time','service'] from public.reservations actual where actual.id=r.reservation_id and actual.restaurant_id=r.restaurant_id) end,jsonb_build_object('guestType',coalesce(r.contact->>'guestType','external'),'hotelRoom',coalesce(r.contact->>'hotelRoom',''),'roomPending',coalesce((r.contact->>'roomPending')::boolean,false))) else v_contact end);
   if v_contact->>'guestType'='hotel' and not c.hotel_guests_enabled and coalesce(r.contact->>'guestType','external')<>'hotel' and not exists(select 1 from public.reservations actual where actual.id=r.reservation_id and actual.restaurant_id=r.restaurant_id and (nullif(btrim(actual.hotel_room),'') is not null or position('[RESTOMANAGER:HOTEL]' in coalesce(actual.notes,''))>0)) then raise exception 'Le parcours Hôtel n’est pas proposé par cet établissement' using errcode='RM015',detail='INVALID';end if;
-  if r.contact is not null and v_contact->>'email' is distinct from r.contact->>'email' then raise exception 'Contactez le restaurant pour changer votre email.' using errcode='RM015',detail='EMAIL_LOCKED';end if;
-  if p_action='submit' and (select count(*) from private.rm015_requests q where q.restaurant_id=c.restaurant_id and q.contact->>'email'=v_contact->>'email' and q.id<>r.id and q.state in ('confirmed','pending','pending_change') and (q.starts_at at time zone 'Europe/Paris')::date=datevalue)>=2 then raise exception 'Plusieurs réservations existent déjà. Contactez le restaurant.' using errcode='RM015',detail='RATE';end if;
+  if r.contact is not null and v_contact->>'email' is distinct from r.contact->>'email' and not (nullif(r.contact->>'email','') is null and private.rm015_email_required()) then raise exception 'Contactez le restaurant pour changer votre email.' using errcode='RM015',detail='EMAIL_LOCKED';end if;
+  if p_action='submit' and v_contact->>'email' is not null and (select count(*) from private.rm015_requests q where q.restaurant_id=c.restaurant_id and q.contact->>'email'=v_contact->>'email' and q.id<>r.id and q.state in ('confirmed','pending','pending_change') and (q.starts_at at time zone 'Europe/Paris')::date=datevalue)>=2 then raise exception 'Plusieurs réservations existent déjà. Contactez le restaurant.' using errcode='RM015',detail='RATE';end if;
   slot:=private.rm015_slot(c.restaurant_id,datevalue,d->>'service',(d->>'time')::time,party,r.id);
   if not coalesce((slot->>'available')::boolean,false) then raise exception 'Ce créneau vient de changer. Choisissez un autre horaire.' using errcode='RM015',detail='FULL';end if;
   update private.rm015_requests set contact=v_contact,draft=d,version=version+1,updated_at=private.rm015_now() where id=r.id;

@@ -32,7 +32,9 @@ test('RM015 demo closures, service, bounds, max party and no fake remaining seat
 test('RM015 real future availability cannot be inferred from the demo contract', () => {
   assert.equal(M.availability(M.venue('le-jardin-demo'), draft, new Date(at)).state, 'closed');
   assert.equal(Object.keys(M.validate(config, draft, contact, new Date(at))).length, 0);
-  for (const field of ['firstName', 'lastName', 'email', 'accepted']) assert.ok(M.validate(config, draft, { ...contact, [field]: field === 'accepted' ? false : '' }, new Date(at))[field]);
+  assert.equal(M.validate(config, draft, { ...contact, email: '' }, new Date(at)).email,undefined);
+  assert.ok(M.validate(config, draft, { ...contact, email: 'bad' }, new Date(at)).email);
+  for (const field of ['firstName', 'lastName', 'accepted']) assert.ok(M.validate(config, draft, { ...contact, [field]: field === 'accepted' ? false : '' }, new Date(at))[field]);
   assert.ok(M.validate(config, { ...draft, time: '19:30' }, contact, new Date(at)).venue);
   assert.ok(M.validate(config, draft, { ...contact, notes: 'x'.repeat(501) }, new Date(at)).notes);
 });

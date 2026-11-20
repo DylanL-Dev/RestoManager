@@ -39,13 +39,13 @@
   let storage; try { storage = window.sessionStorage; } catch { storage = null; }
   const adapter = window.RMPublicDemo.createAdapter({ slug, storage, crypto: window.crypto });
   let draft = { party: 2, date: M.addDays(M.paris().date, 1), service: 'dinner', time: '' };
-  let contact = { firstName: 'Camille', lastName: 'Exemple', email: 'camille@example.test', phone: '', notes: '', accepted: false };
+  let contact = { firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false };
   let stage = 1, errors = {}, record = null, editing = false, notice = '', busy = false, dirty = false;
   function announce(message) { $('live').textContent = message; }
   function steps() { return '<ol class="steps" aria-label="Étapes de la réservation">' + ['Votre venue', 'Coordonnées', 'Récapitulatif'].map((label, index) => `<li${stage === index + 1 ? ' aria-current="step"' : ''}${stage > index + 1 ? ' class="done"' : ''}>${label}</li>`).join('') + '</ol>'; }
   function heading(title, description, symbol = 'calendar-days') { return `<div class="booking-head"><div><h2 tabindex="-1">${title}</h2><p>${description}</p></div><span class="booking-symbol">${icon(symbol)}</span></div>`; }
   function summary(includeContact = false) {
-    return `<dl class="summary"><div class="summary-row"><dt>${icon('calendar-days')}Votre venue</dt><dd>${esc(M.dateLabel(draft.date))}<br>${esc(config.services[draft.service]?.label)} · ${esc(draft.time)}</dd></div><div class="summary-row"><dt>${icon('users-round')}À table</dt><dd>${draft.party} personne${draft.party > 1 ? 's' : ''}</dd></div>${includeContact ? `<div><dt>Coordonnées fictives</dt><dd>${esc(contact.firstName)} ${esc(contact.lastName)}<br><span class="summary-email">${esc(contact.email)}${contact.phone ? '<br>' + esc(contact.phone) : ''}</span></dd></div>${contact.notes ? `<div><dt>Votre demande particulière</dt><dd>${esc(contact.notes)}</dd></div>` : ''}` : ''}</dl>`;
+    return `<dl class="summary"><div class="summary-row"><dt>${icon('calendar-days')}Votre venue</dt><dd>${esc(M.dateLabel(draft.date))}<br>${esc(config.services[draft.service]?.label)} · ${esc(draft.time)}</dd></div><div class="summary-row"><dt>${icon('users-round')}À table</dt><dd>${draft.party} personne${draft.party > 1 ? 's' : ''}</dd></div>${includeContact ? `<div><dt>Coordonnées fictives</dt><dd>${esc(contact.firstName)} ${esc(contact.lastName)}${contact.phone ? '<br>' + esc(contact.phone) : ''}</dd></div>${contact.notes ? `<div><dt>Votre demande particulière</dt><dd>${esc(contact.notes)}</dd></div>` : ''}` : ''}</dl>`;
   }
   function radio(name, value, label, checked, disabled = false, extra = '') {
     const id = name + '-' + value;
@@ -67,7 +67,7 @@
   }
   function coordinatesForm() {
     return `<button class="text-button back" type="button" data-action="back">${icon('arrow-left')}Votre venue</button>${heading('Vos coordonnées', 'Uniquement des exemples fictifs pour cet essai.', 'circle-user-round')}${steps()}<p class="form-note">Les champs sont préremplis avec un exemple. N’inscrivez aucune donnée personnelle réelle.</p>
-      <form id="contactForm" novalidate><div class="field-grid">${field('firstName', 'Prénom fictif')}${field('lastName', 'Nom fictif')}</div>${field('email', 'Email fictif', 'email', 254)}${field('phone', 'Téléphone (facultatif)', 'tel', 30)}<div class="field"><label class="field-label" for="notes">Une demande particulière ? <span class="optional">Facultatif</span></label><textarea id="notes" name="notes" maxlength="500" placeholder="Ex. : un espace pour une poussette" aria-describedby="notesHint">${esc(contact.notes)}</textarea><p class="hint" id="notesHint">500 caractères maximum. Une demande n’est pas une garantie.</p></div>
+      <form id="contactForm" novalidate><div class="field-grid">${field('firstName', 'Prénom fictif')}${field('lastName', 'Nom fictif')}</div>${field('phone', 'Téléphone (facultatif)', 'tel', 30)}<div class="field"><label class="field-label" for="notes">Une demande particulière ? <span class="optional">Facultatif</span></label><textarea id="notes" name="notes" maxlength="500" placeholder="Ex. : un espace pour une poussette" aria-describedby="notesHint">${esc(contact.notes)}</textarea><p class="hint" id="notesHint">500 caractères maximum. Une demande n’est pas une garantie.</p></div>
       <label class="check"><input id="accepted" type="checkbox" name="accepted"${contact.accepted ? ' checked' : ''}${errors.accepted ? ' aria-invalid="true" aria-describedby="error-accepted"' : ''}><span>J’accepte les conditions de l’exemple et j’ai lu les informations de confidentialité ci-dessous.</span></label>${errors.accepted ? '<p class="error" id="error-accepted">' + errors.accepted + '</p>' : ''}<div class="label-line"><button type="button" class="text-button" data-action="terms">Conditions</button><button type="button" class="text-button" data-action="privacy">Confidentialité</button></div><button type="submit" class="primary">Vérifier mon exemple ${icon('arrow-up-right')}</button></form>`;
   }
   function reviewForm() {
@@ -142,7 +142,7 @@
     if (action === 'askCancel') showInfo('cancel');
     if (action === 'restart') {
       adapter.clear(); history.replaceState(null, '', location.pathname + location.search); record = null; editing = false; dirty = false; stage = 1; notice = ''; errors = {};
-      draft = { party: 2, date: M.addDays(M.paris().date, 1), service: 'dinner', time: '' }; contact = { firstName: 'Camille', lastName: 'Exemple', email: 'camille@example.test', phone: '', notes: '', accepted: false }; render();
+      draft = { party: 2, date: M.addDays(M.paris().date, 1), service: 'dinner', time: '' }; contact = { firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false }; render();
     }
     if (action === 'copy') {
       const url = new URL(location.href); url.hash = 'manage=' + record.token;

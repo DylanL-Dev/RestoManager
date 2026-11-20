@@ -49,7 +49,7 @@
     if (!availability(config, draft, now).slots.some(s => s.available && s.time === draft.time)) errors.venue = 'Choisissez à nouveau votre date et un horaire proposé.';
     if (!contact.firstName?.trim() || contact.firstName.trim().length > 80) errors.firstName = 'Indiquez un prénom fictif (80 caractères maximum).';
     if (!contact.lastName?.trim() || contact.lastName.trim().length > 80) errors.lastName = 'Indiquez un nom fictif (80 caractères maximum).';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email || '') || contact.email.length > 254) errors.email = 'Indiquez une adresse de démonstration, par exemple camille@example.test.';
+    if (contact.email && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email) || contact.email.length > 254)) errors.email = 'Indiquez une adresse de démonstration, par exemple camille@example.test.';
     if (contact.phone && (!/^[+\d\s().-]{5,30}$/.test(contact.phone))) errors.phone = 'Vérifiez le numéro ou laissez ce champ vide.';
     if ((contact.notes || '').length > 500) errors.notes = 'Limitez votre demande à 500 caractères.';
     if (contact.accepted !== true) errors.accepted = 'Acceptez les conditions de cet exercice pour continuer.';

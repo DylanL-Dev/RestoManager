@@ -6,11 +6,25 @@ Demande : distinguer les clients hébergés des clients extérieurs dans un port
 
 Un seul portail par établissement. Lorsque le Restaurant active le parcours Hôtel, le client choisit « Client de l’hôtel » ou « Client extérieur ». Un lien et un QR Hôtel distincts présélectionnent le premier choix ; ils ne contiennent ni chambre, ni coordonnées, ni privilège salarié. Le lien général reste disponible. Le client peut changer son choix avant envoi.
 
-Conformément à la précision utilisateur, **le nom et le numéro de chambre sont obligatoires pour réserver comme client Hôtel**. Le prénom et l’email déjà requis restent requis. L’option « Je n’ai pas encore mon numéro de chambre » est retirée. Les champs portent une indication obligatoire accessible. Le récapitulatif et le lien personnel affichent la chambre. Les demandes en attente distinguent le profil proposé de la réservation initiale. Un refus ou une expiration restaure le profil initial. La chambre déclarée n’est jamais recherchée dans un annuaire d’autres clients.
+Conformément à la précision utilisateur, **le nom et le numéro de chambre sont obligatoires pour réserver comme client Hôtel**. Le prénom déjà requis reste requis. L’email est masqué temporairement tant que son envoi est désactivé, selon la dernière demande utilisateur. L’option « Je n’ai pas encore mon numéro de chambre » est retirée. Les champs portent une indication obligatoire accessible. Le récapitulatif et le lien personnel affichent la chambre. Les demandes en attente distinguent le profil proposé de la réservation initiale. Un refus ou une expiration restaure le profil initial. La chambre déclarée n’est jamais recherchée dans un annuaire d’autres clients.
 
 Le séjour est **déclaratif** : ce parcours ne vérifie pas l’hébergement et ne constitue pas un accès privilégié. Hôtel et Extérieur restent soumis aux mêmes tables disponibles, horaires, répartition des arrivées, maintiens et contrôles transactionnels du canal Web. À partir de quatre personnes, la validation Restaurant et son délai configuré restent applicables. Une réservation confirmée reste attendue ; aucune installation automatique n’est ajoutée.
 
 Le Restaurant peut corriger le profil d’une réservation Web dans la fiche existante. Cette correction utilise l’API de modification existante, son contrôle de version et ses autorisations serveur. Elle conserve le nom, les consignes internes, les allergies et l’origine Web ; passer à Extérieur retire la chambre. Le lien personnel reflète ensuite la fiche réellement enregistrée. Les droits Réception sur les tables, l’installation, l’approbation des groupes et la configuration ne sont pas étendus.
+
+## Mode temporaire sans email
+
+Le champ email est absent du formulaire, du récapitulatif et de la confirmation lorsque le serveur annonce explicitement `emailRequired: false`. Il est aussi retiré de la démonstration, qui ne préremplit plus d’adresse fictive. Le prénom, le nom et, pour Hôtel, la chambre restent requis ; le téléphone reste facultatif. Le lien personnel sécurisé demeure le moyen de retrouver la réservation.
+
+Le navigateur omet complètement l’email lors d’une nouvelle soumission dans ce mode. PostgreSQL enregistre `null`, sans adresse fictive ni email commun à tous les visiteurs. Aucune tâche d’envoi n’est créée sans destinataire. Le quota par email ne s’applique qu’aux vraies adresses fournies ; les limites IP, défis anti-abus, contrôles de tables, arrivées et idempotence restent conservés. Trois visiteurs sans email ne se bloquent pas sur un quota d’adresse vide partagée.
+
+Une ancienne adresse est conservée lorsqu’un lien personnel modifie la réservation sans la fournir à nouveau ; elle ne s’affiche pas dans le formulaire masqué. Les anciens clients qui soumettent encore une adresse valide restent compatibles. Changer ou supprimer cette ancienne adresse reste interdit par la règle existante. Aucune purge de données réelles n’est lancée.
+
+La politique est privée et appartient au serveur ; aucun paramètre du visiteur ou réglage salarié ne peut la réactiver. Les essais modifient cette fonction uniquement sur PostgreSQL jetable pour vérifier le retour d’un email obligatoire et la première saisie d’une adresse sur une ancienne réservation anonyme. **Cela ne lance aucun envoi** : le verrou du runtime `emailEnabled=false`, le worker et les secrets restent inchangés. L’activation réelle exigera une livraison revue avec l’adresse autorisée, le prestataire, les règles et le consentement adaptés.
+
+Un ancien backend qui ne connaît pas `emailRequired` conserve le formulaire requis, afin de ne pas cacher le champ alors que son API l’exige encore. Les mentions standards de confidentialité s’adaptent au mode effectif ; seuls les passages standards connus sont remplacés à l’affichage, sans écraser les paragraphes juridiques personnalisés. Une notice entièrement personnalisée reste à vérifier par l’établissement avant publication.
+
+La démonstration passe **13 scénarios** aux sept largeurs, incluant l’absence d’appel aux données internes, le refus du stockage et le lien expiré. Le parcours connecté ciblé couvre le mode sans email sur les sept formats, puis le retour simulé du champ et la préservation d’une adresse existante. Les résultats de campagne complète sur le dernier commit figurent dans la PR.
 
 ## Avant / après
 
@@ -30,7 +44,7 @@ Migration : [`20261120173728_rm015_public_hotel_guests.sql`](../../supabase/migr
 - Une colonne privée : `private.rm015_settings.hotel_guests_enabled boolean NOT NULL DEFAULT false`.
 - Métadonnées déclarées dans le JSON privé existant du contact : `guestType`, `hotelRoom`, `roomPending`.
 - Projection vers les champs et marqueurs métier existants : `hotel_room`, Hôtel/Extérieur et `source_channel = web`. Aucune nouvelle table publique ou politique `anon`.
-- Mise à jour de sept fonctions existantes, sans nouvelle signature ni modification permanente de propriétaire, droits ou RLS. Les permissions temporaires de migration sont retirées dans la transaction.
+- Mise à jour de huit fonctions existantes, sans changer leurs signatures, propriétaires, droits ou RLS. Une nouvelle fonction privée booléenne `rm015_email_required()` renvoie false et n’est pas exécutable par les clients ni par les salariés. Les permissions temporaires de migration sont retirées dans la transaction.
 - Validation stricte côté serveur : types JSON, nom et prénom non vides (espaces, tabulations et retours à la ligne seuls refusés), chambre Hôtel obligatoire de 1 à 20 caractères autorisés, ancien indicateur `roomPending=true` refusé, absence de chambre pour Extérieur, absence d’injection de marqueur métier, activation de l’établissement.
 - Les anciens clients qui omettent ces champs conservent le profil réel d’une réservation Hôtel existante. Une nouvelle réservation ancienne reste Extérieur.
 - Audit des changements de profil public et du réglage Hôtel. Les corrections salariées conservent la traçabilité et le contrôle de concurrence de la modification existante.
@@ -39,16 +53,16 @@ Le test de migration reproduit les permissions relevées en lecture seule sur DE
 
 La migration n’active aucun établissement, ne requalifie aucune réservation passée et ne change ni les horaires, ni les capacités, ni les conditions personnalisées. Sa réapplication est testée avec un mode déjà activé et des réglages personnalisés. La désactivation ultérieure empêche les nouvelles déclarations Hôtel sans bloquer la gestion des réservations Hôtel existantes.
 
-L’Edge Function ajoute seulement les nouveaux champs aux listes explicites d’entrée/sortie. La chambre d’un client n’est rendue que via son propre lien de gestion ou aux salariés habilités du même établissement. Les notes internes restent exclues des réponses publiques. Aucun secret supplémentaire n’est nécessaire. Les emails restent désactivés.
+L’Edge Function accepte une adresse absente ou nulle, valide les adresses fournies et ajoute la politique de collecte aux champs publics autorisés. La chambre d’un client n’est rendue que via son propre lien de gestion ou aux salariés habilités du même établissement. Les notes internes restent exclues des réponses publiques. Aucun secret supplémentaire n’est nécessaire. Les emails restent désactivés.
 
 ## Validation
 
-- **311 cas unitaires**, **64 fichiers `npm test`** : réussis.
-- **196 fichiers** contrôlés sans erreur de syntaxe ; entrée publique et worker email validés par Deno 2.5.6.
-- Builds : **8 assets** pour la démonstration, **16 assets** pour le portail connecté. Aucun dashboard ou secret ajouté à l’artefact public.
-- **19 groupes PostgreSQL dédiés** : isolation par établissement et rôle, déclarations invalides, refus des noms/chambres manquants, protection des anciens liens sans chambre, approbation de groupes revalidée, changements soumis à validation, refus/expiration, compatibilité des anciens clients, désactivation et réapplication de migration.
+- **315 cas unitaires**, **65 fichiers `npm test`** : réussis.
+- **198 fichiers** contrôlés sans erreur de syntaxe ; entrée publique et worker email validés par Deno 2.5.6.
+- Builds : **8 assets** pour la démonstration, **17 assets** pour le portail connecté. Aucun dashboard ou secret ajouté à l’artefact public.
+- **24 groupes PostgreSQL dédiés** : isolation par établissement et rôle, déclarations invalides, refus des noms/chambres manquants, protection des anciens liens sans chambre, approbation de groupes revalidée, changements soumis à validation, refus/expiration, compatibilité des anciens clients, désactivation et réapplication de migration.
 - **27 groupes historiques PostgreSQL réussis** contre le nouveau schéma. Campagne Playwright complète et vérifications CI : résultats finaux consignés dans la Pull Request sur son dernier commit.
-- Parcours ciblé final : **8 scénarios / 30 audits axe réussis**, sur les sept largeurs, incluant les tentatives sans nom et sans chambre, le véritable RPC salarié et les thèmes clair/sombre. Aucune requête extérieure ni écriture de test partagée.
+- Parcours ciblé final : **9 scénarios / 32 audits axe réussis**, sur les sept largeurs, incluant les tentatives sans nom et sans chambre, le véritable RPC salarié et les thèmes clair/sombre. Aucune requête extérieure ni écriture de test partagée.
 - Sept largeurs couvertes : **360, 390, 430, 768, 1024, 1440 et 1920 px**. Vérifications des débordements, champs accessibles, navigation au clavier, focus après erreur, saisie conservée, droits, lien et décodage du QR Hôtel.
 - Le scénario de correction salariée utilise le **vrai RPC SQL de modification**. Le transport du test a été étendu explicitement à ce RPC ; la réponse UUID est convertie en JSON par la fixture. Les accès directs salariés aux tables restent interdits.
 - Les audits axe du formulaire de correction ont révélé un contraste insuffisant des anciens textes d’aide : couleur corrigée en thème clair. Une transition du bouton de table pouvait aussi afficher du texte clair avant le fond sombre ; les couleurs basculent désormais ensemble. Contrôle répété en clair et sombre, sans désactiver de règle axe. Un test de version CSS a été actualisé avec la nouvelle ressource.

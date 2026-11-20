@@ -1,5 +1,5 @@
 {
-  "passed": 19,
+  "passed": 24,
   "results": [
     "Reapplying the migration preserves an already enabled Hotel mode and all custom settings",
     "Hosted-style non-superuser migration rolls back safely and preserves data on apply and reapply",
@@ -19,6 +19,11 @@
     "Expiry of a proposed stay change restores the original Hotel profile",
     "Disabling new Hotel entry preserves an existing Hotel management link and its cancellation",
     "Legacy Hotel records without new contact fields retain their actual profile after mode is disabled",
+    "No-email mode stores null without a fake address or a shared empty-email quota",
+    "Anonymous group approval, modification and cancellation preserve the personal link without mail jobs",
+    "An omitted email preserves a legacy address, and a supplied replacement remains forbidden",
+    "Simulated server reactivation requires a real email and permits its first addition to an old anonymous booking",
+    "Optional email still validates supplied values and the collection policy is not executable by clients",
     "Public profile exposes no rooms or guests, and technical permissions stay restricted"
   ],
   "sharedWrites": 0

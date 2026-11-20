@@ -9,7 +9,7 @@ function draft(value,hasTime){
  return pick(value,hasTime?['party','date','service','time']:['party','date','service']);
 }
 function contact(value){
- if(!value||value.accepted!==true||typeof value.firstName!=='string'||!value.firstName.trim()||value.firstName.length>80||typeof value.lastName!=='string'||!value.lastName.trim()||value.lastName.length>80||typeof value.email!=='string'||value.email.length>254||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email))invalid();
+ if(!value||value.accepted!==true||typeof value.firstName!=='string'||!value.firstName.trim()||value.firstName.length>80||typeof value.lastName!=='string'||!value.lastName.trim()||value.lastName.length>80||value.email!=null&&(typeof value.email!=='string'||value.email.length>254||value.email!==''&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.email)))invalid();
  if(value.phone!==undefined&&(typeof value.phone!=='string'||value.phone.length>30)||value.notes!==undefined&&(typeof value.notes!=='string'||value.notes.length>500))invalid();
  if(value.guestType!==undefined&&!['hotel','external'].includes(value.guestType)||value.hotelRoom!==undefined&&(typeof value.hotelRoom!=='string'||value.hotelRoom.length>20)||value.roomPending!==undefined&&typeof value.roomPending!=='boolean')invalid();
  return {...pick(value,['firstName','lastName','email','phone','notes','guestType','hotelRoom','roomPending']),accepted:true};
@@ -68,7 +68,7 @@ export function createPublicHandler({rpc,keys,activeKey,rateSecret,allowedOrigin
    }
    let data=result.data;
    if(data?.secret_cipher){const token=await decryptToken(keys,body.restaurant,data.secret_cipher);data={...safeRecord(data.data),managementToken:token};}
-   else if(body.action==='profile')data=pick(data,['name','slug','timezone','maxParty','horizonDays','leadMinutes','pendingMinutes','manualFrom','hotelGuestsEnabled','privacyNotice','privacyContact','cancellationNotice','coverPath','coverAlt','publicProfile','openingHours','today','serverTime']);
+   else if(body.action==='profile')data=pick(data,['name','slug','timezone','maxParty','horizonDays','leadMinutes','pendingMinutes','manualFrom','emailRequired','hotelGuestsEnabled','privacyNotice','privacyContact','cancellationNotice','coverPath','coverAlt','publicProfile','openingHours','today','serverTime']);
    else if(body.action==='availability')data={slots:(data?.slots||[]).map(s=>pick(s,['time','available','level','manual'])),serverTime:data?.serverTime};
    return response({data,environment,emailDelivery:'not-activated'});
   }catch(error){
