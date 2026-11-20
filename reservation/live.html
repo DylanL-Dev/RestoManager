@@ -9,9 +9,9 @@
   <meta name="theme-color" content="#146c55">
   <title>Réserver une table — RestoManager · Recette connectée</title>
   <link rel="icon" href="../pwa-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="portal.css?v=20261118-rm0152">
-  <script defer src="../lucide-local.js?v=20261119-rm0155"></script>
-  <script type="module" src="live.mjs?v=20261119-rm0155"></script>
+  <link rel="stylesheet" href="portal.css?v=20261120-rm0156">
+  <script defer src="../lucide-local.js?v=20261120-rm0156"></script>
+  <script type="module" src="live.mjs?v=20261120-rm0156"></script>
 </head>
 <body>
   <a class="skip" href="#booking">Aller à la réservation</a>
@@ -35,9 +35,13 @@
       </section>
       <section class="booking-card" id="booking" aria-label="Réserver une table" tabindex="-1"></section>
     </div>
-    <section class="practical" aria-label="À savoir"><div><i data-lucide="clock-3"></i><h2>À votre rythme</h2><p>Revenez à l’étape précédente pour vérifier ou ajuster votre choix.</p></div><div><i data-lucide="link-2"></i><h2>Gardez la main</h2><p>Un lien personnel permet de retrouver, modifier ou annuler votre réservation.</p></div><div><i data-lucide="circle-help"></i><h2>Un espace de vérification</h2><p>Pour essayer sans modifier les données, utilisez <a href="index.html?restaurant=a-lepicerie-rouen">la démonstration</a>.</p></div></section>
+    <section class="practical profile-practical" aria-label="Informations pratiques">
+      <article class="profile-card" id="publicContact" hidden><h2><i data-lucide="map-pin" aria-hidden="true"></i> Nous trouver et nous contacter</h2><address id="publicAddress" hidden></address><a id="publicPhone" class="profile-link" hidden></a><a id="publicMap" class="profile-link" target="_blank" rel="noopener noreferrer" hidden>Voir l’itinéraire <i data-lucide="arrow-up-right" aria-hidden="true"></i></a></article>
+      <details class="profile-card opening-hours" id="publicHours" hidden><summary><span><i data-lucide="clock-3" aria-hidden="true"></i> Horaires de réservation</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary><div id="publicHoursBody"></div><p class="hint">De la première arrivée à la dernière réservation. Choisissez une date pour vérifier les disponibilités du jour.</p></details>
+      <article class="profile-card"><h2><i data-lucide="link-2" aria-hidden="true"></i> Retrouvez votre réservation</h2><p>Gardez votre lien personnel pour consulter, modifier ou annuler votre réservation.</p><p>Pour essayer sans modifier les données, utilisez <a href="index.html?restaurant=a-lepicerie-rouen">la démonstration</a>.</p></article>
+    </section>
   </main>
-  <footer class="wrap site-footer"><span>Une expérience proposée par <strong>RestoManager</strong></span><div><button type="button" id="privacy" disabled>Confidentialité</button><button type="button" id="conditions" disabled>Conditions de réservation</button></div><small>RM-015.2 · Environnement DEV connecté</small></footer>
+  <footer class="wrap site-footer"><span>Une expérience proposée par <strong>RestoManager</strong></span><div><button type="button" id="privacy" disabled>Confidentialité</button><button type="button" id="conditions" disabled>Conditions de réservation</button></div><small>Environnement de recette · Emails désactivés</small></footer>
   <dialog id="infoDialog" aria-labelledby="infoTitle"><div class="dialog-head"><h2 id="infoTitle"></h2><button type="button" id="closeInfo" class="icon-button" aria-label="Fermer"><i data-lucide="x"></i></button></div><div id="infoBody"></div><button type="button" id="acceptInfo" class="primary">J’ai compris</button></dialog>
   <p class="sr-only" role="status" id="live"></p>
   <noscript><p class="noscript">Activez JavaScript pour consulter les horaires. Aucune réservation ne peut être effectuée sans validation du service.</p></noscript>

@@ -26,6 +26,7 @@
    const text=value[key];if(typeof text!=='string'||text.length>max||opening&&text.trim().length<min)errors[key]='Renseignez '+label+' ('+(opening?min+' à ':'')+max+' caractères maximum).';
    if(opening&&hasDraftMarker(text))errors[key]=key==='privacyNotice'?'Complétez la durée de conservation du modèle ou adaptez les informations de confidentialité.':'Complétez les éléments du modèle avant d’ouvrir les réservations.';
   }
+  if(value.publicProfile){for(const [key,max]of Object.entries({name:180,description:1200,address:300,phone:40})){const text=Object.hasOwn(value.publicProfile,key)?value.publicProfile[key]:'';if(typeof text!=='string'||text.length>max)errors['profile.'+key]='Utilisez '+max+' caractères maximum.';}const phone=typeof value.publicProfile.phone==='string'?value.publicProfile.phone:'',digits=phone.replace(/[^0-9]/g,'');if(phone&&(!/^\+?[0-9 ().-]+$/.test(phone)||digits.length<6||digits.length>15))errors['profile.phone']='Indiquez un numéro de téléphone valide, avec son indicatif si nécessaire.';}
   return errors;
  }
  function fromForm(entries,enabled,version){
@@ -33,6 +34,7 @@
   for(const name of Object.keys(limits)){const raw=String(entries[name]??'').trim();value[name]=raw?Number(raw):name==='maxParty'?null:NaN;}
   for(const name of ['privacyContact','privacyNotice','cancellationNotice'])value[name]=String(entries[name]??'');
   if(Object.hasOwn(entries,'coverPath')){value.coverPath=entries.coverPath||null;value.coverAlt=String(entries.coverAlt??'');}
+  if(Object.hasOwn(entries,'profile.name'))value.publicProfile=Object.fromEntries(['name','description','address','phone'].map(k=>{const text=String(entries['profile.'+k]??'').trim();return [k,k==='name'?text.replace(/[\r\n]+/g,' '):k==='phone'?text.replace(/\s+/g,' '):text];}));
   return value;
  }
  function readiness(settings){

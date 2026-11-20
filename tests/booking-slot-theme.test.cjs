@@ -10,7 +10,7 @@ const lucide=fs.readFileSync('lucide-local.js','utf8');
 test('DEV booking slot component uses a versioned reusable UI-library stylesheet',()=>{
  assert.match(html,/ui\/booking-slot-cards\.css\?v=20261113-slot-library1/);
  assert.match(html,/service-v3-booking-director-choices\.js\?v=20261113-real-tables1/);
- assert.match(html,/lucide-local\.js\?v=20261119-rm0155/);
+ assert.match(html,/lucide-local\.js\?v=20261120-rm0156/);
 });
 test('real booking form has a responsive two-column grid with no double selected outline',()=>{
  assert.match(css,/#bookingForm #rmDirectorTimeChoices \.rmSlotAvailabilityGrid/);
