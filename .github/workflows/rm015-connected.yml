@@ -21,11 +21,13 @@ jobs:
       - name: Edge entrypoint type validation (Deno 2.5.6)
         run: npx --yes deno@2.5.6 check --no-remote supabase/functions/rm015-public/index.ts supabase/functions/rm015-mail/index.ts
       - name: PostgreSQL 17, RLS, booking conflicts, idempotence and email leases
-        run: RM015_PROFILE_SCHEMA=1 npm run test:public-connected:postgres
+        run: RM015_HOTEL_SCHEMA=1 npm run test:public-connected:postgres
       - name: Restaurant photo storage policies, isolation and publication races
         run: node tests/postgres/rm015-media.cjs
       - name: Public restaurant profile, real schedule projection and role isolation
         run: node tests/postgres/rm015-profile.cjs
+      - name: Hotel guest classification, rooms, role isolation and legacy clients
+        run: node tests/postgres/rm015-hotel.cjs
       - name: Encrypted runtime RPC permissions and fail closed configuration
         run: node tests/postgres/rm015-runtime.cjs
       - name: Existing closeout rules against the new schema
