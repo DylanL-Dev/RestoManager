@@ -1,0 +1,31 @@
+{
+  "verified": false,
+  "stage": "widget",
+  "rejected": [
+    {
+      "status": 400,
+      "code": "INVALID"
+    },
+    {
+      "status": 429,
+      "code": "CHALLENGE"
+    }
+  ],
+  "message": "Human interaction or provider availability required; no automated challenge clicks attempted.",
+  "checkedAt": "2026-11-21T12:02:28.379Z",
+  "environment": "DEV",
+  "provider": "Real Cloudflare Turnstile and real deployed DEV Siteverify callback",
+  "validBookingDraftsSent": 0,
+  "businessWrites": 0,
+  "bookingTokensOrProviderTokensStored": false,
+  "blockedRequests": [],
+  "providerErrorCodes": [],
+  "requestKinds": [
+    "profile",
+    "availability",
+    "availability",
+    "invalid-draft-probe",
+    "invalid-draft-probe"
+  ],
+  "proxyTlsVerificationIgnoredInBrowserTestContextOnly": true
+}

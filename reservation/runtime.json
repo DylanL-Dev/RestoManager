@@ -3,5 +3,6 @@
   "channel": "dev",
   "activated": true,
   "api": "https://lykoybacslvmhtzftqsf.supabase.co/functions/v1/rm015-public",
-  "allowedApiOrigin": "https://lykoybacslvmhtzftqsf.supabase.co"
+  "allowedApiOrigin": "https://lykoybacslvmhtzftqsf.supabase.co",
+  "turnstileSiteKey": "0x4AAAAAAGLm9RaVvyWg-GtY"
 }

@@ -12,7 +12,7 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const emptyContact=()=>({firstName:'',lastName:'',email:'',phone:'',notes:'',accepted:false,guestType:'external',hotelRoom:'',roomPending:false});
 let api,profile,step=1,slots=[],loading=false,busy=false,editing=false,dirty=false,record=null,token='',contact=emptyContact(),notice='',errors={},seq=0;
-let showAll=false,initialNotice='',official=false;
+let showAll=false,initialNotice='',official=false,verificationEnabled=false;
 let draft={party:2,date:paris().date,service:'dinner',time:''};
 const tell=text=>{$('live').textContent=text};
 const symbols=()=>window.lucide.createIcons();
@@ -72,7 +72,9 @@ function info(kind){
  const body=$('infoBody');body.replaceChildren();body.classList.toggle('legal-content',kind!=='cancel');
  let text=kind==='cancel'?'La réservation et toute proposition de modification seront annulées. Cette action doit être confirmée.':kind==='privacy'?effectivePrivacyNotice(profile.privacyNotice,profile):profile.cancellationNotice;
  if(kind==='privacy'&&(profile.hotelGuestsEnabled||contact.guestType==='hotel'))text+='\n\nVotre séjour déclaré\nLe choix Hôtel/Extérieur sert à préparer votre accueil au restaurant. Le nom et le numéro de chambre sont obligatoires pour réserver comme client de l’hôtel. Ces informations sont vérifiées par l’équipe si nécessaire et ne donnent aucune priorité sur les disponibilités.';
+ if(kind==='privacy'&&verificationEnabled)text+='\n\nProtection contre les demandes automatisées\nLorsqu’une vérification est nécessaire, Cloudflare Turnstile peut traiter des informations techniques de connexion, notamment l’adresse IP et des informations sur le navigateur, pour protéger le service contre les abus.';
  for(const paragraph of String(text||'').split(/\n\s*\n/)){const lines=paragraph.split('\n');if(kind!=='cancel'&&lines.length>1&&lines[0].length<=80){const heading=document.createElement('h3');heading.textContent=lines.shift();body.append(heading);}const p=document.createElement('p');p.textContent=lines.join('\n');body.append(p);}
+ if(kind==='privacy'&&verificationEnabled){const p=document.createElement('p'),link=document.createElement('a');link.href='https://www.cloudflare.com/privacypolicy/';link.target='_blank';link.rel='noopener noreferrer';link.textContent='Informations de confidentialité de Cloudflare';p.append(link);body.append(p);}
  if(kind==='privacy'){const contact=document.createElement('section');contact.className='legal-contact';const heading=document.createElement('h3');heading.textContent='Contact pour vos données personnelles';contact.append(heading);
   for(const line of String(profile.privacyContact||'').split(/\n/)){const p=document.createElement('p'),value=line.replace(/^(?:Email|Téléphone)\s*:\s*/i,'').trim(),email=/^[A-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9.-]*[A-Z0-9])?\.[A-Z]{2,}$/i.test(value),phone=phoneURL(value);if(email||phone){const link=document.createElement('a');link.href=email?'mailto:'+value:phone;link.textContent=line;p.append(link);}else p.textContent=line;contact.append(p);}body.append(contact);
  }
@@ -109,7 +111,7 @@ setInterval(()=>{if(!busy&&!editing&&!document.hidden&&!$('infoDialog').open&&re
 async function start(){
  try{
   const response=await fetch('runtime.json',{cache:'no-store',credentials:'omit'});if(!response.ok)throw new BookingError('La configuration du restaurant est indisponible.');const runtime=publicRuntime(await response.json(),location.href);
-  official=runtime.channel==='production';
+  official=runtime.channel==='production';verificationEnabled=Boolean(runtime.turnstileSiteKey);
   if(runtime.activated!==true){
    $('portalLayout').classList.add('compact-story');card.innerHTML=header('Les réservations en ligne ne sont pas encore ouvertes','Contactez directement le restaurant pour préparer votre venue.')+'<p class="form-note">Aucune demande ne peut être envoyée depuis cette page.</p><a class="primary" href="index.html?restaurant='+encodeURIComponent(slug||'a-lepicerie-rouen')+'">Voir le parcours de démonstration</a>';symbols();return;
   }

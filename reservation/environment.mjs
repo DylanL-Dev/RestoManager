@@ -6,6 +6,7 @@ export function publicRuntime(value,href){
  if(!value.activated)return {...value,activated:false};
  const api=new URL(value.api,page),origin=value.allowedApiOrigin;
  if(value.channel==='dev'){
+  if(value.turnstileSiteKey!==undefined&&(typeof value.turnstileSiteKey!=='string'||!/^[A-Za-z0-9_-]{10,100}$/.test(value.turnstileSiteKey)))throw Error('La vérification de réservation n’est pas configurée.');
   if(!local&&!page.hostname.endsWith('.onrender.com'))throw Error('Cette page ne peut pas utiliser le service de développement.');
   if(!(local&&api.origin===page.origin)&&api.href!=='https://'+projects.dev+'.supabase.co/functions/v1/rm015-public')throw Error('Service de développement non autorisé.');
  }else{

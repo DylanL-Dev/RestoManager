@@ -1,0 +1,25 @@
+{
+  "passed": 7,
+  "accessibilityAudits": 7,
+  "results": [
+    "Keyboard and explicit server verification without a booking 390",
+    "Keyboard and explicit server verification without a booking 768",
+    "Keyboard and explicit server verification without a booking 1440",
+    "Cancellation sends no API request and permits a new check",
+    "A server rejection never displays verified success",
+    "Unavailable provider fails closed without API write",
+    "The operator page is disabled on the official host"
+  ],
+  "audits": [
+    "ready-390",
+    "dialog-390",
+    "verified-390",
+    "ready-768",
+    "verified-768",
+    "ready-1440",
+    "verified-1440"
+  ],
+  "sharedBusinessWrites": 0,
+  "realProvider": false,
+  "bookingRequests": 0
+}
