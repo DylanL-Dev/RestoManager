@@ -44,6 +44,15 @@
     const slots = service.times.map(time => ({ time, available: !(service.full.includes(time) || (draft.date === today.date && time <= today.time)) }));
     return { state: slots.some(s => s.available) ? 'available' : 'full', slots, message: slots.some(s => s.available) ? 'Horaires fictifs — aucune disponibilité réelle vérifiée.' : 'Aucun horaire proposé dans cet exemple. Essayez une autre date.' };
   }
+  function initialVisit(config,now=new Date()) {
+    const today=paris(now).date;
+    for(const date of [today,addDays(today,1)]){
+      const candidates=['lunch','dinner'].flatMap(service=>availability(config,{date,service,party:2},now).slots.filter(s=>s.available).map(s=>({date,service,time:s.time})));
+      candidates.sort((a,b)=>a.time.localeCompare(b.time));if(candidates.length)return {...candidates[0],party:2,time:''};
+    }
+    return {party:2,date:addDays(today,1),service:'dinner',time:''};
+  }
+  function relativeDateLabel(date,today=paris().date){return (date===today?'Aujourd’hui · ':date===addDays(today,1)?'Demain · ':'')+dateLabel(date);}
   function validate(config, draft, contact, now) {
     const errors = {};
     if (!availability(config, draft, now).slots.some(s => s.available && s.time === draft.time)) errors.venue = 'Choisissez à nouveau votre date et un horaire proposé.';
@@ -61,5 +70,5 @@
     if (!['https:', 'http:'].includes(url.protocol)) throw Error('Invalid public URL');
     url.searchParams.set('restaurant', slug); return url.href;
   }
-  return Object.freeze({ venue, paris, validDate, addDays, dateLabel, availability, validate, publicURL });
+  return Object.freeze({ venue, paris, validDate, addDays, dateLabel, relativeDateLabel, initialVisit, availability, validate, publicURL });
 });

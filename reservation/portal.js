@@ -38,7 +38,7 @@
   document.title = config.name + ' — Réserver · Démonstration';
   let storage; try { storage = window.sessionStorage; } catch { storage = null; }
   const adapter = window.RMPublicDemo.createAdapter({ slug, storage, crypto: window.crypto });
-  let draft = { party: 2, date: M.addDays(M.paris().date, 1), service: 'dinner', time: '' };
+  let draft = M.initialVisit(config);
   let contact = { firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false };
   let stage = 1, errors = {}, record = null, editing = false, notice = '', busy = false, dirty = false;
   function announce(message) { $('live').textContent = message; }
@@ -55,7 +55,7 @@
     const a = M.availability(config, draft);
     return `${heading(editing ? 'Modifier votre exemple' : 'Réservez votre table', 'Quelques instants pour préparer votre venue.')}${steps()}
       <fieldset><legend>Combien de personnes ?</legend><div class="choice-row">${Array.from({ length: config.maxParty }, (_, i) => radio('party', i + 1, i + 1, draft.party === i + 1)).join('')}</div></fieldset>
-      <div class="field"><label class="field-label" for="visitDate">Quel jour ?</label><input class="date-field" type="date" id="visitDate" value="${draft.date}" min="${M.paris().date}" max="${M.addDays(M.paris().date, config.horizonDays)}" aria-describedby="dateHint"><p class="hint" id="dateHint">Choisissez une date dans les ${config.horizonDays} prochains jours.</p></div>
+      <div class="field"><label class="field-label" for="visitDate">Quel jour ?</label><input class="date-field" type="date" id="visitDate" value="${draft.date}" min="${M.paris().date}" max="${M.addDays(M.paris().date, config.horizonDays)}" aria-describedby="dateHint"><p class="hint" id="dateHint">${esc(M.relativeDateLabel(draft.date))}</p></div>
       <fieldset><legend>Quel service ?</legend><div class="choice-row service-row">${Object.entries(config.services).map(([key, s]) => radio('service', key, icon(key === 'lunch' ? 'sun' : 'moon') + esc(s.label), draft.service === key)).join('')}</div></fieldset>
       <fieldset><legend>À quelle heure ?</legend><p class="hint" id="slotsHint">${esc(a.message)}</p>${a.slots.length ? `<div class="choice-row slots" aria-describedby="slotsHint">${a.slots.map(s => radio('time', s.time, esc(s.time), draft.time === s.time, !s.available, s.available ? '' : '<small>Non proposé</small>')).join('')}</div>` : '<p class="empty">' + esc(a.message) + '</p>'}</fieldset>
       ${notice ? '<p class="error-box" role="alert">' + esc(notice) + '</p>' : ''}
@@ -142,7 +142,7 @@
     if (action === 'askCancel') showInfo('cancel');
     if (action === 'restart') {
       adapter.clear(); history.replaceState(null, '', location.pathname + location.search); record = null; editing = false; dirty = false; stage = 1; notice = ''; errors = {};
-      draft = { party: 2, date: M.addDays(M.paris().date, 1), service: 'dinner', time: '' }; contact = { firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false }; render();
+      draft = M.initialVisit(config); contact = { firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false }; render();
     }
     if (action === 'copy') {
       const url = new URL(location.href); url.hash = 'manage=' + record.token;

@@ -68,7 +68,7 @@ async function open(browser,origin,role,viewport={width:390,height:844},timezone
  }
  return {context,page,errors};
 }
-async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();assert.match(await page.locator('#reservationDate').locator('..').innerText(),/Choisir une date/);await page.locator('[data-reservation-action=edit]').first().click();await page.locator('#editForm').waitFor({state:'visible'})}
+async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();assert.equal(await page.locator('#reservationDate').inputValue(),'');assert.match(await page.locator('#reservationDate').locator('..').innerText(),/Toutes les dates/);await page.locator('[data-reservation-action=edit]').first().click();await page.locator('#editForm').waitFor({state:'visible'})}
 async function submit(page){await page.locator('#editForm button[type=submit]').click()}
 async function saved(page){await page.waitForFunction(()=>document.getElementById('editForm').hidden)}
 async function message(page,match){await page.waitForFunction(value=>document.getElementById('reservationMessage').textContent.includes(value),match)}

@@ -357,7 +357,10 @@ function showSmartPlacement(id){
  });select.focus();
 }
 
+function reservationDay(){return new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Paris'});}
+function reservationDateLabel(value){const today=reservationDay(),next=new Date(today+'T12:00Z');next.setUTCDate(next.getUTCDate()+1);return (value===today?'Aujourd’hui · ':value===next.toISOString().slice(0,10)?'Demain · ':'')+new Date(value+'T12:00Z').toLocaleDateString('fr-FR',{timeZone:'Europe/Paris'});}
 function render(){
+ window.RestoCalendar?.refresh?.($('reservationDate'));
  const date=$('reservationDate').value,query=$('reservationQuery').value.trim().toLocaleLowerCase('fr-FR');
  let list;try{list=load()}catch(e){return notify(errorMessage(e,'Impossible de lire les réservations. Réessayez après synchronisation.'))}
  list=list.filter(r=>(!date||r.date===date)&&(!query||[r.client,r.hotelRoom||'',...r.tables.map(String)].join(' ').toLocaleLowerCase('fr-FR').includes(query)));
@@ -419,7 +422,7 @@ function render(){
  const toggleDetails=()=>{expanded=expanded===r.id?null:r.id;render()};
  detailButton.addEventListener('click',toggleDetails);
  clientText.append(detailButton);
- const originLabel=el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub');if(r.channel==='web'&&r.type==='hotel'){originLabel.title='Séjour déclaré par le client, à vérifier si nécessaire.';if(!room)originLabel.append(document.createTextNode(' · Chambre à compléter'));}if(r.channel==='web')originLabel.append(document.createTextNode(' '),el('span','Web','rmWebBadge'));clientText.append(originLabel);
+ const originLabel=el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub');if(r.channel==='web'&&r.type==='hotel'){originLabel.title='Séjour déclaré par le client, à vérifier si nécessaire.';if(!room)originLabel.append(document.createTextNode(' · Chambre à compléter'));}if(r.channel==='web')originLabel.append(document.createTextNode(' '),el('span','Web','rmWebBadge'));clientText.append(originLabel,el('small',reservationDateLabel(r.date),'rmBookingSub rmBookingDate'));
  client.append(clientText);
  // The phone reference includes a separate, accessible detail chevron.
  // It is visually hidden outside of narrow cards; the original name
@@ -463,7 +466,7 @@ function render(){
  if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
  if(expanded===r.id){
  const details=el('section',undefined,'reservationExpanded');
- details.append(el('h3','Suivi de la réservation'));
+ details.append(el('h3','Suivi de la réservation'));details.append(el('p','Date du service : '+reservationDateLabel(r.date)));
  details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
  if(r.allergies)details.append(el('p','Allergies signalées : '+r.allergies,'reservationAllergy'));
  if(r.guestRequestNotes)details.append(el('p','Demande client en ligne : '+r.guestRequestNotes,'reservationNotes'));
@@ -506,7 +509,7 @@ function render(){
  });
  window.lucide?.createIcons?.();
 }
-$('reservationDate').value=new Date().toLocaleDateString('en-CA');
+$('reservationDate').dataset.emptyLabel='Toutes les dates';$('reservationDate').value=reservationDay();
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',()=>{if($('reservationQuery').value.trim()){$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))}else render()});
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))});
 $('editSuccessClose')?.addEventListener('click',()=>{$('editSuccessToast').hidden=true});
