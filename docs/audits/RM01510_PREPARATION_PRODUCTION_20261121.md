@@ -62,8 +62,10 @@ Elles sont testées sur une base éphémère isolée. Le paquet les range dans `
 | Constructions démonstration et portail connecté | 8 et 20 fichiers statiques respectivement. |
 | Construction officielle | Paquet produit, portail fermé et emails désactivés ; liste de fichiers et empreintes dans son reçu. |
 | Deno 2.5.6 | Vérification des entrées API DEV et officielle préparée. |
-| Synchronisation réelle | **15 scénarios réussis**, 390, 768 et 1440 px, sur Auth + PostgREST + Realtime locaux. |
+| Synchronisation réelle | **15 scénarios réussis**, 390, 768 et 1440 px, sur Auth + PostgREST + Realtime locaux ; dernière vérification locale avec Node 22.23.5, comme la CI. |
 | Préparation officielle et anti-abus | **20 scénarios réussis**, **21 audits axe**, aux largeurs 360, 390, 430, 768, 1024, 1440 et 1920 px. |
+
+Une exécution Actions affichait un succès sans avoir produit de rapport ni de captures de synchronisation. Ce résultat a été rejeté. Le lanceur refuse maintenant une sortie réussie avant la fin des scénarios ; la CI exige un rapport `passed=15`, `failed=0` et neuf captures, puis impose leur archivage. Les simples statuts verts sans ces preuves ne sont pas retenus.
 
 Les résultats JSON et captures sont dans [le dossier de preuves](preuves/rm015-production-20261121/). Les workflows de la Pull Request rejouent les suites de non-régression existantes et les deux nouveaux jobs de préparation/synchronisation ; leur état final est indiqué dans la Pull Request.
 
@@ -77,7 +79,7 @@ Pour chacun des trois formats, le navigateur utilise le vrai formulaire public, 
 4. Annulation publique : mise à jour des deux sessions, disparition de l'occupation active. Les liens d'affectation historiques peuvent être conservés volontairement ; leur présence ne signifie pas qu'une table reste bloquée.
 5. Groupe de quatre : demande de confirmation visible au Restaurant, refus réel des droits Réception, deux validations Restaurant simultanées aboutissant à une seule réservation et un état client cohérent.
 
-Les délais locaux observés pour la création jusqu'aux deux états salariés sont de 285, 757 et 810 ms. Ce sont des observations de cette exécution, **pas une garantie de délai en production**. Les courses pour la dernière table, l'idempotence et les limites d'arrivées restent également couvertes par la suite SQL RM-015 existante.
+Les délais locaux observés pour la création jusqu'aux deux états salariés sont de 481, 726 et 772 ms. Ce sont des observations de cette exécution, **pas une garantie de délai en production**. Les courses pour la dernière table, l'idempotence et les limites d'arrivées restent également couvertes par la suite SQL RM-015 existante.
 
 ### Limites des vérifications
 

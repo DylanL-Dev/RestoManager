@@ -42,10 +42,13 @@ jobs:
       - name: Real local Auth, PostgREST, public HTTP, Realtime and staff browser sessions
         env:
           MISSION3_ARTIFACTS: test-results/rm015-production-sync
-        run: npm run test:public-sync:supabase
+        run: |
+          npm run test:public-sync:supabase
+          node -e "const fs=require('fs'),p='test-results/rm015-production-sync/',r=JSON.parse(fs.readFileSync(p+'rm015-sync-results.json'));if(r.status!=='passed'||r.passed!==15||r.failed!==0||fs.readdirSync(p).filter(f=>f.endsWith('.png')).length!==9)throw Error('Complete real synchronization evidence is mandatory');"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: rm015-production-sync-fictional-data
+          if-no-files-found: error
           path: test-results/rm015-production-sync/
       # Preparation and isolated tests only: no deployment or shared secret access.
