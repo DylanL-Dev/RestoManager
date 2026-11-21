@@ -34,5 +34,5 @@ test('RM-011-A : connected PWA references versioned scripts after change',()=>{
   'v3-supabase-booking.js?v=20261117-rm016-readonly'])
   assert.ok(html.includes(key),key);
  assert.match(source('v3-supabase-booking.js'),/booking-draft.js\?v=20261117-rm016-readonly/);
- assert.match(source('sw.js'),/restomanager-shell-2026.11.21-rm015.10-main/);
+ assert.match(source('sw.js'),/restomanager-shell-2026.11.21-rm015.11-main/);
 });
