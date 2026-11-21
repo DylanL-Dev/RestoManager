@@ -22,8 +22,14 @@ test('RM-005 MAIN: every JS/CSS runtime dependency exists and loads once',()=>{
  ])assert.ok(files.includes(name),name+' not loaded');
 });
 test('RM-005 MAIN: keep PROD login and existing Reception/second-occupant protections',()=>{
- assert.match(script('supabase-service-bridge.js'),/tnsrkargogckgtsxipwd/);
- assert.match(script('supabase-login.js'),/tnsrkargogckgtsxipwd/);
+ const prodEnvironment=script('restomanager-env.js');
+ assert.match(prodEnvironment,/if\(location\.origin!=="https:\/\/dylanl-dev\.github\.io"\)/);
+ assert.match(prodEnvironment,/https:\/\/tnsrkargogckgtsxipwd\.supabase\.co/);
+ assert.doesNotMatch(prodEnvironment,/lykoybacslvmhtzftqsf|sb_secret_|service_role/i);
+ for(const file of ['supabase-service-bridge.js','supabase-login.js']){
+  assert.match(script(file),/import \{supabaseEnvironment\} from '\.\/restomanager-env\.js\?v=2026\.11\.21-rm015\.10-main'/);
+  assert.doesNotMatch(script(file),/lykoybacslvmhtzftqsf|sb_secret_|service_role/i);
+ }
  assert.doesNotMatch(html,/lykoybacslvmhtzftqsf|restomanager-env\.js/);
  assert.match(html,/rm005SecondOccupantNotice/);
  assert.match(html,/receptionTableCaptionFix/);
