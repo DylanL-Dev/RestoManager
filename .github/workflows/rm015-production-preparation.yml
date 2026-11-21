@@ -21,6 +21,8 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Closed production routing, challenge UI and official QR on seven widths
         run: node tests/browser/rm015-production.cjs
+      - name: DEV-only operator check, provider fixtures, keyboard and no booking request
+        run: node tests/browser/rm015-turnstile.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -28,6 +30,7 @@ jobs:
           path: |
             dist/rm015-production/
             test-results/rm015-production-browser/
+            test-results/rm015-turnstile-browser/
   real-web-sync:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
