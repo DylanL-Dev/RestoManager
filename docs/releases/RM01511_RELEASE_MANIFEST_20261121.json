@@ -1,0 +1,35 @@
+{
+  "version": "2026.11.21-rm015.11-main",
+  "channel": "main",
+  "sourceDEV": "6ee3b66a2788df0b107f2804b4ca4342764a74f6",
+  "protected_production_files": {
+    "supabase-service-bridge.js": "458801cfc47b0998862c78d198fb704ac106261b4593056dafcb5ef45cf87cb7",
+    "supabase-login.js": "02203e32a99e5a9e3713bb8544f44b3709a476a4061b11fea43c7daade7f4682",
+    "creator-auth.js": "ff227bdc7baeab334bad7ccc8a24a5d80bd5d4471ed14d3a727003e3a33fa594",
+    "login.html": "cd0a1060556b4ba9ffe741fc3d63b006680412303b88b058a3ed20a41c8be35a",
+    "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14",
+    "service-v3-screens.js": "e9097214804ab7340800c8b3ff8e073a436001219c62fb12660606849d852a44",
+    "restomanager-env.js": "2e6607423e773e31cea3a77d5b045f24d1de724ccfc063dcf4faba21c72964c3"
+  },
+  "runtime": {
+    "app-release.json": "bf6cb0009424f4560f95864b78611d57143fae39725210da1c1af0183c738e09",
+    "booking-draft.js": "c2c15ad0502aa4135b0fb978a5163e8246df5c76ed9b38a9412cfa5dde892b43",
+    "service-v3-app-release.js": "195a36f157239e082c9518180eabfc6d01744b4f2e0b792a8d185500b6b68b34",
+    "service-v3-tutorial-model.js": "e1fdc9f631045fa8bba380bd18cf1e946a86e5d9a3ede413ed7b0db79aa4a382",
+    "service-v3-tutorial-training.js": "c532de587a4149e7dfc5ad779242277ba8733f928c8b33c4bda80935d3589a5f",
+    "service-v3-tutorial.css": "97812fa2451fc132e88846721129f5a53909f1c77bb6ac64079d7a6407f90a98",
+    "service-v3-tutorial.js": "786b35bbd011cfe25a85d542017882aae695caf6f75cde08c0f6ba18eb5f9e09",
+    "service-v3-notifications.css": "5a5bb5f14add300a370bf394fdfcf9bdeec84b75b6b34a6cf673fb500907507a",
+    "sw.js": "a7a0f782c28417d9ab4c95fb88bcef349c3581344a6752a89b351fac46287bbe",
+    "v3-connected-auth.js": "08bf7b79351e4eeb9aa3f7557e34a434fd9eab668a046d7a12d3eb72bf68bd46",
+    "v3-connected.html": "e7dd64d8cb8ce08afffbc7856c9ff972755e86c2d4278405963af1f049a17c65",
+    "v3-supabase-booking.js": "774d1a9bbe36ab07f46068ce02f00d5bfcb1f65fe9855f3a5237e07613139e50",
+    "reservation/runtime.json": "a66d8c9aba3711e7017e3d2425e0a59c347f65e8e18065da094c750f212aa26d",
+    "reservation/live.html": "2c4360f0ff26c869a9d5050bc23afd4b7461cabba125fffef9dd63520c47a275"
+  },
+  "supabaseMigrationRequired": false,
+  "portalActivated": true,
+  "emailDeliveryEnabled": false,
+  "publicPortalUrl": "https://dylanl-dev.github.io/RestoManager/reservation/live.html?restaurant=a-lepicerie-rouen",
+  "antiAbuseSiteKey": "0x4AAAAAAGLm9RaVvyWg-GtY"
+}

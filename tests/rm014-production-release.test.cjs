@@ -1,7 +1,7 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
-const manifest=JSON.parse(fs.readFileSync('docs/releases/RM01510_RELEASE_MANIFEST_20261121.json'));
-test('RM-015.10 production: reviewed connection files and dependency lock stay immutable',()=>{
+const manifest=JSON.parse(fs.readFileSync('docs/releases/RM01511_RELEASE_MANIFEST_20261121.json'));
+test('RM-015.11 production: reviewed connection files and dependency lock stay immutable',()=>{
  for(const [file,expected] of Object.entries(manifest.protected_production_files))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),expected,file);
  const environment=fs.readFileSync('restomanager-env.js','utf8');
  assert.match(environment,/location\.origin!=="https:\/\/dylanl-dev\.github\.io"/);
@@ -10,7 +10,7 @@ test('RM-015.10 production: reviewed connection files and dependency lock stay i
  assert.doesNotMatch(environment,/lykoybacslvmhtzftqsf|sb_secret_|service_role/i);
  assert.equal(JSON.parse(fs.readFileSync('package.json')).devDependencies['@supabase/supabase-js'],'2.57.0');
 });
-test('RM-015.10 production: closed portal, version and all offline dependencies agree',()=>{
+test('RM-015.10 production: opened portal, version and all offline dependencies agree',()=>{
  const release=JSON.parse(fs.readFileSync('app-release.json')),html=fs.readFileSync('v3-connected.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
  assert.equal(release.channel,'main');assert.equal(release.currentVersion,manifest.version);
  assert.ok(html.includes('name="restomanager-channel" content="main"'));assert.ok(html.includes('name="restomanager-version" content="'+release.currentVersion+'"'));
@@ -20,8 +20,8 @@ test('RM-015.10 production: closed portal, version and all offline dependencies 
  const portal=JSON.parse(fs.readFileSync('reservation/runtime.json','utf8'));
  assert.equal(portal.schema,1);assert.equal(portal.channel,'production');
  assert.equal(portal.projectRef,'tnsrkargogckgtsxipwd');
- assert.equal(portal.activated,false);assert.equal(portal.api,null);assert.equal(portal.allowedApiOrigin,null);
+ assert.equal(portal.activated,true);assert.equal(portal.api,'https://tnsrkargogckgtsxipwd.supabase.co/functions/v1/rm015-public');assert.equal(portal.allowedApiOrigin,'https://tnsrkargogckgtsxipwd.supabase.co');assert.equal(portal.turnstileSiteKey,'0x4AAAAAAGLm9RaVvyWg-GtY');assert.equal(manifest.emailDeliveryEnabled,false);
  assert.equal(portal.publicOrigin,'https://dylanl-dev.github.io');
- assert.match(html,/name="restomanager-public-portal" content="closed"/);
+ assert.match(html,/name="restomanager-public-portal" content="open"/);
  for(const [file,expected] of Object.entries(manifest.runtime))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),expected,file);
 });
