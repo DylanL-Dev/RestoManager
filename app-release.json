@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.21-rm015.10-main",
+  "currentVersion": "2026.11.21-rm015.11-main",
   "releases": [
+    {
+      "version": "2026.11.21-rm015.11-main",
+      "date": "2026-11-21",
+      "title": "Portail client de réservation disponible",
+      "changes": [
+        "Une page publique sécurisée et un QR code sont disponibles pour chaque établissement activé.",
+        "Les créneaux tiennent compte des tables et horaires réellement disponibles, sans choisir de table côté client.",
+        "Les nouvelles réservations rejoignent le suivi Restaurant et Réception en temps réel."
+      ],
+      "impact": "L’ouverture est contrôlée par établissement. Les emails automatiques restent désactivés ; chaque client conserve son lien personnel.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.21-rm015.10-main",
       "date": "2026-11-21",

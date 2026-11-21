@@ -37,10 +37,35 @@ jobs:
           const portal = JSON.parse(fs.readFileSync('reservation/runtime.json', 'utf8'));
           if (portal.channel !== 'production' || portal.projectRef !== 'tnsrkargogckgtsxipwd' ||
               portal.publicOrigin !== 'https://dylanl-dev.github.io' ||
-              portal.activated !== false || portal.api !== null || portal.allowedApiOrigin !== null) {
+              portal.activated !== true ||
+              portal.api !== 'https://tnsrkargogckgtsxipwd.supabase.co/functions/v1/rm015-public' ||
+              portal.allowedApiOrigin !== 'https://tnsrkargogckgtsxipwd.supabase.co' ||
+              portal.turnstileSiteKey !== '0x4AAAAAAGLm9RaVvyWg-GtY') {
             throw Error('Portail public non verrouillé sur le bon projet PROD');
           }
           console.log('Cible Supabase production préservée; aucune connexion DB effectuée.');
+          NODE
+      - name: Vérifier que l’API officielle est réellement prête (aucune réservation créée)
+        if: startsWith(github.head_ref, 'release/rm01511-open-')
+        run: |
+          node - <<'NODE'
+          const https=require('node:https');
+          const payload=JSON.stringify({action:'__rm015_preflight__',restaurant:'a-lepicerie-rouen'});
+          const req=https.request('https://tnsrkargogckgtsxipwd.supabase.co/functions/v1/rm015-public',{
+            method:'POST',headers:{'Content-Type':'application/json','Content-Length':Buffer.byteLength(payload),'Origin':'https://dylanl-dev.github.io'}
+          },response=>{
+            let body='';response.on('data',chunk=>{if(body.length<10000)body+=chunk.toString()});
+            response.on('end',()=>{
+              let result={};try{result=JSON.parse(body)}catch{}
+              if(response.statusCode!==400||result.error?.code!=='INVALID'){
+                console.error('API non prête : HTTP '+response.statusCode+' / '+(result.error?.code||'UNKNOWN'));
+                process.exitCode=1;
+              }else console.log('API officielle prête, contrôle sans aucune création de réservation.');
+            });
+          });
+          req.setTimeout(15000,()=>req.destroy(new Error('Précontrôle API expiré')));
+          req.on('error',error=>{console.error('Connexion API impossible : '+(error.code||error.message));process.exitCode=1});
+          req.end(payload);
           NODE
       - name: Vérifier la syntaxe JavaScript
         run: |
