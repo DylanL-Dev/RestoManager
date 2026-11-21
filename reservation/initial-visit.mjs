@@ -18,3 +18,24 @@ export async function initialVisit(profile,party,read){
  }
  throw Error('La journée vient de changer. Actualisez les horaires pour continuer.');
 }
+
+const dayKeys=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+export function slotText(slot,date,stamp,lead=0){
+ if(slot.available)return slot.level==='limited'?'Dernières disponibilités':'Disponible';
+ const now=serverDay(stamp),visit=date+'T'+slot.time;
+ if(visit<=now.date+'T'+now.time)return 'Horaire passé';
+ const cutoff=Date.parse(stamp)+Math.max(0,Number(lead)||0)*60000,earliest=serverDay(new Date(cutoff).toISOString()),limit=earliest.date+'T'+earliest.time;
+ if(visit<limit||visit===limit&&cutoff%60000!==0)return 'Trop proche';
+ return 'Indisponible';
+}
+export function availabilityNote(profile,draft,slots){
+ if(!slots.length){
+  const key=dayKeys[new Date(draft.date+'T12:00Z').getUTCDay()],hours=profile.openingHours?.find(day=>day.day===key)?.[draft.service];
+  return hours?.enabled===false?'Le restaurant ne propose pas ce service à cette date. Choisissez un autre service ou une autre date.':'Aucun horaire proposé pour ce service. Essayez une autre date ou l’autre service.';
+ }
+ if(slots.some(slot=>slot.available))return '';
+ const labels=slots.map(slot=>slotText(slot,draft.date,profile.serverTime,profile.leadMinutes));
+ if(labels.every(label=>label==='Horaire passé'))return 'Tous les horaires de ce service sont passés. Choisissez un autre service ou une autre date.';
+ if(labels.every(label=>label==='Horaire passé'||label==='Trop proche'))return 'Il ne reste pas de créneau pour ce service respectant le délai de réservation de '+profile.leadMinutes+' minutes prévu par le restaurant. Choisissez un autre service ou une autre date.';
+ return 'Aucun créneau n’est disponible pour '+draft.party+' personne'+(draft.party>1?'s':'')+' sur ce service. Essayez un autre service ou une autre date.';
+}

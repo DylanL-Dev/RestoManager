@@ -11,7 +11,8 @@
         "Le portail propose aujourd’hui lorsqu’un créneau reste réservable, selon les disponibilités du serveur.",
         "Le passage à demain est clairement annoncé ; aucune heure n’est sélectionnée sans votre choix.",
         "Les réservations existantes et les saisies en cours conservent leur date.",
-        "Les réservations affichent leur date de service. Les calendriers reflètent aussi les changements par recherche et notification."
+        "Les réservations affichent leur date de service. Les calendriers reflètent aussi les changements par recherche et notification.",
+        "Les horaires passés, le délai minimum et les services fermés sont expliqués sans afficher à tort « Complet »."
       ],
       "impact": "Correction DEV du choix initial. Aucun horaire ou réglage restaurant modifié.",
       "requiresReload": true
