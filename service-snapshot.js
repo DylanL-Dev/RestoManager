@@ -23,13 +23,13 @@ export function prepareServiceSnapshot(snapshot,decodeBookingDetails){
   const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(dt);
   const details=decodeBookingDetails(r.notes,r.hotel_room);
   return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts.year+'-'+parts.month+'-'+parts.day,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status==='departed'?'released':r.status,
-   walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
+   channel:r.source_channel==='web'?'web':null,guestRequestNotes:r.source_channel==='web'?String(r.guest_request_notes||''):'',walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||'',editVersion:r.edit_version||null};
  });
  return {plan:{version:1,rooms,tables},values:{
   RestoSharedHours:{shifts,weeklySchedule:hours.weekly_schedule||null,duration:hours.duration,arrivalLimitPercent:Number.isInteger(hours.arrival_limit_percent)&&hours.arrival_limit_percent>=40&&hours.arrival_limit_percent<=90&&hours.arrival_limit_percent%5===0?hours.arrival_limit_percent:null,weekend:{supported:Object.prototype.hasOwnProperty.call(hours,'saturday_lunch_closed')&&Object.prototype.hasOwnProperty.call(hours,'sunday_lunch_closed'),saturdayLunchClosed:hours.saturday_lunch_closed===true,sundayLunchClosed:hours.sunday_lunch_closed===true}},RestoSharedReservations:reservations,
   RestoSmartPlacementTableIds:new Map(tables.map(t=>[t.number,t.id])),
-  RestoDraftHolds:snapshot.holds.map(h=>({id:h.id,number:number(h.table_id),start:Date.parse(h.starts_at),end:Date.parse(h.ends_at),expiry:Date.parse(h.expires_at),team:h.draft_role==='reception'?'Réception':'Restaurant'})),
+  RestoDraftHolds:snapshot.holds.map(h=>({id:h.id,number:number(h.table_id),start:Date.parse(h.starts_at),end:Date.parse(h.ends_at),expiry:Date.parse(h.expires_at),team:h.held_by===null?'Web':h.draft_role==='reception'?'Réception':'Restaurant'})),
   RestoInactiveRestaurantTables:snapshot.tables.filter(t=>!t.active),
   RestoSharedRoomIds:new Map(activeRooms.map((r,i)=>[i===0?'main':r.id,r.id])),
   RestoFusionLinks:snapshot.fusionLinks.map(l=>[number(l.table_a),number(l.table_b)]).filter(p=>p.every(n=>Number.isInteger(n)&&tables.some(t=>t.number===n))),

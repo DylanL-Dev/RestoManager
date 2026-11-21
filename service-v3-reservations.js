@@ -7,6 +7,9 @@ const savedNotes=(input,previous)=>String(input||'').trim()+(String(previous?.no
 const statuses={reserved:'À confirmer · Attendu',confirmed:'Confirmé · Attendu',late:'En retard',arrived:'Attendu',seated:'Installé',completed:'Terminé',released:'Libéré',cancelled:'Annulé',no_show:'Absent'};
 let editing=null,editingBase=null,reviewedVersion=null,savingEdit=false,chosenTables=[],expanded=null,reservationView='upcoming',reservationSort='time',reservationSortDesc=false;
 let navEditBaseline=null,quickTableChange=null;
+const guestProfileField=document.createElement('label');guestProfileField.className='reservationField';guestProfileField.hidden=true;guestProfileField.innerHTML='<span class="reservationFieldCaption" id="editGuestTypeLabel">Profil du client</span><select id="editGuestType" data-portal-choice="true" aria-labelledby="editGuestTypeLabel" disabled><option value="hotel">Client de l’hôtel</option><option value="exterieur">Client extérieur</option></select><small>Pour corriger les informations déclarées en ligne. L’origine Web est conservée.</small>';$('editClient').closest('label').before(guestProfileField);
+function editGuestType(){return editingBase?.channel==='web'&&!guestProfileField.hidden?$('editGuestType').value:editingBase?.type;}
+$('editGuestType').addEventListener('change',()=>{const hotel=editGuestType()==='hotel';$('editHotelRoomField').hidden=!hotel;$('editHotelRoom').disabled=!hotel;syncEditClientRequirement(editGuestType());});
 function showEditSuccess(message){
  const toast=$('editSuccessToast'),label=$('editSuccessText');
  if(!toast||!label)return;
@@ -28,7 +31,7 @@ function clearEditNameError(){
  $('editClient')?.removeAttribute('aria-invalid');
 }
 function validateEditName(){
- const input=$('editClient');if(!input||editingBase?.type!=='exterieur')return true;
+ const input=$('editClient');if(!input||editGuestType()!=='exterieur')return true;
  const invalid=!input.value.trim()||/^(client[ ]+ext[eé]rieur|sans[ ]+nom|anonyme)$/i.test(input.value.trim());
  let error=document.getElementById('rmEditExternalNameError');
  if(!error){error=document.createElement('p');error.id='rmEditExternalNameError';error.className='rmDirectorFieldError';error.setAttribute('role','alert');input.closest('label')?.append(error)}
@@ -38,7 +41,7 @@ function validateEditName(){
  input.removeAttribute('aria-invalid');return true;
 }
 $('editClient')?.addEventListener('input',clearEditNameError);
-$('editClient')?.addEventListener('invalid',event=>{if(editingBase?.type==='exterieur'){event.preventDefault();validateEditName()}});
+$('editClient')?.addEventListener('invalid',event=>{if(editGuestType()==='exterieur'){event.preventDefault();validateEditName()}});
 function updateEditSummary(r){
  const set=(id,value)=>{const node=$(id);if(node)node.textContent=value};
  set('editSummaryClient',r.client||'Client extérieur');
@@ -77,8 +80,8 @@ function editAvailability(tables){
  if(!Number.isInteger(guests)||guests<1)return {available:false,reason:'Nombre de couverts invalide'};
  if(total<guests)return {available:false,reason:'Capacité insuffisante'};
  if(tables.length===1&&guests<(plan.tables.find(t=>t.number===tables[0])?.capacityMin||1))return {available:false,reason:'Capacité minimale non respectée'};
- const candidate={...previous,client:$('editClient').value.trim()||(previous.type==='hotel'?'Chambre '+($('editHotelRoom').value.trim()||'non renseignée'):'Client extérieur'),date:$('editDate').value,time:$('editTime').value,guests,tables};
- if(window.RestoSharedReservations)candidate.hotelRoom=previous.type==='hotel'?$('editHotelRoom').value.trim():'';
+ const candidate={...previous,type:editGuestType()||previous.type,client:$('editClient').value.trim()||(previous.type==='hotel'?'Chambre '+($('editHotelRoom').value.trim()||'non renseignée'):'Client extérieur'),date:$('editDate').value,time:$('editTime').value,guests,tables};
+ if(window.RestoSharedReservations)candidate.hotelRoom=editGuestType()==='hotel'?$('editHotelRoom').value.trim():'';
  const result=E.validate(candidate,load(),editing);
  if(!result.valid)return {available:false,reason:result.conflict?'Occupée à '+result.conflict.time+' · '+result.conflict.client:result.errors[0]};
  const warnings=E.seatingWarnings(candidate,load(),editing);
@@ -137,6 +140,7 @@ function openSharedEditor(r,{directTablePicker=false}={}){
  quickTableChange=null;$('editForm').classList.remove('editQuickTablePending');
  $('editSuccessToast')?.setAttribute('hidden','');updateEditSummary(r);
  editing=r.id;editingBase=window.ReservationEdit.capture(r);reviewedVersion=null;chosenTables=r.tables.slice();
+ guestProfileField.hidden=r.channel!=='web'||!window.RestoSharedReservations;$('editGuestType').disabled=guestProfileField.hidden;$('editGuestType').value=r.type;
  $('editClient').value=r.client;syncEditClientRequirement(r.type);$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;
  $('editNotes').value=publicNotes(r);$('editAllergies').value=r.allergies||'';
  $('editHotelRoomField').hidden=r.type!=='hotel';$('editHotelRoom').disabled=r.type!=='hotel';
@@ -220,6 +224,7 @@ async function action(id,kind){
  if(kind==='confirm'){if(!['reserved','late'].includes(r.status))return notify('Cette réservation ne peut pas être confirmée.');all[i]={...r,status:'confirmed',confirmedAt:new Date().toISOString()};save(all);notify('Réservation confirmée.');return}
  if(kind==='edit'){
  editing=id;editingBase=window.ReservationEdit.capture(r);chosenTables=r.tables.slice();
+ guestProfileField.hidden=r.channel!=='web'||!window.RestoSharedReservations;$('editGuestType').disabled=guestProfileField.hidden;$('editGuestType').value=r.type;
  $('editClient').value=r.client;$('editDate').value=r.date;$('editTime').value=r.time;$('editGuests').value=r.guests;$('editNotes').value=publicNotes(r);$('editAllergies').value=r.allergies||'';
  editChoices();$('editForm').hidden=false;updateEditDetailLimits();notifyNavigationEditorOpen();$('editForm').scrollIntoView({behavior:'smooth',block:'nearest'});return
  }
@@ -352,7 +357,10 @@ function showSmartPlacement(id){
  });select.focus();
 }
 
+function reservationDay(){return new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Paris'});}
+function reservationDateLabel(value){const today=reservationDay(),next=new Date(today+'T12:00Z');next.setUTCDate(next.getUTCDate()+1);return (value===today?'Aujourd’hui · ':value===next.toISOString().slice(0,10)?'Demain · ':'')+new Date(value+'T12:00Z').toLocaleDateString('fr-FR',{timeZone:'Europe/Paris'});}
 function render(){
+ window.RestoCalendar?.refresh?.($('reservationDate'));
  const date=$('reservationDate').value,query=$('reservationQuery').value.trim().toLocaleLowerCase('fr-FR');
  let list;try{list=load()}catch(e){return notify(errorMessage(e,'Impossible de lire les réservations. Réessayez après synchronisation.'))}
  list=list.filter(r=>(!date||r.date===date)&&(!query||[r.client,r.hotelRoom||'',...r.tables.map(String)].join(' ').toLocaleLowerCase('fr-FR').includes(query)));
@@ -414,7 +422,7 @@ function render(){
  const toggleDetails=()=>{expanded=expanded===r.id?null:r.id;render()};
  detailButton.addEventListener('click',toggleDetails);
  clientText.append(detailButton);
- clientText.append(el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub'));
+ const originLabel=el('small',r.type==='hotel'?(roomMention?'Client de l’hôtel':room?'Chambre '+room:'Client de l’hôtel'):'Client extérieur','rmBookingSub');if(r.channel==='web'&&r.type==='hotel'){originLabel.title='Séjour déclaré par le client, à vérifier si nécessaire.';if(!room)originLabel.append(document.createTextNode(' · Chambre à compléter'));}if(r.channel==='web')originLabel.append(document.createTextNode(' '),el('span','Web','rmWebBadge'));clientText.append(originLabel,el('small',reservationDateLabel(r.date),'rmBookingSub rmBookingDate'));
  client.append(clientText);
  // The phone reference includes a separate, accessible detail chevron.
  // It is visually hidden outside of narrow cards; the original name
@@ -439,7 +447,7 @@ function render(){
  status.append(icon(['completed','released'].includes(r.status)?'check-circle-2':r.status==='seated'?'users-round':r.status==='late'?'clock-alert':r.status==='cancelled'?'x-circle':'clock-3'),
   el('span',shortStatus));line.append(status);
  const flags=el('div',undefined,'rmBookingFlags');
- if(publicNotes(r)){
+ if(publicNotes(r)||r.guestRequestNotes){
   const note=el('button',undefined,'rmBookingFlag rmBookingFlagNote');note.type='button';
   note.setAttribute('title','Consulter la note');note.setAttribute('aria-label','Note présente : ouvrir la fiche');
   note.append(icon('notebook-pen'),el('span','Note','rmBookingNoteLabel'));
@@ -458,9 +466,10 @@ function render(){
  if(r.tables.length>1&&total>r.guests)card.append(el('p','Préparation : retirer '+(total-r.guests)+' couvert(s)','fusionCoverHint'));
  if(expanded===r.id){
  const details=el('section',undefined,'reservationExpanded');
- details.append(el('h3','Suivi de la réservation'));
+ details.append(el('h3','Suivi de la réservation'));details.append(el('p','Date du service : '+reservationDateLabel(r.date)));
  details.append(el('p','Statut : '+(statuses[r.status]||r.status)));
  if(r.allergies)details.append(el('p','Allergies signalées : '+r.allergies,'reservationAllergy'));
+ if(r.guestRequestNotes)details.append(el('p','Demande client en ligne : '+r.guestRequestNotes,'reservationNotes'));
  if(publicNotes(r))details.append(el('p','Note : '+publicNotes(r),'reservationNotes'));
  if(r.confirmedAt)details.append(el('p','Confirmée le '+new Date(r.confirmedAt).toLocaleString('fr-FR')));
  if(r.seatedAt){const start=new Date(r.seatedAt);const end=new Date(start.getTime()+(Number(r.duration)||90)*60000);details.append(el('p','Installation réelle : '+start.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})+' · Fin estimée : '+end.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})));const remaining=Math.ceil((end-Date.now())/60000);details.append(el('p',remaining>0?remaining+' min restantes (estimation)':'Fin estimée dépassée de '+Math.abs(remaining)+' min'));const track=el('progress');track.max=100;track.value=Math.min(100,Math.max(0,100-(remaining/(Number(r.duration)||90))*100));details.append(track)}
@@ -500,7 +509,7 @@ function render(){
  });
  window.lucide?.createIcons?.();
 }
-$('reservationDate').value=new Date().toLocaleDateString('en-CA');
+$('reservationDate').dataset.emptyLabel='Toutes les dates';$('reservationDate').value=reservationDay();
 $('reservationDate').addEventListener('change',render);$('reservationQuery').addEventListener('input',()=>{if($('reservationQuery').value.trim()){$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))}else render()});
 $('reservationShowAll').addEventListener('click',()=>{$('reservationDate').value='';$('reservationDate').dispatchEvent(new Event('change',{bubbles:true}))});
 $('editSuccessClose')?.addEventListener('click',()=>{$('editSuccessToast').hidden=true});
@@ -527,7 +536,7 @@ $('editForm').addEventListener('submit',async e=>{
   savingEdit=true;controls.forEach(({control})=>{control.disabled=true});
   try{
    if(!editingBase||editingBase.id!==editing)throw business('Rouvrez la fiche avant de la modifier.');
-   const updated=window.ReservationEdit.candidate(editingBase,{client:$('editClient').value,hotelRoom:$('editHotelRoom').value,
+   const updated=window.ReservationEdit.candidate(editingBase,{type:editGuestType(),client:$('editClient').value,hotelRoom:$('editHotelRoom').value,
     date:$('editDate').value,time:$('editTime').value,guests:$('editGuests').value,tables:window.RestoReception?editingBase.tables.slice():chosenTables,
     notes:savedNotes($('editNotes').value,editingBase||editing),allergies:$('editAllergies').value});
    if(!window.RestoReception&&!updated.tables.length)throw business('Choisissez une table');

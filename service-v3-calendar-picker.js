@@ -8,7 +8,7 @@
  const root=document.createElement('div');root.className='rmCalendarOverlay';root.hidden=true;
  root.innerHTML='<div class="rmCalendarBackdrop"></div><section class="rmCalendarDialog" role="dialog" aria-modal="true" aria-labelledby="rmCalendarTitle"><header><div><span class="rmCalendarEyebrow">CHOIX DE LA DATE</span><h2 id="rmCalendarTitle">Calendrier</h2></div><button type="button" class="rmCalendarClose" aria-label="Fermer"><i data-lucide="x"></i></button></header><div class="rmCalendarNav"><button type="button" class="rmCalendarPrev" aria-label="Mois précédent"><i data-lucide="chevron-left"></i></button><div class="rmCalendarMonth"></div><button type="button" class="rmCalendarNext" aria-label="Mois suivant"><i data-lucide="chevron-right"></i></button></div><div class="rmCalendarWeek"><span>Lun</span><span>Mar</span><span>Mer</span><span>Jeu</span><span>Ven</span><span>Sam</span><span>Dim</span></div><div class="rmCalendarDays" role="group" aria-label="Jours du mois"></div><div class="rmCalendarActions"><button type="button" class="rmCalendarToday">Aujourd’hui</button><button type="button" class="rmCalendarCancel">Annuler</button></div></section>';
  document.body.append(root);
- let active=null,previousFocus=null,year,month;
+ let active=null,previousFocus=null,year,month;const updates=new Map();
  const days=root.querySelector('.rmCalendarDays');
  const allowed=value=>{if(!active)return false;const min=active.getAttribute('min'),max=active.getAttribute('max');return (!min||value>=min)&&(!max||value<=max)};
  const close=()=>{root.hidden=true;document.body.classList.remove('rmCalendarOpen');active=null;previousFocus?.focus?.({preventScroll:true})};
@@ -27,15 +27,17 @@
   const wrapper=document.createElement('span');wrapper.className='rmCalendarField';input.parentNode.insertBefore(wrapper,input);wrapper.append(input);
   const trigger=document.createElement('button');trigger.type='button';trigger.className='rmCalendarTrigger';trigger.setAttribute('aria-label','Choisir une date');trigger.addEventListener('click',()=>open(input));wrapper.append(trigger);
   input.classList.add('rmCalendarInput');input.tabIndex=-1;
-  const update=()=>{trigger.disabled=input.disabled;trigger.replaceChildren();const label=document.createElement('span');label.textContent=parse(input.value)?parse(input.value).toLocaleDateString('fr-FR'):'Choisir une date';const icon=document.createElement('i');icon.setAttribute('data-lucide','calendar-days');trigger.append(label,icon);window.lucide?.createIcons?.();trigger.classList.toggle('isEmpty',!parse(input.value))};
-  input.addEventListener('input',update);input.addEventListener('change',update);
-  const observer=new MutationObserver(update);observer.observe(input,{attributes:true,attributeFilter:['value','disabled','min','max']});
+  const update=()=>{trigger.disabled=input.disabled;trigger.replaceChildren();const label=document.createElement('span');label.textContent=parse(input.value)?parse(input.value).toLocaleDateString('fr-FR'):(input.dataset.emptyLabel||'Choisir une date');const icon=document.createElement('i');icon.setAttribute('data-lucide','calendar-days');trigger.append(label,icon);window.lucide?.createIcons?.();trigger.classList.toggle('isEmpty',!parse(input.value))};
+  updates.set(input,update);input.addEventListener('input',update);input.addEventListener('change',update);
+  const observer=new MutationObserver(update);observer.observe(input,{attributes:true,attributeFilter:['value','disabled','min','max','data-empty-label']});
   update();
   // Certaines vues changent la valeur en JavaScript sans émettre d'événement.
   wrapper.addEventListener('pointerenter',update);
  }
  inputs.forEach(attach);
- window.RestoCalendar={attach};
+ const refresh=input=>{if(input){updates.get(input)?.();return;}for(const [field,update] of updates){if(field.isConnected)update();else updates.delete(field)}};
+ window.RestoCalendar={attach,refresh};
+ for(const event of ['restomanager:editor-open','restomanager:screen','restomanager:v3-change','restomanager:supabase-snapshot'])window.addEventListener(event,()=>refresh());
  root.querySelector('.rmCalendarPrev').addEventListener('click',()=>{month--;if(month<0){month=11;year--}render()});
  root.querySelector('.rmCalendarNext').addEventListener('click',()=>{month++;if(month>11){month=0;year++}render()});
  root.querySelector('.rmCalendarToday').addEventListener('click',()=>{const d=new Date();const value=iso(d.getFullYear(),d.getMonth(),d.getDate());if(allowed(value))choose(value);else{year=d.getFullYear();month=d.getMonth();render()}});
