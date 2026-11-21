@@ -42,7 +42,7 @@ async function main(){
  grant usage on schema public,auth to anon,authenticated,service_role;grant all on schema public to supabase_auth_admin;
 `);
  const ports={auth:await freePort(),rest:await freePort(),realtime:await freePort()};const gatewayPort=await freePort();const url='http://127.0.0.1:'+gatewayPort;
- await runContainer('auth',{GOTRUE_API_HOST:'0.0.0.0',GOTRUE_API_PORT:9999,API_EXTERNAL_URL:url+'/auth/v1',GOTRUE_SITE_URL:url,GOTRUE_DB_DRIVER:'postgres',GOTRUE_DB_DATABASE_URL:`postgres://supabase_auth_admin:${password}@${name}-db:5432/postgres`,GOTRUE_JWT_SECRET:secret,GOTRUE_JWT_ADMIN_ROLES:'service_role',GOTRUE_JWT_AUD:'authenticated',GOTRUE_JWT_DEFAULT_GROUP_NAME:'authenticated',GOTRUE_JWT_EXP:3600,GOTRUE_EXTERNAL_EMAIL_ENABLED:true,GOTRUE_MAILER_AUTOCONFIRM:true,GOTRUE_DISABLE_SIGNUP:true,GOTRUE_SMTP_HOST:'127.0.0.1',GOTRUE_SMTP_PORT:1025},['-p',`127.0.0.1:${ports.auth}:9999`]);
+ await runContainer('auth',{GOTRUE_API_HOST:'0.0.0.0',GOTRUE_API_PORT:9999,API_EXTERNAL_URL:url+'/auth/v1',GOTRUE_SITE_URL:url,GOTRUE_DB_DRIVER:'postgres',GOTRUE_DB_DATABASE_URL:`postgres://supabase_auth_admin:${password}@${name}-db:5432/postgres`,GOTRUE_JWT_SECRET:secret,GOTRUE_JWT_ADMIN_ROLES:'service_role',GOTRUE_JWT_AUD:'authenticated',GOTRUE_JWT_DEFAULT_GROUP_NAME:'authenticated',GOTRUE_JWT_EXP:process.argv.includes('--rm015')?172800:3600,GOTRUE_EXTERNAL_EMAIL_ENABLED:true,GOTRUE_MAILER_AUTOCONFIRM:true,GOTRUE_DISABLE_SIGNUP:true,GOTRUE_SMTP_HOST:'127.0.0.1',GOTRUE_SMTP_PORT:1025},['-p',`127.0.0.1:${ports.auth}:9999`]);
  await waitFor(async()=>{const r=await fetch(`http://127.0.0.1:${ports.auth}/health`);return r.ok;},'Auth');
  // Standard self-hosted bootstrap: retain real GoTrue Auth objects and support
  // both current PostgREST JWT claims and older per-claim GUCs (no user stub).
@@ -71,6 +71,14 @@ async function main(){
  const day=await sql("select ((now() at time zone 'Europe/Paris')::date+1)::text;");
  const devSnapshot=process.argv.includes('--dev-snapshot');
  const context={url,anonKey,accounts,sql,day,assert,ports,root,devSnapshot};
+ if(process.argv.includes('--rm015')){
+  for(const file of ['mission2_reservation_edits.sql','mission3_validation_integration.sql','reception_right_size_recommendations.sql','platform_owner_foundation.sql','bug01_private_reports.sql'])await sql(fs.readFileSync(path.join(root,'supabase/scripts',file),'utf8'));
+  await require('./rm015-bootstrap.cjs')(context);
+  await waitFor(async()=>{const {data,error}=await accounts[0].client.rpc('service_sync_state_v1');return !error&&data?.capabilities?.public_booking===1;},'RM015 schema cache');
+  const result=await require('./rm015-sync.cjs')({...context,serviceKey});
+  if(process.env.MISSION3_ARTIFACTS){fs.mkdirSync(process.env.MISSION3_ARTIFACTS,{recursive:true});fs.writeFileSync(path.join(process.env.MISSION3_ARTIFACTS,'rm015-sync-results.json'),JSON.stringify({status:'passed',images,...result},null,2));}
+  console.log(JSON.stringify(result));for(const a of accounts)if(a.client){await a.client.removeAllChannels();await a.client.auth.signOut();}return;
+ }
  console.log('INFO isolated components started; real Auth sessions established for two fictional restaurants');
  const legacy=await require('./browser-tests.cjs')({...context,readOnlyPhase:true});
  await sql(fs.readFileSync(path.join(root,'supabase/scripts/mission2_reservation_edits.sql'),'utf8'));
