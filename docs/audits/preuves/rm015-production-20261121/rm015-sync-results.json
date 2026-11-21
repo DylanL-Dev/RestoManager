@@ -73,15 +73,15 @@
   "latencies": [
     {
       "width": 390,
-      "createdToBothSnapshotsMs": 721
+      "createdToBothSnapshotsMs": 285
     },
     {
       "width": 768,
-      "createdToBothSnapshotsMs": 647
+      "createdToBothSnapshotsMs": 757
     },
     {
       "width": 1440,
-      "createdToBothSnapshotsMs": 926
+      "createdToBothSnapshotsMs": 810
     }
   ],
   "transport": "Real local Auth, PostgREST and Realtime WebSockets; actual public HTTP handler and staff application. No simulated push or RPC. Loopback only.",

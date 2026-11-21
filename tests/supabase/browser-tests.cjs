@@ -48,8 +48,8 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
   if(!loginUi){const {data:{session}}=await account.client.auth.getSession();await context.addInitScript(session=>localStorage.setItem('sb-127-auth-token',JSON.stringify(session)),session);}
   await context.route('**/*',route=>{const origin=new URL(route.request().url()).origin;return [appUrl,url].includes(origin)?route.continue():route.abort();});
   await context.routeWebSocket('**/*',ws=>{const origin=new URL(ws.url()).origin.replace(/^ws/,'http');if(origin!==url){ws.close();return;}ws.connectToServer();});
-  const page=await context.newPage();if(clock)await page.clock.install({time:new Date(clock)});const errors=[],realtimeEvents=[];page.on('pageerror',error=>errors.push(error.message));
-  page.on('websocket',socket=>socket.on('framereceived',frame=>{try{const wire=JSON.parse(String(frame.payload)),message=Array.isArray(wire)?{event:wire[3],payload:wire[4]}:wire,data=message.payload?.data;if(message.event==='postgres_changes'&&data?.schema==='public'&&data.table==='reservations')realtimeEvents.push({receivedAt:Date.now(),type:data.type,id:data.record?.id});}catch{}}));
+  const page=await context.newPage();if(clock)await page.clock.install({time:new Date(clock)});const errors=[],realtimeEvents=[],realtimeSubscriptions=[];page.on('pageerror',error=>errors.push(error.message));
+  page.on('websocket',socket=>socket.on('framereceived',frame=>{try{const wire=JSON.parse(String(frame.payload)),message=Array.isArray(wire)?{event:wire[3],payload:wire[4]}:wire,data=message.payload?.data;if(message.event==='phx_reply'&&message.payload?.status==='ok'&&message.payload.response?.postgres_changes?.some(change=>change.schema==='public'&&change.table==='reservations'))realtimeSubscriptions.push({receivedAt:Date.now()});if(message.event==='postgres_changes'&&data?.schema==='public'&&data.table==='reservations')realtimeEvents.push({receivedAt:Date.now(),type:data.type,id:data.record?.id});}catch{}}));
   if(loginUi){
    await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();
    try{await page.waitForURL('**/v3-connected.html');}
@@ -80,7 +80,7 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
    await welcome.locator('.restoTourLater').click();
    await welcome.waitFor({state:'hidden'});
   }
-  return {context,page,errors,realtimeEvents};
+  return {context,page,errors,realtimeEvents,realtimeSubscriptions};
  }
  async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();const card=page.locator('.reservationItem').filter({hasText:'Client fictif 1'});await card.locator('[data-reservation-action=edit]').click();await page.locator('#editForm').waitFor({state:'visible'});}
  function persist(){if(process.env.MISSION3_ARTIFACTS){fs.mkdirSync(process.env.MISSION3_ARTIFACTS,{recursive:true});fs.writeFileSync(path.join(process.env.MISSION3_ARTIFACTS,'real-browser-results.json'),JSON.stringify({passed:results.filter(r=>r.status==='passed').length,failed:results.filter(r=>r.status==='failed').length,results},null,2));}}
