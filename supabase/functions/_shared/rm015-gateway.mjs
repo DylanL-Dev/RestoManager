@@ -41,14 +41,16 @@ export function createPublicHandler({rpc,keys,activeKey,rateSecret,allowedOrigin
   if(request.method!=='POST')return response({error:{code:'METHOD',message:'Méthode non acceptée.'}},405);
   if(!enabled)return response({error:{code:'STAGED',message:'Les réservations en ligne ne sont pas encore activées.'}},503);
   try{
-   const body=await jsonBody(request);if(!actions.has(body.action)||typeof body.restaurant!=='string'||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(body.restaurant)||body.restaurant.length>80)invalid();
+   const body=await jsonBody(request),widgetCheck=environment==='dev'&&body.action==='verify-widget';if((!actions.has(body.action)&&!widgetCheck)||typeof body.restaurant!=='string'||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(body.restaurant)||body.restaurant.length>80)invalid();
    if(body.challenge!==undefined&&(typeof body.challenge!=='string'||!body.challenge||body.challenge.length>2048))invalid();
    const ip=ipForRequest?.(request);if(!ip||ip.length>160)throw Object.assign(Error('Connexion non vérifiable. Réessayez.'),{status:503,code:'NETWORK'});
-   const ipHash=await fingerprint(rateSecret,ip),bucket=body.action==='hold'?'hold':body.action==='profile'||body.action==='availability'?'read':'manage';
+   const ipHash=await fingerprint(rateSecret,ip),bucket=widgetCheck?'verify':body.action==='hold'?'hold':body.action==='profile'||body.action==='availability'?'read':'manage';
    // Separate transaction: unsuccessful business requests also consume their rate budget.
-   const limit=await rpc('rm015_rate_v1',{p_key:ipHash,p_bucket:bucket,p_limit:bucket==='hold'?12:bucket==='read'?120:60,p_seconds:900});
+   const limit=await rpc('rm015_rate_v1',{p_key:ipHash,p_bucket:bucket,p_limit:bucket==='hold'||bucket==='verify'?12:bucket==='read'?120:60,p_seconds:900});
    if(limit.error)throw Error('Rate store unavailable');
    if(!limit.data?.allowed)return response({error:{code:'RATE',message:'Trop de demandes. Réessayez dans quelques minutes.'}},429);
+   // DEV-only operator check: Siteverify and a rate counter, never a booking RPC.
+   if(widgetCheck){if(!await verifyChallenge(body.challenge,ip))return response({error:{code:'CHALLENGE',message:'La vérification n’a pas abouti. Réessayez.'}},429);return response({data:{verified:true},environment,emailDelivery:'not-activated'});}
    if(bucket==='hold'&&limit.data.count>3&&!await verifyChallenge(body.challenge,ip))return response({error:{code:'CHALLENGE',message:'Plusieurs demandes ont été effectuées. Patientez avant de réessayer.'}},429);
    const payload={restaurant:body.restaurant};
    if(['availability','hold','submit','modify'].includes(body.action))payload.draft=draft(body.draft,body.action!=='availability');

@@ -3,7 +3,7 @@
   "projectRef": "tnsrkargogckgtsxipwd",
   "publicBaseUrl": "https://dylanl-dev.github.io/RestoManager/",
   "activated": false,
-  "turnstileSiteKey": null,
+  "turnstileSiteKey": "0x4AAAAAAGLm9RaVvyWg-GtY",
   "mainBaseSha": "aab5454b82b33a2a7ecb8b01feb09b4b3198586f",
   "v3BaseSha": "17646fea5d6f1fff2e430babff10a8449bebe958"
 }
