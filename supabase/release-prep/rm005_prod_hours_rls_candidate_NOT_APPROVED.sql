@@ -1,0 +1,20 @@
+-- ARCHIVED: TARGETED RM-005 RLS SECURITY FIX ALREADY APPLIED IN SUPABASE PROD
+-- Date: 2026-11-14
+-- Project: tnsrkargogckgtsxipwd
+-- Supabase migration history name: rm005_prod_hours_rls_role_guard_20261114
+--
+-- IMPORTANT: THIS FILE IS DOCUMENTATION ONLY. DO NOT RE-EXECUTE ANY CANDIDATE
+-- SQL AGAINST PROD. Production is now patched; the previous version of this file
+-- has been superseded. Exact resulting definitions are in PostgreSQL pg_policies
+-- and the audit docs/releases/RM005_SECURITY_HOURS_RLS_APPLIED_20261114.md.
+--
+-- Changes: same_restaurant FOR ALL -> FOR SELECT restricted to tenant,
+-- admin_edit UPDATE -> tenant + fb_admin WITH CHECK,
+-- staff_read SELECT -> tenant + reception/fb_admin,
+-- writer_access untouched.
+--
+-- Test: Reception no-op UPDATE matched 0 rows; Restaurant matched 1 row,
+-- both in ROLLBACK transactions. Reservation count 149 before/after.
+-- Hour configuration MD5 stable across before/after.
+--
+-- FULL RM-005 DATABASE MIGRATIONS ARE NOT YET APPLIED; DO NOT MERGE MAIN.
