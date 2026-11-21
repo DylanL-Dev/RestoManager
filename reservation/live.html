@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' https://tnsrkargogckgtsxipwd.supabase.co/storage/v1/object/public/rm015-covers/; connect-src 'self' https://tnsrkargogckgtsxipwd.supabase.co https://challenges.cloudflare.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src https://challenges.cloudflare.com">
+  <meta name="theme-color" content="#146c55">
+  <title>Réserver une table — RestoManager</title>
+  <link rel="icon" href="../pwa-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="portal.css?v=20261121-rm01510">
+  <script defer src="../lucide-local.js?v=20261121-rm01510"></script>
+  <script type="module" src="live.mjs?v=20261121-rm01510"></script>
+</head>
+<body>
+  <a class="skip" href="#booking">Aller à la réservation</a>
+  <div class="demo-banner" id="liveBanner"><span class="demo-dot" aria-hidden="true"></span><strong>Réservation en ligne</strong><span>Votre lien personnel de réservation</span></div>
+  <header class="site-header wrap">
+    <a class="brand" id="homeLink" href="#booking" aria-label="Présentation du restaurant"><span class="brand-mark" aria-hidden="true"><i data-lucide="utensils"></i></span><span>RestoManager<small>UNE TABLE, UN BON MOMENT</small></span></a>
+    <a class="header-action" href="#booking"><i data-lucide="calendar-days"></i>Réserver une table</a>
+  </header>
+  <main class="wrap" id="main">
+    <section class="restaurant-intro" aria-labelledby="restaurantName" id="restaurantIntro">
+      <div class="eyebrow"><i data-lucide="map-pin"></i><span id="locality"></span></div>
+      <h1 id="restaurantName">Réserver une table</h1><p class="restaurant-subtitle" id="restaurantSubtitle"></p>
+    </section>
+    <div class="portal-layout" id="portalLayout">
+      <section class="restaurant-story" aria-label="Présentation du restaurant" id="story">
+        <div class="cover"><img src="dining.svg" width="800" height="540" alt="Illustration d’une table dressée dans un intérieur végétal"><span class="cover-caption">ILLUSTRATION · APERÇU DE DÉMONSTRATION</span><span class="cover-label"><i data-lucide="utensils"></i>Le plaisir de se retrouver</span></div>
+        <div class="story-text"><span class="eyebrow">BIENVENUE À VOTRE TABLE</span><h2 id="introduction"></h2><p id="description"></p>
+          <div class="story-features"><span><i data-lucide="calendar-days"></i>Votre date, votre horaire</span><span><i data-lucide="users-round"></i>À deux ou à plusieurs</span></div>
+        </div>
+        <div class="reassurance"><span class="soft-icon"><i data-lucide="check-circle-2"></i></span><div><strong>Simple, du début à la fin</strong><p>Choisissez votre venue, renseignez vos coordonnées et retrouvez le récapitulatif en quelques instants.</p></div></div>
+      </section>
+      <section class="booking-card" id="booking" aria-label="Réserver une table" tabindex="-1"></section>
+    </div>
+    <section class="practical profile-practical" aria-label="Informations pratiques">
+      <article class="profile-card" id="publicContact" hidden><h2><i data-lucide="map-pin" aria-hidden="true"></i> Nous trouver et nous contacter</h2><address id="publicAddress" hidden></address><a id="publicPhone" class="profile-link" hidden></a><a id="publicMap" class="profile-link" target="_blank" rel="noopener noreferrer" hidden>Voir l’itinéraire <i data-lucide="arrow-up-right" aria-hidden="true"></i></a></article>
+      <details class="profile-card opening-hours" id="publicHours" hidden><summary><span><i data-lucide="clock-3" aria-hidden="true"></i> Horaires de réservation</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary><div id="publicHoursBody"></div><p class="hint">De la première arrivée à la dernière réservation. Choisissez une date pour vérifier les disponibilités du jour.</p></details>
+      <article class="profile-card"><h2><i data-lucide="link-2" aria-hidden="true"></i> Retrouvez votre réservation</h2><p>Gardez votre lien personnel pour consulter, modifier ou annuler votre réservation.</p><p>Pour essayer sans modifier les données, utilisez <a href="index.html?restaurant=a-lepicerie-rouen">la démonstration</a>.</p></article>
+    </section>
+  </main>
+  <footer class="wrap site-footer"><span>Une expérience proposée par <strong>RestoManager</strong></span><div><button type="button" id="privacy" disabled>Confidentialité</button><button type="button" id="conditions" disabled>Conditions de réservation</button></div><small id="liveFooter">Conservez votre lien personnel de réservation.</small></footer>
+  <dialog id="infoDialog" aria-labelledby="infoTitle"><div class="dialog-head"><h2 id="infoTitle"></h2><button type="button" id="closeInfo" class="icon-button" aria-label="Fermer"><i data-lucide="x"></i></button></div><div id="infoBody"></div><button type="button" id="acceptInfo" class="primary">J’ai compris</button></dialog>
+  <dialog id="verificationDialog" aria-labelledby="verificationTitle"><div class="dialog-head"><h2 id="verificationTitle">Vérification rapide</h2></div><p role="status"></p><div data-verification-widget></div><button type="button" data-verification-cancel class="secondary">Revenir à ma réservation</button></dialog>
+  <p class="sr-only" role="status" id="live"></p>
+  <noscript><p class="noscript">Activez JavaScript pour consulter les horaires. Aucune réservation ne peut être effectuée sans validation du service.</p></noscript>
+</body>
+</html>

@@ -20,8 +20,12 @@ test('RM-006 assistance: coherent HTML/CSS/JS modules, with PROD-only auth',()=>
   assert.match(html,/creator-auth\.js\?v=20261114-rm006-root1/);
   assert.match(auth,/creator-admin\.js\?v=20261114-rm006-root1/);
   assert.match(auth,/creator-console\.js\?v=20261114-rm006-root1/);
-  assert.match(auth,/https:\/\/tnsrkargogckgtsxipwd\.supabase\.co/);
-  assert.doesNotMatch(auth,/restomanager-env\.js|lykoybacslvmhtzftqsf/);
+  const prodEnvironment=read('restomanager-env.js');
+  assert.match(auth,/restomanager-env\.js\?v=2026\.11\.21-rm015\.10-main/);
+  assert.match(prodEnvironment,/https:\/\/tnsrkargogckgtsxipwd\.supabase\.co/);
+  assert.match(prodEnvironment,/dylanl-dev\.github\.io/);
+  assert.doesNotMatch(auth,/lykoybacslvmhtzftqsf|sb_secret_|service_role/i);
+  assert.doesNotMatch(prodEnvironment,/lykoybacslvmhtzftqsf|sb_secret_|service_role/i);
   assert.match(consoleJs,/ownerDrawerOpen/);
   assert.match(consoleJs,/ownerNavBackdrop/);
   assert.match(css,/ownerNavBackdrop/);

@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "channel": "production",
+  "projectRef": "tnsrkargogckgtsxipwd",
+  "publicOrigin": "https://dylanl-dev.github.io",
+  "publicBasePath": "/RestoManager/",
+  "activated": false,
+  "api": null,
+  "allowedApiOrigin": null,
+  "turnstileSiteKey": null
+}
