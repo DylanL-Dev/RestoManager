@@ -29,14 +29,15 @@
   return cleaned;
  }
  function candidate(base,values){
-  const hotelRoom=base.type==='hotel'?String(values.hotelRoom||'').trim():'';
+  const type=base.channel==='web'&&['hotel','exterieur'].includes(values.type)?values.type:base.type;
+  const hotelRoom=type==='hotel'?String(values.hotelRoom||'').trim():'';
   let client=String(values.client||'').trim();
   // Old hotel bookings use the room as guest_name. Follow that alias when the
   // room alone changes, but never replace an actual guest name.
   if(base.type==='hotel'&&hotelRoom&&base.client===base.hotelRoom&&client===base.client)client=hotelRoom;
-  if(!client&&base.type==='exterieur')throw (globalThis.RestoErrors?.business?.('Le nom du client extérieur est obligatoire.')||Error('Nom du client extérieur obligatoire'));
+  if(!client&&type==='exterieur')throw (globalThis.RestoErrors?.business?.('Le nom du client extérieur est obligatoire.')||Error('Nom du client extérieur obligatoire'));
   if(!client)client='Chambre '+(hotelRoom||'non renseignée');
-  return {...base,client,hotelRoom,date:values.date,time:values.time,guests:Number(values.guests),
+  return {...base,type,client,hotelRoom,date:values.date,time:values.time,guests:Number(values.guests),
    tables:(values.tables||[]).slice(),notes:detail(base,'notes',values.notes),
    allergies:detail(base,'allergies',values.allergies)};
  }
