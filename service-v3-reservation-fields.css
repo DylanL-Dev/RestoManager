@@ -373,3 +373,7 @@ html.reception #bookingForm > .bookingSubmitPrimary,
 html.reception #editForm.editFormModern .editFormActions button{
  font-family:inherit;
 }
+/* Readable edit help, including Web guest profile corrections. */
+html:not([data-theme="dark"]) #editForm.editFormModern :is(.reservationFieldCaption small,#editNotesLimit,#editAllergiesLimit){color:#52675c!important}
+/* Theme colors must switch together: inherited dark text cannot precede the background. */
+#editForm.editFormModern .reservationField .tableChoiceTrigger{transition:transform var(--motion-fast) var(--motion-ease),box-shadow var(--motion-fast) ease}

@@ -1,7 +1,7 @@
 import {supabase,requireStaff,subscribeSharedService,loadSharedService} from './supabase-service-bridge.js?v=20261117-rm012';
 import {installFeedback} from './service-v3-feedback.js?v=20261116-rm013a3';
 import {installTutorial} from './service-v3-tutorial.js?v=20261117-rm016';
-import {prepareServiceSnapshot} from './service-snapshot.js?v=20261114-rm009-shared-threshold1';
+import {prepareServiceSnapshot} from './service-snapshot.js?v=20261118-rm0152';
 import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {decodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 const style=document.getElementById('integrationGate');
@@ -330,7 +330,8 @@ try{
   // Only the Restaurant role may submit them, after shared data is writable.
   const permittedRoomRename=!window.RestoReception&&form?.classList.contains('roomManagerRenameForm');
   const permittedCloseout=!window.RestoReception&&window.RestoServiceCapabilities?.service_regularization===1&&form?.id==='rm012ConfirmationForm';
-  const permittedForm=form&&(allowedForms.includes(form.id)||permittedRoomRename||permittedCloseout);
+  const permittedWeb=!window.RestoReception&&window.RestoServiceCapabilities?.public_booking===1&&form?.id==='rm015WebSettings';
+  const permittedForm=form&&(allowedForms.includes(form.id)||permittedRoomRename||permittedCloseout||permittedWeb);
   if(e.type==='submit' && form && (!permittedForm||(!window.RestoSupabaseReady&&form.id!=='reportIssueForm'))){e.preventDefault();e.stopImmediatePropagation();const message=form.id==='bookingForm'?'Connexion en cours. Patientez avant d’enregistrer.':'Cette fonction de gestion est temporairement indisponible.';const feedback=document.getElementById(form.id==='bookingForm'?'bookingFeedback':form.id==='tableAdminForm'?'tableAdminFeedback':form.id==='fusionForm'?'fusionMessage':'reservationMessage');if(feedback)feedback.textContent=message;label.textContent=message;return;}
   if(e.type==='click'){
    const btn=target.closest?.('button');

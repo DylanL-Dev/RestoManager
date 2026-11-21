@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.17-rm016.1",
+  "currentVersion": "2026.11.21-rm015.10-main",
   "releases": [
+    {
+      "version": "2026.11.21-rm015.10-main",
+      "date": "2026-11-21",
+      "title": "Réservations en ligne et suivi partagé",
+      "changes": [
+        "Un portail client par restaurant, ouvert seulement après configuration et validation.",
+        "Les réservations Web rejoignent les vues Restaurant et Réception, avec leurs droits habituels.",
+        "Les dates, horaires indisponibles et délais sont expliqués."
+      ],
+      "impact": "Le portail reste fermé tant que son ouverture n’est pas validée. Les emails restent désactivés.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.17-rm016.1",
       "date": "2026-11-17",
