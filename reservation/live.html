@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://lykoybacslvmhtzftqsf.supabase.co/storage/v1/object/public/rm015-covers/; connect-src 'self' https://lykoybacslvmhtzftqsf.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://challenges.cloudflare.com; style-src 'self'; img-src 'self' https://lykoybacslvmhtzftqsf.supabase.co/storage/v1/object/public/rm015-covers/; connect-src 'self' https://lykoybacslvmhtzftqsf.supabase.co https://challenges.cloudflare.com; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src https://challenges.cloudflare.com">
   <meta name="theme-color" content="#146c55">
   <title>Réserver une table — RestoManager · Recette connectée</title>
   <link rel="icon" href="../pwa-icon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="portal.css?v=20261120-rm0159">
-  <script defer src="../lucide-local.js?v=20261120-rm0159"></script>
-  <script type="module" src="live.mjs?v=20261120-rm0159"></script>
+  <link rel="stylesheet" href="portal.css?v=20261121-rm01510">
+  <script defer src="../lucide-local.js?v=20261121-rm01510"></script>
+  <script type="module" src="live.mjs?v=20261121-rm01510"></script>
 </head>
 <body>
   <a class="skip" href="#booking">Aller à la réservation</a>
@@ -41,8 +41,9 @@
       <article class="profile-card"><h2><i data-lucide="link-2" aria-hidden="true"></i> Retrouvez votre réservation</h2><p>Gardez votre lien personnel pour consulter, modifier ou annuler votre réservation.</p><p>Pour essayer sans modifier les données, utilisez <a href="index.html?restaurant=a-lepicerie-rouen">la démonstration</a>.</p></article>
     </section>
   </main>
-  <footer class="wrap site-footer"><span>Une expérience proposée par <strong>RestoManager</strong></span><div><button type="button" id="privacy" disabled>Confidentialité</button><button type="button" id="conditions" disabled>Conditions de réservation</button></div><small>Environnement de recette · Emails désactivés</small></footer>
+  <footer class="wrap site-footer"><span>Une expérience proposée par <strong>RestoManager</strong></span><div><button type="button" id="privacy" disabled>Confidentialité</button><button type="button" id="conditions" disabled>Conditions de réservation</button></div><small id="liveFooter">Environnement de recette · Emails désactivés</small></footer>
   <dialog id="infoDialog" aria-labelledby="infoTitle"><div class="dialog-head"><h2 id="infoTitle"></h2><button type="button" id="closeInfo" class="icon-button" aria-label="Fermer"><i data-lucide="x"></i></button></div><div id="infoBody"></div><button type="button" id="acceptInfo" class="primary">J’ai compris</button></dialog>
+  <dialog id="verificationDialog" aria-labelledby="verificationTitle"><div class="dialog-head"><h2 id="verificationTitle">Vérification rapide</h2></div><p role="status"></p><div data-verification-widget></div><button type="button" data-verification-cancel class="secondary">Revenir à ma réservation</button></dialog>
   <p class="sr-only" role="status" id="live"></p>
   <noscript><p class="noscript">Activez JavaScript pour consulter les horaires. Aucune réservation ne peut être effectuée sans validation du service.</p></noscript>
 </body>

@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "channel": "main",
+  "currentVersion": "2026.11.17-rm016.1",
+  "releases": [
+    {
+      "version": "2026.11.17-rm016.1",
+      "date": "2026-11-17",
+      "title": "Apprendre RestoManager à votre rythme",
+      "changes": [
+        "Deux niveaux et des petits parcours adaptés à votre équipe, avec des repères dans les vrais écrans.",
+        "Trois exercices fictifs permettent d’apprendre sans modifier le service réel.",
+        "L’aide recherchable et la progression sont accessibles depuis chaque écran.",
+        "Le bouton Voir les nouveautés est harmonisé, tactile et accessible au clavier."
+      ],
+      "impact": "Ouvrez Aide pour découvrir les guides et M’entraîner. Aucun exercice ne crée de vraie réservation.",
+      "requiresReload": true
+    },
+    {
+      "version": "2026.11.17-rm012.1",
+      "date": "2026-11-17",
+      "title": "Fin de service intelligente et clôture automatique sûre",
+      "changes": [
+        "Retrouvez les journées à vérifier, corrigez les oublis après confirmation et consultez un historique des actions.",
+        "Le suivi commence le 17 novembre 2026 ; les journées antérieures restent consultables sans nouveaux rappels.",
+        "Une journée terminée se clôture automatiquement si tout est finalisé et sans blocage, même application fermée.",
+        "Aucun client n’est déclaré absent et aucune table n’est libérée automatiquement."
+      ],
+      "impact": "Aucun client n’est déclaré absent et aucune table n’est libérée automatiquement. Aucun rattrapage automatique des journées antérieures au début du suivi.",
+      "requiresReload": true
+    },
+    {
+      "version": "2026.11.16-rm014.2",
+      "date": "2026-11-16",
+      "title": "Retirez les notifications déjà traitées",
+      "changes": [
+        "Glissez une notification à gauche ou à droite pour la retirer sur cet appareil.",
+        "Utilisez « Annuler » en cas d’erreur ou le bouton « Retirer » sur ordinateur.",
+        "Une nouvelle modification de la même réservation réapparaît ; l’historique des nouveautés reste accessible."
+      ],
+      "impact": "Le retrait est personnel à cet appareil. Les réservations et les notifications des collègues sont conservées.",
+      "requiresReload": true
+    },
+    {
+      "version": "2026.11.16-rm014.1",
+      "date": "2026-11-16",
+      "title": "Votre nouveau centre de notifications",
+      "changes": [
+        "Une cloche unique et un centre de notifications adapté à chaque écran.",
+        "Les événements d’une réservation sont regroupés ; les rappels résolus disparaissent.",
+        "Marquez vos notifications comme lues et reportez les rappels de dix minutes.",
+        "Consultez les nouveautés et mettez l’application à jour en préservant votre saisie."
+      ],
+      "impact": "Vos réservations, vos réglages et les droits de votre équipe sont conservés.",
+      "requiresReload": true
+    },
+    {
+      "version": "2026.11.16-rm013a3",
+      "date": "2026-11-16",
+      "title": "Une gestion plus claire, sur tous vos écrans",
+      "changes": [
+        "Les noms des salles restent lisibles sur mobile.",
+        "Les réglages de Gestion se déplient par rubrique.",
+        "Le formulaire Assistance reprend le style de l’application."
+      ],
+      "impact": "Les réglages et les données du restaurant sont conservés.",
+      "requiresReload": true
+    }
+  ]
+}

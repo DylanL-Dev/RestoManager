@@ -1,6 +1,8 @@
 import {requiresEmail,contactForSubmission,effectivePrivacyNotice} from './contact.mjs';
 import {guestLabel,guestErrors} from './guests.mjs';
-import {createBookingClient,BookingError} from './client.mjs';
+import {createBookingClient,BookingError} from './client.mjs?v=20261121-rm01510';
+import {publicRuntime} from './environment.mjs';
+import {createVerification} from './turnstile.mjs';
 import {presentCover} from './media.mjs';
 import {presentProfile,phoneURL} from '../public-restaurant-profile.mjs?v=20261120-rm0156';
 import {paris,addDays,relativeDateLabel,deadline} from './dates.mjs?v=20261120-rm0159';
@@ -10,7 +12,7 @@ const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const emptyContact=()=>({firstName:'',lastName:'',email:'',phone:'',notes:'',accepted:false,guestType:'external',hotelRoom:'',roomPending:false});
 let api,profile,step=1,slots=[],loading=false,busy=false,editing=false,dirty=false,record=null,token='',contact=emptyContact(),notice='',errors={},seq=0;
-let showAll=false,initialNotice='';
+let showAll=false,initialNotice='',official=false;
 let draft={party:2,date:paris().date,service:'dinner',time:''};
 const tell=text=>{$('live').textContent=text};
 const symbols=()=>window.lucide.createIcons();
@@ -39,7 +41,7 @@ function statusView(){
  const r=record,pending=['pending','pending_change'].includes(r.state),final=['cancelled','expired','rejected'].includes(r.state),proposal=r.state==='pending_change';
  const title=r.state==='pending'?'Votre demande est envoyée':proposal?'Votre modification attend une confirmation':r.state==='confirmed'?'Votre réservation est confirmée':r.state==='cancelled'?'Votre réservation est annulée':r.state==='expired'?'Votre demande a expiré':'Votre demande n’a pas été confirmée';
  const message=pending?'Le Restaurant doit confirmer votre demande. Vérifiez son état avec votre lien personnel.':r.state==='confirmed'?'Retrouvez ici les informations à jour de votre réservation.':'Contactez le restaurant si vous avez besoin d’aide.';
- return `<div class="success-icon">${icon(pending?'clock-3':final?'calendar-x':'check-circle-2')}</div><span class="status-badge${final?' cancelled':''}">${pending?'En attente du Restaurant':r.state==='confirmed'?'Confirmée':final?'Demande traitée':''}</span>${header(title,message)}<p class="reference">${esc(r.reference)}</p>${proposal?summary(r.booking,false,'Réservation initiale conservée')+summary(r.draft,false,'Nouvelle proposition à confirmer'):summary(r.booking||r.draft,true)}${pending?'<p class="form-note">Réponse attendue avant le '+esc(deadline(r.deadline))+'. '+(proposal?'Votre réservation initiale reste confirmée si cette proposition est refusée ou expire.':'Sans confirmation avant ce délai, la demande expirera et le maintien sera libéré.')+'</p>':''}${r.lastResult&&r.state==='confirmed'?'<p class="form-note">'+({expired:'La proposition de modification a expiré. Votre réservation initiale est conservée.',rejected:'La proposition de modification n’a pas été acceptée. Votre réservation initiale est conservée.',superseded:'Le Restaurant a mis à jour la réservation. Retrouvez le récapitulatif ci-dessus.'}[r.lastResult]||'Votre réservation a été mise à jour.')+'</p>':''}<p class="hint">Gardez votre lien personnel pour retrouver la réservation depuis un autre appareil. Dans cette recette DEV, aucun email n’est envoyé.</p><div class="button-stack">${r.canModify?button('edit','Modifier ma réservation'):''}${r.canCancel?button('askCancel','Annuler ma réservation','danger'):''}${button('refresh','Actualiser le suivi','secondary')}${token?button('copy',icon('copy')+' Copier mon lien personnel','secondary'):''}</div>${r.state==='expired'&&!r.contact?button('recheck','Revérifier cet horaire','primary')+button('anotherTime','Choisir un autre horaire','secondary'):''}${final?button('restart','Choisir une nouvelle réservation','text-button'):''}`;
+ return `<div class="success-icon">${icon(pending?'clock-3':final?'calendar-x':'check-circle-2')}</div><span class="status-badge${final?' cancelled':''}">${pending?'En attente du Restaurant':r.state==='confirmed'?'Confirmée':final?'Demande traitée':''}</span>${header(title,message)}<p class="reference">${esc(r.reference)}</p>${proposal?summary(r.booking,false,'Réservation initiale conservée')+summary(r.draft,false,'Nouvelle proposition à confirmer'):summary(r.booking||r.draft,true)}${pending?'<p class="form-note">Réponse attendue avant le '+esc(deadline(r.deadline))+'. '+(proposal?'Votre réservation initiale reste confirmée si cette proposition est refusée ou expire.':'Sans confirmation avant ce délai, la demande expirera et le maintien sera libéré.')+'</p>':''}${r.lastResult&&r.state==='confirmed'?'<p class="form-note">'+({expired:'La proposition de modification a expiré. Votre réservation initiale est conservée.',rejected:'La proposition de modification n’a pas été acceptée. Votre réservation initiale est conservée.',superseded:'Le Restaurant a mis à jour la réservation. Retrouvez le récapitulatif ci-dessus.'}[r.lastResult]||'Votre réservation a été mise à jour.')+'</p>':''}<p class="hint">Gardez votre lien personnel pour retrouver la réservation depuis un autre appareil. ${official?'Aucun email n’est envoyé pour le moment.':'Dans cette recette DEV, aucun email n’est envoyé.'}</p><div class="button-stack">${r.canModify?button('edit','Modifier ma réservation'):''}${r.canCancel?button('askCancel','Annuler ma réservation','danger'):''}${button('refresh','Actualiser le suivi','secondary')}${token?button('copy',icon('copy')+' Copier mon lien personnel','secondary'):''}</div>${r.state==='expired'&&!r.contact?button('recheck','Revérifier cet horaire','primary')+button('anotherTime','Choisir un autre horaire','secondary'):''}${final?button('restart','Choisir une nouvelle réservation','text-button'):''}`;
 }
 function render(focus=true,focusId){
  $('portalLayout').classList.toggle('compact-story',step!==1);card.setAttribute('aria-busy',String(busy));
@@ -106,16 +108,17 @@ window.addEventListener('hashchange',()=>{const next=new URLSearchParams(locatio
 setInterval(()=>{if(!busy&&!editing&&!document.hidden&&!$('infoDialog').open&&record&&['pending','pending_change'].includes(record.state)){const own=token;void api.read(own).then(r=>{if(own===token&&!editing&&!busy&&(r.version!==record.version||r.state!==record.state))adopt(r);}).catch(()=>{});}},30000);
 async function start(){
  try{
-  const response=await fetch('runtime.json',{cache:'no-store',credentials:'omit'}),runtime=await response.json();
-  if(!response.ok||runtime.schema!==1||runtime.channel!=='dev'||runtime.activated!==true||!runtime.api){
-   $('portalLayout').classList.add('compact-story');card.innerHTML=header('Les réservations en ligne ne sont pas encore ouvertes','Le parcours connecté sera disponible après validation du service DEV.')+'<p class="form-note">Aucune demande ne peut être envoyée depuis cet aperçu.</p><a class="primary" href="index.html?restaurant='+encodeURIComponent(slug||'a-lepicerie-rouen')+'">Voir le parcours de démonstration</a>';symbols();return;
+  const response=await fetch('runtime.json',{cache:'no-store',credentials:'omit'});if(!response.ok)throw new BookingError('La configuration du restaurant est indisponible.');const runtime=publicRuntime(await response.json(),location.href);
+  official=runtime.channel==='production';
+  if(runtime.activated!==true){
+   $('portalLayout').classList.add('compact-story');card.innerHTML=header('Les réservations en ligne ne sont pas encore ouvertes','Contactez directement le restaurant pour préparer votre venue.')+'<p class="form-note">Aucune demande ne peut être envoyée depuis cette page.</p><a class="primary" href="index.html?restaurant='+encodeURIComponent(slug||'a-lepicerie-rouen')+'">Voir le parcours de démonstration</a>';symbols();return;
   }
   let storage;try{storage=sessionStorage}catch{}
-  api=createBookingClient({endpoint:runtime.api,allowedOrigin:runtime.allowedApiOrigin,base:location.href,restaurant:slug,storage});
+  api=createBookingClient({endpoint:runtime.api,allowedOrigin:runtime.allowedApiOrigin,base:location.href,restaurant:slug,storage,challenge:runtime.turnstileSiteKey?createVerification({dialog:$('verificationDialog'),siteKey:runtime.turnstileSiteKey}):undefined});
   token=new URLSearchParams(location.hash.slice(1)).get('manage')||'';
   profile=await api.profile(token||undefined);if(!profile.name||!Number.isInteger(profile.maxParty)||!profile.today)throw new BookingError('Les informations du restaurant sont indisponibles.');
   presentCover(profile,runtime.allowedApiOrigin);$('restaurantName').textContent=profile.name;$('restaurantSubtitle').textContent='Réservez directement auprès de votre restaurant';$('locality').textContent='Votre restaurant';$('introduction').textContent='Un moment à partager, une table à retrouver.';$('description').textContent='Choisissez votre venue et retrouvez votre réservation avec votre lien personnel.';
-  presentProfile(profile);$('liveBanner').textContent='DEV · Données de l’établissement · Emails désactivés';$('privacy').disabled=false;$('conditions').disabled=false;
+  presentProfile(profile);$('liveBanner').textContent=runtime.channel==='dev'?'DEV · Données de l’établissement · Emails désactivés':'Réservation en ligne · Lien personnel sécurisé';if(runtime.channel==='production')$('liveFooter').textContent='Conservez votre lien personnel pour retrouver votre réservation.';$('privacy').disabled=false;$('conditions').disabled=false;
   const hotelEntry=new URLSearchParams(location.search).get('guest')==='hotel';
   if(hotelEntry&&!profile.hotelGuestsEnabled&&!token){const url=new URL(location.href);url.searchParams.delete('guest');card.innerHTML=header('Le parcours Hôtel n’est pas ouvert','Contactez la Réception ou le Restaurant pour réserver en tant que client de l’hôtel.')+'<a class="secondary" href="'+esc(url.href)+'">Réserver comme client extérieur</a>';symbols();return;}
   contact.guestType=profile.hotelGuestsEnabled?(hotelEntry?'hotel':''):'external';

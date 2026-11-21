@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "dev",
-  "currentVersion": "2026.11.20-rm015.9-dev",
+  "currentVersion": "2026.11.21-rm015.10-dev",
   "releases": [
+    {
+      "version": "2026.11.21-rm015.10-dev",
+      "date": "2026-11-21",
+      "title": "Préparer une ouverture fiable des réservations",
+      "changes": [
+        "Vérifications de synchronisation du portail avec les équipes Restaurant et Réception.",
+        "Séparation renforcée des environnements et préparation du portail officiel.",
+        "Vérification anti-abus progressive, sans perte de votre choix de réservation."
+      ],
+      "impact": "Préparation sur DEV. Le portail de production reste fermé et les emails désactivés.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.20-rm015.9-dev",
       "date": "2026-11-20",

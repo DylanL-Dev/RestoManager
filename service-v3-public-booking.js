@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const management=document.querySelector('[data-screen="administration"]');if(!management)return;
+ const management=document.querySelector('[data-screen="administration"]');if(!management)return;const preview=document.querySelector('meta[name=restomanager-channel]')?.content!=='main';
  const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n},icon=name=>{const i=el('i');i.dataset.lucide=name;i.setAttribute('aria-hidden','true');return i};
  const button=(text,run,cls='rmWebSecondary')=>{const b=el('button',cls,text);b.type='button';b.addEventListener('click',()=>void run());return b};
  const group=el('details','managementGroup');group.id='manageWeb';const head=el('summary','managementGroupHead');head.innerHTML='<span class="managementGroupIcon" aria-hidden="true"><i data-lucide="calendar-days"></i></span><span class="managementGroupWords"><strong>Réservations en ligne</strong><small>Demandes clients et réglages du portail</small></span><span class="managementChevron" aria-hidden="true"><i data-lucide="chevron-down"></i></span>';
@@ -144,10 +144,11 @@
  async function saveSettings(form){
   if(!writable()||photoWorking)return;const payload=formValue(form),errors=model.validate(payload);showErrors(form,errors);if(Object.keys(errors).length)return;
   const previous=document.activeElement,owner=scope,opening=!data.settings.enabled&&payload.enabled,closing=data.settings.enabled&&!payload.enabled,addressChanged=Boolean(data.settings.slug)&&payload.slug!==data.settings.slug;
+  if(opening&&document.querySelector('meta[name=restomanager-public-portal]')?.content==='closed'){status.textContent='Le portail officiel n’est pas encore ouvert. Préparez vos réglages en laissant les réservations en ligne désactivées.';return;}
   if(opening||closing||addressChanged){
    let message=opening?'Les clients pourront envoyer leurs demandes avec cette adresse : '+payload.slug+'. Maximum : '+payload.maxParty+' personnes. À partir de 4 personnes, votre accord sera nécessaire sous '+payload.pendingMinutes+' minutes. Les emails restent désactivés.':closing?'Les nouvelles demandes seront fermées. Les réservations existantes et leurs liens de gestion seront conservés.':'Les anciens liens et QR codes devront être remplacés. Le serveur refusera ce changement si des liens de réservation utilisent encore cette adresse.';
    if(addressChanged&&(opening||closing))message+=' L’adresse change aussi : les anciens liens et QR codes devront être remplacés.';
-   reviewing=true;render();let accepted=false;try{accepted=await window.RestoDialog?.confirm?.(message,{title:opening?'Ouvrir le portail DEV ?':closing?'Fermer les nouvelles demandes ?':'Changer l’adresse publique ?',acceptLabel:opening?'Oui, ouvrir sur DEV':closing?'Oui, fermer':'Oui, changer l’adresse'});}catch{status.textContent='La confirmation n’a pas pu être affichée. Aucun réglage n’a été envoyé.';}finally{reviewing=false;}
+   reviewing=true;render();let accepted=false;try{accepted=await window.RestoDialog?.confirm?.(message,{title:opening?(preview?'Ouvrir le portail DEV ?':'Ouvrir les réservations en ligne ?'):closing?'Fermer les nouvelles demandes ?':'Changer l’adresse publique ?',acceptLabel:opening?(preview?'Oui, ouvrir sur DEV':'Oui, ouvrir'):closing?'Oui, fermer':'Oui, changer l’adresse'});}catch{status.textContent='La confirmation n’a pas pu être affichée. Aucun réglage n’a été envoyé.';}finally{reviewing=false;}
    if(!accepted||owner!==identity()||!form.isConnected){render();if(owner===identity()&&previous?.isConnected)previous.focus();return;}
   }
   if(!writable()||owner!==identity())return;try{if(data.mediaEnabled===true&&photo?.prepare)payload.coverPath=await photo.prepare();}catch(e){if(owner===identity())status.textContent=e.message||'La photo n’a pas été enregistrée.';return;}if(!writable()||owner!==identity()||!form.isConnected)return;pending={action:'configure',payload:{...payload,operation:crypto.randomUUID()},owner};void send();

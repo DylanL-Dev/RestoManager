@@ -1,18 +1,21 @@
 const recordKeys=['reference','state','version','draft','booking','contact','deadline','tokenExpiresAt','canModify','canCancel','lastResult','emailStatus','managementToken'];
 export class BookingError extends Error{constructor(message,{code='NETWORK',status=0,uncertain=false}={}){super(message);this.code=code;this.status=status;this.uncertain=uncertain;}}
-export function createBookingClient({endpoint,base,restaurant,allowedOrigin,fetcher=fetch,storage,timeout=15000}){
+export function createBookingClient({endpoint,base,restaurant,allowedOrigin,fetcher=fetch,storage,timeout=15000,challenge}){
  const url=new URL(endpoint,base);if(url.origin!==new URL(base).origin&&url.origin!==allowedOrigin)throw Error('Unapproved API origin');
  if(url.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(url.hostname))throw Error('Secure API required');
  const key='rm0152:pending:'+restaurant;
  let pending=null;try{const p=JSON.parse(storage?.getItem(key)||'null');if(p&&/^[a-f0-9-]{36}$/i.test(p.key)&&/^[a-f0-9]{64}$/.test(p.proof))pending=p;}catch{}
  function persist(value){try{if(!storage)throw Error();if(value)storage.setItem(key,JSON.stringify(value));else storage.removeItem(key);}catch{throw new BookingError('Le stockage de cet onglet est indisponible. Autorisez-le ou contactez le restaurant.',{code:'STORAGE'});}pending=value;}
- async function call(action,args={}){
+ async function call(action,args={},challenged=false){
   const mutating=['hold','submit','modify','cancel','release'].includes(action);
   let response;
   try{response=await fetcher(url.href,{method:'POST',headers:{'Content-Type':'application/json'},credentials:'omit',referrerPolicy:'no-referrer',cache:'no-store',signal:AbortSignal.timeout(timeout),body:JSON.stringify({action,restaurant,...args})});}
   catch{throw new BookingError('La connexion a été interrompue. Vérifiez la demande avant de réessayer.',{uncertain:mutating});}
   let result;try{result=await response.json();}catch{throw new BookingError('La réponse du service ne peut pas être vérifiée.',{uncertain:mutating});}
-  if(!response.ok)throw new BookingError(result.error?.message||'Le service est indisponible.',{code:result.error?.code||'UNAVAILABLE',status:response.status,uncertain:mutating&&response.status>=500});
+  if(!response.ok){
+   if(action==='hold'&&response.status===429&&result.error?.code==='CHALLENGE'&&challenge&&!challenged){const token=await challenge();if(typeof token!=='string'||!token||token.length>2048)throw new BookingError('La vérification n’a pas abouti. Réessayez.',{code:'CHALLENGE'});return call(action,{...args,challenge:token},true);}
+   throw new BookingError(result.error?.message||'Le service est indisponible.',{code:result.error?.code||'UNAVAILABLE',status:response.status,uncertain:mutating&&response.status>=500});
+  }
   if(!result.data||typeof result.data!=='object')throw new BookingError('La réponse du service est incomplète.',{uncertain:mutating});
   return result.data;
  }
