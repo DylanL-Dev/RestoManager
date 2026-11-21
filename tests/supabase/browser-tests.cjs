@@ -49,7 +49,7 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
   await context.route('**/*',route=>{const origin=new URL(route.request().url()).origin;return [appUrl,url].includes(origin)?route.continue():route.abort();});
   await context.routeWebSocket('**/*',ws=>{const origin=new URL(ws.url()).origin.replace(/^ws/,'http');if(origin!==url){ws.close();return;}ws.connectToServer();});
   const page=await context.newPage();if(clock)await page.clock.install({time:new Date(clock)});const errors=[],realtimeEvents=[];page.on('pageerror',error=>errors.push(error.message));
-  page.on('websocket',socket=>socket.on('framereceived',frame=>{if(String(frame.payload).includes('postgres_changes'))realtimeEvents.push({receivedAt:Date.now()});}));
+  page.on('websocket',socket=>socket.on('framereceived',frame=>{try{const wire=JSON.parse(String(frame.payload)),message=Array.isArray(wire)?{event:wire[3],payload:wire[4]}:wire,data=message.payload?.data;if(message.event==='postgres_changes'&&data?.schema==='public'&&data.table==='reservations')realtimeEvents.push({receivedAt:Date.now(),type:data.type,id:data.record?.id});}catch{}}));
   if(loginUi){
    await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();
    try{await page.waitForURL('**/v3-connected.html');}

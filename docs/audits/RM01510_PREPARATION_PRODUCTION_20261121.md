@@ -69,7 +69,7 @@ Les résultats JSON et captures sont dans [le dossier de preuves](preuves/rm015-
 
 ### Synchronisation effectivement exercée
 
-Pour chacun des trois formats, le navigateur utilise le vrai formulaire public, son handler HTTP, la base locale, les connexions Auth réelles et deux sessions salariées distinctes. Les tests constatent la réception de trames WebSocket `postgres_changes`, puis le rendu dans les deux interfaces sans actualisation manuelle.
+Pour chacun des trois formats, le navigateur utilise le vrai formulaire public, son handler HTTP, la base locale, les connexions Auth réelles et deux sessions salariées distinctes. Les tests constatent dans chaque session une trame WebSocket `postgres_changes` de type `INSERT` sur `public.reservations`, portant l'identifiant exact de la réservation créée, puis le rendu dans les deux interfaces sans actualisation manuelle. Les accusés de connexion sont exclus ; le lecteur accepte les formats Phoenix 1 et 2 du SDK épinglé.
 
 1. Création Web : une réservation, affectation réelle d'une table, affichage côté Restaurant et Réception, compteurs du jour corrects ; absence d'accès depuis un autre établissement.
 2. Modification Restaurant : Extérieur vers Hôtel, chambre 204, heure 21 h 15 et journée suivante. Réception et lien personnel reçoivent le changement ; les compteurs et tables de la journée précédente restent cohérents. Les notes internes ne sont pas exposées au client.
@@ -77,7 +77,7 @@ Pour chacun des trois formats, le navigateur utilise le vrai formulaire public, 
 4. Annulation publique : mise à jour des deux sessions, disparition de l'occupation active. Les liens d'affectation historiques peuvent être conservés volontairement ; leur présence ne signifie pas qu'une table reste bloquée.
 5. Groupe de quatre : demande de confirmation visible au Restaurant, refus réel des droits Réception, deux validations Restaurant simultanées aboutissant à une seule réservation et un état client cohérent.
 
-Les délais locaux observés pour la création jusqu'aux deux états salariés sont de 443, 748 et 587 ms. Ce sont des observations de cette exécution, **pas une garantie de délai en production**. Les courses pour la dernière table, l'idempotence et les limites d'arrivées restent également couvertes par la suite SQL RM-015 existante.
+Les délais locaux observés pour la création jusqu'aux deux états salariés sont de 721, 647 et 926 ms. Ce sont des observations de cette exécution, **pas une garantie de délai en production**. Les courses pour la dernière table, l'idempotence et les limites d'arrivées restent également couvertes par la suite SQL RM-015 existante.
 
 ### Limites des vérifications
 
