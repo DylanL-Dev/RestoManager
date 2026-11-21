@@ -1,0 +1,91 @@
+{
+  "status": "passed",
+  "images": {
+    "db": "restomanager-mission3/postgres:17-bookworm-flattened",
+    "auth": "docker.io/supabase/gotrue:v2.197.0@sha256:1736a63078f5922b198c4cbe50f80ab9a2d3b54fe8b7b6cfb2e9dc5dbbc12c6b",
+    "rest": "docker.io/postgrest/postgrest:v16.5@sha256:1347d7552b88f17832912c06afbf7c43209af6eeeb60834b04aae12c9bd9d5cc",
+    "realtime": "restomanager-mission3/realtime:v2.151.3-flattened"
+  },
+  "passed": 15,
+  "failed": 0,
+  "results": [
+    {
+      "name": "Web create → actual Auth/REST/WebSocket → Restaurant and Reception with table and day totals 390",
+      "status": "passed"
+    },
+    {
+      "name": "Hotel, room, hour and service-day edits synchronize and preserve today 390",
+      "status": "passed"
+    },
+    {
+      "name": "Reception reconnect receives real changes and preserves its conflicting draft 390",
+      "status": "passed"
+    },
+    {
+      "name": "Public cancellation clears active occupation in both real employee sessions 390",
+      "status": "passed"
+    },
+    {
+      "name": "Group request, real Reception denial and simultaneous Restaurant approval yield one booking 390",
+      "status": "passed"
+    },
+    {
+      "name": "Web create → actual Auth/REST/WebSocket → Restaurant and Reception with table and day totals 768",
+      "status": "passed"
+    },
+    {
+      "name": "Hotel, room, hour and service-day edits synchronize and preserve today 768",
+      "status": "passed"
+    },
+    {
+      "name": "Reception reconnect receives real changes and preserves its conflicting draft 768",
+      "status": "passed"
+    },
+    {
+      "name": "Public cancellation clears active occupation in both real employee sessions 768",
+      "status": "passed"
+    },
+    {
+      "name": "Group request, real Reception denial and simultaneous Restaurant approval yield one booking 768",
+      "status": "passed"
+    },
+    {
+      "name": "Web create → actual Auth/REST/WebSocket → Restaurant and Reception with table and day totals 1440",
+      "status": "passed"
+    },
+    {
+      "name": "Hotel, room, hour and service-day edits synchronize and preserve today 1440",
+      "status": "passed"
+    },
+    {
+      "name": "Reception reconnect receives real changes and preserves its conflicting draft 1440",
+      "status": "passed"
+    },
+    {
+      "name": "Public cancellation clears active occupation in both real employee sessions 1440",
+      "status": "passed"
+    },
+    {
+      "name": "Group request, real Reception denial and simultaneous Restaurant approval yield one booking 1440",
+      "status": "passed"
+    }
+  ],
+  "latencies": [
+    {
+      "width": 390,
+      "createdToBothSnapshotsMs": 481
+    },
+    {
+      "width": 768,
+      "createdToBothSnapshotsMs": 726
+    },
+    {
+      "width": 1440,
+      "createdToBothSnapshotsMs": 772
+    }
+  ],
+  "transport": "Real local Auth, PostgREST and Realtime WebSockets; actual public HTTP handler and staff application. No simulated push or RPC. Loopback only.",
+  "clock": "Isolated service and browser calendar start tomorrow at midnight; real local Auth issues two-day tokens for this controlled-clock test.",
+  "storage": "SQL policy fixture only; hosted Storage and Edge deployment not exercised",
+  "sharedBusinessWrites": 0
+}

@@ -1,0 +1,60 @@
+{
+  "project": "tnsrkargogckgtsxipwd",
+  "checkedDate": "2026-11-21",
+  "readOnly": true,
+  "customerRowsRead": 0,
+  "results": [
+    {
+      "preflight": {
+        "realtime": [
+          "fb_reservation_alerts",
+          "reservation_tables",
+          "reservations",
+          "restaurant_hours",
+          "restaurant_rooms",
+          "restaurant_service_changes",
+          "restaurant_tables",
+          "service_closures",
+          "service_regularization_audit",
+          "table_fusion_links",
+          "table_holds"
+        ],
+        "prerequisites": {
+          "edit": true,
+          "vault": true,
+          "fusion": true,
+          "ranking": true,
+          "storage": true,
+          "arrivals": true,
+          "closeout": true,
+          "weekly_hours": true,
+          "mutation_lock": true
+        },
+        "web_functions": [],
+        "critical_tables": [
+          {
+            "rls": true,
+            "table": "reservation_tables",
+            "anon_select": false
+          },
+          {
+            "rls": true,
+            "table": "reservations",
+            "anon_select": false
+          },
+          {
+            "rls": true,
+            "table": "restaurant_tables",
+            "anon_select": false
+          },
+          {
+            "rls": true,
+            "table": "table_holds",
+            "anon_select": false
+          }
+        ],
+        "web_schema_present": false
+      }
+    }
+  ]
+}

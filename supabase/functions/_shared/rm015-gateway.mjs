@@ -42,6 +42,7 @@ export function createPublicHandler({rpc,keys,activeKey,rateSecret,allowedOrigin
   if(!enabled)return response({error:{code:'STAGED',message:'Les réservations en ligne ne sont pas encore activées.'}},503);
   try{
    const body=await jsonBody(request);if(!actions.has(body.action)||typeof body.restaurant!=='string'||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(body.restaurant)||body.restaurant.length>80)invalid();
+   if(body.challenge!==undefined&&(typeof body.challenge!=='string'||!body.challenge||body.challenge.length>2048))invalid();
    const ip=ipForRequest?.(request);if(!ip||ip.length>160)throw Object.assign(Error('Connexion non vérifiable. Réessayez.'),{status:503,code:'NETWORK'});
    const ipHash=await fingerprint(rateSecret,ip),bucket=body.action==='hold'?'hold':body.action==='profile'||body.action==='availability'?'read':'manage';
    // Separate transaction: unsuccessful business requests also consume their rate budget.

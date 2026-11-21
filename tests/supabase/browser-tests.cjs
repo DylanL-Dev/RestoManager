@@ -2,9 +2,9 @@
 const fs=require('node:fs');const path=require('node:path');const http=require('node:http');
 const assert=require('node:assert/strict');const {chromium}=require('playwright');
 
-module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=false}){
+module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=false,webSync,publicHandler,clock}){
  assert.equal(new URL(url).hostname,'127.0.0.1');
- const results=[];const contexts=[];let browser;let appUrl;
+ const results=[];const contexts=[];let browser;let appUrl;let publicApi;const publicRequests=new Set();
  // 2.119 uses dist/index.cjs; 2.57 used dist/main/index.js. Resolve the
  // same-version browser bundle from the package root, never inject Node CJS.
  const sdkRoot=path.dirname(require.resolve('@supabase/supabase-js/package.json'));
@@ -16,6 +16,11 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
  const sdk=fs.readFileSync(path.join(sdkRoot,'dist/umd/supabase.js'),'utf8');
  const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
+  if(webSync&&pathname==='/reservation/runtime.json'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({schema:1,channel:'dev',activated:true,api:appUrl+'/__rm015',allowedApiOrigin:appUrl}));return;}
+  if(webSync&&pathname==='/__rm015'){
+   const request=(async()=>{const chunks=[];for await(const c of req)chunks.push(c);const body=Buffer.concat(chunks);const response=await publicApi(new Request(appUrl+pathname,{method:req.method,headers:req.headers,...(body.length?{body}:{})}));res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));})();
+   publicRequests.add(request);request.then(()=>publicRequests.delete(request),()=>publicRequests.delete(request));return;
+  }
   if(pathname==='/__sdk.mjs'){res.setHeader('Content-Type','text/javascript');res.end('export const createClient=globalThis.__RestoAuditSDK.createClient;');return;}
   // The app now derives its endpoint from restomanager-env.js, not from
   // bridge/login literals. Serve a local-only replacement: NEVER allow this
@@ -35,15 +40,16 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
    res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.setHeader('Cache-Control','no-store');res.end(data);
   });
  });
- async function open(account,loginUi=false){
-  const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});contexts.push(context);
+ async function open(account,loginUi=false,width=390){
+  const context=await browser.newContext({viewport:{width,height:width<768?844:1024},isMobile:width<768,hasTouch:width<=1024,locale:'fr-FR',timezoneId:'Europe/Paris',serviceWorkers:'block'});contexts.push(context);
   // The modern bundle declares a local `var supabase`; Playwright evaluates
   // init scripts inside a wrapper. Publish that actual bundle explicitly.
   await context.addInitScript({content:sdk+'\n;globalThis.__RestoAuditSDK=supabase;'});
   if(!loginUi){const {data:{session}}=await account.client.auth.getSession();await context.addInitScript(session=>localStorage.setItem('sb-127-auth-token',JSON.stringify(session)),session);}
   await context.route('**/*',route=>{const origin=new URL(route.request().url()).origin;return [appUrl,url].includes(origin)?route.continue():route.abort();});
   await context.routeWebSocket('**/*',ws=>{const origin=new URL(ws.url()).origin.replace(/^ws/,'http');if(origin!==url){ws.close();return;}ws.connectToServer();});
-  const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
+  const page=await context.newPage();if(clock)await page.clock.install({time:new Date(clock)});const errors=[],realtimeEvents=[],realtimeSubscriptions=[];page.on('pageerror',error=>errors.push(error.message));
+  page.on('websocket',socket=>socket.on('framereceived',frame=>{try{const wire=JSON.parse(String(frame.payload)),message=Array.isArray(wire)?{event:wire[3],payload:wire[4]}:wire,data=message.payload?.data;if(message.event==='phx_reply'&&message.payload?.status==='ok'&&message.payload.response?.postgres_changes?.some(change=>change.schema==='public'&&change.table==='reservations'))realtimeSubscriptions.push({receivedAt:Date.now()});if(message.event==='postgres_changes'&&data?.schema==='public'&&data.table==='reservations')realtimeEvents.push({receivedAt:Date.now(),type:data.type,id:data.record?.id});}catch{}}));
   if(loginUi){
    await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();
    try{await page.waitForURL('**/v3-connected.html');}
@@ -74,14 +80,16 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
    await welcome.locator('.restoTourLater').click();
    await welcome.waitFor({state:'hidden'});
   }
-  return {context,page,errors};
+  return {context,page,errors,realtimeEvents,realtimeSubscriptions};
  }
  async function edit(page){await page.evaluate(()=>window.RestoScreens.show('reservations'));await page.locator('#reservationShowAll').click();const card=page.locator('.reservationItem').filter({hasText:'Client fictif 1'});await card.locator('[data-reservation-action=edit]').click();await page.locator('#editForm').waitFor({state:'visible'});}
  function persist(){if(process.env.MISSION3_ARTIFACTS){fs.mkdirSync(process.env.MISSION3_ARTIFACTS,{recursive:true});fs.writeFileSync(path.join(process.env.MISSION3_ARTIFACTS,'real-browser-results.json'),JSON.stringify({passed:results.filter(r=>r.status==='passed').length,failed:results.filter(r=>r.status==='failed').length,results},null,2));}}
  const passed=name=>{results.push({name,status:'passed'});persist();console.log('PASS '+name);};
  try{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));appUrl='http://127.0.0.1:'+server.address().port;
+  if(publicHandler)publicApi=publicHandler(appUrl);
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
+  if(webSync)return await webSync({open,browser,appUrl,passed,results,drain:async()=>{while(publicRequests.size)await Promise.all([...publicRequests]);}});
   if(readOnlyPhase){
    for(const account of [accounts[0],accounts[2]]){
     const view=await open(account,true);

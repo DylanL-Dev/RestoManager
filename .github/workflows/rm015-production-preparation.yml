@@ -1,0 +1,54 @@
+name: RM-015 Production preparation and real Web synchronization
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production-package:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test && npm run test:syntax && npm run prepare:production
+      - run: npx --yes deno@2.5.6 check --no-remote dist/rm015-production/supabase/functions/rm015-public/index.ts
+      - run: npx playwright install --with-deps chromium
+      - name: Closed production routing, challenge UI and official QR on seven widths
+        run: node tests/browser/rm015-production.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm015-production-prepared-only
+          path: |
+            dist/rm015-production/
+            test-results/rm015-production-browser/
+  real-web-sync:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Real local Auth, PostgREST, public HTTP, Realtime and staff browser sessions
+        env:
+          MISSION3_ARTIFACTS: test-results/rm015-production-sync
+        run: |
+          npm run test:public-sync:supabase
+          node -e "const fs=require('fs'),p='test-results/rm015-production-sync/',r=JSON.parse(fs.readFileSync(p+'rm015-sync-results.json'));if(r.status!=='passed'||r.passed!==15||r.failed!==0||fs.readdirSync(p).filter(f=>f.endsWith('.png')).length!==9)throw Error('Complete real synchronization evidence is mandatory');"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm015-production-sync-fictional-data
+          if-no-files-found: error
+          path: test-results/rm015-production-sync/
+      # Preparation and isolated tests only: no deployment or shared secret access.
