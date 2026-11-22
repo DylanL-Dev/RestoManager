@@ -89,7 +89,8 @@ async function complete(page) {
       const c = await context({ viewport: { width: 390, height: 844 }, reducedMotion: 'reduce' }), page = await c.newPage();
       await page.goto(origin + '/reservation/?restaurant=a-lepicerie-rouen');
       await page.keyboard.press('Tab'); assert.equal(await page.evaluate(() => document.activeElement.className), 'skip'); await page.keyboard.press('Enter');
-      await page.locator('#time-19\\:00').focus(); await page.keyboard.press('Space'); await page.getByRole('button', { name: 'Continuer' }).focus(); await page.keyboard.press('Enter');
+      // Select a currently offered slot: a fixed 19:00 can be past/disabled after dinner starts.
+      await page.locator('input[name=time]:not(:disabled)').first().focus(); await page.keyboard.press('Space'); await page.getByRole('button', { name: 'Continuer' }).focus(); await page.keyboard.press('Enter');
       assert.equal(await page.evaluate(() => document.activeElement.tagName), 'H2');
       await page.getByRole('button', { name: 'Confidentialité', exact: true }).first().click();
       for (let i = 0; i < 8; i++) { await page.keyboard.press('Tab'); assert.ok(await page.evaluate(() => !!document.activeElement.closest('dialog'))); }
