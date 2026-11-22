@@ -60,7 +60,7 @@ test('booking and edit controls have the same geometry on all breakpoints',()=>{
 });
 
 test('Reception and Restaurant use identical icon-marked reservation fields',()=>{
- const icons=['users','building-2','calendar-days','clock-3','users','armchair','alert-triangle','clipboard-list'];
+ const icons=['users','hotel','calendar-days','clock-3','users','armchair','alert-triangle','clipboard-list'];
  for(const [kind,prefix] of [['booking','booking'],['edit','edit']]){
   const html=form(kind==='booking'?'bookingForm':'editForm');
   const ids=[prefix+'Client',prefix+'HotelRoom',prefix+'Date',prefix+'Time',prefix+'Guests',prefix+'Table',prefix+'Allergies',prefix+'Notes'];

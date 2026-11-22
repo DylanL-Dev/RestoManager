@@ -1,8 +1,21 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.21-rm015.11-main",
+  "currentVersion": "2026.11.22-rm015.13.2-main",
   "releases": [
+    {
+      "version": "2026.11.22-rm015.13.2-main",
+      "date": "2026-11-22",
+      "title": "Un accueil hôtel et des démonstrations adaptés à chaque restaurant",
+      "changes": [
+        "Le parcours Hôtel / Client extérieur dispose de son pictogramme dédié dans les réservations et le suivi des chambres.",
+        "Les établissements indépendants conservent leur propre présentation et leurs textes de confidentialité adaptés.",
+        "Les démonstrations fictives Le Jardin et Les Rives sont séparées et utilisent le parcours correspondant à chaque activité.",
+        "Le choix d’un restaurant d’hôtel et ses informations légales sont proposés dans Gestion, sans remplacer les textes personnalisés ni modifier vos réservations."
+      ],
+      "impact": "Mise à jour de l’interface et des modèles de configuration. Aucune migration Supabase, aucun email activé et aucune nouvelle ouverture des réservations en ligne.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.21-rm015.11-main",
       "date": "2026-11-21",
