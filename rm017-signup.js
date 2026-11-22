@@ -1,5 +1,5 @@
 'use strict';
-/* RM-017.1: accessible static UX preview. No signup API, cookies, localStorage or network writes. */
+/* RM-017.1: accessible static UX preview. No signup API, persistence or network writes. */
 (function(){
  const M=window.RestoSignupDraft;
  const $=id=>document.getElementById(id);
