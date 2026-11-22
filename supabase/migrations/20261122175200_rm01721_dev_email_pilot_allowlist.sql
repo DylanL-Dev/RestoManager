@@ -12,7 +12,7 @@ CREATE TABLE private.rm017_pilot_invites (
   created_at timestamptz NOT NULL DEFAULT now(),
   CHECK (email = lower(btrim(email)) AND length(email) BETWEEN 6 AND 160
       AND email ~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]{2,}$'),
-  CHECK ((consumed_by IS NULL) = (consumed_at IS NULL))
+  CHECK (consumed_by IS NULL OR consumed_at IS NOT NULL)
 );
 ALTER TABLE private.rm017_pilot_invites ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE private.rm017_pilot_invites FROM PUBLIC,anon,authenticated;
