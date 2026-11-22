@@ -40,13 +40,31 @@
   let storage; try { storage = window.sessionStorage; } catch { storage = null; }
   const adapter = window.RMPublicDemo.createAdapter({ slug, storage, crypto: window.crypto });
   let draft = M.initialVisit(config);
-  let contact = { firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false };
+  const blankContact = () => ({ firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false, guestType: config.type === 'hotel' ? '' : 'external', hotelRoom: '' });
+  let contact = blankContact();
   let stage = 1, errors = {}, record = null, editing = false, notice = '', busy = false, dirty = false;
   function announce(message) { $('live').textContent = message; }
+  function hotelChoice() {
+    if (config.type !== 'hotel') return '';
+    return '<fieldset class="guest-choice"><legend>Séjournez-vous à l’hôtel ?</legend><div class="choice-row">'
+      + radio('guestType', 'hotel', icon('bed-double') + ' Client de l’hôtel', contact.guestType === 'hotel')
+      + radio('guestType', 'external', icon('users') + ' Client extérieur', contact.guestType === 'external')
+      + '</div><p class="hint">Pour réserver une table, choisissez votre situation. Aucun accès aux données réelles de l’hôtel.</p></fieldset>';
+  }
+  function roomFields() {
+    return config.type === 'hotel' && contact.guestType === 'hotel'
+      ? '<div class="hotel-stay"><h3>Votre séjour fictif à l’hôtel</h3>' + field('hotelRoom', 'Numéro de chambre fictif *', 'text', 20) + '<p class="hint">Exemple : 204. N’indiquez pas votre véritable numéro de chambre.</p></div>'
+      : '';
+  }
+  function hotelRecap() {
+    return config.type === 'hotel'
+      ? '<div class="summary-row"><dt>' + icon('bed-double') + 'Votre accueil</dt><dd>' + esc(contact.guestType === 'hotel' ? 'Client de l’hôtel · Chambre ' + contact.hotelRoom : 'Client extérieur') + '</dd></div>'
+      : '';
+  }
   function steps() { return '<ol class="steps" aria-label="Étapes de la réservation">' + ['Votre venue', 'Coordonnées', 'Récapitulatif'].map((label, index) => `<li${stage === index + 1 ? ' aria-current="step"' : ''}${stage > index + 1 ? ' class="done"' : ''}>${label}</li>`).join('') + '</ol>'; }
   function heading(title, description, symbol = 'calendar-days') { return `<div class="booking-head"><div><h2 tabindex="-1">${title}</h2><p>${description}</p></div><span class="booking-symbol">${icon(symbol)}</span></div>`; }
   function summary(includeContact = false) {
-    return `<dl class="summary"><div class="summary-row"><dt>${icon('calendar-days')}Votre venue</dt><dd>${esc(M.dateLabel(draft.date))}<br>${esc(config.services[draft.service]?.label)} · ${esc(draft.time)}</dd></div><div class="summary-row"><dt>${icon('users-round')}À table</dt><dd>${draft.party} personne${draft.party > 1 ? 's' : ''}</dd></div>${includeContact ? `<div><dt>Coordonnées fictives</dt><dd>${esc(contact.firstName)} ${esc(contact.lastName)}${contact.phone ? '<br>' + esc(contact.phone) : ''}</dd></div>${contact.notes ? `<div><dt>Votre demande particulière</dt><dd>${esc(contact.notes)}</dd></div>` : ''}` : ''}</dl>`;
+    return `<dl class="summary"><div class="summary-row"><dt>${icon('calendar-days')}Votre venue</dt><dd>${esc(M.dateLabel(draft.date))}<br>${esc(config.services[draft.service]?.label)} · ${esc(draft.time)}</dd></div><div class="summary-row"><dt>${icon('users-round')}À table</dt><dd>${draft.party} personne${draft.party > 1 ? 's' : ''}</dd></div>${includeContact ? `<div><dt>Coordonnées fictives</dt><dd>${esc(contact.firstName)} ${esc(contact.lastName)}${contact.phone ? '<br>' + esc(contact.phone) : ''}</dd></div>${contact.notes ? `<div><dt>Votre demande particulière</dt><dd>${esc(contact.notes)}</dd></div>` : ''}` : ''}${includeContact ? hotelRecap() : ''}</dl>`;
   }
   function radio(name, value, label, checked, disabled = false, extra = '') {
     const id = name + '-' + value;
@@ -54,13 +72,13 @@
   }
   function venueForm() {
     const a = M.availability(config, draft);
-    return `${heading(editing ? 'Modifier votre exemple' : 'Réservez votre table', 'Quelques instants pour préparer votre venue.')}${steps()}
+    return `${heading(editing ? 'Modifier votre exemple' : 'Réservez votre table', 'Quelques instants pour préparer votre venue.')}${steps()}${hotelChoice()}
       <fieldset><legend>Combien de personnes ?</legend><div class="choice-row">${Array.from({ length: config.maxParty }, (_, i) => radio('party', i + 1, i + 1, draft.party === i + 1)).join('')}</div></fieldset>
       <div class="field"><label class="field-label" for="visitDate">Quel jour ?</label><input class="date-field" type="date" id="visitDate" value="${draft.date}" min="${M.paris().date}" max="${M.addDays(M.paris().date, config.horizonDays)}" aria-describedby="dateHint"><p class="hint" id="dateHint">${esc(M.relativeDateLabel(draft.date))}</p></div>
       <fieldset><legend>Quel service ?</legend><div class="choice-row service-row">${Object.entries(config.services).map(([key, s]) => radio('service', key, icon(key === 'lunch' ? 'sun' : 'moon') + esc(s.label), draft.service === key)).join('')}</div></fieldset>
       <fieldset><legend>À quelle heure ?</legend><p class="hint" id="slotsHint">${esc(a.message)}</p>${a.slots.length ? `<div class="choice-row slots" aria-describedby="slotsHint">${a.slots.map(s => radio('time', s.time, esc(s.time), draft.time === s.time, !s.available, s.available ? '' : '<small>Non proposé</small>')).join('')}</div>` : '<p class="empty">' + esc(a.message) + '</p>'}</fieldset>
       ${notice ? '<p class="error-box" role="alert">' + esc(notice) + '</p>' : ''}
-      <button class="primary" type="button" data-action="coordinates"${draft.time && a.slots.some(s => s.available && s.time === draft.time) ? '' : ' disabled'}>Continuer ${icon('arrow-up-right')}</button>
+      <button class="primary" type="button" data-action="coordinates"${draft.time && a.slots.some(s => s.available && s.time === draft.time) && (config.type !== 'hotel' || ['hotel', 'external'].includes(contact.guestType)) ? '' : ' disabled'}>Continuer ${icon('arrow-up-right')}</button>
       <p class="booking-foot">${icon('check-circle-2')}Sans compte · Exercice sans engagement</p>${editing ? '<button class="text-button" type="button" data-action="abandonEdit">Conserver mon exemple actuel</button>' : ''}`;
   }
   function field(name, label, type = 'text', max = 80) {
@@ -68,7 +86,7 @@
   }
   function coordinatesForm() {
     return `<button class="text-button back" type="button" data-action="back">${icon('arrow-left')}Votre venue</button>${heading('Vos coordonnées', 'Uniquement des exemples fictifs pour cet essai.', 'circle-user-round')}${steps()}<p class="form-note">Les champs sont préremplis avec un exemple. N’inscrivez aucune donnée personnelle réelle.</p>
-      <form id="contactForm" novalidate><div class="field-grid">${field('firstName', 'Prénom fictif')}${field('lastName', 'Nom fictif')}</div>${field('phone', 'Téléphone (facultatif)', 'tel', 30)}<div class="field"><label class="field-label" for="notes">Une demande particulière ? <span class="optional">Facultatif</span></label><textarea id="notes" name="notes" maxlength="500" placeholder="Ex. : un espace pour une poussette" aria-describedby="notesHint">${esc(contact.notes)}</textarea><p class="hint" id="notesHint">500 caractères maximum. Une demande n’est pas une garantie.</p></div>
+      <form id="contactForm" novalidate><div class="field-grid">${field('firstName', 'Prénom fictif')}${field('lastName', 'Nom fictif')}</div>${field('phone', 'Téléphone (facultatif)', 'tel', 30)}${roomFields()}<div class="field"><label class="field-label" for="notes">Une demande particulière ? <span class="optional">Facultatif</span></label><textarea id="notes" name="notes" maxlength="500" placeholder="Ex. : un espace pour une poussette" aria-describedby="notesHint">${esc(contact.notes)}</textarea><p class="hint" id="notesHint">500 caractères maximum. Une demande n’est pas une garantie.</p></div>
       <label class="check"><input id="accepted" type="checkbox" name="accepted"${contact.accepted ? ' checked' : ''}${errors.accepted ? ' aria-invalid="true" aria-describedby="error-accepted"' : ''}><span>J’accepte les conditions de l’exemple et j’ai lu les informations de confidentialité ci-dessous.</span></label>${errors.accepted ? '<p class="error" id="error-accepted">' + errors.accepted + '</p>' : ''}<div class="label-line"><button type="button" class="text-button" data-action="terms">Conditions</button><button type="button" class="text-button" data-action="privacy">Confidentialité</button></div><button type="submit" class="primary">Vérifier mon exemple ${icon('arrow-up-right')}</button></form>`;
   }
   function reviewForm() {
@@ -87,7 +105,8 @@
     else if (focus) { card.querySelector('h2').focus({ preventScroll: true }); card.scrollIntoView({ block: 'start' }); }
   }
   function syncContact() {
-    for (const name of ['firstName', 'lastName', 'email', 'phone', 'notes']) if ($(name)) contact[name] = $(name).value.trim();
+    for (const name of ['firstName', 'lastName', 'email', 'phone', 'notes', 'hotelRoom']) if ($(name)) contact[name] = $(name).value.trim();
+    if (contact.guestType !== 'hotel') contact.hotelRoom = '';
     if ($('accepted')) contact.accepted = $('accepted').checked;
   }
   function readManaged() {
@@ -105,6 +124,7 @@
   }
   card.addEventListener('change', event => {
     const input = event.target;
+    if (input.name === 'guestType' && config.type === 'hotel') { contact.guestType = input.value; contact.hotelRoom = ''; dirty = true; notice = ''; render(false, input.id); return; }
     if (['party', 'service', 'time'].includes(input.name)) draft[input.name] = input.name === 'party' ? Number(input.value) : input.value;
     else if (input.id === 'visitDate') draft.date = input.value;
     else { dirty = true; return; }
@@ -143,7 +163,7 @@
     if (action === 'askCancel') showInfo('cancel');
     if (action === 'restart') {
       adapter.clear(); history.replaceState(null, '', location.pathname + location.search); record = null; editing = false; dirty = false; stage = 1; notice = ''; errors = {};
-      draft = M.initialVisit(config); contact = { firstName: 'Camille', lastName: 'Exemple', email: '', phone: '', notes: '', accepted: false }; render();
+      draft = M.initialVisit(config); contact = blankContact(); render();
     }
     if (action === 'copy') {
       const url = new URL(location.href); url.hash = 'manage=' + record.token;

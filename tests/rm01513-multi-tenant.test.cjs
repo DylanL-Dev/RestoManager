@@ -49,7 +49,8 @@ test('RM-015.13: les réservations fictives de deux restaurants ne peuvent pas s
  const aRecord=a.create({party:2,date:'2026-11-26',service:'dinner',time:'18:30'},validContact);
  assert.equal(aRecord.slug,'le-jardin-demo');
  assert.throws(()=>b.read(aRecord.token),{code:'not_found'});
- const bRecord=b.create({party:2,date:'2026-11-26',service:'dinner',time:'19:00'},validContact);
+ const bRecord=b.create({party:2,date:'2026-11-26',service:'dinner',time:'19:00'},{...validContact,guestType:'hotel',hotelRoom:'204'});
+ assert.equal(b.read(bRecord.token).contact.hotelRoom,'204');
  assert.equal(bRecord.slug,'hotel-des-rives-demo');
  assert.throws(()=>a.read(bRecord.token),{code:'not_found'});
  assert.equal(a.read(aRecord.token).reference,aRecord.reference);
@@ -84,4 +85,26 @@ test('RM-015.13: le guide Hôtel reste soumis à la capacité du restaurant et a
  assert.match(ui,/value\.data\.restaurantId!==context\(\)\.restaurantId/);
  assert.match(ui,/owner!==identity\(\)/);
  assert.doesNotMatch(ui,/\.from\('public\.restaurants'\).*select\('\*'\)/);
+});
+
+test('RM-015.13: hotel demo requires guest status and fictional room, unlike independent restaurants',()=>{
+ const hotel=Demo.venue('hotel-des-rives-demo'),independent=Demo.venue('le-jardin-demo');
+ const now=new Date('2026-11-23T10:00:00Z');
+ const visit={party:2,date:'2026-11-26',service:'dinner',time:'19:00'};
+ const errors=contact=>Demo.validate(hotel,visit,{...validContact,...contact},now);
+ assert.match(errors({}).guestType,/séjournez/);
+ assert.match(errors({guestType:'hotel',hotelRoom:''}).hotelRoom,/chambre/);
+ assert.match(errors({guestType:'hotel',hotelRoom:'<script>'}).hotelRoom,/chambre/);
+ assert.match(errors({guestType:'hotel',hotelRoom:'a'.repeat(21)}).hotelRoom,/chambre/);
+ assert.deepEqual(errors({guestType:'hotel',hotelRoom:'204'}),{});
+ assert.deepEqual(errors({guestType:'external',hotelRoom:''}),{});
+ assert.match(errors({guestType:'external',hotelRoom:'204'}).hotelRoom,/extérieur/);
+ const independentVisit={party:2,date:'2026-11-26',service:'dinner',time:'20:00'};
+ assert.deepEqual(Demo.validate(independent,independentVisit,{...validContact,guestType:'external',hotelRoom:''},now),{});
+ assert.match(Demo.validate(independent,independentVisit,{...validContact,guestType:'hotel',hotelRoom:'204'},now).guestType,/hôtel/);
+ const portal=read('reservation/portal.js'),css=read('reservation/portal.css'),html=read('reservation/index.html');
+ for(const expected of ['function hotelChoice()', 'function roomFields()', 'function hotelRecap()', 'guestType', 'hotelRoom', 'blankContact()']) assert.ok(portal.includes(expected),expected);
+ assert.match(css,/guest-choice.*choice-row/);
+ assert.match(css,/site-footer>div.*flex-wrap:wrap/);
+ assert.match(html,/portal\.js\?v=20261122-rm01513-hotel/);
 });

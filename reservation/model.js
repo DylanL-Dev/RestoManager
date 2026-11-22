@@ -74,6 +74,15 @@
     if (contact.email && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email) || contact.email.length > 254)) errors.email = 'Indiquez une adresse de démonstration, par exemple camille@example.test.';
     if (contact.phone && (!/^[+\d\s().-]{5,30}$/.test(contact.phone))) errors.phone = 'Vérifiez le numéro ou laissez ce champ vide.';
     if ((contact.notes || '').length > 500) errors.notes = 'Limitez votre demande à 500 caractères.';
+    // Mirror the connected portal's hotel/extérieur choice without ever using real room data.
+    if (config.type === 'hotel') {
+      if (!['hotel', 'external'].includes(contact.guestType)) errors.guestType = 'Indiquez si vous séjournez à l’hôtel.';
+      const room = String(contact.hotelRoom || '').trim();
+      if (contact.guestType === 'hotel' && (!room || room.length > 20 || !/^[\p{L}\p{N} ._-]+$/u.test(room))) errors.hotelRoom = 'Indiquez un numéro de chambre fictif pour cet exemple.';
+      if (contact.guestType === 'external' && room) errors.hotelRoom = 'Un client extérieur ne renseigne pas de chambre.';
+    } else if (contact.guestType === 'hotel' || String(contact.hotelRoom || '').trim()) {
+      errors.guestType = 'Le parcours hôtel n’est pas proposé ici.';
+    }
     if (contact.accepted !== true) errors.accepted = 'Acceptez les conditions de cet exercice pour continuer.';
     return errors;
   }
