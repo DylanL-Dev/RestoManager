@@ -25,7 +25,7 @@
     "v3-connected.html": "70476dfe7b30ad9c1c8867b771a25aac7bfaa577cd4fa65f9f04671d58c7c556",
     "v3-supabase-booking.js": "774d1a9bbe36ab07f46068ce02f00d5bfcb1f65fe9855f3a5237e07613139e50",
     "reservation/runtime.json": "a66d8c9aba3711e7017e3d2425e0a59c347f65e8e18065da094c750f212aa26d",
-    "reservation/live.html": "3346b07b5284511b22c64c0a540df8918fad3d45e438cf91506a3f317052b182"
+    "reservation/live.html": "7bbae5cbaa9af4bcb2cc10db0e5faf7bb6a7751ded4542689a8ab677a71f920c"
   },
   "supabaseMigrationRequired": false,
   "portalActivated": true,
