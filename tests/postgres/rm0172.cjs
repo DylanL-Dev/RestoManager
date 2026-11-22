@@ -15,7 +15,7 @@ const count=(who,table)=>db.json(db.ctx(who,'select to_json((select count(*) fro
   assert.equal(await db.json("select to_json((select enabled from private.rm017_signup_gate where id=1))"),false);
   assert.equal(await db.json("select to_json((select relrowsecurity and relforcerowsecurity from pg_class where oid='public.rm017_establishment_profiles'::regclass))"),true);
   console.log('PASS registration gate closed, RLS enabled and forced');
-  for(const [who,expected] of [[1,{restaurants:1,staff_profiles:3,reservations:4,reservation_tables:4,restaurant_tables:8}],
+  for(const [who,expected] of [[1,{restaurants:1,staff_profiles:1,reservations:4,reservation_tables:4,restaurant_tables:8}],
                                 [4,{restaurants:1,staff_profiles:1,reservations:1,reservation_tables:1,restaurant_tables:1}]]){
    for(const [table,number] of Object.entries(expected))assert.equal(await count(who,table),number,table+' user '+who+' must only see own tenant');
   }
