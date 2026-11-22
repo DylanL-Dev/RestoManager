@@ -1,0 +1,74 @@
+/* RM-017.3.1: strictly local fictional simulation, aligned with signup palette. */
+.pilot-main{padding-bottom:42px}
+.pilot-hero{display:flex;justify-content:space-between;gap:30px;align-items:center;padding:43px clamp(26px,5vw,65px);border-radius:25px;background:radial-gradient(circle at 82% 20%,#255e4a,#10382f 62%);color:#fff;overflow:hidden}
+.pilot-overline{display:inline-flex;align-items:center;gap:9px;color:#e8c785;font-weight:850;font-size:11px;letter-spacing:.1em}
+.pilot-overline svg{width:17px;height:17px}
+.pilot-hero h1{font:500 clamp(2rem,4vw,3.45rem)/1.13 Georgia,'Times New Roman',serif;max-width:720px;margin:18px 0}
+.pilot-hero h1 em{font-style:normal;color:#eccd84}
+.pilot-hero p{color:#d4e6db;max-width:700px;font-size:14px}
+.pilot-legend{display:flex;gap:13px;flex-wrap:wrap;margin-top:22px}
+.pilot-legend span{display:flex;align-items:center;gap:8px;border:1px solid #ffffff3d;border-radius:40px;padding:8px 12px;font-size:11px;color:#e9f3ec}
+.pilot-legend svg{width:15px;height:15px}
+.pilot-hero-symbol{width:174px;height:174px;flex:none;border:1px solid #d5f0de55;box-shadow:0 0 0 25px #d5f0de0c,0 0 0 50px #d5f0de0a;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f4dda4;gap:8px}
+.pilot-hero-symbol svg{width:55px;height:55px}
+.pilot-hero-symbol span{letter-spacing:.21em;font-size:13px;font-weight:900}
+.pilot-content{display:grid;grid-template-columns:minmax(0,1.24fr) minmax(310px,.76fr);gap:20px;align-items:start;margin-top:22px}
+.pilot-card{border:1px solid #dce8df;background:#fff;border-radius:22px;padding:clamp(20px,3vw,33px);box-shadow:0 15px 40px #2647320d;min-width:0}
+.pilot-card-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:24px}
+.pilot-card-heading h2{font:500 1.75rem/1.25 Georgia,'Times New Roman',serif;margin:7px 0;color:#1a4233}
+.pilot-card-heading p{color:#627769;font-size:12px}
+.pilot-outline,.pilot-primary,.pilot-danger-button,.pilot-role{min-height:45px;border-radius:11px;font-weight:780;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:9px;text-align:left;padding:12px 14px}
+.pilot-outline{background:#fff;border:1px solid #bad6c8;color:#176547}
+.pilot-outline:hover:not(:disabled){background:#f0f9f2}
+.pilot-primary{background:#087f5b;color:#fff;border:1px solid #087f5b;margin-top:20px}
+.pilot-primary:hover:not(:disabled){background:#076e50}
+.pilot-outline:disabled,.pilot-primary:disabled,.pilot-danger-button:disabled{opacity:.48;cursor:not-allowed}
+.pilot-card button svg{width:17px;height:17px}
+.pilot-role-picker{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:25px}
+.pilot-role{border:1px solid #d1e4d7;background:#f6f9f5;color:#2b6047}
+.pilot-role.active{border-color:#087f5b;background:#e9f6ed;color:#075b40;box-shadow:inset 0 -2px #087f5b}
+.pilot-section-head{display:flex;align-items:flex-start;gap:12px;margin:16px 0}
+.pilot-number{border-radius:10px;background:#edf6ee;color:#087f5b;width:36px;height:36px;display:grid;place-items:center;font-weight:850;font-size:12px;flex:none}
+.pilot-section-head h3{font-size:15px;color:#143c2e;line-height:1.4}
+.pilot-section-head p{font-size:12px;color:#5d7465;margin-top:4px}
+.pilot-fields{display:grid;grid-template-columns:1fr 1fr;gap:0 13px}
+.pilot-fields .field{min-width:0}
+.pilot-fields .field small{font-size:11px;color:#667d6e;line-height:1.45;display:block;margin-top:7px}
+.pilot-fields select,.pilot-danger input{width:100%;height:50px;border:1px solid #cfddd2;border-radius:12px;color:#183e2f;background:#fff;padding:12px 14px;font:inherit}
+.pilot-fields select:focus-visible,.pilot-danger input:focus-visible{outline:3px solid #e9b656;outline-offset:2px}
+.pilot-step-surface{border-top:1px solid #e5eee6;margin-top:23px;padding-top:8px}
+.pilot-button-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:15px}
+.pilot-caption{color:#63776a;font-size:11px;margin-top:12px}
+.pilot-feedback{margin-top:20px;border-radius:11px;padding:13px 15px;background:#f1f7ef;color:#2a614b;font-size:12px;min-height:43px}
+.pilot-feedback.is-error{background:#fcf0ee;color:#a52f32}
+.pilot-danger{border:1px solid #f2d9d0;border-radius:15px;background:#fff9f6;margin-top:23px;padding:17px}
+.pilot-danger h3{font-size:14px;color:#883e35;display:flex;align-items:center;gap:8px}
+.pilot-danger p,.pilot-danger small{display:block;color:#79574e;font-size:12px;margin:9px 0;line-height:1.55}
+.pilot-danger label{display:block;font-size:12px;font-weight:800;color:#755045;margin:11px 0 6px}
+.pilot-danger-button{background:#a33c35;color:white;border:1px solid #a33c35;margin-top:11px;width:100%}
+.pilot-company{display:flex;gap:13px;padding:15px;border-radius:14px;background:#f2f7f2;align-items:center;margin-bottom:20px}
+.pilot-company-icon{width:49px;height:49px;border-radius:13px;display:grid;place-items:center;background:#0b805c;color:#fff;flex:none}
+.pilot-company-icon svg{width:24px;height:24px}
+.pilot-company>div{min-width:0}
+.pilot-company small,.pilot-company strong,.pilot-company span{display:block;overflow-wrap:anywhere}
+.pilot-company small{font-size:10px;color:#56705f;font-weight:800}
+.pilot-company strong{font-size:14px;margin:5px 0;color:#153d2d}
+.pilot-company span{font-size:11px;color:#5a7161}
+.pilot-states{margin:0}
+.pilot-states>div{padding:12px 0;display:flex;justify-content:space-between;gap:13px;border-bottom:1px solid #e8eee8;align-items:baseline}
+.pilot-states dt{color:#667a6c;font-size:12px}
+.pilot-states dd{margin:0;text-align:right;color:#153e2f;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+.pilot-log-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:24px 0 10px}
+.pilot-log-head h3{font-size:13px;color:#1e4635}
+.pilot-log-head span{font-size:11px;color:#63796a}
+.pilot-timeline{padding-left:21px;margin:0;color:#446451;font-size:12px;display:grid;gap:10px}
+.pilot-timeline li::marker{color:#0b805c;font-weight:800}
+.pilot-assurance{display:flex;align-items:flex-start;gap:10px;border:1px solid #dfeadd;border-radius:13px;background:#f9fcf7;padding:14px;margin-top:24px}
+.pilot-assurance svg{color:#21845e;width:18px;height:18px}
+.pilot-assurance p{font-size:11px;color:#57705f}
+.pilot-assurance strong{color:#236447}
+.pilot-footer{padding:28px 4px;color:#708172;font-size:11px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.pilot-footer a{color:#087f5b}
+@media(max-width:960px){.pilot-content{grid-template-columns:1fr}.pilot-hero-symbol{width:115px;height:115px}.pilot-hero-symbol svg{width:36px;height:36px}}
+@media(max-width:560px){.pilot-hero{padding:29px 22px;border-radius:19px}.pilot-hero-symbol{display:none}.pilot-card{border-radius:17px;padding:19px}.pilot-card-heading{flex-wrap:wrap}.pilot-card-heading h2{font-size:1.5rem}.pilot-fields,.pilot-button-grid{grid-template-columns:1fr}.pilot-role-picker{gap:6px}.pilot-role{padding:10px 8px;font-size:11px}.pilot-legend{gap:8px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
