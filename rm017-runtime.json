@@ -1,8 +1,11 @@
 {
-  "schema": 1,
+  "schema": 2,
   "channel": "dev",
   "enabled": false,
+  "pilotOnly": true,
   "confirmationEmailRequired": true,
+  "captchaRequired": true,
+  "turnstileSiteKey": null,
   "redirectOrigin": "https://restomanager-v3-supabase-integration.onrender.com",
-  "reason": "Activation différée jusqu'à vérification Supabase Auth : Confirm Email, SMTP, Redirect URLs, CAPTCHA et recette cross-tenant."
+  "reason": "RM-017.2.1 : pilote fermé. Vérifier SMTP, Confirm Email, URL de redirection, CAPTCHA Supabase Auth et invitations email autorisées avant toute activation."
 }
