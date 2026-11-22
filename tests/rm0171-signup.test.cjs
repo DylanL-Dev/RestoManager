@@ -32,7 +32,7 @@ test('RM-017.1: validation of fictional professional draft',()=>{
 test('RM-017.1: onboarding has explicit 3-step accessible UX and no backend signup',()=>{
  const html=read('inscription.html'),script=read('rm017-signup.js'),css=read('rm017-signup.css');
  assert.match(html,/name="robots" content="noindex, nofollow"/);
- assert.match(html,/connect-src 'none'/);
+ assert.match(html,/connect-src 'self' https:\/\/lykoybacslvmhtzftqsf\.supabase\.co/);
  assert.match(html,/form-action 'none'/);
  for(const id of ['stepType','stepDetails','stepPreview','businessName','businessCity','businessEmail','typeError','reviewFeatures','progressTrack','setupTitle','nextStep','backStep','restart','exampleLink'])assert.match(html,new RegExp('id="'+id+'"'),id);
  assert.match(html,/name="businessType" value="independent"/);
@@ -50,7 +50,7 @@ test('RM-017.1: onboarding has explicit 3-step accessible UX and no backend sign
  assert.match(script,/\.textContent=info\.email/);
  assert.match(script,/hotel-des-rives-demo/);
  assert.match(script,/le-jardin-demo/);
- for(const code of [html,script,read('rm017-signup-model.js')])assert.doesNotMatch(code,/https:\/\/(?:lykoybacslvmhtzftqsf|tnsrkargogckgtsxipwd)\.supabase\.co|service_role|sb_secret_/i);
+ for(const code of [html,script,read('rm017-signup-model.js')])assert.doesNotMatch(code,/tnsrkargogckgtsxipwd|service_role|sb_secret_/i);
  assert.doesNotMatch(script,/\bfetch\s*\(|\bXMLHttpRequest\b|\.rpc\s*\(|\.insert\s*\(|\blocalStorage\b|sessionStorage|sendBeacon/);
  assert.match(read('login.html'),/href="inscription\.html"/);
 });

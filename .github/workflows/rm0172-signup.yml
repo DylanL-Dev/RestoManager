@@ -1,0 +1,30 @@
+name: RM-017.2 Secure registration - isolated RLS and verified email
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  registration-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:syntax
+      - name: Verify DEV gates, email-confirmed flow, RLS contract and original wizard
+        run: node --test tests/rm0171-signup.test.cjs tests/rm0172-signup.test.cjs
+      - name: Disposable PostgreSQL 17, fictional users, cross-tenant RLS, verified signup and no duplicates
+        run: node tests/postgres/rm0172.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Preserve RM-017.1 accepted visual and accessible flow on seven viewport widths
+        run: node tests/browser/rm0171-signup.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm0172-signup-rls-and-responsive
+          path: test-results/rm0171-signup/

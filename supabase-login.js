@@ -42,7 +42,13 @@ form.addEventListener('submit',async event=>{
  submitting=true;
  button.disabled=true;
  setStage('authentification','Étape 1/2 · Vérification des identifiants…');
- const account=Object.hasOwn(accounts,usernameInput.value.trim().toLowerCase())?accounts[usernameInput.value.trim().toLowerCase()]:null;
+ const input=usernameInput.value.trim().toLowerCase();
+  const registered=Object.hasOwn(accounts,input)?accounts[input]:null;
+  // RM-017.2: DEV self-service administrators may sign in by verified email;
+  // the existing shared reception/admin aliases remain untouched.
+  const isDev=supabaseEnvironment.name==='DEV';
+  const signupEmail=isDev && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+  const account=registered||(signupEmail?{email:input,role:'fb_admin'}:null);
  try{
   if(!account)throw new Error('Unknown username');
   // signInWithPassword already returns the authenticated user.

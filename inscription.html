@@ -5,7 +5,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="robots" content="noindex, nofollow">
  <meta name="referrer" content="no-referrer">
- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; img-src 'self'; connect-src 'self' https://lykoybacslvmhtzftqsf.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
  <meta name="theme-color" content="#102f29">
  <meta name="description" content="Découvrez le parcours d'inscription de RestoManager pour les restaurants et les restaurants d'hôtel. Démonstration sans création de compte.">
  <title>Créer mon établissement · RestoManager — Aperçu DEV</title>
@@ -14,6 +14,7 @@
  <script defer src="lucide-local.js?v=20261122-rm0171"></script>
  <script defer src="rm017-signup-model.js?v=20261122-rm0171"></script>
  <script defer src="rm017-signup.js?v=20261122-rm0171"></script>
+ <script type="module" src="rm017-register.js?v=20261122-rm0172"></script>
 </head>
 <body>
  <a class="skip" href="#signupMain">Aller au formulaire</a>
@@ -97,6 +98,13 @@
        <div class="review-features"><strong>Fonctionnalités adaptées</strong><ul id="reviewFeatures"></ul></div>
        <div class="availability-note"><i data-lucide="circle-help" aria-hidden="true"></i><div><strong>Aucune inscription n'a été effectuée.</strong><p>La création sécurisée de comptes et l'ouverture d'un véritable espace établissement arriveront dans une prochaine étape de développement.</p></div></div>
        <a class="example-link" id="exampleLink" href="reservation/?restaurant=le-jardin-demo">Voir un exemple fictif de réservation <i data-lucide="chevron-right" aria-hidden="true"></i></a>
+       <section class="account-setup" aria-labelledby="accountTitle">
+        <div class="account-heading"><span class="account-lock"><i data-lucide="check-circle-2" aria-hidden="true"></i></span><div><h3 id="accountTitle">Création sécurisée du compte</h3><p>Votre première connexion nécessite la confirmation de votre email avant toute création d’établissement.</p></div></div>
+        <div class="field"><label for="registrationPassword">Mot de passe <span aria-hidden="true">*</span></label><input id="registrationPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="12 caractères minimum" aria-describedby="registrationPasswordHelp"><small id="registrationPasswordHelp">Utilisez une phrase de passe unique d’au moins 12 caractères.</small></div>
+        <div class="field"><label for="registrationPasswordConfirm">Confirmer le mot de passe <span aria-hidden="true">*</span></label><input id="registrationPasswordConfirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Répéter le mot de passe"></div>
+        <button type="button" class="next-button register-button" id="submitRegistration" disabled>Créer mon compte DEV <i data-lucide="chevron-right" aria-hidden="true"></i></button>
+        <p class="signup-state" id="registrationStatus" role="status" aria-live="polite">Vérification des conditions d’ouverture de l’inscription…</p>
+       </section>
       </section>
 
       <p class="form-alert" id="formMessage" aria-live="polite" role="status"></p>
@@ -106,6 +114,7 @@
        <button type="button" id="restart" class="next-button" hidden>Recommencer <i data-lucide="chevron-right" aria-hidden="true"></i></button>
       </div>
      </form>
+     <section id="registrationDone" class="registration-done" hidden tabindex="-1"><span class="review-check"><i data-lucide="check-circle-2" aria-hidden="true"></i></span><h3>Votre établissement est créé dans DEV.</h3><p>Votre email a été confirmé et votre accès administrateur est prêt. Les services et réservations restent fermés jusqu’à votre configuration.</p><a href="v3-connected.html">Accéder à mon espace de gestion</a></section>
      <p class="disclaimer"><i data-lucide="check-circle-2" aria-hidden="true"></i> Aperçu privé DEV · Aucune inscription, aucun paiement, aucune donnée transmise.</p>
     </div>
     <footer class="form-footer"><span>© RestoManager · Simplifiez votre service</span><a href="login.html">Connexion équipe</a></footer>
