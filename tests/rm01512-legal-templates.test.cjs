@@ -79,4 +79,6 @@ test('RM-015.12: le formulaire préserve les textes enregistrés et ne remplace 
  assert.match(source,/else status\.textContent='Le parcours client a changé/);
  assert.match(source,/model\.withRetention\(proposalFor\(form\),model\.retentionFrom/);
  assert.ok(!source.includes('c.privacyNotice=model.privacyDefault('),'Aucun écrasement en arrière-plan');
+ assert.ok(!source.includes('À l’Épicerie — Rouen'),'Aucun exemple réservé à l’établissement historique dans Gestion');
+ assert.ok(source.includes('Ex. Nom de votre restaurant'));
 });

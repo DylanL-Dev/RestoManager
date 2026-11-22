@@ -36,7 +36,7 @@
  function field(name,label,value,type='text',help=''){
   const row=el('label','rmWebField'),text=el('span','',label),input=el(name==='privacyContact'?'textarea':'input');input.name=name;input.id='rmWeb-'+name;if(name==='privacyContact')input.rows=4;else input.type=type;input.value=value??'';text.id=input.id+'-label';input.setAttribute('aria-labelledby',text.id);
   if(type==='number'){const range=model.limits[name];input.min=String(range[0]);input.max=String(range[1]);input.step='1';}
-  if(name==='slug'){input.maxLength=160;input.autocomplete='off';input.spellcheck=false;input.placeholder='Ex. À l’Épicerie — Rouen';}
+  if(name==='slug'){input.maxLength=160;input.autocomplete='off';input.spellcheck=false;input.placeholder='Ex. Nom de votre restaurant';}
   if(name==='privacyContact')input.maxLength=500;row.append(text,input);if(help)row.append(el('small','',help));return row;
  }
  function accordionHead(title,help,symbol){const summary=el('summary'),badge=el('span','rmWebAccordionIcon'),words=el('span','rmWebAccordionWords');badge.append(icon(symbol));words.append(el('strong','',title),el('small','',help));summary.append(badge,words,icon('chevron-down'));return summary;}

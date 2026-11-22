@@ -10,7 +10,7 @@ Le modèle proposé dans Gestion → Réservations en ligne contenait toujours u
 
 - **Restaurant indépendant** (option `hotelGuestsEnabled` désactivée ou absente) : modèle de confidentialité neutre, sans chambre, séjour ni parcours Hôtel/Extérieur.
 - **Restaurant d’hôtel** (option activée) : ajouter une explication spécifique sur le parcours hôtel et la donnée éventuelle de chambre, sans annoncer qu’une chambre est toujours obligatoire.
-- Le nom visible de l’établissement est utilisé pour le modèle proposé, sans copier le nom ni le contact du Mercure Rouen.
+- Le nom visible de l’établissement est utilisé pour le modèle proposé, sans copier le nom ni le contact du Mercure Rouen. L’exemple du champ de lien est neutre (« Nom de votre restaurant »), et ne cite plus À l’Épicerie.
 - Le texte de confidentialité sauvegardé, les conditions d’annulation et le contact RGPD enregistrés restent **inchangés** jusqu’à une action explicite de l’utilisateur puis « Enregistrer les réglages ».
 - Quand l’option Hôtel change, seul un *modèle strictement non personnalisé* est régénéré, en préservant la durée de conservation renseignée. Un texte libre ou déjà enregistré ne doit jamais être écrasé automatiquement. Un avertissement demande de le relire.
 - Bouton « Utiliser les textes proposés » : conserve la confirmation en cas de remplacement et n’enregistre rien sans l’action finale.
