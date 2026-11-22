@@ -106,5 +106,23 @@ test('RM-015.13: hotel demo requires guest status and fictional room, unlike ind
  for(const expected of ['function hotelChoice()', 'function roomFields()', 'function hotelRecap()', 'guestType', 'hotelRoom', 'blankContact()']) assert.ok(portal.includes(expected),expected);
  assert.match(css,/guest-choice.*choice-row/);
  assert.match(css,/site-footer>div.*flex-wrap:wrap/);
- assert.match(html,/portal\.js\?v=20261122-rm01513-hotel/);
+ assert.match(html,/portal\.js\?v=20261122-rm01513-hotel-icon/);
+ assert.match(portal,/brand-mark \[data-lucide\]/);
+ assert.match(portal,/cover-label \[data-lucide\]/);
+ assert.match(portal,/icon\('hotel'\)/);
+ assert.doesNotMatch(portal,/icon\('bed-double'\)/);
+ const connected=read('reservation/live.mjs'),liveHtml=read('reservation/live.html'),staff=read('v3-connected.html'),staffWeb=read('service-v3-public-booking.js');
+ assert.match(connected,/radio\('guestType','hotel',icon\('hotel'\)/);
+ assert.match(connected,/profile.hotelGuestsEnabled===true/);
+ assert.match(connected,/brand-mark \[data-lucide\]/);
+ assert.match(liveHtml,/live\.mjs\?v=20261122-rm01513-hotel-icon/);
+ assert.match(staffWeb,/hotel.prepend\(icon\('hotel'\)\)/);
+ assert.match(staffWeb,/stay.prepend\(icon\('hotel'\)\)/);
+ for(const part of ['name="walkinType" value="hotel" checked','name="bookingTypeVisual" value="hotel" checked','id="bookingHotelRoomField"','id="editHotelRoomField"']){
+   const at=staff.indexOf(part);assert.ok(at>=0,part);
+   assert.match(staff.slice(at,at+220),/data-lucide="hotel"/,part);
+ }
+ assert.match(staff,/class="sidebarEstablishment"><i data-lucide="building-2"/); // Generic establishment identity remains generic.
+ assert.match(staff,/src="asset\/img\/restomanager-chef-white\.svg"/); // Preserve RestoManager logo.
+
 });

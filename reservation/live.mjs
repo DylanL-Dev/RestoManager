@@ -26,7 +26,7 @@ function summary(value=draft,withContact=false,title='Votre venue'){
  return `<dl class="summary"><div><dt>${esc(title)}</dt><dd>${esc(relativeDateLabel(value.date,profile.today))}<br>${esc(value.time)} · ${Number(value.party)} personne${value.party>1?'s':''}</dd></div>${withContact?`<div><dt>Coordonnées</dt><dd>${esc(contact.firstName)} ${esc(contact.lastName)}${requiresEmail(profile)&&contact.email?'<br><span class="summary-email">'+esc(contact.email)+'</span>':''}</dd></div>${contact.notes?`<div><dt>Votre demande particulière</dt><dd>${esc(contact.notes)}</dd></div>`:''}`:''}${profile.hotelGuestsEnabled||value.guestType==='hotel'||contact.guestType==='hotel'?'<div><dt>Votre accueil</dt><dd>'+esc(guestLabel(value.guestType?value:contact))+'</dd></div>':''}</dl>`;
 }
 function hotelChoice(){return profile.hotelGuestsEnabled===true||editing&&record?.contact?.guestType==='hotel';}
-function chooseGuest(){return hotelChoice()?'<fieldset class="guest-choice"><legend>Séjournez-vous à l’hôtel ?</legend><div class="choice-row">'+radio('guestType','hotel',icon('building-2')+' Client de l’hôtel',contact.guestType==='hotel')+radio('guestType','external',icon('users')+' Client extérieur',contact.guestType==='external')+'</div><p class="hint">La réservation concerne une table au restaurant.</p></fieldset>':'';}
+function chooseGuest(){return hotelChoice()?'<fieldset class="guest-choice"><legend>Séjournez-vous à l’hôtel ?</legend><div class="choice-row">'+radio('guestType','hotel',icon('hotel')+' Client de l’hôtel',contact.guestType==='hotel')+radio('guestType','external',icon('users')+' Client extérieur',contact.guestType==='external')+'</div><p class="hint">La réservation concerne une table au restaurant.</p></fieldset>':'';}
 function roomFields(){return contact.guestType==='hotel'?'<div class="hotel-stay"><h3>Votre séjour à l’hôtel</h3>'+field('hotelRoom','Numéro de chambre *','text',20,'off')+'<p class="hint">Votre nom et votre numéro de chambre sont obligatoires pour réserver comme client de l’hôtel.</p></div>':'';}
 function venue(){
  const visible=showAll?slots:(slots.some(s=>s.available)?slots.filter(s=>s.available).slice(0,5):slots.slice(0,5));
@@ -123,6 +123,11 @@ async function start(){
   api=createBookingClient({endpoint:runtime.api,allowedOrigin:runtime.allowedApiOrigin,base:location.href,restaurant:slug,storage,challenge:runtime.turnstileSiteKey?createVerification({dialog:$('verificationDialog'),siteKey:runtime.turnstileSiteKey}):undefined});
   token=new URLSearchParams(location.hash.slice(1)).get('manage')||'';
   profile=await api.profile(token||undefined);if(!profile.name||!Number.isInteger(profile.maxParty)||!profile.today)throw new BookingError('Les informations du restaurant sont indisponibles.');
+  // Use the same hotel pictogram on public hotel pages; restaurants keep their usual identity.
+  if(profile.hotelGuestsEnabled===true){
+    $('homeLink').querySelector('.brand-mark [data-lucide]')?.setAttribute('data-lucide','hotel');
+    $('story').querySelector('.cover-label [data-lucide]')?.setAttribute('data-lucide','hotel');
+  }
   presentCover(profile,runtime.allowedApiOrigin);$('restaurantName').textContent=profile.name;$('restaurantSubtitle').textContent='Réservez directement auprès de votre restaurant';$('locality').textContent='Votre restaurant';$('introduction').textContent='Un moment à partager, une table à retrouver.';$('description').textContent='Choisissez votre venue et retrouvez votre réservation avec votre lien personnel.';
   presentProfile(profile);$('liveBanner').textContent=runtime.channel==='dev'?'DEV · Données de l’établissement · Emails désactivés':'Réservation en ligne · Lien personnel sécurisé';if(runtime.channel==='production')$('liveFooter').textContent='Conservez votre lien personnel pour retrouver votre réservation.';$('privacy').disabled=false;$('conditions').disabled=false;
   const hotelEntry=new URLSearchParams(location.search).get('guest')==='hotel';

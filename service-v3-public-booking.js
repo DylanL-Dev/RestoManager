@@ -66,7 +66,7 @@
    box.append(el('p','rmWebHelp','Première configuration : choisissez votre activité. Les propositions restent un brouillon jusqu’à « Enregistrer les réglages ».'));
    const choices=el('div','rmWebShareActions');
    choices.append(button('Restaurant indépendant',()=>applyTypeSetup(form,'independent')));
-   const hotel=button('Restaurant d’hôtel',()=>applyTypeSetup(form,'hotel'));
+   const hotel=button('Restaurant d’hôtel',()=>applyTypeSetup(form,'hotel'));hotel.prepend(icon('hotel'));
    hotel.disabled=data.hotelGuestsCapability!==true;
    if(hotel.disabled)hotel.title='Option disponible uniquement si le parcours hôtel est autorisé pour cet établissement';
    choices.append(hotel);box.append(choices);
@@ -101,7 +101,7 @@
   const heading=el('div','rmWebHead');const refresh=button('Actualiser',()=>load());refresh.dataset.webReadAction='true';heading.append(el('h3','','Demandes à confirmer'),refresh);requests.append(heading);
   if(!data.requests.length)requests.append(el('p','rmWebEmpty','Aucune demande en attente. Les réservations Web confirmées figurent dans Réservations.'));
   for(const r of data.requests){
-   const article=el('article','rmWebRequest');article.dataset.webRequest=r.id;if(r.contact.guestType==='hotel')article.append(el('p','rmWebHelp','Client de l’hôtel · '+(r.contact.hotelRoom?'Chambre '+r.contact.hotelRoom:'Chambre à compléter')+' · Séjour déclaré'));article.append(el('span','rmWebBadge',r.state==='pending_change'?'Modification demandée':'À confirmer'),el('h4','',(r.contact.firstName||'Client')+' '+(r.contact.lastName||'')),el('p','',r.draft.date.split('-').reverse().join('/')+' à '+r.draft.time+' · '+r.draft.party+' personnes'),el('p','rmWebDeadline','À confirmer avant le '+format(r.deadline)));
+   const article=el('article','rmWebRequest');article.dataset.webRequest=r.id;if(r.contact.guestType==='hotel'){const stay=el('p','rmWebHelp','Client de l’hôtel · '+(r.contact.hotelRoom?'Chambre '+r.contact.hotelRoom:'Chambre à compléter')+' · Séjour déclaré');stay.prepend(icon('hotel'));article.append(stay);}article.append(el('span','rmWebBadge',r.state==='pending_change'?'Modification demandée':'À confirmer'),el('h4','',(r.contact.firstName||'Client')+' '+(r.contact.lastName||'')),el('p','',r.draft.date.split('-').reverse().join('/')+' à '+r.draft.time+' · '+r.draft.party+' personnes'),el('p','rmWebDeadline','À confirmer avant le '+format(r.deadline)));
    if(r.state==='pending_change')article.append(el('p','rmWebHelp','La réservation initiale reste conservée si cette proposition est refusée ou expire.'));
    if(role()==='fb_admin'){
     const contactLabel=[r.contact.email,r.contact.phone].filter(Boolean).join(' · ');if(contactLabel)article.append(el('p','rmWebHelp',contactLabel));if(r.contact.notes)article.append(el('p','rmWebNote',r.contact.notes));const actions=el('div','rmWebActions');actions.append(button('Confirmer la demande',()=>ask(r,'approve'),'rmWebPrimary'),button('Refuser',()=>ask(r,'reject')));article.append(actions);

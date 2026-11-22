@@ -31,6 +31,11 @@
     icons(); return;
   }
   $('homeLink').href = '?restaurant=' + encodeURIComponent(slug);
+  // Hotel-specific identity only; independent restaurants keep the restaurant icon.
+  if (config.type === 'hotel') {
+    $('homeLink').querySelector('.brand-mark [data-lucide]')?.setAttribute('data-lucide', 'hotel');
+    $('story').querySelector('.cover-label [data-lucide]')?.setAttribute('data-lucide', 'hotel');
+  }
   $('restaurantName').textContent = config.name;
   $('restaurantSubtitle').textContent = config.subtitle;
   $('locality').textContent = config.locality;
@@ -47,7 +52,7 @@
   function hotelChoice() {
     if (config.type !== 'hotel') return '';
     return '<fieldset class="guest-choice"><legend>Séjournez-vous à l’hôtel ?</legend><div class="choice-row">'
-      + radio('guestType', 'hotel', icon('bed-double') + ' Client de l’hôtel', contact.guestType === 'hotel')
+      + radio('guestType', 'hotel', icon('hotel') + ' Client de l’hôtel', contact.guestType === 'hotel')
       + radio('guestType', 'external', icon('users') + ' Client extérieur', contact.guestType === 'external')
       + '</div><p class="hint">Pour réserver une table, choisissez votre situation. Aucun accès aux données réelles de l’hôtel.</p></fieldset>';
   }
@@ -58,7 +63,7 @@
   }
   function hotelRecap() {
     return config.type === 'hotel'
-      ? '<div class="summary-row"><dt>' + icon('bed-double') + 'Votre accueil</dt><dd>' + esc(contact.guestType === 'hotel' ? 'Client de l’hôtel · Chambre ' + contact.hotelRoom : 'Client extérieur') + '</dd></div>'
+      ? '<div class="summary-row"><dt>' + icon('hotel') + 'Votre accueil</dt><dd>' + esc(contact.guestType === 'hotel' ? 'Client de l’hôtel · Chambre ' + contact.hotelRoom : 'Client extérieur') + '</dd></div>'
       : '';
   }
   function steps() { return '<ol class="steps" aria-label="Étapes de la réservation">' + ['Votre venue', 'Coordonnées', 'Récapitulatif'].map((label, index) => `<li${stage === index + 1 ? ' aria-current="step"' : ''}${stage > index + 1 ? ' class="done"' : ''}>${label}</li>`).join('') + '</ol>'; }
