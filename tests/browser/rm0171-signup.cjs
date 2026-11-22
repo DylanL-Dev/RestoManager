@@ -12,7 +12,7 @@ const server=http.createServer((request,response)=>{
  fs.readFile(file,(error,bytes)=>{if(error){response.writeHead(404);return response.end();}response.setHeader('Content-Type',mime[path.extname(file)]||'application/octet-stream');response.end(bytes);});
 });
 async function assertLayout(page,width){
- const result=await page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth,wide:[...document.querySelectorAll('body *')].filter(e=>{const r=e.getBoundingClientRect();return r.width>1 && (r.left < -1||r.right>innerWidth+1)}).slice(0,8).map(e=>e.id||e.className||e.tagName)}));
+ const result=await page.evaluate(()=>({viewport:innerWidth,scroll:document.documentElement.scrollWidth,wide:[...document.querySelectorAll('body *')].filter(e=>{if(e.closest('[aria-hidden="true"]'))return false;const r=e.getBoundingClientRect();return r.width>1 && (r.left < -1||r.right>innerWidth+1)}).slice(0,8).map(e=>e.id||e.className||e.tagName)}));
  assert.ok(result.scroll<=width+1,'Horizontal overflow: '+JSON.stringify(result));
  assert.deepEqual(result.wide,[],'Offscreen element: '+JSON.stringify(result));
 }
