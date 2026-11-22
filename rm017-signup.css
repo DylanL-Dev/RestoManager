@@ -46,10 +46,7 @@
 #registrationVerification a{color:#fff}
 @media(max-width:390px){.pilot-captcha{max-width:100%;overflow-x:auto}}
 
-/* RM-017.2.2: remove the distracting double frames around signup cards. */
-.experience{border:0}
-.account-setup{border:0;background:transparent;border-radius:0;padding:0;margin-top:25px}
-@media(max-width:560px){.account-setup{padding:0}}
+/* RM-017.2.2: preserve the accepted panel frames; only selected-card touch focus is simplified. */
 
 /* RM-017.2.2: restrained SIRET verification, no extra nested outlines. */
 .siret-help{display:block;margin-top:7px;color:#586e60;font-size:11px;line-height:1.5}
