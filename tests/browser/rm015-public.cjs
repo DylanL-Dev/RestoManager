@@ -114,6 +114,7 @@ async function complete(page) {
       await page.goto(origin + '/reservation/?restaurant=a-lepicerie-rouen'); await complete(page); const link = await page.locator('a[href*="#manage="]').getAttribute('href');
       await page.goto(origin + '/reservation/?restaurant=le-jardin-demo' + new URL(link, origin).hash); await page.getByRole('heading', { name: 'Ce lien n’est plus disponible' }).waitFor(); assert.equal(await page.locator('.summary').count(), 0);
       await page.goto(origin + '/reservation/?restaurant=le-jardin-demo'); assert.equal(await page.locator('#party-8').count(), 0); assert.match(await page.locator('h1').innerText(), /Jardin/);
+      assert.equal(await page.locator('.brand-mark svg').evaluate(svg=>!!svg.querySelector('rect[x="4"][y="2"][width="16"][height="20"]')),false,'Independent restaurant retains restaurant icon');
       const foreign = await context(), other = await foreign.newPage(); await other.goto(origin + '/reservation/' + link); await other.getByRole('heading', { name: 'Ce lien n’est plus disponible' }).waitFor(); await foreign.close();
       pass('Closures, unknown/missing restaurant, independent venue settings, foreign tenant/session links'); await c.close();
     }
@@ -164,6 +165,8 @@ async function complete(page) {
       page.on('request',r=>requests.push({method:r.method(),url:r.url()}));
       await page.goto(origin+'/reservation/?restaurant=hotel-des-rives-demo');
       await page.getByRole('heading',{name:'Réservez votre table'}).waitFor();
+      const hotelSvg=await page.locator('.brand-mark svg').evaluate(svg=>!!svg.querySelector('rect[x="4"][y="2"][width="16"][height="20"]'));
+      assert.equal(hotelSvg,true,'Hotel page uses local official Lucide hotel icon');
       assert.equal(await page.getByRole('radio',{name:/Client de l’hôtel/}).count(),1);
       assert.ok(await page.getByRole('button',{name:/Continuer/}).isDisabled(),'Hotel visitor must choose status');
       await page.locator('#guestType-hotel').check();
