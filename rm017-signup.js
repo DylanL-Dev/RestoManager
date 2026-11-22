@@ -8,6 +8,10 @@
  let step=1;
  const data=()=>({name:$('businessName').value,city:$('businessCity').value,email:$('businessEmail').value});
  const chosen=()=>form.querySelector('input[name="businessType"]:checked')?.value||'';
+ const siretHelpByType={
+  independent:"Le numéro est vérifié auprès d'un registre officiel français. Indiquez le SIRET de l'établissement qui exploite votre restaurant.",
+  hotel:"Le numéro est vérifié auprès d'un registre officiel français. Si le restaurant est exploité par l'hôtel, indiquez le SIRET de l'établissement hôtelier. Sinon, indiquez celui de la société exploitante."
+ };
  const drawIcons=()=>window.lucide?.createIcons();
  const replaceIcon=(selector,name)=>{
   const wrapper=document.querySelector(selector);if(!wrapper||!['hotel','utensils'].includes(name))return;
@@ -23,6 +27,7 @@
  }
  function syncPreview(){
   const type=chosen(),v=type?M.types[type]:null;
+  $('siretHelp').textContent=siretHelpByType[type]||"Le numéro SIRET est vérifié auprès d'un registre officiel français.";
   $('storyBusiness').textContent=v?$('businessName').value.trim()||v.label:'Votre futur établissement';
   replaceIcon('.insight-logo',v?v.icon:'utensils');
   if(v){$('selectedTypeLabel').textContent=v.label;replaceIcon('.mini-icon',v.icon);}
