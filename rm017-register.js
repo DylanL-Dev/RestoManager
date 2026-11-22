@@ -1,14 +1,34 @@
 'use strict';
-/* RM-017.2: DEV-only Auth flow, publishable key, no direct SQL writes or PROD routing. */
+/* RM-017.2.1: invitation-only DEV pilot, with fail-closed browser and DB gates. */
 import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 const $=id=>document.getElementById(id);
 const button=$('submitRegistration'),notice=$('registrationStatus'),done=$('registrationDone');
+const verification=$('registrationVerification');
 const isDev=(location.hostname.endsWith('.onrender.com')||location.hostname==='localhost'||location.hostname==='127.0.0.1')&&supabaseEnvironment.name==='DEV';
-let client=null,busy=false;
-function message(text){if(notice)notice.textContent=text;}
+let client=null,busy=false,challengeToken='',captchaWidget=null;
+const runtimeURL='rm017-runtime.json';
+const captchaScript='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+const message=text=>{if(notice)notice.textContent=text;};
+function safeUrl(){
+ // Never keep an OTP fragment or callback error in the address bar.
+ if(location.hash||location.search)history.replaceState(null,'',location.pathname);
+}
+function isConfirmationReturn(){
+ const query=new URLSearchParams(location.search);
+ const fragment=new URLSearchParams(location.hash.slice(1));
+ return query.get('verified')==='1'||query.has('error_code')||
+   fragment.has('access_token')||fragment.has('error_code');
+}
+function showVerification(title,details){
+ if(!verification)return;
+ $('signupDraft').hidden=true;
+ verification.hidden=false;done.hidden=true;
+ $('verificationTitle').textContent=title;
+ $('verificationText').textContent=details;
+ verification.focus({preventScroll:true});
+}
 async function connect(){
  if(client)return client;
- // Import only when an operator-enabled DEV signup is in use.
  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm');
  client=createClient(supabaseEnvironment.url,supabaseEnvironment.publishableKey,{
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
@@ -18,9 +38,9 @@ async function connect(){
 function details(){
  const Model=window.RestoSignupDraft;
  const type=document.querySelector('input[name="businessType"]:checked')?.value||'';
- const data={name:$('businessName').value,city:$('businessCity').value,email:$('businessEmail').value};
- if(!Model||Model.validateType(type)||Object.keys(Model.validateDetails(data)).length)throw Error('Vérifiez les informations de votre établissement.');
- return Model.preview(type,data);
+ const draft={name:$('businessName').value,city:$('businessCity').value,email:$('businessEmail').value};
+ if(!Model||Model.validateType(type)||Object.keys(Model.validateDetails(draft)).length)throw Error('Vérifiez les informations de votre établissement.');
+ return Model.preview(type,draft);
 }
 function checkPassword(){
  const pass=$('registrationPassword').value,confirmed=$('registrationPasswordConfirm').value;
@@ -28,21 +48,61 @@ function checkPassword(){
  if(pass!==confirmed)throw Error('Les mots de passe ne correspondent pas.');
  return pass;
 }
+function resetCaptcha(){
+ challengeToken='';
+ button.disabled=true;
+ try{if(captchaWidget!==null)window.turnstile?.reset(captchaWidget);}catch{
+  message('La vérification anti-robot doit être rechargée pour réessayer.');
+ }
+}
+async function loadCaptcha(siteKey){
+ const container=$('registrationCaptcha');
+ if(!container)return false;
+ container.hidden=false;
+ await new Promise((resolve,reject)=>{
+  if(window.turnstile?.render){resolve();return;}
+  const script=document.createElement('script');
+  script.src=captchaScript;script.async=true;
+  script.onload=resolve;script.onerror=()=>reject(Error('captcha unavailable'));
+  document.head.append(script);
+ });
+ if(!window.turnstile?.render)throw Error('captcha unavailable');
+ captchaWidget=window.turnstile.render(container,{
+  sitekey:siteKey,theme:'light',language:'fr',
+  callback:token=>{
+   challengeToken=typeof token==='string'?token:'';
+   button.disabled=!challengeToken||busy;
+   if(challengeToken)message('Contrôle anti-robot validé. Réservé aux comptes de test invités.');
+  },
+  'expired-callback':()=>{challengeToken='';button.disabled=true;message('Vérification expirée : recommencez le contrôle anti-robot.');},
+  'error-callback':()=>{challengeToken='';button.disabled=true;message('Vérification anti-robot indisponible. Réessayez.');}
+ });
+ return captchaWidget!==null&&captchaWidget!==undefined;
+}
 async function finishVerifiedAccount(api,user){
- if(!user||!user.email_confirmed_at)return;
+ if(!user?.email_confirmed_at){
+  showVerification('Confirmation nécessaire','Ce lien n’a pas confirmé votre adresse. Vérifiez le message reçu, puis réessayez.');return;
+ }
  const m=user.user_metadata||{};
  const name=typeof m.rm017_name==='string'?m.rm017_name:'';
  const city=typeof m.rm017_city==='string'?m.rm017_city:'';
- const kind=typeof m.rm017_type==='string'?m.rm017_type:'';
- const model=window.RestoSignupDraft;
- if(!model||model.validateType(kind)||Object.keys(model.validateDetails({name,city,email:user.email||''})).length){
-  message('Compte confirmé, mais informations incomplètes. Contactez l’assistance avant la configuration.');return;
+ const type=typeof m.rm017_type==='string'?m.rm017_type:'';
+ const Model=window.RestoSignupDraft;
+ if(!Model||Model.validateType(type)||Object.keys(Model.validateDetails({name,city,email:user.email||''})).length){
+  showVerification('Profil incomplet','Compte confirmé, mais informations insuffisantes. Contactez l’assistance avant la configuration.');return;
  }
- message('Email confirmé. Préparation de votre établissement DEV…');
- const {data,error}=await api.rpc('rm017_complete_signup_v1',{p_name:name,p_city:city,p_type:kind});
- if(error)throw Error(error.code==='23505'?'Ce compte est déjà lié à un établissement. Connectez-vous.':'La création sécurisée a été refusée. Contactez l’assistance.');
- if(!data?.restaurant_id||data.status!=='configuration_required')throw Error('La création de l’établissement n’a pas été confirmée.');
- $('signupDraft').hidden=true;
+ showVerification('Confirmation reçue','Adresse vérifiée. Création sécurisée de votre établissement de test…');
+ // Server verifies JWT identity, confirmed email and an unconsumed pilot invite.
+ const {data,error}=await api.rpc('rm017_complete_signup_v1',{p_name:name,p_city:city,p_type:type});
+ if(error){
+  const known=error.code==='23505'?'Ce compte appartient déjà à un établissement. Connectez-vous.':
+   'L’inscription pilote a été refusée : adresse non invitée, invitation expirée ou pilote fermé.';
+  showVerification('Inscription non finalisée',known);return;
+ }
+ if(!data?.restaurant_id||data.status!=='configuration_required'){
+  showVerification('Inscription non finalisée','La création n’a pas été confirmée. Contactez l’assistance.');return;
+ }
+ verification.hidden=true;
  done.hidden=false;
  $('setupTitle').textContent='Bienvenue sur RestoManager !';
  $('setupSubtitle').textContent='Votre email est confirmé. Configurez maintenant votre premier service.';
@@ -52,55 +112,82 @@ async function finishVerifiedAccount(api,user){
  done.focus({preventScroll:true});
 }
 async function onSignup(){
- if(busy||button.disabled)return;
- busy=true;button.disabled=true;let password='';
+ if(busy||button.disabled||!challengeToken)return;
+ busy=true;button.disabled=true;
  try{
-  const profile=details();password=checkPassword();
-  message('Envoi de votre demande de confirmation…');
+  const profile=details(),password=checkPassword(),token=challengeToken;
+  challengeToken='';message('Envoi de votre demande de confirmation…');
   const api=await connect();
   const canonical=new URL('/inscription.html?verified=1',location.origin).href;
   const {data,error}=await api.auth.signUp({
    email:profile.email,password,
-   options:{emailRedirectTo:canonical,data:{
-    rm017_name:profile.name,rm017_city:profile.city,rm017_type:profile.type
-   }}
+   options:{emailRedirectTo:canonical,captchaToken:token,
+    data:{rm017_name:profile.name,rm017_city:profile.city,rm017_type:profile.type}}
   });
-  if(error)throw Error('Impossible de lancer l’inscription. Vérifiez l’adresse, les limitations d’email et réessayez.');
-  if(data?.session){
-   // Fail closed if Auth Confirm Email is unexpectedly disabled.
-   await api.auth.signOut({scope:'local'});
-   throw Error('Confirmation email désactivée côté Supabase DEV. Inscription suspendue.');
+  if(error){
+   if(error.code==='over_email_send_rate_limit'||error.status===429)throw Error('Limite d’envoi atteinte. Réessayez plus tard.');
+   if(error.code==='captcha_failed')throw Error('Vérification anti-robot refusée. Recommencez.');
+   throw Error('L’inscription n’a pas pu être envoyée. Vérifiez votre email ou contactez l’assistance du pilote.');
   }
-  message('Si l’adresse est autorisée, un message de confirmation sera envoyé. Vérifiez votre boîte mail avant de revenir ici.');
- }catch(e){message(e.message||'Inscription momentanément indisponible.');}
- finally{
-  password='';$('registrationPassword').value='';$('registrationPasswordConfirm').value='';
-  busy=false;button.disabled=false;
+  if(data?.session){
+   // When Confirm Email is OFF Supabase may create an immediate session. Fail closed.
+   await api.auth.signOut({scope:'local'});
+   throw Error('La confirmation email est désactivée dans Supabase DEV : pilote suspendu.');
+  }
+  message('Si l’adresse est autorisée, un email de confirmation a été demandé. Cliquez sur son lien pour terminer la création.');
+ }catch(error){
+  message(error?.message||'Inscription momentanément indisponible.');
+ }finally{
+  $('registrationPassword').value='';$('registrationPasswordConfirm').value='';
+  busy=false;resetCaptcha();
  }
 }
 async function start(){
- if(!button||!notice||!done)return;
- if(!isDev){message('Inscription réservée à DEV.');return;}
+ if(!button||!notice||!done||!verification)return;
+ const callback=isConfirmationReturn();
+ if(!isDev){message('Inscription réservée à DEV.');if(callback){showVerification('Pilote inaccessible','Cette adresse ne peut pas confirmer une inscription DEV.');safeUrl();}return;}
  let runtime;
  try{
-  const response=await fetch('rm017-runtime.json',{cache:'no-store',credentials:'omit'});
-  if(!response.ok)throw Error('runtime unavailable');
+  const response=await fetch(runtimeURL,{cache:'no-store',credentials:'omit'});
+  if(!response.ok)throw Error('configuration unavailable');
   runtime=await response.json();
- }catch{message('Paramétrage d’inscription indisponible.');return;}
- if(runtime?.schema!==1||runtime?.channel!=='dev'||runtime?.enabled!==true||
-    runtime?.confirmationEmailRequired!==true||runtime?.redirectOrigin!==location.origin){
-  message('Inscription réelle non ouverte : vérification du service email, des redirections et de la sécurité en cours.');
+ }catch{message('Paramétrage d’inscription indisponible.');if(callback){showVerification('Pilote indisponible','Configuration DEV inaccessible.');safeUrl();}return;}
+ const key=runtime?.turnstileSiteKey;
+ const validKey=typeof key==='string'&&/^0x[a-zA-Z0-9_-]{16,80}$/.test(key);
+ if(runtime?.schema!==2||runtime?.channel!=='dev'||runtime?.enabled!==true||
+    runtime?.pilotOnly!==true||runtime?.confirmationEmailRequired!==true||
+    runtime?.captchaRequired!==true||!validKey||
+    runtime?.redirectOrigin!==location.origin){
+  message('Pilote privé fermé : contrôle de la confirmation email, de SMTP, du CAPTCHA et des invitations en cours.');
+  if(callback){showVerification('Pilote temporairement fermé','Le lien ne peut pas être finalisé tant que les inscriptions de test sont suspendues.');safeUrl();}
   return;
  }
- button.disabled=false;
- message('Inscription de test DEV uniquement · Confirmation email obligatoire · Aucun portail public activé.');
- button.addEventListener('click',onSignup);
- // After the user follows the Supabase confirmation link, an authenticated
- // session is returned to this same DEV page; provisioning is then atomic.
+ $('pilotBannerText').textContent='Pilote privé sur invitation · Email confirmé et CAPTCHA obligatoires';
+ $('dataDisclaimer').textContent='Utilisez uniquement une adresse email de test autorisée par RestoManager. Aucune réservation ne sera ouverte automatiquement.';
+ $('signupDisclaimer').textContent='Inscription pilote DEV : données transmises uniquement à Supabase DEV après vérification anti-robot.';
+ if(callback){
+  const q=new URLSearchParams(location.search),hash=new URLSearchParams(location.hash.slice(1));
+  if(q.has('error_code')||hash.has('error_code')){
+   showVerification('Lien invalide ou expiré','Demandez un nouveau message de confirmation à l’assistance du pilote.');
+   safeUrl();return;
+  }
+  showVerification('Vérification de l’email','Validation de votre session auprès de Supabase DEV…');
+  try{
+   const api=await connect();
+   const {data,error}=await api.auth.getUser();
+   if(error||!data?.user){showVerification('Confirmation non reconnue','Le lien est expiré ou la session n’a pas pu être validée. Réessayez depuis le message reçu.');}
+   else await finishVerifiedAccount(api,data.user);
+  }catch{showVerification('Confirmation non finalisée','Une erreur a empêché la création de votre espace de test. Contactez l’assistance.');}
+  finally{safeUrl();}
+  return;
+ }
  try{
-  const api=await connect();
-  const {data,error}=await api.auth.getUser();
-  if(!error&&data?.user?.email_confirmed_at)await finishVerifiedAccount(api,data.user);
- }catch(e){message(e.message||'Impossible de finaliser automatiquement. Reconnectez-vous.');}
+  await loadCaptcha(key);
+  message('Inscription pilote sur invitation uniquement · Email confirmé obligatoire.');
+  button.addEventListener('click',onSignup);
+ }catch{
+  button.disabled=true;
+  message('Contrôle anti-robot non disponible. Le formulaire d’inscription reste fermé.');
+ }
 }
 void start();
