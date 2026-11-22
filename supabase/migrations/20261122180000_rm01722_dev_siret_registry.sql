@@ -34,6 +34,15 @@ CREATE TABLE private.rm017_siret_prechecks(
 ALTER TABLE private.rm017_siret_prechecks ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE private.rm017_siret_prechecks FROM PUBLIC,anon,authenticated;
 
+-- Per-invitation hourly lookup ceiling to avoid consuming public API quotas.
+CREATE TABLE private.rm017_siret_lookup_attempts(
+ email text PRIMARY KEY,
+ window_started_at timestamptz NOT NULL DEFAULT now(),
+ attempts integer NOT NULL DEFAULT 0 CHECK(attempts BETWEEN 0 AND 20)
+);
+ALTER TABLE private.rm017_siret_lookup_attempts ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE private.rm017_siret_lookup_attempts FROM PUBLIC,anon,authenticated;
+
 -- Fail-closed preflight. Service_role only. No enumeration via public RPC.
 CREATE FUNCTION public.rm017_siret_preflight_v1(
  p_email text,p_type text,p_siret text
@@ -55,6 +64,33 @@ $$;
 REVOKE ALL ON FUNCTION public.rm017_siret_preflight_v1(text,text,text)
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.rm017_siret_preflight_v1(text,text,text) TO service_role;
+
+
+-- Called once for each external registry lookup, never from the browser.
+CREATE FUNCTION public.rm017_siret_allow_lookup_v1(
+ p_email text,p_type text,p_siret text
+) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
+AS $
+DECLARE v_email text:=pg_catalog.lower(pg_catalog.btrim(p_email));
+ v_attempts integer;
+BEGIN
+ IF NOT public.rm017_siret_preflight_v1(v_email,p_type,p_siret)
+ THEN RETURN false; END IF;
+ INSERT INTO private.rm017_siret_lookup_attempts(email,attempts)
+ VALUES (v_email,1)
+ ON CONFLICT(email) DO UPDATE
+ SET attempts=CASE WHEN private.rm017_siret_lookup_attempts.window_started_at<now()-interval '1 hour'
+                   THEN 1 ELSE pg_catalog.least(private.rm017_siret_lookup_attempts.attempts+1,20) END,
+     window_started_at=CASE WHEN private.rm017_siret_lookup_attempts.window_started_at<now()-interval '1 hour'
+                            THEN now() ELSE private.rm017_siret_lookup_attempts.window_started_at END
+ RETURNING attempts INTO v_attempts;
+ RETURN v_attempts<=6;
+END;
+$;
+REVOKE ALL ON FUNCTION public.rm017_siret_allow_lookup_v1(text,text,text)
+ FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.rm017_siret_allow_lookup_v1(text,text,text) TO service_role;
 
 -- Called only AFTER the Edge function verified a real active matching SIRET
 -- at the government registry; this function cannot be called by the browser.
