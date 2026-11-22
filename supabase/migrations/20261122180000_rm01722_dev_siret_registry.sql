@@ -118,7 +118,7 @@ BEGIN
  INSERT INTO private.rm017_siret_prechecks(
   email,siret,siren,establishment_type,legal_name,city,checked_at,expires_at
  ) VALUES(
-  v_email,p_siret,pg_catalog.substring(p_siret from 1 for 9),
+  v_email,p_siret,pg_catalog.substr(p_siret,1,9),
   p_type,v_name,v_city,now(),now()+interval '48 hours'
  )
  ON CONFLICT (email) DO UPDATE SET
