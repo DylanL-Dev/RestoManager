@@ -48,6 +48,8 @@ async function context(browser,origin,width){
    await page.locator('#nextStep').click();
    assert.equal(await page.locator('#stepDetails').isVisible(),true);
    assert.equal(await page.locator('#selectedTypeLabel').innerText(),"Restaurant d’hôtel");
+   assert.match(await page.locator('#siretHelp').innerText(),/Si le restaurant est exploité par l'hôtel/);
+   assert.doesNotMatch(await page.locator('#siretHelp').innerText(),/Indiquez le SIRET de l'établissement qui exploite votre restaurant/);
    await page.locator('#nextStep').click();
    assert.equal(await page.locator('#nameError').isVisible(),true,'Name required');
    assert.equal(await page.locator('#emailError').isVisible(),true,'Email required');
@@ -74,6 +76,8 @@ async function context(browser,origin,width){
   for(const width of [390,1440]){
    const ctx=await context(browser,origin,width),page=await ctx.newPage();page.on('pageerror',e=>errors.push(width+':'+e.message));
    await page.goto(origin+'/inscription.html');await page.locator('#typeIndependent').click();await page.locator('#nextStep').click();
+   assert.match(await page.locator('#siretHelp').innerText(),/Indiquez le SIRET de l'établissement qui exploite votre restaurant/);
+   assert.doesNotMatch(await page.locator('#siretHelp').innerText(),/Si le restaurant est exploité par l'hôtel/);
    await page.locator('#businessName').fill('<img src=x onerror=alert(1)>');
    await page.locator('#businessCity').fill('Ville de démonstration');
    await page.locator('#businessEmail').fill('info@example.test');await page.locator('#nextStep').click();
