@@ -5,7 +5,7 @@
 Rendre l'inscription pilote plus crédible, en vérifiant **côté serveur** que le SIRET de l'entreprise exploitante correspond à un établissement français **actif** sur une source gouvernementale. Le contrôle n'est pas une preuve de propriété : il reste nécessaire de confirmer l'email et d'appliquer la règle d'invitation ou une validation manuelle avant l'ouverture commerciale.
 
 ## UX
-- Charte RM-017.1 conservée, suppression des contours visuels doublés sur les cartes et dans le formulaire (une seule bordure sur les choix de type, focus visible au clavier).
+- Charte RM-017.1 conservée, suppression du double contour vert + doré sur la carte de type sélectionnée au toucher (une seule bordure verte, focus doré réservé à la navigation au clavier), sans modifier le cadre global du formulaire.
 - Champ SIRET de 14 chiffres dans la deuxième étape, prévisualisation lisible à la troisième.
 - Le SIRET n'est **jamais accepté uniquement sur le calcul Luhn du navigateur**. La validation extérieure est obligatoire avant \`auth.signUp\` et demeure obligatoire après la confirmation email via une preuve serveur en base.
 - Affichage du nom légal et de la ville officiels si vérifiables. Le **nom commercial** du restaurant est conservé distinctement.
