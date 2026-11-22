@@ -14,7 +14,7 @@ test('the client-type cards are identical and always hotel first',()=>{
  const start=page.indexOf('<form id="bookingForm"');
  const fragment=page.slice(start,page.indexOf('</form>',start));
  assert.ok(fragment.indexOf('value="hotel"')<fragment.indexOf('value="exterieur"'));
- assert.match(fragment,/data-lucide="building-2"/);
+ assert.match(fragment,/name="bookingTypeVisual" value="hotel"[\s\S]*?data-lucide="hotel"/);
  assert.match(fragment,/data-lucide="users"/);
 });
 test('Reception displays a matching automatic-assignment field on new bookings',()=>{
