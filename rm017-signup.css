@@ -45,3 +45,12 @@
 #registrationVerification .review-check{display:grid;place-items:center}
 #registrationVerification a{color:#fff}
 @media(max-width:390px){.pilot-captcha{max-width:100%;overflow-x:auto}}
+
+/* RM-017.2.2: preserve the accepted panel frames; only selected-card touch focus is simplified. */
+
+/* RM-017.2.2: restrained SIRET verification, no extra nested outlines. */
+.siret-help{display:block;margin-top:7px;color:#586e60;font-size:11px;line-height:1.5}
+.siret-verification{margin:18px 0 0;color:#4e6a5c;font-size:12px;line-height:1.6}
+.siret-verification[data-status="verified"]{color:#087f5b;font-weight:700}
+.siret-verification[data-status="error"]{color:#9b2c32;font-weight:650}
+.siret-field input{font-variant-numeric:tabular-nums;letter-spacing:.035em}

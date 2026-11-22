@@ -48,6 +48,40 @@ function checkPassword(){
  if(pass!==confirmed)throw Error('Les mots de passe ne correspondent pas.');
  return pass;
 }
+function validSiret(value){
+ if(!/^[0-9]{14}$/.test(value))return false;
+ const digits=[...value].map(Number);
+ const sum=digits.reduce((total,d,i)=>{
+   const v=i%2===0?d*2:d;
+   return total+(v>9?v-9:v);
+ },0);
+ return sum%10===0||(value.startsWith('356000000')&&digits.reduce((x,y)=>x+y,0)%5===0);
+}
+async function verifyProfessionalSiret(profile,siret){
+ const state=$('siretVerificationStatus');
+ state.dataset.status='';
+ state.textContent='Vérification de votre SIRET auprès du registre officiel…';
+ const response=await fetch(supabaseEnvironment.url+'/functions/v1/rm017-siret',{
+  method:'POST',
+  headers:{'Content-Type':'application/json','apikey':supabaseEnvironment.publishableKey},
+  body:JSON.stringify({email:profile.email,type:profile.type,siret}),
+  cache:'no-store',credentials:'omit'
+ });
+ let body={};
+ try{body=await response.json()}catch{}
+ if(!response.ok||body?.verified!==true||body?.siret!==siret){
+  state.dataset.status='error';
+  state.textContent=(response.status===422?'Ce SIRET n’a pas pu être confirmé automatiquement. ':
+   'Cette inscription ne peut pas être validée pour le moment. ')+
+   'Contactez l’assistance du pilote si nécessaire.';
+  throw Error(state.textContent);
+ }
+ state.dataset.status='verified';
+ state.textContent='SIRET vérifié : '+String(body.legalName||'Établissement').slice(0,160)+
+   ' · '+String(body.city||'').slice(0,80)+
+   ' · activité '+String(body.activityCode||'').slice(0,10)+'. L’autorisation du responsable reste soumise à validation.';
+ return body;
+}
 function resetCaptcha(){
  challengeToken='';
  button.disabled=true;
@@ -116,13 +150,23 @@ async function onSignup(){
  busy=true;button.disabled=true;
  try{
   const profile=details(),password=checkPassword(),token=challengeToken;
-  challengeToken='';message('Envoi de votre demande de confirmation…');
+  const siret=$('businessSiret').value.trim();
+  $('siretError').hidden=true;$('siretError').textContent='';
+  if(!validSiret(siret)){
+   $('siretError').hidden=false;
+   $('siretError').textContent='SIRET invalide : vérifiez les 14 chiffres et la clé de contrôle.';
+   throw Error('Le SIRET doit comporter 14 chiffres valides.');
+  }
+  challengeToken='';
+  // No account is created before this official server-side verification.
+  await verifyProfessionalSiret(profile,siret);
+  message('SIRET vérifié. Envoi de votre demande de confirmation email…');
   const api=await connect();
   const canonical=new URL('/inscription.html?verified=1',location.origin).href;
   const {data,error}=await api.auth.signUp({
    email:profile.email,password,
    options:{emailRedirectTo:canonical,captchaToken:token,
-    data:{rm017_name:profile.name,rm017_city:profile.city,rm017_type:profile.type}}
+    data:{rm017_name:profile.name,rm017_city:profile.city,rm017_type:profile.type,rm017_siret:siret}}
   });
   if(error){
    if(error.code==='over_email_send_rate_limit'||error.status===429)throw Error('Limite d’envoi atteinte. Réessayez plus tard.');
