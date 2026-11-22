@@ -13,12 +13,15 @@ const expectDenied=async(user,kind='independent',code='42501')=>{
 (async()=>{
  try{
   db=await start();
+  await db.ok('DO $ BEGIN CREATE ROLE supabase_auth_admin NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $;');
   await db.ok('alter table auth.users add column if not exists email text, add column if not exists email_confirmed_at timestamptz, add column if not exists is_anonymous boolean not null default false, add column if not exists deleted_at timestamptz;');
   await db.ok(migration('20261122170000_rm0172_dev_secure_signup.sql'));
   await db.ok(migration('20261122175200_rm01721_dev_email_pilot_allowlist.sql'));
   assert.equal(await db.json('select to_json((select count(*) from private.rm017_pilot_invites))'),0);
   assert.equal(await db.json('select to_json((select enabled from private.rm017_signup_gate where id=1))'),false);
-  console.log('PASS DEV migrations: no invitations and global gate off');
+  assert.equal(await db.json("select to_json(has_function_privilege('anon','public.rm017_before_user_created_v1(jsonb)','execute'))"),false);
+  assert.equal(await db.json("select to_json(has_function_privilege('supabase_auth_admin','public.rm017_before_user_created_v1(jsonb)','execute'))"),true);
+  console.log('PASS DEV migrations: no invitations, hook not public and global gate off');
   await db.ok("update auth.users set email='pilot-hotel@example.test',email_confirmed_at=now() where id='"+uid(6)+"';");
   await expectDenied(6,'hotel');
   await db.ok("update private.rm017_signup_gate set enabled=true where id=1;");
@@ -31,6 +34,11 @@ const expectDenied=async(user,kind='independent',code='42501')=>{
   await expectDenied(6,'hotel'); // inactive.
   console.log('PASS confirmed but non-invited, wrong type, expired and inactive are refused');
   await db.ok("update private.rm017_pilot_invites set active=true;");
+  const hook = "select to_json(public.rm017_before_user_created_v1('{\"user\":{\"email\":\"pilot-hotel@example.test\",\"user_metadata\":{\"rm017_type\":\"hotel\"}}}'::jsonb))";
+  assert.deepEqual(await db.json(hook),{});
+  const wrongHook = "select to_json(public.rm017_before_user_created_v1('{\"user\":{\"email\":\"other@example.test\",\"user_metadata\":{\"rm017_type\":\"hotel\"}}}'::jsonb))";
+  assert.equal((await db.json(wrongHook)).error.http_code,403);
+  console.log('PASS opt-in Auth hook allows only invited email and correct type');
   let r=await db.sql(db.ctx(6,'select * from private.rm017_pilot_invites'));
   assert.notEqual(r.code,0,'Pilot list must be invisible to staff');
   assert.match(r.stderr,/permission denied/i);
@@ -39,6 +47,7 @@ const expectDenied=async(user,kind='independent',code='42501')=>{
   assert.equal(hotel.status,'configuration_required');
   assert.equal(await db.json("select to_json((select consumed_by='"+uid(6)+"'::uuid and consumed_at is not null from private.rm017_pilot_invites where email='pilot-hotel@example.test'))"),true);
   await expectDenied(6,'hotel','23505');
+  assert.equal((await db.json(hook)).error.http_code,403);
   assert.equal(await db.json("select to_json((select count(*) from public.rm017_establishment_profiles))"),1);
   assert.equal(await db.json("select to_json((select count(*) from public.restaurants))"),3);
   assert.equal(await db.json("select to_json((select count(*) from public.restaurant_rooms where restaurant_id='"+hotel.restaurant_id+"'))"),1);
