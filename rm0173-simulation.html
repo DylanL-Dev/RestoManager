@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="fr">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width,initial-scale=1">
+ <meta name="robots" content="noindex,nofollow">
+ <meta name="referrer" content="no-referrer">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+ <meta name="theme-color" content="#10382f">
+ <title>Simulation des comptes · RestoManager DEV</title>
+ <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
+ <link rel="stylesheet" href="rm017-signup.css?v=20261122-rm0171">
+ <link rel="stylesheet" href="rm0173-simulation.css?v=20261122-rm01731">
+ <script defer src="lucide-local.js?v=20261122-rm0171"></script>
+ <script defer src="rm0173-pilot-model.js?v=20261122-rm01731"></script>
+ <script defer src="rm0173-simulation.js?v=20261122-rm01731"></script>
+</head>
+<body>
+ <a href="#pilotMain" class="skip">Aller à la simulation</a>
+ <div class="preview-bar" role="note"><i data-lucide="shield-check" aria-hidden="true"></i><strong>RM-017.3.1 · LABORATOIRE DEV</strong><span>100 % fictif · aucune inscription, aucun email, aucune suppression réelle</span></div>
+ <header class="topbar wrap">
+  <a class="brand" href="inscription.html" aria-label="RestoManager, retour à l'inscription">
+   <span class="brand-emblem"><img src="asset/img/restomanager-chef-white.svg" width="30" height="30" alt=""><span class="brand-accent"></span></span>
+   <span class="brand-word"><strong>Resto<span>Manager</span></strong><small>Simplifiez votre service</small></span>
+  </a>
+  <a class="login-link" href="inscription.html"><i data-lucide="arrow-left" aria-hidden="true"></i> Retour à l'inscription</a>
+ </header>
+ <main class="wrap pilot-main" id="pilotMain">
+  <section class="pilot-hero" aria-labelledby="pilotTitle">
+   <div class="pilot-hero-copy">
+    <span class="pilot-overline"><i data-lucide="flask-conical" aria-hidden="true"></i> SIMULATION INTERACTIVE · RM-017.3.1</span>
+    <h1 id="pilotTitle">Le parcours d'un restaurant, <em>de A à Z.</em></h1>
+    <p>Testez une création d'établissement, une demande de fermeture et les interventions de la console Créateur. Tout se déroule uniquement dans cette page, sans contacter Supabase.</p>
+    <div class="pilot-legend"><span><i data-lucide="shield-check" aria-hidden="true"></i> Aucun accès Root réel</span><span><i data-lucide="database-zap" aria-hidden="true"></i> Aucune donnée enregistrée</span></div>
+   </div>
+   <div class="pilot-hero-symbol" aria-hidden="true"><i data-lucide="building-2"></i><span>DEV</span></div>
+  </section>
+  <div class="pilot-content">
+   <section class="pilot-card" aria-labelledby="workspaceTitle">
+    <div class="pilot-card-heading">
+     <div><span class="form-eyebrow">PARCOURS INTERACTIF</span><h2 id="workspaceTitle">Essayer les deux rôles</h2><p>Un exemple local qui disparaît en rechargeant la page.</p></div>
+     <button id="pilotReset" class="pilot-outline" type="button"><i data-lucide="refresh-cw" aria-hidden="true"></i> Recommencer</button>
+    </div>
+    <div class="pilot-role-picker" role="group" aria-label="Choisir la vue de simulation">
+     <button type="button" id="pilotOwnerTab" class="pilot-role active" aria-pressed="true" aria-controls="pilotOwnerPanel"><i data-lucide="utensils" aria-hidden="true"></i> Restaurateur</button>
+     <button type="button" id="pilotRootTab" class="pilot-role" aria-pressed="false" aria-controls="pilotRootPanel"><i data-lucide="shield" aria-hidden="true"></i> Créateur / Root fictif</button>
+    </div>
+    <div id="pilotOwnerPanel" aria-labelledby="pilotOwnerTab">
+     <form id="pilotCreateForm" autocomplete="off" novalidate>
+      <div class="pilot-section-head"><span class="pilot-number">01</span><div><h3>Créer un établissement fictif</h3><p>Un exemple prérempli : aucun SIRET ni email réel n'est nécessaire.</p></div></div>
+      <div class="pilot-fields">
+       <div class="field"><label for="pilotType">Type de restaurant</label><select id="pilotType" name="pilotType"><option value="independent">Restaurant indépendant</option><option value="hotel">Restaurant d'hôtel</option></select></div>
+       <div class="field"><label for="pilotName">Nom d'exemple</label><input id="pilotName" name="pilotName" maxlength="90" value="Le Jardin (démo)" required></div>
+       <div class="field"><label for="pilotSiret">SIRET fictif</label><input id="pilotSiret" name="pilotSiret" inputmode="numeric" maxlength="14" value="00000000000000" aria-describedby="pilotSiretHelp" required><small id="pilotSiretHelp">Numéro de démonstration à 14 chiffres, sans consultation d'un registre officiel. SIREN déduit automatiquement.</small></div>
+       <div class="field"><label for="pilotEmail">Email fictif</label><input id="pilotEmail" name="pilotEmail" type="email" maxlength="160" value="demo@example.test" required></div>
+      </div>
+      <button class="pilot-primary" type="submit" id="pilotCreate"><i data-lucide="user-plus" aria-hidden="true"></i> Simuler une inscription</button>
+     </form>
+     <section id="pilotEmailStage" class="pilot-step-surface" hidden aria-label="Confirmation fictive de l'email">
+      <div class="pilot-section-head"><span class="pilot-number">02</span><div><h3>Confirmation d'email simulée</h3><p>Aucun message n'a été envoyé. Ce bouton simule uniquement le clic sur un lien de confirmation.</p></div></div>
+      <button id="pilotConfirmEmail" type="button" class="pilot-primary"><i data-lucide="mail-check" aria-hidden="true"></i> Simuler la confirmation d'email</button>
+     </section>
+     <section id="pilotOwnerActions" class="pilot-step-surface" hidden aria-label="Gestion du compte propriétaire">
+      <div class="pilot-section-head"><span class="pilot-number">03</span><div><h3>Mes demandes en tant que restaurateur</h3><p>La fermeture de l'établissement et la suppression d'un compte sont deux demandes distinctes.</p></div></div>
+      <div class="pilot-button-grid">
+       <button id="pilotRequestAccount" type="button" class="pilot-outline"><i data-lucide="user-round-x" aria-hidden="true"></i> Demander la suppression de mon compte</button>
+       <button id="pilotRequestClosure" type="button" class="pilot-outline"><i data-lucide="store" aria-hidden="true"></i> Demander la fermeture du restaurant</button>
+      </div>
+      <p class="pilot-caption">Ces actions ne ferment aucun compte réel et n'ont aucune conséquence pour les réservations.</p>
+     </section>
+    </div>
+    <div id="pilotRootPanel" aria-labelledby="pilotRootTab" hidden>
+     <div class="pilot-section-head"><span class="pilot-number">04</span><div><h3>Interventions du Créateur / Root</h3><p>Il s'agit d'une <strong>simulation sans authentification Root</strong>. Les vrais pouvoirs administratifs ne sont pas disponibles ici.</p></div></div>
+     <div class="pilot-button-grid">
+      <button id="pilotSuspend" class="pilot-outline" type="button"><i data-lucide="pause-circle" aria-hidden="true"></i> Suspendre (fictif)</button>
+      <button id="pilotRestore" class="pilot-outline" type="button"><i data-lucide="play-circle" aria-hidden="true"></i> Réactiver (fictif)</button>
+      <button id="pilotArchive" class="pilot-outline" type="button"><i data-lucide="archive" aria-hidden="true"></i> Archiver (fictif)</button>
+     </div>
+     <div class="pilot-danger">
+      <h3><i data-lucide="trash-2" aria-hidden="true"></i> Effacement de l'exemple</h3>
+      <p>Possible uniquement après suspension puis archivage. Écrivez <strong>EFFACER LA DÉMO</strong> pour simuler l'effacement de la fiche fictive.</p>
+      <label for="pilotErasePhrase">Confirmation</label>
+      <input id="pilotErasePhrase" type="text" autocomplete="off" spellcheck="false" placeholder="EFFACER LA DÉMO" aria-describedby="pilotEraseHelp">
+      <small id="pilotEraseHelp">Ne touche ni aux comptes Auth ni aux restaurants Supabase.</small>
+      <button id="pilotErase" class="pilot-danger-button" type="button" disabled>Effacer uniquement l'exemple fictif</button>
+     </div>
+    </div>
+    <p class="pilot-feedback" id="pilotFeedback" role="status" aria-live="polite">Commencez par simuler une inscription.</p>
+   </section>
+   <aside class="pilot-card pilot-summary" aria-labelledby="pilotSummaryTitle">
+    <div class="pilot-card-heading"><div><span class="form-eyebrow">SUIVI DE LA SIMULATION</span><h2 id="pilotSummaryTitle">État du restaurant</h2><p>Ce panneau reflète seulement les actions réalisées sur cette page.</p></div></div>
+    <div class="pilot-company">
+     <span class="pilot-company-icon"><i data-lucide="utensils" aria-hidden="true"></i></span>
+     <div><small>ÉTABLISSEMENT FICTIF</small><strong id="pilotSummaryName">Aucun exemple créé</strong><span id="pilotSummaryType">—</span></div>
+    </div>
+    <dl class="pilot-states">
+     <div><dt>Compte utilisateur</dt><dd id="pilotAccountState">Non créé</dd></div>
+     <div><dt>Restaurant</dt><dd id="pilotRestaurantState">Non créé</dd></div>
+     <div><dt>SIREN (extrait)</dt><dd id="pilotSirenValue">—</dd></div>
+     <div><dt>SIRET (masqué)</dt><dd id="pilotSiretValue">—</dd></div>
+     <div><dt>Email (masqué)</dt><dd id="pilotEmailValue">—</dd></div>
+    </dl>
+    <div class="pilot-log-head"><h3>Journal de la démonstration</h3><span id="pilotEventCount">0 étape</span></div>
+    <ol id="pilotEventLog" class="pilot-timeline"><li>Aucune action simulée pour le moment.</li></ol>
+    <div class="pilot-assurance"><i data-lucide="lock-keyhole" aria-hidden="true"></i><p><strong>Sans effet sur RestoManager.</strong> Aucun appel réseau, stockage, invitation, email ou suppression. Rechargez la page pour repartir à zéro.</p></div>
+   </aside>
+  </div>
+  <footer class="pilot-footer">RestoManager · Démonstration isolée sur DEV · <a href="inscription.html">Retour à l'inscription sécurisée</a></footer>
+ </main>
+ <noscript>Cette simulation fictive nécessite JavaScript. Aucun compte réel ne peut être créé depuis cette page.</noscript>
+</body>
+</html>
