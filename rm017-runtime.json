@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "channel": "dev",
+  "enabled": false,
+  "confirmationEmailRequired": true,
+  "redirectOrigin": "https://restomanager-v3-supabase-integration.onrender.com",
+  "reason": "Activation différée jusqu'à vérification Supabase Auth : Confirm Email, SMTP, Redirect URLs, CAPTCHA et recette cross-tenant."
+}
