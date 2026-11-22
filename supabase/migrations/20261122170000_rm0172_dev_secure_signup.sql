@@ -124,11 +124,9 @@ BEGIN
  VALUES (v_restaurant,p_type,v_city,v_uid);
  INSERT INTO public.staff_profiles(user_id,role,display_name,active,restaurant_id)
  VALUES (v_uid,'fb_admin','Responsable',true,v_restaurant);
- -- Safe default: the new establishment has no open service or tables.
- INSERT INTO public.restaurant_hours
- (restaurant_id,id,lunch_enabled,lunch_start,lunch_end,dinner_enabled,
- dinner_start,dinner_end,duration)
- VALUES (v_restaurant,1,false,'12:00','14:30',false,'19:00','22:00',90);
+ -- Existing initialize_hours and rm012_initialize_policy triggers create
+ -- closed default service rules atomically on the new restaurant.
+ -- Do not insert a duplicate restaurant_hours row.
  INSERT INTO public.restaurant_rooms(restaurant_id,name,active,sort_order)
  VALUES(v_restaurant,'Salle principale',true,0);
  RETURN pg_catalog.jsonb_build_object(
