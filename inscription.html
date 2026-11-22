@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="fr">
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <meta name="robots" content="noindex, nofollow">
+ <meta name="referrer" content="no-referrer">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+ <meta name="theme-color" content="#102f29">
+ <meta name="description" content="Découvrez le parcours d'inscription de RestoManager pour les restaurants et les restaurants d'hôtel. Démonstration sans création de compte.">
+ <title>Créer mon établissement · RestoManager — Aperçu DEV</title>
+ <link rel="icon" href="pwa-icon.svg" type="image/svg+xml">
+ <link rel="stylesheet" href="rm017-signup.css?v=20261122-rm0171">
+ <script defer src="lucide-local.js?v=20261122-rm0171"></script>
+ <script defer src="rm017-signup-model.js?v=20261122-rm0171"></script>
+ <script defer src="rm017-signup.js?v=20261122-rm0171"></script>
+</head>
+<body>
+ <a class="skip" href="#signupMain">Aller au formulaire</a>
+ <div class="preview-bar" role="note"><i data-lucide="circle-help" aria-hidden="true"></i><strong>RM-017.1 · Aperçu DEV</strong><span>Simulation uniquement : aucun compte ni établissement créé</span></div>
+ <header class="topbar wrap">
+   <a class="brand" href="v3-connected.html" aria-label="RestoManager, accueil">
+     <span class="brand-emblem"><img src="asset/img/restomanager-chef-white.svg" width="26" height="26" alt=""><span class="brand-accent"></span></span>
+     <span class="brand-word"><strong>Resto<span>Manager</span></strong><small>Simplifiez votre service</small></span>
+   </a>
+   <div class="top-actions"><span>Vous faites déjà partie de RestoManager ?</span><a class="login-link" href="login.html">Se connecter <i data-lucide="chevron-right" aria-hidden="true"></i></a></div>
+ </header>
+ <main id="signupMain" class="wrap experience">
+  <aside class="story" aria-label="Découvrir RestoManager">
+    <div class="story-glow" aria-hidden="true"></div>
+    <div class="story-content">
+      <span class="overline"><span class="gold-line"></span> RESTOMANAGER POUR LES PROFESSIONNELS</span>
+      <h1>Votre restaurant.<br><em>Votre façon</em><br>de travailler.</h1>
+      <p class="story-lead">Une plateforme pensée pour les vrais services : vos tables, vos arrivées et vos réservations au même endroit.</p>
+      <div class="benefit-list">
+        <div><span class="benefit-icon"><i data-lucide="calendar-days" aria-hidden="true"></i></span><span><strong>Un service plus fluide</strong><small>Réservations, disponibilités et arrivées réunies.</small></span></div>
+        <div><span class="benefit-icon"><i data-lucide="layers" aria-hidden="true"></i></span><span><strong>Une organisation à votre image</strong><small>Restaurant indépendant ou restaurant d'hôtel.</small></span></div>
+        <div><span class="benefit-icon"><i data-lucide="check-circle-2" aria-hidden="true"></i></span><span><strong>Une équipe en temps réel</strong><small>Réception et salle partagent la même information.</small></span></div>
+      </div>
+      <div class="insight-card" aria-label="Aperçu de l'espace RestoManager">
+        <div class="insight-top"><span class="insight-logo"><i data-lucide="utensils" id="storyIcon" aria-hidden="true"></i></span><div><strong id="storyBusiness">Votre futur établissement</strong><small>Un espace qui s'adapte à vous</small></div><span class="insight-live"><span></span> Aperçu</span></div>
+        <div class="insight-stats"><div><span>Vos salles</span><strong>Sur mesure</strong></div><div><span>Vos réservations</span><strong>Au même endroit</strong></div></div>
+        <p><i data-lucide="check" aria-hidden="true"></i> Vos données, votre établissement, votre équipe.</p>
+      </div>
+    </div>
+    <div class="story-bottom"><span>Une solution née sur le terrain.</span><span class="story-tag">RestoManager <span>•</span> 2026</span></div>
+  </aside>
+
+  <section class="signup-side" aria-labelledby="setupTitle">
+    <div class="form-shell">
+     <div class="form-heading">
+      <div class="step-label"><span class="step-count" id="stepCount">01 / 03</span><span id="stepCaption">Votre activité</span></div>
+      <div class="progress" aria-label="Progression : étape 1 sur 3" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1" id="progressTrack"><span id="progressFill"></span></div>
+      <span class="form-eyebrow">BIENVENUE SUR RESTOMANAGER</span>
+      <h2 id="setupTitle">Commençons par votre établissement.</h2>
+      <p class="setup-subtitle" id="setupSubtitle">Chaque restaurant est différent. Choisissez votre activité pour découvrir une configuration adaptée.</p>
+     </div>
+
+     <form id="signupDraft" novalidate autocomplete="off">
+      <fieldset class="step-panel" id="stepType">
+       <legend class="sr-only">Choix du type d'établissement</legend>
+       <div class="type-grid">
+        <label class="type-card" id="typeIndependent">
+         <input type="radio" name="businessType" value="independent">
+         <span class="type-icon"><i data-lucide="utensils" aria-hidden="true"></i></span>
+         <span class="type-copy"><strong>Restaurant indépendant</strong><small>Votre salle, votre équipe, vos réservations.</small></span>
+         <span class="type-check"><i data-lucide="check" aria-hidden="true"></i></span>
+        </label>
+        <label class="type-card" id="typeHotel">
+         <input type="radio" name="businessType" value="hotel">
+         <span class="type-icon"><i data-lucide="hotel" aria-hidden="true"></i></span>
+         <span class="type-copy"><strong>Restaurant d'hôtel</strong><small>Un parcours pour les clients de l'hôtel et les visiteurs extérieurs.</small></span>
+         <span class="type-check"><i data-lucide="check" aria-hidden="true"></i></span>
+        </label>
+       </div>
+       <p class="field-error" id="typeError" role="alert" hidden></p>
+       <div class="hint-card"><i data-lucide="circle-help" aria-hidden="true"></i><p>Ce choix adapte les fonctionnalités proposées. Les deux types d'établissements bénéficient des mêmes outils de gestion des tables et des disponibilités.</p></div>
+      </fieldset>
+
+      <fieldset class="step-panel" id="stepDetails" hidden>
+       <legend class="sr-only">Informations de l'établissement</legend>
+       <div class="selected-type"><span class="mini-icon"><i data-lucide="utensils" id="selectedTypeIcon" aria-hidden="true"></i></span><span><small>Votre activité</small><strong id="selectedTypeLabel">Restaurant indépendant</strong></span><i data-lucide="check-circle-2" aria-hidden="true"></i></div>
+       <div class="field"><label for="businessName">Nom de l'établissement <span aria-hidden="true">*</span></label><input id="businessName" name="businessName" type="text" maxlength="90" placeholder="Ex. : Le Jardin" autocomplete="off" required aria-describedby="nameError"><small id="nameError" class="field-error" role="alert" hidden></small></div>
+       <div class="field"><label for="businessCity">Ville <span aria-hidden="true">*</span></label><input id="businessCity" name="businessCity" type="text" maxlength="80" placeholder="Ex. : Rouen" autocomplete="off" required aria-describedby="cityError"><small id="cityError" class="field-error" role="alert" hidden></small></div>
+       <div class="field"><label for="businessEmail">Email professionnel <span aria-hidden="true">*</span></label><input id="businessEmail" name="businessEmail" type="email" inputmode="email" maxlength="160" placeholder="contact@exemple.test" autocomplete="off" spellcheck="false" required aria-describedby="emailError"><small id="emailError" class="field-error" role="alert" hidden></small></div>
+       <div class="hint-card warning"><i data-lucide="circle-help" aria-hidden="true"></i><p><strong>Pour cet aperçu, utilisez des informations fictives.</strong> Rien n'est envoyé, enregistré ou associé à un compte.</p></div>
+      </fieldset>
+
+      <section class="step-panel" id="stepPreview" aria-label="Récapitulatif du parcours" hidden>
+       <div class="review-head"><span class="review-check"><i data-lucide="check-circle-2" aria-hidden="true"></i></span><div><strong>Votre parcours est prêt à être découvert.</strong><p>Voici le profil que RestoManager pourrait préparer pour votre établissement.</p></div></div>
+       <dl class="review-fields">
+         <div><dt>Type d'établissement</dt><dd id="reviewType"></dd></div>
+         <div><dt>Établissement</dt><dd id="reviewName"></dd></div>
+         <div><dt>Ville</dt><dd id="reviewCity"></dd></div>
+         <div><dt>Email de contact</dt><dd id="reviewEmail"></dd></div>
+       </dl>
+       <div class="review-features"><strong>Fonctionnalités adaptées</strong><ul id="reviewFeatures"></ul></div>
+       <div class="availability-note"><i data-lucide="circle-help" aria-hidden="true"></i><div><strong>Aucune inscription n'a été effectuée.</strong><p>La création sécurisée de comptes et l'ouverture d'un véritable espace établissement arriveront dans une prochaine étape de développement.</p></div></div>
+       <a class="example-link" id="exampleLink" href="reservation/?restaurant=le-jardin-demo">Voir un exemple fictif de réservation <i data-lucide="chevron-right" aria-hidden="true"></i></a>
+      </section>
+
+      <p class="form-alert" id="formMessage" aria-live="polite" role="status"></p>
+      <div class="form-actions">
+       <button type="button" id="backStep" class="back-button" hidden><i data-lucide="arrow-left" aria-hidden="true"></i> Retour</button>
+       <button type="button" id="nextStep" class="next-button">Continuer <i data-lucide="chevron-right" aria-hidden="true"></i></button>
+       <button type="button" id="restart" class="next-button" hidden>Recommencer <i data-lucide="chevron-right" aria-hidden="true"></i></button>
+      </div>
+     </form>
+     <p class="disclaimer"><i data-lucide="check-circle-2" aria-hidden="true"></i> Aperçu privé DEV · Aucune inscription, aucun paiement, aucune donnée transmise.</p>
+    </div>
+    <footer class="form-footer"><span>© RestoManager · Simplifiez votre service</span><a href="login.html">Connexion équipe</a></footer>
+  </section>
+ </main>
+ <noscript><p class="noscript">Activez JavaScript pour parcourir cet aperçu. Aucune inscription réelle n'est proposée sur cette page.</p></noscript>
+</body>
+</html>

@@ -1,0 +1,28 @@
+name: RM-017.1 Signup - isolated onboarding UX and no-write security
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  signup-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:syntax
+      - name: RM-017.1 model, UI contracts and non-registration safety
+        run: node --test tests/rm0171-signup.test.cjs
+      - name: Seven widths, hotel and independent paths, keyboard, accessibility, no writes
+        run: node tests/browser/rm0171-signup.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rm0171-signup-seven-widths
+          path: test-results/rm0171-signup/
