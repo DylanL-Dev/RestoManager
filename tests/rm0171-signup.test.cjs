@@ -41,7 +41,7 @@ test('RM-017.1: onboarding has explicit 3-step accessible UX and no backend sign
  assert.match(html,/data-lucide="utensils"/);
  assert.match(html,/restomanager-chef-white\.svg/);
  assert.match(html,/Aucune inscription n'a été effectuée/);
- assert.match(html,/aucun compte ni établissement créé/);
+ assert.match(html,/Inscription non ouverte · tests sur invitation uniquement/);
  assert.match(css,/@media \(max-width:560px\)/);
  assert.match(css,/@media \(max-width:840px\)/);
  assert.match(css,/prefers-reduced-motion:reduce/);
