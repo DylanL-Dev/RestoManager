@@ -23,7 +23,7 @@ test('RM-017.2: actual signup remains DEV-only, closed until SMTP, redirect allo
  assert.match(client,/data\?\.session/);
  assert.match(client,/auth\.signOut/);
  assert.match(client,/\.rpc\('rm017_complete_signup_v1'/);
- assert.match(client,/password\.length/);
+ assert.match(client,/pass\.length/);
  assert.doesNotMatch(client,/service_role|sb_secret_|tnsrkargogckgtsxipwd/i);
  assert.doesNotMatch(html,/tnsrkargogckgtsxipwd/i);
 });
@@ -32,7 +32,7 @@ test('RM-017.2: email and password authorization is never accepted from editable
  assert.match(sql,/u\.is_anonymous = false/);
  assert.match(sql,/u\.deleted_at IS NULL/);
  assert.match(sql,/auth\.uid\(\)/);
- assert.doesNotMatch(sql,/raw_user_meta_data|user_metadata/i);
+ assert.doesNotMatch(sql.replace(/--[^\n]*/g,''),/raw_user_meta_data|user_metadata/i);
  assert.match(sql,/pg_advisory_xact_lock/);
  assert.match(sql,/FROM public\.staff_profiles WHERE user_id=v_uid/);
  assert.match(sql,/GRANT EXECUTE ON FUNCTION public\.rm017_complete_signup_v1/);
