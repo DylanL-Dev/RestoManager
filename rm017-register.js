@@ -181,13 +181,22 @@ async function start(){
   finally{safeUrl();}
   return;
  }
- try{
-  await loadCaptcha(key);
-  message('Inscription pilote sur invitation uniquement · Email confirmé obligatoire.');
-  button.addEventListener('click',onSignup);
- }catch{
-  button.disabled=true;
-  message('Contrôle anti-robot non disponible. Le formulaire d’inscription reste fermé.');
+ let loadingCaptcha=false;
+ async function onPreview(){
+  if(loadingCaptcha||captchaWidget!==null)return;
+  loadingCaptcha=true;
+  try{
+   await loadCaptcha(key);
+   message('Inscription pilote sur invitation uniquement · Email confirmé obligatoire.');
+  }catch{
+   button.disabled=true;
+   message('Contrôle anti-robot non disponible. Le formulaire d’inscription reste fermé.');
+  }finally{loadingCaptcha=false;}
  }
+ button.addEventListener('click',onSignup);
+ // A real Turnstile widget must render only when its container is visible.
+ window.addEventListener('restomanager:registration-preview',()=>void onPreview());
+ if(!$('stepPreview').hidden)void onPreview();
+ else message('Pilote privé : choisissez d’abord votre établissement. La vérification anti-robot suit à l’étape finale.');
 }
 void start();
