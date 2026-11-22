@@ -1,4 +1,4 @@
-name: RM-017.2 Secure registration - isolated RLS and verified email
+name: RM-017.2.1 Signup pilot - verified email, RLS and invitation only
 on:
   pull_request:
     branches: [feature/v3-supabase-full-clone]
@@ -17,12 +17,16 @@ jobs:
       - run: npm ci
       - run: npm run test:syntax
       - name: Verify DEV gates, email-confirmed flow, RLS contract and original wizard
-        run: node --test tests/rm0171-signup.test.cjs tests/rm0172-signup.test.cjs
+        run: node --test tests/rm0171-signup.test.cjs tests/rm0172-signup.test.cjs tests/rm01721-pilot.test.cjs
       - name: Disposable PostgreSQL 17, fictional users, cross-tenant RLS, verified signup and no duplicates
         run: node tests/postgres/rm0172.cjs
+      - name: Disposable PostgreSQL pilot invitations, one-use, before-user-created hook and cross-tenant RLS
+        run: node tests/postgres/rm01721.cjs
       - run: npx playwright install --with-deps chromium
       - name: Preserve RM-017.1 accepted visual and accessible flow on seven viewport widths
         run: node tests/browser/rm0171-signup.cjs
+      - name: Browser tests for CAPTCHA, confirmed callback and expired email
+        run: node tests/browser/rm01721-pilot.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
