@@ -67,9 +67,9 @@ async function fillWizard(page){
   await closed.ctx.close();console.log('PASS closed DEV runtime never initializes Auth or CAPTCHA');
   const active=await setup(browser,{active:true});
   await active.page.goto(active.origin+'/inscription.html');
+  await fillWizard(active.page);
   await active.page.waitForFunction(()=>!!window.__captchaOptions);
   await active.page.waitForFunction(()=>document.getElementById('submitRegistration').disabled===false);
-  await fillWizard(active.page);
   await active.page.locator('#submitRegistration').click();
   await active.page.waitForFunction(()=>!!window.__signupPayload);
   const p=await active.page.evaluate(()=>window.__signupPayload);
