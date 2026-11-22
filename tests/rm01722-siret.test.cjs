@@ -5,7 +5,7 @@ const base=path.resolve(__dirname,'..'),read=p=>fs.readFileSync(path.join(base,p
 const sql=read('supabase/migrations/20261122180000_rm01722_dev_siret_registry.sql');
 const signup=read('rm017-register.js'),html=read('inscription.html');
 const upstreamURL='https://recherche-entreprises.api.gouv.fr/search?q=13002526500013';
-const validFixture={resultats:[{siren:'130025265',etat_administratif:'A',nom_complet:'ENTREPRISE OFFICIELLE EXEMPLE',siege:{siret:'13002526500013',etat_administratif:'A',libelle_commune:'Rouen'}}]};
+const validFixture={resultats:[{siren:'130025265',etat_administratif:'A',nom_complet:'ENTREPRISE OFFICIELLE EXEMPLE',siege:{siret:'13002526500013',etat_administratif:'A',libelle_commune:'Rouen',activite_principale:'56.10A'}}]};
 const load=()=>import('../supabase/functions/_shared/rm017-siret-gateway.mjs');
 test('SIRET format and checksum reject fictitious and mismatched identifiers',async()=>{
  const {validSiret}=await load();
@@ -18,11 +18,14 @@ test('SIRET format and checksum reject fictitious and mismatched identifiers',as
 });
 test('Government lookup must prove the exact active establishment, not only the company SIREN',async()=>{
  const {inspectRegistryRecord}=await load();
- assert.deepEqual(inspectRegistryRecord(validFixture,'13002526500013'),{siret:'13002526500013',siren:'130025265',legalName:'ENTREPRISE OFFICIELLE EXEMPLE',city:'Rouen'});
+ assert.deepEqual(inspectRegistryRecord(validFixture,'13002526500013'),{siret:'13002526500013',siren:'130025265',legalName:'ENTREPRISE OFFICIELLE EXEMPLE',city:'Rouen',activityCode:'56.10A'});
  assert.equal(inspectRegistryRecord({...validFixture,resultats:[{...validFixture.resultats[0],siege:{...validFixture.resultats[0].siege,siret:'13002526500021'}}]},'13002526500013'),null);
  assert.equal(inspectRegistryRecord({...validFixture,resultats:[{...validFixture.resultats[0],etat_administratif:'C'}]},'13002526500013'),null);
  assert.equal(inspectRegistryRecord({...validFixture,resultats:[{...validFixture.resultats[0],siege:{...validFixture.resultats[0].siege,etat_administratif:'F'}}]},'13002526500013'),null);
  assert.equal(inspectRegistryRecord(validFixture,'13002526500014'),null);
+ // Valid active companies unrelated to hospitality must not pass unattended.
+ assert.equal(inspectRegistryRecord({...validFixture,resultats:[{...validFixture.resultats[0],siege:{...validFixture.resultats[0].siege,activite_principale:'62.01Z'}}]},'13002526500013'),null);
+ assert.equal(inspectRegistryRecord({...validFixture,resultats:[{...validFixture.resultats[0],siege:{...validFixture.resultats[0].siege,activite_principale:null}}]},'13002526500013'),null);
 });
 test('SIRET lookup gateway only calls the government host after private invitation and rate-limit approval',async()=>{
  const {createSiretHandler}=await load();
@@ -47,7 +50,9 @@ test('SIRET lookup gateway only calls the government host after private invitati
  assert.equal(forbidden.status,403);assert.equal(called.length,0);
  const okay=await handler(req());
  assert.equal(okay.status,200);
- assert.equal((await okay.json()).verified,true);
+ const checked=await okay.json();
+ assert.equal(checked.verified,true);
+ assert.equal(checked.activityCode,'56.10A');
  assert.deepEqual(called,[
   'https://lykoybacslvmhtzftqsf.supabase.co/rest/v1/rpc/rm017_siret_allow_lookup_v1',
   upstreamURL,
