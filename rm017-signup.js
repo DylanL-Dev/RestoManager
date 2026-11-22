@@ -62,6 +62,7 @@
   $('nextStep').replaceChildren(document.createTextNode(next===1?'Continuer ': 'Voir mon aperçu '));
   const arrow=document.createElement('i');arrow.setAttribute('data-lucide','chevron-right');arrow.setAttribute('aria-hidden','true');$('nextStep').append(arrow);
   drawIcons();
+  if(next===3)window.dispatchEvent(new Event('restomanager:registration-preview'));
   if(focus){$('setupTitle').setAttribute('tabindex','-1');$('setupTitle').focus({preventScroll:true});}
  }
  function advance(){
