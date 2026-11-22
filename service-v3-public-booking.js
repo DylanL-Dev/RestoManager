@@ -42,13 +42,46 @@
  function accordionHead(title,help,symbol){const summary=el('summary'),badge=el('span','rmWebAccordionIcon'),words=el('span','rmWebAccordionWords');badge.append(icon(symbol));words.append(el('strong','',title),el('small','',help));summary.append(badge,words,icon('chevron-down'));return summary;}
  function renderLinkPreview(form){const box=el('div','rmWebLinkDraft'),title=el('strong','','Votre lien de réservation'),value=el('output');value.id='rmWebLinkPreview';value.htmlFor='rmWeb-slug';value.setAttribute('aria-live','polite');value.setAttribute('aria-label','Aperçu du lien de réservation');const note=el('small','rmWebHelp');box.append(title,value,note);if(establishmentName()){const use=button('Utiliser le nom de mon restaurant',()=>{if(!writable())return;form.elements.slug.value=establishmentName();changed({target:form.elements.slug});form.elements.slug.focus();});box.append(use);}form.append(box);updateLinkPreview(form);}
  function updateLinkPreview(form){const value=formValue(form).slug,output=form.querySelector('#rmWebLinkPreview'),help=form.querySelector('.rmWebLinkDraft small');if(!output)return;if(value&&model.validSlug(value)){output.textContent=model.publicURL(location.href,value);help.textContent=value===data.settings.slug?'Ce lien correspond à l’adresse enregistrée.':'Aperçu — enregistrez les réglages pour utiliser ce lien. Le lien déjà partagé reste inchangé jusque-là.';}else{output.textContent='Le lien complet apparaîtra ici';help.textContent=value?'Indiquez uniquement le nom du restaurant, sans adresse https://.':'Commencez par écrire le nom de votre restaurant.';}}
+ function applyTypeSetup(form,type){
+  if(!writable())return;
+  const hotel=form.elements.hotelGuestsEnabled;
+  if(type==='hotel'&&!hotel){status.textContent='Le parcours hôtel doit d’abord être autorisé pour cet établissement.';return;}
+  try{
+   if(hotel&&hotel.checked!==(type==='hotel')){hotel.checked=type==='hotel';hotel.dispatchEvent(new Event('change',{bubbles:true}));}
+   const next=model.setupDraft({type,hotelGuestsCapability:data.hotelGuestsCapability===true,restaurantName:establishmentName(),
+    privacyNotice:form.elements.privacyNotice.value,cancellationNotice:form.elements.cancellationNotice.value,
+    cancellationMinutes:Number(form.elements.cancellationMinutes.value)});
+   for(const key of ['privacyNotice','cancellationNotice'])if(form.elements[key].value!==next[key]){form.elements[key].value=next[key];dirty=true;}
+   syncRetention(form);updateConstraints(form);
+   const note=form.querySelector('.rmWebSetupStatus');if(note)note.textContent='Modèle '+(type==='hotel'?'restaurant d’hôtel':'restaurant indépendant')+' préparé en brouillon. Complétez votre contact et la durée de conservation, puis enregistrez volontairement.';
+   status.textContent='Configuration proposée uniquement dans ce formulaire. Rien n’a été enregistré.';
+  }catch(e){status.textContent=e.message||'Ce modèle ne peut pas être préparé.';}
+ }
+ function renderSetupGuide(form,c){
+  const box=el('section','rmWebDefaults rmWebSetupGuide');box.setAttribute('aria-label','Configuration du type d’établissement');
+  box.append(el('strong','','Votre type d’établissement'));
+  if(c.slug){
+   box.append(el('p','rmWebHelp','Profil actuel : '+(c.hotelGuestsEnabled===true?'restaurant d’hôtel':'restaurant indépendant')+'. Les textes et réservations enregistrés sont conservés. Modifiez le parcours hôtel ci-dessous si nécessaire.'));
+  }else{
+   box.append(el('p','rmWebHelp','Première configuration : choisissez votre activité. Les propositions restent un brouillon jusqu’à « Enregistrer les réglages ».'));
+   const choices=el('div','rmWebShareActions');
+   choices.append(button('Restaurant indépendant',()=>applyTypeSetup(form,'independent')));
+   const hotel=button('Restaurant d’hôtel',()=>applyTypeSetup(form,'hotel'));
+   hotel.disabled=data.hotelGuestsCapability!==true;
+   if(hotel.disabled)hotel.title='Option disponible uniquement si le parcours hôtel est autorisé pour cet établissement';
+   choices.append(hotel);box.append(choices);
+   if(hotel.disabled)box.append(el('p','rmWebHelp','Le parcours hôtel n’est pas activé pour cet établissement. Contactez l’administrateur pour obtenir cette option.'));
+   const note=el('p','rmWebSetupStatus rmWebHelp');note.setAttribute('role','status');box.append(note);
+  }
+  form.append(box);
+ }
  function renderSettings(){
   const current=settings.querySelector('form');profileView?.updateHours(data.openingHours);if(current&&dirty){const reload=settings.querySelector('.rmWebReload');if(reload)reload.hidden=Number(current.dataset.version)===data.settings.version;return;}
   if(current&&settings.dataset.version===String(data.settings.version)&&settings.dataset.media===String(data.mediaEnabled===true)&&settings.dataset.profile===String(data.profileEnabled===true)&&settings.dataset.hotel===String(data.hotelGuestsCapability===true))return;
   settings.dataset.version=String(data.settings.version);settings.dataset.media=String(data.mediaEnabled===true);settings.dataset.profile=String(data.profileEnabled===true);settings.dataset.hotel=String(data.hotelGuestsCapability===true);
   photo?.destroy();profileView?.destroy();profileView=null;photo=null;photoWorking=false;settings.replaceChildren();if(role()!=='fb_admin'){settings.append(el('p','rmWebHelp','Les réglages et la confirmation des demandes sont réservés à l’équipe Restaurant.'));return;}
   const c=data.settings,disclosure=el('details','rmWebConfiguration rmWebAccordion'),summary=accordionHead('Réglages du portail','Lien, accueil des clients et présentation','sliders-horizontal');summary.tabIndex=0;disclosure.append(summary);const form=el('form','rmWebForm');form.id='rm015WebSettings';form.dataset.version=String(c.version);disclosure.open=!c.slug;const errors=el('div','rmWebValidation');errors.id='rmWebValidation';errors.setAttribute('role','alert');errors.hidden=true;form.append(errors);
-  const enabled=el('label','rmWebCheck'),check=el('input');check.type='checkbox';check.name='enabled';check.checked=c.enabled===true;enabled.append(check,document.createTextNode('Accepter les réservations en ligne'));form.append(enabled);
+  const enabled=el('label','rmWebCheck'),check=el('input');check.type='checkbox';check.name='enabled';check.checked=c.enabled===true;enabled.append(check,document.createTextNode('Accepter les réservations en ligne'));form.append(enabled);renderSetupGuide(form,c);
   form.append(field('slug','Nom à utiliser dans le lien',c.slug,'text','Écrivez le nom du restaurant, avec ses accents si vous voulez. RestoManager construit le lien complet ci-dessous : inutile de saisir https://.'));renderLinkPreview(form);form.append(field('maxParty','Nombre maximal de personnes',c.maxParty,'number','À partir de 4 personnes, une confirmation du Restaurant est nécessaire.'));
   const delay=el('label','rmWebField'),delayLabel=el('span','','Délai de confirmation');delayLabel.id='rmWeb-pendingMinutes-label';delay.append(delayLabel);const select=el('select');select.name='pendingMinutes';select.dataset.portalChoice='true';select.id='rmWeb-pendingMinutes';select.setAttribute('aria-labelledby',delayLabel.id);for(const value of [15,30,60,90,120,180]){const o=el('option','',value+' minutes');o.value=value;select.append(o)}if(c.pendingMinutes&&!Array.from(select.options).some(o=>Number(o.value)===c.pendingMinutes)){const custom=el('option','',c.pendingMinutes+' minutes');custom.value=c.pendingMinutes;select.append(custom);}select.value=String(c.pendingMinutes??60);delay.append(select,el('small','','Pour les demandes de 4 personnes ou plus. Sans votre accord avant l’échéance, la demande expire.'));form.append(delay);
   form.append(el('p','rmWebHelp','Les horaires et le pourcentage de répartition des arrivées suivent les paramètres du service. Le portail respecte ce plafond et les tables réellement disponibles.'));

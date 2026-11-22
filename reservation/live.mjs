@@ -2,12 +2,13 @@ import {requiresEmail,contactForSubmission,effectivePrivacyNotice} from './conta
 import {guestLabel,guestErrors} from './guests.mjs';
 import {createBookingClient,BookingError} from './client.mjs?v=20261121-rm01510';
 import {publicRuntime} from './environment.mjs';
+import {restaurantSlug,demoURL} from './tenant-links.mjs?v=20261122-rm01513';
 import {createVerification} from './turnstile.mjs';
 import {presentCover} from './media.mjs';
 import {presentProfile,phoneURL} from '../public-restaurant-profile.mjs?v=20261120-rm0156';
 import {paris,addDays,relativeDateLabel,deadline} from './dates.mjs?v=20261120-rm0159';
 import {initialVisit,currentSlots,serverDay,slotText,availabilityNote} from './initial-visit.mjs';
-const $=id=>document.getElementById(id),card=$('booking'),slug=new URLSearchParams(location.search).get('restaurant');
+const $=id=>document.getElementById(id),card=$('booking'),slug=restaurantSlug(location.href);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const emptyContact=()=>({firstName:'',lastName:'',email:'',phone:'',notes:'',accepted:false,guestType:'external',hotelRoom:'',roomPending:false});
@@ -108,12 +109,15 @@ $('infoDialog').addEventListener('keydown',e=>{if(e.key!=='Tab')return;const nod
 window.addEventListener('beforeunload',e=>{if(dirty&&(step===2||step===3||editing)){e.preventDefault();e.returnValue='';}});
 window.addEventListener('hashchange',()=>{const next=new URLSearchParams(location.hash.slice(1)).get('manage');if(next&&next!==token&&!busy){token=next;void perform(async()=>adopt(await api.read(token)));}});
 setInterval(()=>{if(!busy&&!editing&&!document.hidden&&!$('infoDialog').open&&record&&['pending','pending_change'].includes(record.state)){const own=token;void api.read(own).then(r=>{if(own===token&&!editing&&!busy&&(r.version!==record.version||r.state!==record.state))adopt(r);}).catch(()=>{});}},30000);
+function demoAction(label){return '<a class="primary" href="'+esc(demoURL(location.href))+'">'+esc(label)+'</a>';}
 async function start(){
+ $('demoLink').href=demoURL(location.href);
+ if(!slug){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Lien du restaurant incomplet','Vérifiez le lien ou le QR code transmis par votre établissement.')+demoAction('Découvrir la démonstration fictive');symbols();return;}
  try{
   const response=await fetch('runtime.json',{cache:'no-store',credentials:'omit'});if(!response.ok)throw new BookingError('La configuration du restaurant est indisponible.');const runtime=publicRuntime(await response.json(),location.href);
   official=runtime.channel==='production';verificationEnabled=Boolean(runtime.turnstileSiteKey);
   if(runtime.activated!==true){
-   $('portalLayout').classList.add('compact-story');card.innerHTML=header('Les réservations en ligne ne sont pas encore ouvertes','Contactez directement le restaurant pour préparer votre venue.')+'<p class="form-note">Aucune demande ne peut être envoyée depuis cette page.</p><a class="primary" href="index.html?restaurant='+encodeURIComponent(slug||'a-lepicerie-rouen')+'">Voir le parcours de démonstration</a>';symbols();return;
+   $('portalLayout').classList.add('compact-story');card.innerHTML=header('Les réservations en ligne ne sont pas encore ouvertes','Contactez directement le restaurant pour préparer votre venue.')+'<p class="form-note">Aucune demande ne peut être envoyée depuis cette page.</p>'+demoAction('Voir le parcours de démonstration');symbols();return;
   }
   let storage;try{storage=sessionStorage}catch{}
   api=createBookingClient({endpoint:runtime.api,allowedOrigin:runtime.allowedApiOrigin,base:location.href,restaurant:slug,storage,challenge:runtime.turnstileSiteKey?createVerification({dialog:$('verificationDialog'),siteKey:runtime.turnstileSiteKey}):undefined});
@@ -129,6 +133,6 @@ async function start(){
   if(token){adopt(await api.read(token));return;}
   if(api.hasPending()){try{const r=await api.recover();if(r&&!['expired','cancelled','rejected'].includes(r.state)){adopt(r);return;}api.clearRecovery();}catch(e){if(e.code==='TOKEN')api.clearRecovery();else throw e;}}
   await chooseInitialVisit();symbols();
- }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p><a class="primary" href="index.html?restaurant=a-lepicerie-rouen">Essayer la démonstration</a>';symbols();}
+ }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p>'+demoAction('Essayer la démonstration');symbols();}
 }
 void start();

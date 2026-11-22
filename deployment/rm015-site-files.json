@@ -35,6 +35,7 @@
   "reservation/initial-visit.mjs",
   "reservation/live.html",
   "reservation/live.mjs",
+  "reservation/tenant-links.mjs",
   "reservation/media.mjs",
   "reservation/model.js",
   "reservation/portal.css",

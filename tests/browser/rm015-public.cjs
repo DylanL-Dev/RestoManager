@@ -103,8 +103,13 @@ async function complete(page) {
       await page.goto(origin + '/reservation/?restaurant=a-lepicerie-rouen');
       const futureSaturday = await page.evaluate(() => { const M = window.RMPublicModel; let d = M.addDays(M.paris().date, 1); while (new Date(d + 'T12:00Z').getUTCDay() !== 6) d = M.addDays(d, 1); return d; });
       await page.locator('#visitDate').fill(futureSaturday); await page.locator('#service-lunch').check(); assert.equal(await page.locator('input[name=time]').count(), 0); assert.ok(await page.getByRole('button', { name: 'Continuer' }).isDisabled());
-      await page.goto(origin + '/reservation/?restaurant=%3Cscript%3E'); assert.equal(await page.getByRole('heading', { name: 'Ce restaurant n’est pas disponible' }).count(), 1);
-      await page.goto(origin + '/reservation/'); assert.equal(await page.getByRole('heading', { name: 'Ce restaurant n’est pas disponible' }).count(), 1);
+      await page.goto(origin + '/reservation/?restaurant=%3Cscript%3E'); assert.equal(await page.getByRole('heading', { name: 'Ce lien de démonstration n’est pas disponible' }).count(), 1);
+      await page.goto(origin + '/reservation/'); await page.getByRole('heading', { name: 'Choisissez votre établissement fictif' }).waitFor();
+      const examples=await page.locator('.choice-row a').allTextContents();assert.equal(examples.length,2);assert.ok(examples.some(t=>t.includes('Jardin'))&&examples.some(t=>t.includes('Rives')));
+      assert.ok(!examples.some(t=>/Épicerie|Mercure|Rouen/i.test(t)),'No historic hotel suggested in generic demos');
+      await page.getByRole('link',{name:/Rives/}).click();
+      await page.getByRole('heading',{name:/Rives/}).waitFor();assert.match(await page.locator('h1').innerText(),/Rives/);assert.match(page.url(),/restaurant=hotel-des-rives-demo/);
+      await page.goto(origin + '/reservation/');
       await page.getByRole('button', { name: 'Confidentialité', exact: true }).click(); await page.getByRole('heading', { name: 'Vos données dans cet aperçu' }).waitFor(); await page.keyboard.press('Escape');
       await page.goto(origin + '/reservation/?restaurant=a-lepicerie-rouen'); await complete(page); const link = await page.locator('a[href*="#manage="]').getAttribute('href');
       await page.goto(origin + '/reservation/?restaurant=le-jardin-demo' + new URL(link, origin).hash); await page.getByRole('heading', { name: 'Ce lien n’est plus disponible' }).waitFor(); assert.equal(await page.locator('.summary').count(), 0);
