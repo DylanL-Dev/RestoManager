@@ -13,7 +13,7 @@ const expectDenied=async(user,kind='independent',code='42501')=>{
 (async()=>{
  try{
   db=await start();
-  await db.ok('DO $ BEGIN CREATE ROLE supabase_auth_admin NOLOGIN; EXCEPTION WHEN duplicate_object THEN NULL; END $;');
+  if(!await db.json("select to_json(exists(select 1 from pg_roles where rolname='supabase_auth_admin'))"))await db.ok('create role supabase_auth_admin nologin;');
   await db.ok('alter table auth.users add column if not exists email text, add column if not exists email_confirmed_at timestamptz, add column if not exists is_anonymous boolean not null default false, add column if not exists deleted_at timestamptz;');
   await db.ok(migration('20261122170000_rm0172_dev_secure_signup.sql'));
   await db.ok(migration('20261122175200_rm01721_dev_email_pilot_allowlist.sql'));
