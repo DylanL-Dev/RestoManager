@@ -106,5 +106,9 @@ test('RM-015.13: hotel demo requires guest status and fictional room, unlike ind
  for(const expected of ['function hotelChoice()', 'function roomFields()', 'function hotelRecap()', 'guestType', 'hotelRoom', 'blankContact()']) assert.ok(portal.includes(expected),expected);
  assert.match(css,/guest-choice.*choice-row/);
  assert.match(css,/site-footer>div.*flex-wrap:wrap/);
- assert.match(html,/portal\.js\?v=20261122-rm01513-hotel/);
+ assert.match(html,/portal\.js\?v=20261122-rm01513-hotel-icon/);
+ assert.match(portal,/brand-mark \[data-lucide\]/);
+ assert.match(portal,/cover-label \[data-lucide\]/);
+ assert.match(portal,/icon\('hotel'\)/);
+ assert.doesNotMatch(portal,/icon\('bed-double'\)/);
 });
