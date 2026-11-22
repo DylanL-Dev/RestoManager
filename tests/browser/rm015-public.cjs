@@ -108,7 +108,7 @@ async function complete(page) {
       const examples=await page.locator('.choice-row a').allTextContents();assert.equal(examples.length,2);assert.ok(examples.some(t=>t.includes('Jardin'))&&examples.some(t=>t.includes('Rives')));
       assert.ok(!examples.some(t=>/Épicerie|Mercure|Rouen/i.test(t)),'No historic hotel suggested in generic demos');
       await page.getByRole('link',{name:/Rives/}).click();
-      assert.match(await page.locator('h1').innerText(),/Rives/);assert.match(page.url(),/restaurant=hotel-des-rives-demo/);
+      await page.getByRole('heading',{name:/Rives/}).waitFor();assert.match(await page.locator('h1').innerText(),/Rives/);assert.match(page.url(),/restaurant=hotel-des-rives-demo/);
       await page.goto(origin + '/reservation/');
       await page.getByRole('button', { name: 'Confidentialité', exact: true }).click(); await page.getByRole('heading', { name: 'Vos données dans cet aperçu' }).waitFor(); await page.keyboard.press('Escape');
       await page.goto(origin + '/reservation/?restaurant=a-lepicerie-rouen'); await complete(page); const link = await page.locator('a[href*="#manage="]').getAttribute('href');
