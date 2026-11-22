@@ -81,7 +81,7 @@ BEGIN
  VALUES (v_email,1)
  ON CONFLICT(email) DO UPDATE
  SET attempts=CASE WHEN private.rm017_siret_lookup_attempts.window_started_at<now()-interval '1 hour'
-                   THEN 1 ELSE pg_catalog.least(private.rm017_siret_lookup_attempts.attempts+1,20) END,
+                   THEN 1 ELSE least(private.rm017_siret_lookup_attempts.attempts+1,20) END,
      window_started_at=CASE WHEN private.rm017_siret_lookup_attempts.window_started_at<now()-interval '1 hour'
                             THEN now() ELSE private.rm017_siret_lookup_attempts.window_started_at END
  RETURNING attempts INTO v_attempts;
