@@ -23,6 +23,10 @@
       if (!record || record.slug !== slug || record.token !== token || !['confirmed', 'cancelled'].includes(record.status)) return fail('not_found');
       if (!Number.isFinite(record.expiresAt) || now() >= record.expiresAt) { clear(); return fail('expired'); }
       if (!Number.isInteger(record.draft?.party) || record.draft.party < 1 || record.draft.party > config.maxParty || !model.validDate(record.draft.date) || !Object.hasOwn(config.services, record.draft.service) || !/^\d{2}:\d{2}$/.test(record.draft.time) || !Number.isInteger(record.revision) || !record.contact || ['firstName', 'lastName', 'email', 'phone', 'notes'].some(k => typeof record.contact[k] !== 'string' || record.contact[k].length > 500)) return fail('not_found');
+      // Reject inconsistent session data; an independent venue cannot inherit hotel details.
+      const guest = record.contact.guestType, room = String(record.contact.hotelRoom || '');
+      if (config.type === 'hotel' && (!['hotel','external'].includes(guest) || (guest === 'hotel' && (!room.trim() || room.length > 20 || !/^[\p{L}\p{N} ._-]+$/u.test(room))) || (guest === 'external' && room.trim()))) return fail('not_found');
+      if (config.type !== 'hotel' && (guest === 'hotel' || room.trim())) return fail('not_found');
       current = record; return structuredClone(record);
     }
     function check(draft, contact) { const errors = model.validate(config, draft, contact, new Date(now())); if (Object.keys(errors).length) return fail('invalid'); }
