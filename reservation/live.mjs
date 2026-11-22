@@ -2,17 +2,18 @@ import {requiresEmail,contactForSubmission,effectivePrivacyNotice} from './conta
 import {guestLabel,guestErrors} from './guests.mjs';
 import {createBookingClient,BookingError} from './client.mjs?v=20261121-rm01510';
 import {publicRuntime} from './environment.mjs';
+import {restaurantSlug,demoURL} from './tenant-links.mjs?v=20261122-rm01513';
 import {createVerification} from './turnstile.mjs';
 import {presentCover} from './media.mjs';
 import {presentProfile,phoneURL} from '../public-restaurant-profile.mjs?v=20261120-rm0156';
 import {paris,addDays,relativeDateLabel,deadline} from './dates.mjs?v=20261120-rm0159';
 import {initialVisit,currentSlots,serverDay,slotText,availabilityNote} from './initial-visit.mjs';
-const $=id=>document.getElementById(id),card=$('booking'),slug=new URLSearchParams(location.search).get('restaurant');
+const $=id=>document.getElementById(id),card=$('booking'),slug=restaurantSlug(location.href);
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const emptyContact=()=>({firstName:'',lastName:'',email:'',phone:'',notes:'',accepted:false,guestType:'external',hotelRoom:'',roomPending:false});
 let api,profile,step=1,slots=[],loading=false,busy=false,editing=false,dirty=false,record=null,token='',contact=emptyContact(),notice='',errors={},seq=0;
-let showAll=false,initialNotice='',official=false;
+let showAll=false,initialNotice='',official=false,verificationEnabled=false;
 let draft={party:2,date:paris().date,service:'dinner',time:''};
 const tell=text=>{$('live').textContent=text};
 const symbols=()=>window.lucide.createIcons();
@@ -25,7 +26,7 @@ function summary(value=draft,withContact=false,title='Votre venue'){
  return `<dl class="summary"><div><dt>${esc(title)}</dt><dd>${esc(relativeDateLabel(value.date,profile.today))}<br>${esc(value.time)} · ${Number(value.party)} personne${value.party>1?'s':''}</dd></div>${withContact?`<div><dt>Coordonnées</dt><dd>${esc(contact.firstName)} ${esc(contact.lastName)}${requiresEmail(profile)&&contact.email?'<br><span class="summary-email">'+esc(contact.email)+'</span>':''}</dd></div>${contact.notes?`<div><dt>Votre demande particulière</dt><dd>${esc(contact.notes)}</dd></div>`:''}`:''}${profile.hotelGuestsEnabled||value.guestType==='hotel'||contact.guestType==='hotel'?'<div><dt>Votre accueil</dt><dd>'+esc(guestLabel(value.guestType?value:contact))+'</dd></div>':''}</dl>`;
 }
 function hotelChoice(){return profile.hotelGuestsEnabled===true||editing&&record?.contact?.guestType==='hotel';}
-function chooseGuest(){return hotelChoice()?'<fieldset class="guest-choice"><legend>Séjournez-vous à l’hôtel ?</legend><div class="choice-row">'+radio('guestType','hotel',icon('building-2')+' Client de l’hôtel',contact.guestType==='hotel')+radio('guestType','external',icon('users')+' Client extérieur',contact.guestType==='external')+'</div><p class="hint">La réservation concerne une table au restaurant.</p></fieldset>':'';}
+function chooseGuest(){return hotelChoice()?'<fieldset class="guest-choice"><legend>Séjournez-vous à l’hôtel ?</legend><div class="choice-row">'+radio('guestType','hotel',icon('hotel')+' Client de l’hôtel',contact.guestType==='hotel')+radio('guestType','external',icon('users')+' Client extérieur',contact.guestType==='external')+'</div><p class="hint">La réservation concerne une table au restaurant.</p></fieldset>':'';}
 function roomFields(){return contact.guestType==='hotel'?'<div class="hotel-stay"><h3>Votre séjour à l’hôtel</h3>'+field('hotelRoom','Numéro de chambre *','text',20,'off')+'<p class="hint">Votre nom et votre numéro de chambre sont obligatoires pour réserver comme client de l’hôtel.</p></div>':'';}
 function venue(){
  const visible=showAll?slots:(slots.some(s=>s.available)?slots.filter(s=>s.available).slice(0,5):slots.slice(0,5));
@@ -72,7 +73,9 @@ function info(kind){
  const body=$('infoBody');body.replaceChildren();body.classList.toggle('legal-content',kind!=='cancel');
  let text=kind==='cancel'?'La réservation et toute proposition de modification seront annulées. Cette action doit être confirmée.':kind==='privacy'?effectivePrivacyNotice(profile.privacyNotice,profile):profile.cancellationNotice;
  if(kind==='privacy'&&(profile.hotelGuestsEnabled||contact.guestType==='hotel'))text+='\n\nVotre séjour déclaré\nLe choix Hôtel/Extérieur sert à préparer votre accueil au restaurant. Le nom et le numéro de chambre sont obligatoires pour réserver comme client de l’hôtel. Ces informations sont vérifiées par l’équipe si nécessaire et ne donnent aucune priorité sur les disponibilités.';
+ if(kind==='privacy'&&verificationEnabled)text+='\n\nProtection contre les demandes automatisées\nLorsqu’une vérification est nécessaire, Cloudflare Turnstile peut traiter des informations techniques de connexion, notamment l’adresse IP et des informations sur le navigateur, pour protéger le service contre les abus.';
  for(const paragraph of String(text||'').split(/\n\s*\n/)){const lines=paragraph.split('\n');if(kind!=='cancel'&&lines.length>1&&lines[0].length<=80){const heading=document.createElement('h3');heading.textContent=lines.shift();body.append(heading);}const p=document.createElement('p');p.textContent=lines.join('\n');body.append(p);}
+ if(kind==='privacy'&&verificationEnabled){const p=document.createElement('p'),link=document.createElement('a');link.href='https://www.cloudflare.com/privacypolicy/';link.target='_blank';link.rel='noopener noreferrer';link.textContent='Informations de confidentialité de Cloudflare';p.append(link);body.append(p);}
  if(kind==='privacy'){const contact=document.createElement('section');contact.className='legal-contact';const heading=document.createElement('h3');heading.textContent='Contact pour vos données personnelles';contact.append(heading);
   for(const line of String(profile.privacyContact||'').split(/\n/)){const p=document.createElement('p'),value=line.replace(/^(?:Email|Téléphone)\s*:\s*/i,'').trim(),email=/^[A-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9.-]*[A-Z0-9])?\.[A-Z]{2,}$/i.test(value),phone=phoneURL(value);if(email||phone){const link=document.createElement('a');link.href=email?'mailto:'+value:phone;link.textContent=line;p.append(link);}else p.textContent=line;contact.append(p);}body.append(contact);
  }
@@ -106,17 +109,25 @@ $('infoDialog').addEventListener('keydown',e=>{if(e.key!=='Tab')return;const nod
 window.addEventListener('beforeunload',e=>{if(dirty&&(step===2||step===3||editing)){e.preventDefault();e.returnValue='';}});
 window.addEventListener('hashchange',()=>{const next=new URLSearchParams(location.hash.slice(1)).get('manage');if(next&&next!==token&&!busy){token=next;void perform(async()=>adopt(await api.read(token)));}});
 setInterval(()=>{if(!busy&&!editing&&!document.hidden&&!$('infoDialog').open&&record&&['pending','pending_change'].includes(record.state)){const own=token;void api.read(own).then(r=>{if(own===token&&!editing&&!busy&&(r.version!==record.version||r.state!==record.state))adopt(r);}).catch(()=>{});}},30000);
+function demoAction(label){return '<a class="primary" href="'+esc(demoURL(location.href))+'">'+esc(label)+'</a>';}
 async function start(){
+ $('demoLink').href=demoURL(location.href);
+ if(!slug){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Lien du restaurant incomplet','Vérifiez le lien ou le QR code transmis par votre établissement.')+demoAction('Découvrir la démonstration fictive');symbols();return;}
  try{
   const response=await fetch('runtime.json',{cache:'no-store',credentials:'omit'});if(!response.ok)throw new BookingError('La configuration du restaurant est indisponible.');const runtime=publicRuntime(await response.json(),location.href);
-  official=runtime.channel==='production';
+  official=runtime.channel==='production';verificationEnabled=Boolean(runtime.turnstileSiteKey);
   if(runtime.activated!==true){
-   $('portalLayout').classList.add('compact-story');card.innerHTML=header('Les réservations en ligne ne sont pas encore ouvertes','Contactez directement le restaurant pour préparer votre venue.')+'<p class="form-note">Aucune demande ne peut être envoyée depuis cette page.</p><a class="primary" href="index.html?restaurant='+encodeURIComponent(slug||'a-lepicerie-rouen')+'">Voir le parcours de démonstration</a>';symbols();return;
+   $('portalLayout').classList.add('compact-story');card.innerHTML=header('Les réservations en ligne ne sont pas encore ouvertes','Contactez directement le restaurant pour préparer votre venue.')+'<p class="form-note">Aucune demande ne peut être envoyée depuis cette page.</p>'+demoAction('Voir le parcours de démonstration');symbols();return;
   }
   let storage;try{storage=sessionStorage}catch{}
   api=createBookingClient({endpoint:runtime.api,allowedOrigin:runtime.allowedApiOrigin,base:location.href,restaurant:slug,storage,challenge:runtime.turnstileSiteKey?createVerification({dialog:$('verificationDialog'),siteKey:runtime.turnstileSiteKey}):undefined});
   token=new URLSearchParams(location.hash.slice(1)).get('manage')||'';
   profile=await api.profile(token||undefined);if(!profile.name||!Number.isInteger(profile.maxParty)||!profile.today)throw new BookingError('Les informations du restaurant sont indisponibles.');
+  // Use the same hotel pictogram on public hotel pages; restaurants keep their usual identity.
+  if(profile.hotelGuestsEnabled===true){
+    $('homeLink').querySelector('.brand-mark [data-lucide]')?.setAttribute('data-lucide','hotel');
+    $('story').querySelector('.cover-label [data-lucide]')?.setAttribute('data-lucide','hotel');
+  }
   presentCover(profile,runtime.allowedApiOrigin);$('restaurantName').textContent=profile.name;$('restaurantSubtitle').textContent='Réservez directement auprès de votre restaurant';$('locality').textContent='Votre restaurant';$('introduction').textContent='Un moment à partager, une table à retrouver.';$('description').textContent='Choisissez votre venue et retrouvez votre réservation avec votre lien personnel.';
   presentProfile(profile);$('liveBanner').textContent=runtime.channel==='dev'?'DEV · Données de l’établissement · Emails désactivés':'Réservation en ligne · Lien personnel sécurisé';if(runtime.channel==='production')$('liveFooter').textContent='Conservez votre lien personnel pour retrouver votre réservation.';$('privacy').disabled=false;$('conditions').disabled=false;
   const hotelEntry=new URLSearchParams(location.search).get('guest')==='hotel';
@@ -127,6 +138,6 @@ async function start(){
   if(token){adopt(await api.read(token));return;}
   if(api.hasPending()){try{const r=await api.recover();if(r&&!['expired','cancelled','rejected'].includes(r.state)){adopt(r);return;}api.clearRecovery();}catch(e){if(e.code==='TOKEN')api.clearRecovery();else throw e;}}
   await chooseInitialVisit();symbols();
- }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p><a class="primary" href="index.html?restaurant=a-lepicerie-rouen">Essayer la démonstration</a>';symbols();}
+ }catch(e){$('portalLayout').classList.add('compact-story');card.innerHTML=header('Le service est momentanément indisponible',e.message||'Vérifiez votre lien et réessayez.')+'<p class="form-note">Aucune réservation n’est confirmée sur cet écran.</p>'+demoAction('Essayer la démonstration');symbols();}
 }
 void start();
