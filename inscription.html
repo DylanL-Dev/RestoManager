@@ -7,7 +7,7 @@
  <meta name="referrer" content="no-referrer">
  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self'; img-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://lykoybacslvmhtzftqsf.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'none'; form-action 'none'">
  <meta name="theme-color" content="#102f29">
- <meta name="description" content="Découvrez le parcours d'inscription de RestoManager pour les restaurants et les restaurants d'hôtel. Démonstration sans création de compte.">
+ <meta name="description" content="RestoManager : inscription professionnelle sécurisée pour restaurants et hôtels, avec vérification SIRET. Pilote DEV fermé.">
  <title>Créer mon établissement · RestoManager — Aperçu DEV</title>
  <link rel="icon" href="pwa-icon.svg" type="image/svg+xml">
  <link rel="stylesheet" href="rm017-signup.css?v=20261122-rm0171">
@@ -83,6 +83,12 @@
        <div class="selected-type"><span class="mini-icon"><i data-lucide="utensils" id="selectedTypeIcon" aria-hidden="true"></i></span><span><small>Votre activité</small><strong id="selectedTypeLabel">Restaurant indépendant</strong></span><i data-lucide="check-circle-2" aria-hidden="true"></i></div>
        <div class="field"><label for="businessName">Nom de l'établissement <span aria-hidden="true">*</span></label><input id="businessName" name="businessName" type="text" maxlength="90" placeholder="Ex. : Le Jardin" autocomplete="off" required aria-describedby="nameError"><small id="nameError" class="field-error" role="alert" hidden></small></div>
        <div class="field"><label for="businessCity">Ville <span aria-hidden="true">*</span></label><input id="businessCity" name="businessCity" type="text" maxlength="80" placeholder="Ex. : Rouen" autocomplete="off" required aria-describedby="cityError"><small id="cityError" class="field-error" role="alert" hidden></small></div>
+       <div class="field siret-field">
+         <label for="businessSiret">SIRET de l'établissement exploitant <span aria-hidden="true">*</span></label>
+         <input id="businessSiret" name="businessSiret" type="text" inputmode="numeric" pattern="[0-9]{14}" minlength="14" maxlength="14" placeholder="14 chiffres, sans espaces" autocomplete="off" spellcheck="false" aria-describedby="siretHelp siretError">
+         <small id="siretHelp" class="siret-help">Le numéro est vérifié auprès d'un registre officiel français. Pour un restaurant d'hôtel, indiquez le SIRET de la société exploitante.</small>
+         <small id="siretError" class="field-error" role="alert" hidden></small>
+        </div>
        <div class="field"><label for="businessEmail">Email professionnel <span aria-hidden="true">*</span></label><input id="businessEmail" name="businessEmail" type="email" inputmode="email" maxlength="160" placeholder="contact@exemple.test" autocomplete="off" spellcheck="false" required aria-describedby="emailError"><small id="emailError" class="field-error" role="alert" hidden></small></div>
        <div class="hint-card warning"><i data-lucide="circle-help" aria-hidden="true"></i><p id="dataDisclaimer"><strong>Aperçu DEV :</strong> utilisez des informations fictives. Aucun envoi sans activation du pilote privé.</p></div>
       </fieldset>
@@ -93,6 +99,7 @@
          <div><dt>Type d'établissement</dt><dd id="reviewType"></dd></div>
          <div><dt>Établissement</dt><dd id="reviewName"></dd></div>
          <div><dt>Ville</dt><dd id="reviewCity"></dd></div>
+         <div><dt>SIRET</dt><dd id="reviewSiret"></dd></div>
          <div><dt>Email de contact</dt><dd id="reviewEmail"></dd></div>
        </dl>
        <div class="review-features"><strong>Fonctionnalités adaptées</strong><ul id="reviewFeatures"></ul></div>
@@ -102,6 +109,7 @@
         <div class="account-heading"><span class="account-lock"><i data-lucide="check-circle-2" aria-hidden="true"></i></span><div><h3 id="accountTitle">Création sécurisée du compte</h3><p>Votre première connexion nécessite la confirmation de votre email avant toute création d’établissement.</p></div></div>
         <div class="field"><label for="registrationPassword">Mot de passe <span aria-hidden="true">*</span></label><input id="registrationPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="12 caractères minimum" aria-describedby="registrationPasswordHelp"><small id="registrationPasswordHelp">Utilisez une phrase de passe unique d’au moins 12 caractères.</small></div>
         <div class="field"><label for="registrationPasswordConfirm">Confirmer le mot de passe <span aria-hidden="true">*</span></label><input id="registrationPasswordConfirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Répéter le mot de passe"></div>
+        <p id="siretVerificationStatus" class="siret-verification" role="status" aria-live="polite">Le SIRET sera contrôlé avant l'envoi de l'email de confirmation.</p>
         <div class="pilot-captcha" id="registrationCaptcha" role="group" aria-label="Vérification anti-robot" hidden></div>
         <button type="button" class="next-button register-button" id="submitRegistration" disabled>Créer mon compte DEV <i data-lucide="chevron-right" aria-hidden="true"></i></button>
         <p class="signup-state" id="registrationStatus" role="status" aria-live="polite">Vérification des conditions d’ouverture de l’inscription…</p>
