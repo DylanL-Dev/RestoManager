@@ -1,5 +1,5 @@
 'use strict';
-/* RM-017.2: DEV-only Auth flow. No service_role key, no direct SQL writes, no PROD routing. */
+/* RM-017.2: DEV-only Auth flow, publishable key, no direct SQL writes or PROD routing. */
 import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 const $=id=>document.getElementById(id);
 const button=$('submitRegistration'),notice=$('registrationStatus'),done=$('registrationDone');
