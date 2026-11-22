@@ -32,6 +32,7 @@
   $('reviewType').textContent=info.label;
   $('reviewName').textContent=info.name;
   $('reviewCity').textContent=info.city;
+  $('reviewSiret').textContent=$('businessSiret').value.trim()||'À vérifier avant inscription';
   $('reviewEmail').textContent=info.email;
   const list=$('reviewFeatures');list.replaceChildren();
   for(const feature of info.features){
