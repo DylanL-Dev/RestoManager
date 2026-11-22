@@ -22,3 +22,21 @@
 .guest-choice{padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--tint)}.guest-choice .choice-row{grid-template-columns:1fr 1fr}.guest-choice label{font-size:.8rem;gap:6px;min-height:56px}.guest-choice svg{width:18px;height:18px}.guest-choice .hint{margin:10px 0 0}.hotel-stay{border:1px solid var(--line);border-radius:14px;padding:16px;background:var(--tint);margin:20px 0}.hotel-stay h3{font-size:1rem;margin:0 0 14px}
 
 #verificationDialog [data-verification-widget]{display:grid;justify-items:center;gap:8px}#verificationDialog [data-verification-cancel]{margin-top:18px}
+
+/* RM-015.13: one coherent hotel guest choice in the fictional demo. */
+.guest-choice .choice-row{grid-template-columns:repeat(2,minmax(0,1fr))}
+.guest-choice .choice label{min-height:55px;padding:10px 8px;gap:7px}
+.guest-choice .choice svg{height:18px;width:18px}
+.guest-choice .hint{margin-top:9px}
+.hotel-stay{background:#f2f7f1;border:1px solid var(--line);border-radius:14px;padding:17px;margin-bottom:18px}
+.hotel-stay h3{font-size:.92rem;margin-bottom:13px}
+.site-footer>div{min-width:0;flex-wrap:wrap;row-gap:0}
+.site-footer button{white-space:normal;text-align:left}
+@media(max-width:699px){
+ .site-footer{display:flex;flex-direction:column;align-items:flex-start;gap:2px}
+ .site-footer>div{width:100%;margin-left:0;gap:0 16px;justify-content:flex-start;min-width:0}
+ .site-footer small{flex-basis:auto}
+ .label-line{flex-wrap:wrap}
+ .hotel-stay{padding:15px}
+}
+@media(max-width:350px){.guest-choice .choice label{flex-direction:column}}
