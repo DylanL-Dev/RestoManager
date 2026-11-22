@@ -40,6 +40,7 @@ test('RM-017.1: onboarding has explicit 3-step accessible UX and no backend sign
  assert.match(html,/data-lucide="hotel"/);
  assert.match(html,/data-lucide="utensils"/);
  assert.match(html,/restomanager-chef-white\.svg/);
+ assert.match(html,/<em>Votre façon<\/em><br> de travailler\./,'Responsive heading must retain a word separator when the mobile <br> is hidden');
  assert.match(html,/Aucune inscription n'a été effectuée/);
  assert.match(html,/Inscription non ouverte · tests sur invitation uniquement/);
  assert.match(css,/@media \(max-width:560px\)/);

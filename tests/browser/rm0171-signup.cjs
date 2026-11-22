@@ -36,6 +36,8 @@ async function context(browser,origin,width){
    page.on('pageerror',e=>errors.push(width+':'+e.message));
    await page.goto(origin+'/inscription.html');
    await page.getByRole('heading',{name:/Commençons par votre établissement/}).waitFor();
+   const storyHeading=await page.locator('.story h1').innerText();
+   assert.match(storyHeading,/Votre façon\s+de travailler\./,'Mobile and desktop title must contain a space between « façon » and « de »');
    assert.equal(await page.getByRole('radio').count(),2);
    assert.equal(await page.locator('#progressTrack').getAttribute('aria-valuenow'),'1');
    assert.equal(await page.locator('#typeHotel .type-icon svg').evaluate(svg=>!!svg.querySelector('rect[x="4"][y="2"]')),true,'Lucide hotel');
