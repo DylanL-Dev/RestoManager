@@ -5,7 +5,7 @@
  <meta name="viewport" content="width=device-width, initial-scale=1">
  <meta name="robots" content="noindex, nofollow">
  <meta name="referrer" content="no-referrer">
- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; img-src 'self'; connect-src 'self' https://lykoybacslvmhtzftqsf.supabase.co; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+ <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self'; img-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://lykoybacslvmhtzftqsf.supabase.co https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; object-src 'none'; base-uri 'none'; form-action 'none'">
  <meta name="theme-color" content="#102f29">
  <meta name="description" content="Découvrez le parcours d'inscription de RestoManager pour les restaurants et les restaurants d'hôtel. Démonstration sans création de compte.">
  <title>Créer mon établissement · RestoManager — Aperçu DEV</title>
@@ -14,11 +14,11 @@
  <script defer src="lucide-local.js?v=20261122-rm0171"></script>
  <script defer src="rm017-signup-model.js?v=20261122-rm0171"></script>
  <script defer src="rm017-signup.js?v=20261122-rm0171"></script>
- <script type="module" src="rm017-register.js?v=20261122-rm0172"></script>
+ <script type="module" src="rm017-register.js?v=20261122-rm01721"></script>
 </head>
 <body>
  <a class="skip" href="#signupMain">Aller au formulaire</a>
- <div class="preview-bar" role="note"><i data-lucide="circle-help" aria-hidden="true"></i><strong>RM-017.1 · Aperçu DEV</strong><span>Simulation uniquement : aucun compte ni établissement créé</span></div>
+ <div class="preview-bar" role="note"><i data-lucide="circle-help" aria-hidden="true"></i><strong>RM-017.2.1 · Pilote DEV</strong><span id="pilotBannerText">Inscription non ouverte · tests sur invitation uniquement</span></div>
  <header class="topbar wrap">
    <a class="brand" href="v3-connected.html" aria-label="RestoManager, accueil">
      <span class="brand-emblem"><img src="asset/img/restomanager-chef-white.svg" width="26" height="26" alt=""><span class="brand-accent"></span></span>
@@ -84,7 +84,7 @@
        <div class="field"><label for="businessName">Nom de l'établissement <span aria-hidden="true">*</span></label><input id="businessName" name="businessName" type="text" maxlength="90" placeholder="Ex. : Le Jardin" autocomplete="off" required aria-describedby="nameError"><small id="nameError" class="field-error" role="alert" hidden></small></div>
        <div class="field"><label for="businessCity">Ville <span aria-hidden="true">*</span></label><input id="businessCity" name="businessCity" type="text" maxlength="80" placeholder="Ex. : Rouen" autocomplete="off" required aria-describedby="cityError"><small id="cityError" class="field-error" role="alert" hidden></small></div>
        <div class="field"><label for="businessEmail">Email professionnel <span aria-hidden="true">*</span></label><input id="businessEmail" name="businessEmail" type="email" inputmode="email" maxlength="160" placeholder="contact@exemple.test" autocomplete="off" spellcheck="false" required aria-describedby="emailError"><small id="emailError" class="field-error" role="alert" hidden></small></div>
-       <div class="hint-card warning"><i data-lucide="circle-help" aria-hidden="true"></i><p><strong>Pour cet aperçu, utilisez des informations fictives.</strong> Rien n'est envoyé, enregistré ou associé à un compte.</p></div>
+       <div class="hint-card warning"><i data-lucide="circle-help" aria-hidden="true"></i><p id="dataDisclaimer"><strong>Aperçu DEV :</strong> utilisez des informations fictives. Aucun envoi sans activation du pilote privé.</p></div>
       </fieldset>
 
       <section class="step-panel" id="stepPreview" aria-label="Récapitulatif du parcours" hidden>
@@ -96,12 +96,13 @@
          <div><dt>Email de contact</dt><dd id="reviewEmail"></dd></div>
        </dl>
        <div class="review-features"><strong>Fonctionnalités adaptées</strong><ul id="reviewFeatures"></ul></div>
-       <div class="availability-note"><i data-lucide="circle-help" aria-hidden="true"></i><div><strong>Aucune inscription n'a été effectuée.</strong><p>La création sécurisée de comptes et l'ouverture d'un véritable espace établissement arriveront dans une prochaine étape de développement.</p></div></div>
+       <div class="availability-note"><i data-lucide="circle-help" aria-hidden="true"></i><div><strong>Aucune inscription n'a été effectuée.</strong><p>Le pilote privé exige une invitation, un email confirmé et une validation sécurisée avant la création de votre établissement.</p></div></div>
        <a class="example-link" id="exampleLink" href="reservation/?restaurant=le-jardin-demo">Voir un exemple fictif de réservation <i data-lucide="chevron-right" aria-hidden="true"></i></a>
        <section class="account-setup" aria-labelledby="accountTitle">
         <div class="account-heading"><span class="account-lock"><i data-lucide="check-circle-2" aria-hidden="true"></i></span><div><h3 id="accountTitle">Création sécurisée du compte</h3><p>Votre première connexion nécessite la confirmation de votre email avant toute création d’établissement.</p></div></div>
         <div class="field"><label for="registrationPassword">Mot de passe <span aria-hidden="true">*</span></label><input id="registrationPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="12 caractères minimum" aria-describedby="registrationPasswordHelp"><small id="registrationPasswordHelp">Utilisez une phrase de passe unique d’au moins 12 caractères.</small></div>
         <div class="field"><label for="registrationPasswordConfirm">Confirmer le mot de passe <span aria-hidden="true">*</span></label><input id="registrationPasswordConfirm" type="password" autocomplete="new-password" minlength="12" maxlength="128" placeholder="Répéter le mot de passe"></div>
+        <div class="pilot-captcha" id="registrationCaptcha" role="group" aria-label="Vérification anti-robot" hidden></div>
         <button type="button" class="next-button register-button" id="submitRegistration" disabled>Créer mon compte DEV <i data-lucide="chevron-right" aria-hidden="true"></i></button>
         <p class="signup-state" id="registrationStatus" role="status" aria-live="polite">Vérification des conditions d’ouverture de l’inscription…</p>
        </section>
@@ -114,8 +115,9 @@
        <button type="button" id="restart" class="next-button" hidden>Recommencer <i data-lucide="chevron-right" aria-hidden="true"></i></button>
       </div>
      </form>
+     <section id="registrationVerification" class="registration-done" hidden tabindex="-1"><span class="review-check"><i data-lucide="mail-check" aria-hidden="true"></i></span><h3 id="verificationTitle">Vérification de l’email</h3><p id="verificationText" role="status" aria-live="polite">Vérification de votre lien en cours…</p><a href="login.html">Se connecter</a></section>
      <section id="registrationDone" class="registration-done" hidden tabindex="-1"><span class="review-check"><i data-lucide="check-circle-2" aria-hidden="true"></i></span><h3>Votre établissement est créé dans DEV.</h3><p>Votre email a été confirmé et votre accès administrateur est prêt. Les services et réservations restent fermés jusqu’à votre configuration.</p><a href="v3-connected.html">Accéder à mon espace de gestion</a></section>
-     <p class="disclaimer"><i data-lucide="check-circle-2" aria-hidden="true"></i> Aperçu privé DEV · Aucune inscription, aucun paiement, aucune donnée transmise.</p>
+     <p class="disclaimer" id="signupDisclaimer"><i data-lucide="check-circle-2" aria-hidden="true"></i> Pilote DEV désactivé · Aucun paiement ni compte créé depuis cette page.</p>
     </div>
     <footer class="form-footer"><span>© RestoManager · Simplifiez votre service</span><a href="login.html">Connexion équipe</a></footer>
   </section>
