@@ -63,6 +63,16 @@ CREATE POLICY rm017_current_restaurant_read ON public.rm017_establishment_profil
  (restaurant_id = (select private.staff_restaurant()) AND
   (select private.current_staff_role()) IN ('fb_admin','reception'));
 
+-- DEV release gate: do not accept new accounts before SMTP, Confirm Email
+-- and allowed redirect domains have been verified by the operator.
+CREATE TABLE private.rm017_signup_gate(
+ id integer PRIMARY KEY CHECK(id=1),
+ enabled boolean NOT NULL DEFAULT false,
+ updated_at timestamptz NOT NULL DEFAULT now()
+);
+INSERT INTO private.rm017_signup_gate(id,enabled) VALUES(1,false);
+REVOKE ALL ON TABLE private.rm017_signup_gate FROM PUBLIC,anon,authenticated;
+
 -- Controlled transaction: no direct restaurant/profile INSERT for users.
 -- JWT user_metadata is intentionally not trusted for authorization.
 -- A verified authenticated user can provision one new restaurant, once.
@@ -78,9 +88,13 @@ DECLARE
  v_email text;
  v_restaurant uuid;
 BEGIN
- IF v_uid IS NULL OR current_user <> 'postgres' THEN
-   -- current_user is the definer (postgres); this catches changed ownership.
+ IF v_uid IS NULL THEN
    RAISE EXCEPTION 'Inscription non autorisée' USING ERRCODE='42501';
+ END IF;
+ IF NOT EXISTS (SELECT 1 FROM private.rm017_signup_gate
+                WHERE id=1 AND enabled) THEN
+   RAISE EXCEPTION 'Inscriptions non ouvertes dans cet environnement.'
+   USING ERRCODE='42501';
  END IF;
  SELECT u.email INTO v_email FROM auth.users AS u
  WHERE u.id=v_uid AND u.email_confirmed_at IS NOT NULL
