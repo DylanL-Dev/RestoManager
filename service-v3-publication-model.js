@@ -15,6 +15,18 @@
   const duration=integer(minutes,0,2880)?minutes===0?'jusqu’à l’heure prévue de votre venue':minutes%60===0?'jusqu’à '+minutes/60+' heure'+(minutes===60?'':'s')+' avant votre venue':'jusqu’à '+minutes+' minutes avant votre venue':'[À COMPLÉTER : délai d’annulation]';
   return 'Vous pouvez consulter votre réservation avec votre lien personnel et l’annuler en ligne '+duration+'. Passé ce délai, contactez le restaurant. Merci de prévenir l’établissement en cas de retard ou si vous ne pouvez plus venir.\n\nÀ partir de 4 personnes, la demande attend l’accord du Restaurant jusqu’à l’échéance affichée dans le suivi. Elle n’est confirmée qu’après cet accord. Sans accord avant cette échéance, la demande expire.\n\nUne réservation n’est acquise qu’après la confirmation affichée dans le suivi. Aucun numéro de table précis n’est promis. Toute modification est revérifiée selon les disponibilités. Si une modification attend un accord, la réservation initiale est conservée en cas de refus ou d’expiration de la proposition.\n\nLes demandes particulières ne sont pas garanties. La réservation porte sur un repas au restaurant. Gardez votre lien personnel privé.';
  }
+ // A proposal is a local draft, never a database mutation or a tenant setting.
+ function setupDraft({type,hotelGuestsCapability=false,restaurantName='',privacyNotice='',cancellationNotice='',cancellationMinutes=0}={}){
+  if(!['independent','hotel'].includes(type))throw Error('Type d’établissement inconnu');
+  if(type==='hotel'&&hotelGuestsCapability!==true)throw Error('Le parcours hôtel n’est pas autorisé pour cet établissement');
+  if(typeof privacyNotice!=='string'||typeof cancellationNotice!=='string')throw Error('Texte de réservation invalide');
+  const hotelGuestsEnabled=type==='hotel';
+  return Object.freeze({
+   hotelGuestsEnabled,
+   privacyNotice:privacyNotice.trim()?privacyNotice:privacyDefault(restaurantName,{hotelGuestsEnabled}),
+   cancellationNotice:cancellationNotice.trim()?cancellationNotice:cancellationDefault(cancellationMinutes)
+  });
+ }
  const hasRetentionLine=text=>retentionLine.test(String(text||''));
  function retentionFrom(text){const value=String(text||'').match(retentionLine)?.[1]?.trim()||'';return hasDraftMarker(value)?'':value;}
  function withRetention(text,value){const duration=String(value||'').replace(/[\r\n]+/g,' ').trim().slice(0,160)||retentionMarker;return String(text||'').replace(retentionLine,()=> 'Durée de conservation : '+duration);}
@@ -54,5 +66,5 @@
   if(typeof generator!=='function')throw Error('QR generator unavailable');
   const qr=generator(0,'M');qr.addData(url,'Byte');qr.make();const count=qr.getModuleCount();return Array.from({length:count},(_,y)=>Array.from({length:count},(_,x)=>qr.isDark(y,x)));
  }
- return Object.freeze({limits:Object.freeze(limits),validSlug,normalizeSlug,validate,fromForm,readiness,publicURL,qrMatrix,privacyDefault,cancellationDefault,hasDraftMarker,hasRetentionLine,retentionFrom,withRetention});
+ return Object.freeze({limits:Object.freeze(limits),validSlug,normalizeSlug,validate,fromForm,readiness,publicURL,qrMatrix,privacyDefault,cancellationDefault,setupDraft,hasDraftMarker,hasRetentionLine,retentionFrom,withRetention});
 });

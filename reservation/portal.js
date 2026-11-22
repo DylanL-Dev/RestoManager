@@ -24,9 +24,10 @@
   });
   if (!config) {
     $('restaurantName').textContent = 'Retrouvez votre restaurant';
-    $('restaurantSubtitle').textContent = 'Le lien de cet établissement est incomplet ou inconnu.';
+    $('restaurantSubtitle').textContent = slug ? 'Vérifiez le lien de démonstration fourni.' : 'Découvrez deux exemples sans réservation réelle.';
     $('story').hidden = true; $('portalLayout').classList.add('compact-story');
-    card.innerHTML = '<h2 tabindex="-1">Ce restaurant n’est pas disponible</h2><p class="form-note">Vérifiez le lien ou le QR code remis par votre établissement.</p><a class="primary" href="?restaurant=a-lepicerie-rouen">Découvrir le restaurant de démonstration</a>';
+    const choices = M.examples().map(example => '<a class="secondary" href="?restaurant=' + encodeURIComponent(example.slug) + '">' + esc(example.name) + ' · ' + esc(example.subtitle) + '</a>').join('');
+    card.innerHTML = '<h2 tabindex="-1">' + (slug ? 'Ce lien de démonstration n’est pas disponible' : 'Choisissez votre établissement fictif') + '</h2><p class="form-note">Aucune demande réelle ne sera transmise. Les exemples ne contiennent ni réservations ni données de clients réels.</p><div class="choice-row" aria-label="Exemples fictifs">' + choices + '</div>';
     icons(); return;
   }
   $('homeLink').href = '?restaurant=' + encodeURIComponent(slug);

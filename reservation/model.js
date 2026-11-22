@@ -18,17 +18,30 @@
       }, closedDates: ['2032-12-25']
     },
     'le-jardin-demo': {
-      slug: 'le-jardin-demo', name: 'Le Jardin', subtitle: 'Établissement entièrement fictif', locality: 'Ville de démonstration',
+      type: 'independent', slug: 'le-jardin-demo', name: 'Le Jardin', subtitle: 'Établissement entièrement fictif', locality: 'Ville de démonstration',
       introduction: 'Une autre adresse, le même plaisir de réserver.',
       description: 'Ce deuxième établissement fictif permet de vérifier que chaque restaurant possède son propre parcours.',
       initials: 'J', maxParty: 6, horizonDays: 30, timezone: 'Europe/Paris',
       services: { lunch: { label: 'Midi', days: [0, 1, 2, 3, 4, 5, 6], times: ['12:15', '12:45', '13:15'], full: [] }, dinner: { label: 'Soir', days: [4, 5, 6], times: ['18:30', '19:15', '20:00'], full: ['19:15'] } },
       closedDates: []
+    },
+    'hotel-des-rives-demo': {
+      type: 'hotel', slug: 'hotel-des-rives-demo', name: 'Les Rives — Hôtel fictif',
+      subtitle: 'Restaurant d’hôtel entièrement fictif', locality: 'Ville de démonstration',
+      introduction: 'Un restaurant d’hôtel, les mêmes règles de disponibilité.',
+      description: 'Parcours fictif pour découvrir l’accueil d’un restaurant d’hôtel, sans utiliser les données d’aucun établissement réel.',
+      initials: 'R', maxParty: 8, horizonDays: 30, timezone: 'Europe/Paris',
+      services: {
+        lunch: { label: 'Midi', days: [1, 2, 3, 4, 5], times: ['12:00','12:30','13:00'], full: ['12:30'] },
+        dinner: { label: 'Soir', days: [0, 1, 2, 3, 4, 5, 6], times: ['19:00','19:30','20:00'], full: ['19:30'] }
+      }, closedDates: []
     }
   };
   function freeze(value) { Object.values(value).forEach(v => { if (v && typeof v === 'object') freeze(v); }); return Object.freeze(value); }
   freeze(venues);
   function venue(slug) { return Object.hasOwn(venues, slug) ? venues[slug] : null; }
+  // Only fictional examples are displayed by default; real establishments are never substituted.
+  function examples() { return Object.freeze(['le-jardin-demo','hotel-des-rives-demo'].map(slug => Object.freeze({slug,name:venues[slug].name,subtitle:venues[slug].subtitle,type:venues[slug].type}))); }
   function paris(now = new Date()) {
     const parts = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(now).map(p => [p.type, p.value]));
     return { date: `${parts.year}-${parts.month}-${parts.day}`, time: `${parts.hour}:${parts.minute}` };
@@ -70,5 +83,5 @@
     if (!['https:', 'http:'].includes(url.protocol)) throw Error('Invalid public URL');
     url.searchParams.set('restaurant', slug); return url.href;
   }
-  return Object.freeze({ venue, paris, validDate, addDays, dateLabel, relativeDateLabel, initialVisit, availability, validate, publicURL });
+  return Object.freeze({ venue, examples, paris, validDate, addDays, dateLabel, relativeDateLabel, initialVisit, availability, validate, publicURL });
 });
