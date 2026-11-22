@@ -87,6 +87,8 @@ DECLARE
  v_city text := pg_catalog.btrim(p_city);
  v_email text;
  v_restaurant uuid;
+ v_previous_sub text;
+ v_previous_claims text;
 BEGIN
  IF v_uid IS NULL THEN
    RAISE EXCEPTION 'Inscription non autorisée' USING ERRCODE='42501';
@@ -118,7 +120,19 @@ BEGIN
    RAISE EXCEPTION 'Ce compte appartient déjà à un établissement.'
    USING ERRCODE='23505';
  END IF;
+ -- The existing AFTER INSERT triggers initialize closed hours and closure policy.
+ -- Their direct-service guard treats a JWT-bearing user as an existing staff
+ -- member; this first-time creator has no staff profile yet.
+ -- Enter the existing no-JWT administrative maintenance scope ONLY around the
+ -- fixed INSERT (not around any user-controlled SQL); then restore both claims.
+ -- SET LOCAL rolls back automatically if any trigger/statement raises an error.
+ v_previous_sub := current_setting('request.jwt.claim.sub',true);
+ v_previous_claims := current_setting('request.jwt.claims',true);
+ PERFORM pg_catalog.set_config('request.jwt.claim.sub','',true);
+ PERFORM pg_catalog.set_config('request.jwt.claims','',true);
  INSERT INTO public.restaurants(name) VALUES(v_name) RETURNING id INTO v_restaurant;
+ PERFORM pg_catalog.set_config('request.jwt.claim.sub',coalesce(v_previous_sub,''),true);
+ PERFORM pg_catalog.set_config('request.jwt.claims',coalesce(v_previous_claims,''),true);
  INSERT INTO public.rm017_establishment_profiles
    (restaurant_id,establishment_type,city,created_by)
  VALUES (v_restaurant,p_type,v_city,v_uid);
