@@ -119,4 +119,38 @@ GRANT EXECUTE ON FUNCTION public.rm017_complete_signup_v1(text,text,text)
  TO authenticated;
 COMMENT ON FUNCTION public.rm017_complete_signup_v1(text,text,text)
  IS 'DEV RM-017.2.1: verified email + explicit expiring one-time pilot invitation; keeps database signup gate and transaction-safe tenant initialization.';
+
+-- Opt-in Supabase Auth hook (not enabled by this migration).
+-- Configure Authentication > Hooks > Before User Created manually in DEV.
+-- Rejects non-invited Auth user creation, not just tenant creation.
+CREATE FUNCTION public.rm017_before_user_created_v1(event jsonb)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
+AS $$
+DECLARE
+  v_email text := pg_catalog.lower(pg_catalog.btrim(event->'user'->>'email'));
+  v_type text := event->'user'->'user_metadata'->>'rm017_type';
+BEGIN
+  IF NOT EXISTS(SELECT 1 FROM private.rm017_signup_gate WHERE id=1 AND enabled)
+     OR v_email IS NULL OR v_type IS NULL
+     OR NOT EXISTS(
+        SELECT 1 FROM private.rm017_pilot_invites i
+        WHERE i.email=v_email AND i.establishment_type=v_type
+          AND i.active AND i.expires_at>now() AND i.consumed_at IS NULL
+     ) THEN
+    RETURN pg_catalog.jsonb_build_object(
+      'error',pg_catalog.jsonb_build_object(
+        'http_code',403,'message','Inscription sur invitation uniquement.'
+      )
+    );
+  END IF;
+  RETURN '{}'::jsonb;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.rm017_before_user_created_v1(jsonb)
+ FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.rm017_before_user_created_v1(jsonb)
+ TO supabase_auth_admin;
+COMMENT ON FUNCTION public.rm017_before_user_created_v1(jsonb)
+ IS 'DEV pilot only. Enable explicitly in Supabase DEV Auth Hooks after testing SMTP, email redirects and CAPTCHA. Restricts new Auth users to the invitation list.';
+
 COMMIT;
