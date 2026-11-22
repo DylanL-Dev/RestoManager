@@ -71,7 +71,7 @@ CREATE FUNCTION public.rm017_siret_allow_lookup_v1(
  p_email text,p_type text,p_siret text
 ) RETURNS boolean
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
-AS $
+AS $$
 DECLARE v_email text:=pg_catalog.lower(pg_catalog.btrim(p_email));
  v_attempts integer;
 BEGIN
@@ -87,7 +87,7 @@ BEGIN
  RETURNING attempts INTO v_attempts;
  RETURN v_attempts<=6;
 END;
-$;
+$$;
 REVOKE ALL ON FUNCTION public.rm017_siret_allow_lookup_v1(text,text,text)
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.rm017_siret_allow_lookup_v1(text,text,text) TO service_role;
@@ -137,7 +137,7 @@ REVOKE ALL ON FUNCTION public.rm017_record_siret_v1(text,text,text,text,text)
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.rm017_record_siret_v1(text,text,text,text,text) TO service_role;
 
--- The previous email/invitation checks and closure triggers are preserved.
+-- Existing email/invite checks and triggers retained; add government SIRET evidence.
 CREATE OR REPLACE FUNCTION public.rm017_complete_signup_v1(
  p_name text, p_city text, p_type text
 ) RETURNS jsonb
@@ -201,11 +201,28 @@ BEGIN
    RAISE EXCEPTION 'Inscription pilote réservée aux adresses invitées.'
      USING ERRCODE='42501';
  END IF;
- -- The SIRET in editable Auth metadata is only a lookup key. All proof data
- -- must have been recorded SERVER-SIDE by rm017-siret after a real official lookup.
+ -- Auth metadata supplies a comparison key, not an authorization assertion.
+ -- Only server-recorded evidence from the government registry can authorize.
  SELECT pg_catalog.btrim(u.raw_user_meta_data->>'rm017_siret') INTO v_siret
  FROM auth.users u WHERE u.id=v_uid;
- IF v_siret IS NULL OR v_siret !~ '^[0-9]{14}
+ IF v_siret IS NULL OR v_siret !~ '^[0-9]{14}$' THEN
+  RAISE EXCEPTION 'SIRET vérifié obligatoire.' USING ERRCODE='42501';
+ END IF;
+ SELECT x.siren,x.legal_name,x.checked_at
+ INTO v_siren,v_legal_name,v_siret_checked_at
+ FROM private.rm017_siret_prechecks x
+ WHERE x.email=pg_catalog.lower(pg_catalog.btrim(v_email))
+   AND x.siret=v_siret AND x.establishment_type=p_type
+   AND x.expires_at>now() AND x.consumed_at IS NULL
+ FOR UPDATE;
+ IF v_siren IS NULL THEN
+  RAISE EXCEPTION 'Vérification professionnelle absente ou expirée.'
+   USING ERRCODE='42501';
+ END IF;
+ IF EXISTS(SELECT 1 FROM public.rm017_establishment_profiles WHERE siret=v_siret) THEN
+  RAISE EXCEPTION 'Établissement déjà enregistré : demandez un accès.'
+   USING ERRCODE='23505';
+ END IF;
  -- The existing AFTER INSERT triggers initialize closed hours and closure policy.
  -- Their direct-service guard treats a JWT-bearing user as an existing staff
  -- member; this first-time creator has no staff profile yet.
@@ -223,7 +240,7 @@ BEGIN
    (restaurant_id,establishment_type,city,created_by,
     siret,siren,verified_legal_name,siret_verified_at)
  VALUES (v_restaurant,p_type,v_city,v_uid,
-         v_siret,v_siren,v_legal_name,v_siret_checked_at);
+   v_siret,v_siren,v_legal_name,v_siret_checked_at);
  INSERT INTO public.staff_profiles(user_id,role,display_name,active,restaurant_id)
  VALUES (v_uid,'fb_admin','Responsable',true,v_restaurant);
  -- Existing initialize_hours and rm012_initialize_policy triggers create
@@ -250,66 +267,12 @@ BEGIN
 END;
 $$;
 
- THEN
-   RAISE EXCEPTION 'Un SIRET vérifié est obligatoire.' USING ERRCODE='42501';
- END IF;
- SELECT p.siren,p.legal_name,p.checked_at
- INTO v_siren,v_legal_name,v_siret_checked_at
- FROM private.rm017_siret_prechecks p
- WHERE p.email=pg_catalog.lower(pg_catalog.btrim(v_email))
-   AND p.siret=v_siret AND p.establishment_type=p_type
-   AND p.expires_at>now() AND p.consumed_at IS NULL
- FOR UPDATE;
- IF v_siren IS NULL THEN
-   RAISE EXCEPTION 'Vérification SIRET absente ou expirée.' USING ERRCODE='42501';
- END IF;
- IF EXISTS(SELECT 1 FROM public.rm017_establishment_profiles WHERE siret=v_siret) THEN
-   RAISE EXCEPTION 'Établissement déjà enregistré : demandez un accès.'
-     USING ERRCODE='23505';
- END IF;
- -- The existing AFTER INSERT triggers initialize closed hours and closure policy.
- -- Their direct-service guard treats a JWT-bearing user as an existing staff
- -- member; this first-time creator has no staff profile yet.
- -- Enter the existing no-JWT administrative maintenance scope ONLY around the
- -- fixed INSERT (not around any user-controlled SQL); then restore both claims.
- -- SET LOCAL rolls back automatically if any trigger/statement raises an error.
- v_previous_sub := current_setting('request.jwt.claim.sub',true);
- v_previous_claims := current_setting('request.jwt.claims',true);
- PERFORM pg_catalog.set_config('request.jwt.claim.sub','',true);
- PERFORM pg_catalog.set_config('request.jwt.claims','',true);
- INSERT INTO public.restaurants(name) VALUES(v_name) RETURNING id INTO v_restaurant;
- PERFORM pg_catalog.set_config('request.jwt.claim.sub',coalesce(v_previous_sub,''),true);
- PERFORM pg_catalog.set_config('request.jwt.claims',coalesce(v_previous_claims,''),true);
- INSERT INTO public.rm017_establishment_profiles
-   (restaurant_id,establishment_type,city,created_by)
- VALUES (v_restaurant,p_type,v_city,v_uid);
- INSERT INTO public.staff_profiles(user_id,role,display_name,active,restaurant_id)
- VALUES (v_uid,'fb_admin','Responsable',true,v_restaurant);
- -- Existing initialize_hours and rm012_initialize_policy triggers create
- -- closed default service rules atomically on the new restaurant.
- -- Do not insert a duplicate restaurant_hours row.
- INSERT INTO public.restaurant_rooms(restaurant_id,name,active,sort_order)
- VALUES(v_restaurant,'Salle principale',true,0);
- UPDATE private.rm017_pilot_invites
-    SET consumed_by = v_uid, consumed_at = now()
-  WHERE email = v_pilot_email AND consumed_at IS NULL;
- IF NOT FOUND THEN
-   RAISE EXCEPTION 'Invitation déjà utilisée.' USING ERRCODE='42501';
- END IF;
- RETURN pg_catalog.jsonb_build_object(
-  'restaurant_id',v_restaurant,'type',p_type,
-  'status','configuration_required');
-END;
-$$;
-
 
 REVOKE ALL ON FUNCTION public.rm017_complete_signup_v1(text,text,text)
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.rm017_complete_signup_v1(text,text,text)
  TO authenticated;
 
--- Existing Auth Hook remains opt-in in Supabase Auth settings. It now also
--- requires server-verified SIRET evidence prior to creation of Auth users.
 CREATE OR REPLACE FUNCTION public.rm017_before_user_created_v1(event jsonb)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
 AS $$
@@ -325,25 +288,15 @@ BEGIN
         WHERE i.email=v_email AND i.establishment_type=v_type
           AND i.active AND i.expires_at>now() AND i.consumed_at IS NULL
      )
-     OR v_siret IS NULL OR v_siret !~ '^[0-9]{14}
-    RETURN pg_catalog.jsonb_build_object(
-      'error',pg_catalog.jsonb_build_object(
-        'http_code',403,'message','Inscription sur invitation uniquement.'
-      )
-    );
-  END IF;
-  RETURN '{}'::jsonb;
-END;
-$$;
-
+     OR v_siret IS NULL OR v_siret !~ '^[0-9]{14}$'
      OR NOT EXISTS(
-        SELECT 1 FROM private.rm017_siret_prechecks p
-        WHERE p.email=v_email AND p.establishment_type=v_type
-          AND p.siret=v_siret AND p.expires_at>now()
-          AND p.consumed_at IS NULL
+       SELECT 1 FROM private.rm017_siret_prechecks x
+       WHERE x.email=v_email AND x.establishment_type=v_type
+         AND x.siret=v_siret AND x.expires_at>now()
+         AND x.consumed_at IS NULL
      )
      OR EXISTS(
-       SELECT 1 FROM public.rm017_establishment_profiles e WHERE e.siret=v_siret
+       SELECT 1 FROM public.rm017_establishment_profiles p WHERE p.siret=v_siret
      ) THEN
     RETURN pg_catalog.jsonb_build_object(
       'error',pg_catalog.jsonb_build_object(
@@ -359,7 +312,6 @@ REVOKE ALL ON FUNCTION public.rm017_before_user_created_v1(jsonb)
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.rm017_before_user_created_v1(jsonb)
  TO supabase_auth_admin;
-
 COMMENT ON FUNCTION public.rm017_complete_signup_v1(text,text,text)
- IS 'RM-017.2.2 DEV: confirmed email + invited profile + server-verified unique SIRET, atomic restaurant creation.';
+ IS 'RM-017.2.2 DEV: confirmed email and invitation plus server-verified unique SIRET and atomic tenant creation.';
 COMMIT;
