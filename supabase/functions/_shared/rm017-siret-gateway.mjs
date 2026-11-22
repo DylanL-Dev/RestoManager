@@ -27,11 +27,11 @@ function activityCodeOf(establishment,enterprise){
   const raw=typeof value==='string'?value:typeof value?.code==='string'?value.code:
     typeof value?.value==='string'?value.value:'';
   const code=raw.trim().toUpperCase();
-  if(/^\\d{2}\\.\\d{2}[A-Z0-9]$/.test(code))return code;
+  if(/^\d{2}\.\d{2}[A-Z0-9]$/.test(code))return code;
  }
  return '';
 }
-const eligibleActivity=code=>/^(55|56)\\./.test(code);
+const eligibleActivity=code=>/^(55|56)\./.test(code);
 const active=(e)=>e?.etat_administratif==='A'||e?.etatAdministratifEtablissement==='A'||e?.etat_administratif_etablissement==='A'||e?.est_ouvert===true;
 export function inspectRegistryRecord(json,requestedSiret){
  if(!validSiret(requestedSiret)||!json||typeof json!=='object')return null;
