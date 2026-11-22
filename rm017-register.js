@@ -79,7 +79,7 @@ async function verifyProfessionalSiret(profile,siret){
  state.dataset.status='verified';
  state.textContent='SIRET vérifié : '+String(body.legalName||'Établissement').slice(0,160)+
    ' · '+String(body.city||'').slice(0,80)+
-   '. L’autorisation du responsable reste soumise à validation.';
+   ' · activité '+String(body.activityCode||'').slice(0,10)+'. L’autorisation du responsable reste soumise à validation.';
  return body;
 }
 function resetCaptcha(){
