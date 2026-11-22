@@ -50,3 +50,10 @@
 .experience{border:0}
 .account-setup{border:0;background:transparent;border-radius:0;padding:0;margin-top:25px}
 @media(max-width:560px){.account-setup{padding:0}}
+
+/* RM-017.2.2: restrained SIRET verification, no extra nested outlines. */
+.siret-help{display:block;margin-top:7px;color:#586e60;font-size:11px;line-height:1.5}
+.siret-verification{margin:18px 0 0;color:#4e6a5c;font-size:12px;line-height:1.6}
+.siret-verification[data-status="verified"]{color:#087f5b;font-weight:700}
+.siret-verification[data-status="error"]{color:#9b2c32;font-weight:650}
+.siret-field input{font-variant-numeric:tabular-nums;letter-spacing:.035em}
