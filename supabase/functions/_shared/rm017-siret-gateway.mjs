@@ -17,6 +17,21 @@ export function validSiret(input){
  return sum%10===0||(input.startsWith('356000000')&&digits.reduce((x,y)=>x+y,0)%5===0);
 }
 const clean=(v,max=180)=>typeof v==='string'?v.trim().replace(/\s+/g,' ').slice(0,max):'';
+// RM-017.2.2: accept automatic onboarding only for hospitality/restaurant APE.
+// A holding company or an unusual operator code requires manual approval.
+function activityCodeOf(establishment,enterprise){
+ const values=[establishment?.activite_principale,establishment?.activitePrincipaleEtablissement,
+  establishment?.activite_principale_etablissement,establishment?.code_ape,
+  enterprise?.activite_principale,enterprise?.code_ape];
+ for(const value of values){
+  const raw=typeof value==='string'?value:typeof value?.code==='string'?value.code:
+    typeof value?.value==='string'?value.value:'';
+  const code=raw.trim().toUpperCase();
+  if(/^\\d{2}\\.\\d{2}[A-Z0-9]$/.test(code))return code;
+ }
+ return '';
+}
+const eligibleActivity=code=>/^(55|56)\\./.test(code);
 const active=(e)=>e?.etat_administratif==='A'||e?.etatAdministratifEtablissement==='A'||e?.etat_administratif_etablissement==='A'||e?.est_ouvert===true;
 export function inspectRegistryRecord(json,requestedSiret){
  if(!validSiret(requestedSiret)||!json||typeof json!=='object')return null;
@@ -31,7 +46,9 @@ export function inspectRegistryRecord(json,requestedSiret){
   if(!establishment)continue;
   const legalName=clean(enterprise.nom_complet||enterprise.nom_raison_sociale||enterprise.denomination,180);
   const city=clean(establishment.libelle_commune||establishment.commune||establishment.ville,80);
-  if(legalName.length>=2&&city.length>=2)return {siret:requestedSiret,siren,legalName,city};
+  const activityCode=activityCodeOf(establishment,enterprise);
+  if(legalName.length>=2&&city.length>=2&&eligibleActivity(activityCode))
+   return {siret:requestedSiret,siren,legalName,city,activityCode};
  }
  // SocialGouv secondary endpoint responds with an exact SIRET (not just SIREN).
  const value=json?.etablissement&&typeof json.etablissement==='object'?json.etablissement:json;
@@ -40,7 +57,9 @@ export function inspectRegistryRecord(json,requestedSiret){
   const legalName=clean(value.nom_complet||value.nom_raison_sociale||value.raison_sociale||
    value.denomination||value.entreprise?.nom_complet||value.unite_legale?.denomination,180);
   const city=clean(value.libelle_commune||value.commune||value.ville||value.adresse?.commune,80);
-  if(legalName.length>=2&&city.length>=2)return {siret:requestedSiret,siren,legalName,city};
+  const activityCode=activityCodeOf(value,value.entreprise||value.unite_legale);
+  if(legalName.length>=2&&city.length>=2&&eligibleActivity(activityCode))
+   return {siret:requestedSiret,siren,legalName,city,activityCode};
  }
  return null;
 }
@@ -100,7 +119,7 @@ export function createSiretHandler({env,fetcher=fetch,timeoutMs=8500,projectRef=
      p_email:email,p_type:kind,p_siret:siret,p_legal_name:registry.legalName,p_city:registry.city
    });
    if(recorded!==true)throw Error('record not confirmed');
-   return respond(200,{verified:true,siret,siren:registry.siren,legalName:registry.legalName,city:registry.city},origin);
+   return respond(200,{verified:true,siret,siren:registry.siren,legalName:registry.legalName,city:registry.city,activityCode:registry.activityCode},origin);
   }catch{
    return respond(503,{error:{code:'UNAVAILABLE',message:'La vérification professionnelle est momentanément indisponible.'}},origin);
   }
