@@ -18,3 +18,21 @@
 @media (max-width:560px){.wrap{width:calc(100% - 28px)}.topbar{height:78px}.brand-emblem{width:42px;height:42px}.brand-word strong{font-size:18px}.brand-word small{font-size:9px}.top-actions>span{display:none}.login-link{padding:10px;font-size:11px}.experience{border-radius:18px;margin-bottom:20px}.story{padding:30px 23px 27px}.story h1{font-size:clamp(2rem,10vw,2.8rem);letter-spacing:-.05em}.story-lead{font-size:12px;line-height:1.65}.overline{font-size:9px;letter-spacing:.08em}.signup-side{padding:30px 20px}.form-heading h2{font-size:clamp(1.88rem,7vw,2.35rem)}.type-grid{grid-template-columns:1fr}.type-card{min-height:106px;flex-direction:row;align-items:center;padding:15px}.type-check{position:static}.type-icon{width:45px;height:45px}.type-icon svg{width:22px;height:22px}.step-label{font-size:10px}.form-actions{gap:9px}.form-actions .next-button{padding:12px 14px;font-size:12px}.back-button{padding:11px;font-size:11px}.preview-bar{font-size:10px;padding:7px 15px}.form-footer{margin-top:31px}.disclaimer{line-height:1.5}}
 @media (max-width:370px){.type-card{gap:10px}.type-copy strong{font-size:12px}.type-copy small{font-size:11px}.top-actions{gap:3px}.brand-word strong{font-size:17px}.brand-emblem{width:38px;height:38px}.signup-side{padding:27px 15px}.review-fields>div{padding:12px}.review-fields dt{font-size:10px}.review-fields dd{font-size:11px}}
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* RM-017.2: verified-account continuation uses the existing visual system. */
+.account-setup{margin-top:21px;padding:20px;border:1px solid #dce8df;border-radius:16px;background:#fbfdfb}
+.account-heading{display:flex;align-items:flex-start;gap:11px}
+.account-heading h3{font-size:14px;color:#193e31;font-weight:800;letter-spacing:-.02em}
+.account-heading p{margin-top:6px;color:#536b5e;font-size:12px}
+.account-lock{background:#e5f3e9;color:#0d7955;width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center}
+.account-lock svg{width:17px;height:17px}
+.account-setup .field small{display:block;margin-top:7px;color:#596e60;font-size:11px}
+.account-setup .register-button{min-height:48px;border:0;border-radius:12px;margin-top:18px;width:100%;background:#087f5b;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font-weight:800;font-size:13px}
+.account-setup .register-button:hover:not(:disabled){background:#076b4f}
+.account-setup .register-button:disabled{background:#acbfb0;color:#fff;cursor:not-allowed;opacity:1}
+.account-setup .signup-state{font-size:12px;color:#536b5e;margin-top:13px;min-height:19px}
+.registration-done{padding:22px;background:#f0f8ef;border:1px solid #c6e2d0;border-radius:16px;margin-top:20px}
+.registration-done h3{font-size:20px;letter-spacing:-.02em;margin:14px 0 9px}
+.registration-done p{font-size:13px;color:#52695c}
+.registration-done a{display:inline-flex;align-items:center;justify-content:center;min-height:46px;border-radius:12px;background:#087f5b;color:#fff;padding:12px 16px;text-decoration:none;font-size:13px;font-weight:800;margin-top:19px}
+@media(max-width:560px){.account-setup{padding:16px}.account-heading h3{font-size:13px}}
