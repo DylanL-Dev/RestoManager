@@ -21,7 +21,7 @@ async function setup(browser,{active=true,verified=false,width=390}={}){
  await page.addInitScript(({verified})=>{
   if(verified)window.__mockVerifiedUser={
    email:'pilot@example.test',email_confirmed_at:'2026-11-22T16:00:00Z',
-   user_metadata:{rm017_name:'Restaurant pilote',rm017_city:'Rouen',rm017_type:'hotel'}
+   user_metadata:{rm017_name:'Restaurant pilote',rm017_city:'Rouen',rm017_type:'hotel',rm017_siret:'13002526500013'}
   };
  },{verified});
  const unexpected=[];
@@ -32,6 +32,9 @@ async function setup(browser,{active=true,verified=false,width=390}={}){
     schema:2,channel:'dev',enabled:active,pilotOnly:true,captchaRequired:true,
     confirmationEmailRequired:true,redirectOrigin:origin,turnstileSiteKey:'0x4AAAAAAGLm9RaVvyWg-GtY'
    })});
+  }
+  if(url==='https://lykoybacslvmhtzftqsf.supabase.co/functions/v1/rm017-siret'){
+   return route.fulfill({contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify({verified:true,siret:'13002526500013',siren:'130025265',legalName:'RESTAURANT PILOTE OFFICIEL',city:'Rouen'})});
   }
   if(url.startsWith('https://challenges.cloudflare.com/turnstile/v0/api.js')){
    return route.fulfill({contentType:'text/javascript',headers:{'Access-Control-Allow-Origin':'*'},body:fakeTurnstile});
@@ -48,6 +51,7 @@ async function fillWizard(page){
  await page.locator('#typeHotel').click();await page.locator('#nextStep').click();
  await page.locator('#businessName').fill('Restaurant pilote');
  await page.locator('#businessCity').fill('Rouen');
+ await page.locator('#businessSiret').fill('13002526500013');
  await page.locator('#businessEmail').fill('pilot@example.test');
  await page.locator('#nextStep').click();
  await page.locator('#registrationPassword').fill('Longue phrase de passe DEV 2026');
@@ -76,6 +80,8 @@ async function fillWizard(page){
   assert.equal(p.email,'pilot@example.test');
   assert.equal(p.options.captchaToken,'mock-turnstile-token');
   assert.equal(p.options.data.rm017_type,'hotel');
+  assert.equal(p.options.data.rm017_siret,'13002526500013');
+  assert.match(await active.page.locator('#siretVerificationStatus').innerText(),/SIRET vérifié/);
   assert.equal(p.options.emailRedirectTo,active.origin+'/inscription.html?verified=1');
   assert.equal(await active.page.locator('#submitRegistration').isDisabled(),true);
   assert.match(await active.page.locator('#registrationStatus').innerText(),/email de confirmation/);
