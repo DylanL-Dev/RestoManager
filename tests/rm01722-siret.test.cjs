@@ -80,7 +80,7 @@ test('UI requires a verifiable SIRET before Auth and maintains registration and 
  assert.match(sql,/GRANT EXECUTE ON FUNCTION public\.rm017_siret_allow_lookup_v1.*TO service_role/s);
  assert.match(sql,/u\.email_confirmed_at IS NOT NULL/);
  assert.match(sql,/i\.consumed_at IS NULL/);
- assert.match(sql,/p\.consumed_at IS NULL/);
+ assert.match(sql,/x\.consumed_at IS NULL/);
  assert.match(sql,/e\.siret=v_siret/);
  assert.match(sql,/rm017_siret_prechecks/);
  assert.doesNotMatch(signup,/service_role|sb_secret_|tnsrkargogckgtsxipwd/);
