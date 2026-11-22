@@ -49,6 +49,10 @@ test('RM-017.1: onboarding has explicit 3-step accessible UX and no backend sign
  assert.match(script,/\.textContent=info\.name/);
  assert.match(script,/\.textContent=info\.email/);
  assert.match(script,/hotel-des-rives-demo/);
+ assert.match(html,/id="siretHelp"/);
+ assert.match(script,/siretHelpByType\[type\]/);
+ assert.match(script,/independent:"Le numéro est vérifié/);
+ assert.match(script,/hotel:"Le numéro est vérifié/);
  assert.match(script,/le-jardin-demo/);
  for(const code of [html,script,read('rm017-signup-model.js')])assert.doesNotMatch(code,/tnsrkargogckgtsxipwd|service_role|sb_secret_/i);
  assert.doesNotMatch(script,/\bfetch\s*\(|\bXMLHttpRequest\b|\.rpc\s*\(|\.insert\s*\(|\blocalStorage\b|sessionStorage|sendBeacon/);
