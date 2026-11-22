@@ -21,6 +21,10 @@ jobs:
         run: node --test tests/rm0171-signup.test.cjs
       - name: Seven widths, hotel and independent paths, keyboard, accessibility, no writes
         run: node tests/browser/rm0171-signup.cjs
+      - name: RM-017.3.1 safe fictitious lifecycle, SIREN derivation, and admin guards
+        run: node --test tests/rm01731-lifecycle.test.cjs
+      - name: RM-017.3.1 browser owner and Root simulation, mobile, no network writes
+        run: node tests/browser/rm01731-simulation.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
