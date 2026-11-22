@@ -156,6 +156,53 @@ async function complete(page) {
       const cachedPublic = await page.evaluate(async () => { const keys = await caches.keys(); const urls = []; for (const key of keys) for (const r of await (await caches.open(key)).keys()) urls.push(r.url); return urls.some(u => new URL(u).pathname.startsWith('/reservation/')); }); assert.equal(cachedPublic, false);
       pass('Actual employee service worker excludes public cache, offline staff fallback and update acknowledgements'); await c.close();
     }
+
+    for (const width of [360,390,768]) {
+      const c=await context({viewport:{width,height:844},isMobile:width<700,hasTouch:width<700});
+      const page=await c.newPage(),errors=[],requests=[];
+      page.on('pageerror',e=>errors.push(e.message));
+      page.on('request',r=>requests.push({method:r.method(),url:r.url()}));
+      await page.goto(origin+'/reservation/?restaurant=hotel-des-rives-demo');
+      await page.getByRole('heading',{name:'Réservez votre table'}).waitFor();
+      assert.equal(await page.getByRole('radio',{name:/Client de l’hôtel/}).count(),1);
+      assert.ok(await page.getByRole('button',{name:/Continuer/}).isDisabled(),'Hotel visitor must choose status');
+      await page.locator('#guestType-hotel').check();
+      await page.locator('input[name=time]:not(:disabled)').first().check();
+      await page.getByRole('button',{name:/Continuer/}).click();
+      assert.equal(await page.getByLabel('Numéro de chambre fictif *').count(),1);
+      await page.getByLabel('J’accepte les conditions').check();
+      await page.getByRole('button',{name:'Vérifier mon exemple'}).click();
+      assert.equal(await page.locator('#hotelRoom').getAttribute('aria-invalid'),'true','Room is required for hotel guest');
+      await page.locator('#hotelRoom').fill('204');
+      await page.getByRole('button',{name:'Vérifier mon exemple'}).click();
+      assert.match(await page.locator('.summary').innerText(),/Client de l’hôtel · Chambre 204/);
+      await layout(page);await axe(page,'hotel review '+width);
+      if(width===390)await capture(page,'hotel-review-'+width);
+      await page.getByRole('button',{name:'Terminer la réservation fictive'}).click();
+      assert.match(await page.locator('.summary').innerText(),/Chambre 204/);
+      await page.getByRole('link',{name:'Consulter ou modifier mon exemple'}).click();
+      await page.reload();
+      await page.getByRole('button',{name:'Modifier mon exemple'}).click();
+      await page.locator('#guestType-external').check();
+      await page.getByRole('button',{name:/Continuer/}).click();
+      assert.equal(await page.locator('#hotelRoom').count(),0,'No room for outside guests');
+      await page.getByRole('button',{name:'Vérifier mon exemple'}).click();
+      assert.match(await page.locator('.summary').innerText(),/Client extérieur/);
+      assert.doesNotMatch(await page.locator('.summary').innerText(),/Chambre 204/);
+      await page.getByRole('button',{name:'Enregistrer la modification fictive'}).click();
+      assert.match(await page.locator('.summary').innerText(),/Client extérieur/);
+      const footer=await page.evaluate(()=>{
+        const a=document.querySelector('#privacy').getBoundingClientRect();
+        const b=document.querySelector('#conditions').getBoundingClientRect();
+        return {overlap:a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom,scroll:document.documentElement.scrollWidth,width:innerWidth};
+      });
+      assert.equal(footer.overlap,false,'Mobile footer privacy and conditions must not overlap');
+      assert.ok(footer.scroll<=footer.width+1,'No horizontal mobile overflow');
+      assert.deepEqual(errors,[]);
+      assert.ok(requests.every(r=>r.method==='GET'),'Demos make no mutations');
+      pass('Hotel guest/room, outside guest, recap, refresh and mobile footer '+width);
+      await c.close();
+    }
     fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify({ widths, results, privacy: 'Fictitious browser-only records; no credentials, APIs or business writes', limitation: 'Automated accessibility and simulated journeys; no human usability study' }, null, 2));
   } finally { await browser?.close(); server.closeAllConnections(); await new Promise(r => server.close(r)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
