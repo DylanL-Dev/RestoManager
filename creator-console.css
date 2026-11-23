@@ -112,7 +112,7 @@ h1,h2,h3,p{margin-top:0}p{line-height:1.55;color:#607b70}h1{font-size:clamp(25px
 .ownerSupportTicket .ownerReportTop time{font-size:10px;color:#597562;white-space:nowrap}
 .ownerSupportTicketTitle{display:block;font-size:14px;line-height:1.35;overflow-wrap:anywhere}
 .ownerSupportTicket .ownerReportLocation{margin:0;font-size:11px;font-weight:700;color:#4e705b;overflow-wrap:anywhere}
-.ownerSupportTicketPreview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;margin:0;color:#6a8273;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.ownerSupportTicketPreview{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden;margin:0;color:#365b47;font-size:12px;line-height:1.5;overflow-wrap:anywhere}
 .ownerSupportTicket>.ownerSupportStatusBadge{justify-self:start}
 .ownerSupportStatusBadge{display:inline-flex;align-items:center;border-radius:30px;padding:5px 9px;font-size:10px;font-weight:850;line-height:1.25;white-space:nowrap;background:#eff4f0;color:#516d5e}
 .ownerSupportStatus-new{background:#e2efff;color:#1d5c9d}
