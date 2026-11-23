@@ -74,7 +74,10 @@ test('RM-017.3.3 only DEV and no hardcoded credential or privilege grant',()=>{
  assert.match(html,/id="creatorRecoverRequest"/);
  assert.match(recovery,/id="creatorPasswordRecovery"/);
  assert.match(reset,/auth\.updateUser\(\{password:p\}\)/);
- assert.match(reset,/markedRecovery|markedInvite/);
+ assert.match(reset,/hasLinkProof/);
+ assert.match(reset,/hasAuthCode/);
+ assert.match(reset,/hasImplicitTokens/);
+ assert.match(reset,/event==='PASSWORD_RECOVERY'/);
  assert.match(reset,/getUser\(\)/);
  assert.doesNotMatch(reset,/signUp\(|auth\.admin|service_role|\.rpc\(|\.insert\(|\.upsert\(/);
 });
