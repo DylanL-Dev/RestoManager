@@ -106,7 +106,7 @@ export function installOwnerInbox({client}){
    detail.append(empty);return;
   }
   const top=$('div','ownerSupportDetailTop');
-  const section=$('span','ownerSupportEyebrow','FICHE DE SIGNALement'.toUpperCase());
+  const section=$('span','ownerSupportEyebrow','FICHE DU SIGNALEMENT');
   const reference=$('span','ownerSupportRef','Référence : '+item.id);
   top.append(section,reference);
   const badges=$('div','ownerSupportBadges');
