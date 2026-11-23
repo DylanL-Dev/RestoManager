@@ -20,3 +20,5 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - name: Login and recovery on mobile/tablet/desktop with WCAG and no backend calls
         run: node tests/browser/rm01733-root-login.cjs
+      - name: Root console checklist - six views, responsive and read-only fixtures
+        run: node tests/browser/rm01739-root-console.cjs
