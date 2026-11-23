@@ -30,7 +30,7 @@ test('RM-017.3.2 auth: no user metadata, verified owner, active Root, MFA and au
  assert.match(sql,/rm01732_read_self/);
  assert.match(sql,/rm01732_read_active_root/);
  assert.match(sql,/private\.rm017_lifecycle_events/);
- assert.match(sql,/p_decision IN \('reviewing','closed_reviewed','closed_rejected'\)/);
+ assert.match(sql,/p_decision NOT IN \('reviewing','closed_reviewed','closed_rejected'\)/);
  assert.doesNotMatch(sql,/raw_user_meta_data|user_metadata/);
 });
 test('RM-017.3.2 Root console is read only and preserves isolation',()=>{
