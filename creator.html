@@ -20,7 +20,7 @@
   <form id="creatorLogin" autocomplete="on">
    <label for="ownerUsername">Identifiant Créateur / Root</label>
    <input id="ownerUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="rootdev" required aria-describedby="ownerAliasInfo">
-   <p id="ownerAliasInfo" class="ownerAliasHelp">Saisissez votre email DEV uniquement pour la première connexion sur cet appareil. Après validation du code de sécurité, l'identifiant <strong>rootdev</strong> suffira. L'identifiant <strong>root</strong> reste réservé à MAIN.</p>
+   <p id="ownerAliasInfo" class="ownerAliasHelp">Pour la première connexion sur cet appareil, saisissez votre email DEV et votre mot de passe. Ensuite, utilisez <strong>rootdev</strong> avec le même mot de passe, sans code de sécurité. L'identifiant <strong>root</strong> reste réservé à MAIN.</p>
    <label for="ownerPassword">Mot de passe DEV</label>
    <input id="ownerPassword" type="password" autocomplete="current-password" required>
    <button id="ownerSubmit" type="submit">Se connecter à l’administration</button>
@@ -34,31 +34,6 @@
    <button id="ownerRecoverSubmit" type="submit">Demander un lien de récupération</button>
    <button id="ownerBackToLogin" class="ownerTextButton" type="button">Revenir à la connexion</button>
   </form>
-  <section id="creatorMfaStep" class="ownerAuthStep" hidden aria-labelledby="ownerMfaTitle">
-   <h2 id="ownerMfaTitle">Vérification en deux étapes</h2>
-   <p>Entrez le code à 6 chiffres de votre application d'authentification. L'accès à l'administration reste fermé sans ce contrôle.</p>
-   <form id="creatorMfaForm">
-    <label for="ownerMfaCode">Code de sécurité</label>
-    <input id="ownerMfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
-    <button id="ownerMfaSubmit" type="submit">Vérifier le code</button>
-   </form>
-  </section>
-  <section id="creatorMfaEnroll" class="ownerAuthStep" hidden aria-labelledby="ownerEnrollTitle">
-   <h2 id="ownerEnrollTitle">Protéger votre accès Root</h2>
-   <p>Configurez une application d'authentification (TOTP) avant d'ouvrir votre console. Ce paramétrage concerne uniquement votre compte DEV.</p>
-   <button id="ownerStartEnroll" type="button">Configurer la double authentification</button>
-   <div id="ownerEnrollInstructions" hidden>
-    <img id="ownerTotpQr" alt="Code QR pour ajouter votre compte DEV dans une application d'authentification" hidden>
-    <p>Si vous ne pouvez pas scanner le QR code, saisissez cette clé dans l'application d'authentification :</p>
-    <code id="ownerTotpSecret" class="ownerTotpSecret"></code>
-    <form id="creatorMfaEnrollForm">
-     <label for="ownerEnrollCode">Code à 6 chiffres</label>
-     <input id="ownerEnrollCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" required>
-     <button id="ownerEnrollSubmit" type="submit">Activer et vérifier MFA</button>
-    </form>
-   </div>
-  </section>
-  <button id="ownerMfaCancel" class="ownerTextButton" type="button" hidden>Annuler et se déconnecter</button>
   <p id="ownerAuthFeedback" role="status" aria-live="polite" class="ownerAuthFeedback"></p>
   <a class="loginBack" href="login.html">Retour à la connexion des équipes</a>
  </main>
@@ -125,6 +100,6 @@
  </div>
 </div>
 <p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
-<script type="module" src="creator-auth.js?v=20261123-rm01737"></script>
+<script type="module" src="creator-auth.js?v=20261123-rm01738"></script>
 </body>
 </html>
