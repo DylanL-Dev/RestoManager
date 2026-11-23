@@ -5,7 +5,7 @@ export function installCreatorConsole({client,installOwnerInbox}){
  const navigation=[...document.querySelectorAll('[data-owner-nav]')];
  const setText=(id,value)=>{const node=byId(id);if(node)node.textContent=String(value);};
  const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
- let establishments=[],loaded=false,reportsLoaded=false,loading=false;
+ let establishments=[],loaded=false,reportsLoaded=false,loading=false,publicationLoading=false;
  const sidebar=byId('ownerSidebar'),navToggle=byId('ownerNavToggle'),navClose=byId('ownerNavClose'),navBackdrop=byId('ownerNavBackdrop');
  const mobileQuery=window.matchMedia('(max-width: 760px)');
  function setMenuOpen(open){
@@ -23,18 +23,24 @@ export function installCreatorConsole({client,installOwnerInbox}){
   const chosen=sections.some(s=>s.dataset.ownerSection===view)?view:'dashboard';
   for(const section of sections)section.hidden=section.dataset.ownerSection!==chosen;
   for(const link of navigation){const active=link.dataset.ownerNav===chosen;link.classList.toggle('active',active);link.setAttribute('aria-current',active?'page':'false');}
-  const names={dashboard:'Vue générale',restaurants:'Établissements',reports:'Assistance & signalements',monitoring:'Supervision',settings:'Paramètres'};
+  const names={dashboard:'Vue générale',restaurants:'Établissements',reports:'Assistance & signalements',publications:'Publications',monitoring:'Supervision',settings:'Paramètres'};
   setText('ownerPageTitle',names[chosen]||'Vue générale');
   if(chosen==='reports'&&!reportsLoaded){installOwnerInbox({client});reportsLoaded=true;}
   if(chosen==='restaurants')renderEstablishments();
+  if(chosen==='publications')void loadPublication();
   if(chosen==='dashboard'&&loaded)void load();
   setMenuOpen(false);
  }
  function renderEstablishments(){
   const container=byId('ownerRestaurantList');if(!container)return;
   container.replaceChildren();
-  if(!establishments.length){container.append(make('p','ownerEmpty','Aucun établissement disponible.'));return;}
-  establishments.forEach(restaurant=>{
+  const normalize=value=>String(value||'').toLocaleLowerCase('fr-FR').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const query=normalize(byId('ownerRestaurantSearch')?.value.trim()||'');
+  const visible=establishments.filter(restaurant=>!query||
+   normalize(restaurant.name).includes(query)||normalize(restaurant.id).includes(query));
+  setText('ownerRestaurantCount',visible.length+' établissement(s) affiché(s) sur '+establishments.length+'.');
+  if(!visible.length){container.append(make('p','ownerEmpty',establishments.length?'Aucun établissement ne correspond à votre recherche.':'Aucun établissement disponible.'));return;}
+  visible.forEach(restaurant=>{
    const row=make('article','ownerRestaurantRow');
    const icon=make('span','ownerRestaurantIcon','⌂');
    const name=make('div','ownerRestaurantName');
@@ -42,6 +48,37 @@ export function installCreatorConsole({client,installOwnerInbox}){
    const badge=make('span','ownerReadOnlyTag','Lecture seule');
    row.append(icon,name,badge);container.append(row);
   });
+ }
+ // Read only same-origin static release metadata. These flags do not certify a
+ // live API, the state of each restaurant or email delivery.
+ async function loadPublication(){
+  if(publicationLoading)return;
+  publicationLoading=true;
+  setText('ownerPublicationStatus','Vérification des fichiers publics…');
+  setText('ownerReleaseVersion','Non vérifiée');
+  setText('ownerReleaseChannel','Version non confirmée.');
+  setText('ownerPortalConfigured','Non vérifié');
+  try{
+   const [releaseResult,portalResult]=await Promise.all([
+    fetch(new URL('app-release.json',location.href),{cache:'no-store',credentials:'omit'}),
+    fetch(new URL('reservation/runtime.json',location.href),{cache:'no-store',credentials:'omit'})
+   ]);
+   if(!releaseResult.ok||!portalResult.ok)throw new Error('Configuration inaccessible');
+   const [release,portal]=await Promise.all([releaseResult.json(),portalResult.json()]);
+   if(release?.schema!==1||release?.channel!=='main'||typeof release?.currentVersion!=='string'||
+      !/^20\d\d\.\d{2}\.\d{2}-[a-zA-Z0-9.\-]+$/.test(release.currentVersion)||
+      portal?.schema!==1||portal?.channel!=='production'||portal?.publicOrigin!==location.origin||
+      typeof portal?.activated!=='boolean'){
+    throw new Error('Configuration inattendue');
+   }
+   setText('ownerReleaseVersion',release.currentVersion);
+   setText('ownerReleaseChannel','Version déclarée dans app-release.json.');
+   setText('ownerPortalConfigured',portal.activated
+    ?'Portail technique configuré':'Portail technique désactivé');
+   setText('ownerPublicationStatus','Configuration publique lue. Aucun contrôle de disponibilité serveur ni de réservation réelle.');
+  }catch{
+   setText('ownerPublicationStatus','Statut non vérifiable : ne pas présumer que les services sont actifs.');
+  }finally{publicationLoading=false;}
  }
  async function load(){
   if(loading)return;
@@ -69,6 +106,8 @@ export function installCreatorConsole({client,installOwnerInbox}){
  }
  navigation.forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.ownerNav)));
  byId('ownerRefreshOverview')?.addEventListener('click',()=>void load());
+ byId('ownerRestaurantSearch')?.addEventListener('input',renderEstablishments);
+ byId('ownerRefreshPublication')?.addEventListener('click',()=>void loadPublication());
  window.addEventListener('restomanager:root-reports-updated',()=>void load());
  navToggle?.addEventListener('click',()=>setMenuOpen(!sidebar?.classList.contains('open')));
  navClose?.addEventListener('click',()=>{setMenuOpen(false);navToggle?.focus();});
