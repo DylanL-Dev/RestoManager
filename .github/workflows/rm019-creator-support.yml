@@ -1,0 +1,26 @@
+name: RM-019 Creator support centre - DEV
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  support-dev:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Syntax and existing Root counters
+        run: |
+          npm run test:syntax
+          node tests/root-issue-counters.test.cjs
+      - name: Unit and schema/RLS contracts
+        run: node --test tests/rm019-creator-assistance.test.cjs tests/creator-console.test.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Root support responsive, rollback, accessibility, no real network
+        run: node tests/browser/rm019-creator-assistance.cjs
