@@ -1,0 +1,24 @@
+name: RM-RELEASE-01A Creator release safety
+on:
+  pull_request:
+    branches:
+      - RestoManager-V3
+      - main
+permissions:
+  contents: read
+jobs:
+  creator-safe-release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Production Root regression and read-only contract
+        run: node --test tests/rmrelease01a-creator.test.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Creator UX and public release metadata (localhost only)
+        run: node tests/browser/rmrelease01a-creator.cjs
