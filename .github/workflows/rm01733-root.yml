@@ -1,0 +1,22 @@
+name: RM-017.3.3 — DEV Root email recovery and MFA
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  root-access:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Root Auth security, recovery and MFA mocked verification
+        run: node --test tests/rm01733-root-auth.test.cjs tests/platform-owner-security.test.cjs && npm run test:syntax
+      - run: npx playwright install --with-deps chromium
+      - name: Login and recovery on mobile/tablet/desktop with WCAG and no backend calls
+        run: node tests/browser/rm01733-root-login.cjs

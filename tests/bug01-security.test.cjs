@@ -38,9 +38,12 @@ test('BUG-01 staff app can only submit, never retrieve or list reports',()=>{
  assert.match(feedback,/id="reportIssueContact"/);
 });
 
-test('BUG-01 creator uses verified owner login, root is only an alias',()=>{
- assert.match(creator,/const ROOT_AUTH_EMAIL='root@accounts\.restomanager\.example\.com'/);
- assert.match(creator,/value\.trim\(\)\.toLowerCase\(\)!=='root'/);
+test('BUG-01 creator preserves verified Root-only read and upgrades DEV alias to safe email/MFA',()=>{
+ assert.match(creator,/supabaseEnvironment\.name!=='DEV'/);
+ assert.match(creator,/const email=\$\('ownerUsername'\)\.value\.trim\(\)\.toLowerCase\(\)/);
+ assert.match(creator,/getAuthenticatorAssuranceLevel/);
+ assert.match(creator,/aal\.currentLevel==='aal2'/);
+ assert.doesNotMatch(creator,/ROOT_AUTH_EMAIL|accounts\.restomanager\.example\.com/);
  assert.match(creator,/signInWithPassword/);
  assert.match(creator,/verifyOwner\(\)/);
  assert.match(creator,/installCreatorConsole\(\{client,installOwnerInbox\}\)/);
