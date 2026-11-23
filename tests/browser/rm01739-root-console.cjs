@@ -30,6 +30,11 @@ const server=http.createServer((req,res)=>{
    await context.route('**/*',route=>{
     const request=route.request(),url=request.url();
     if(new URL(url).origin!==origin)return route.abort();
+    // The shipped runtime uses the real DEV Render origin; tests use localhost.
+    // Replace only the public, closed configuration with matching local origin.
+    if(url===origin+'/rm017-runtime.json')return route.fulfill({status:200,contentType:'application/json',
+      body:JSON.stringify({schema:2,channel:'dev',enabled:false,pilotOnly:true,
+       confirmationEmailRequired:true,captchaRequired:true,redirectOrigin:origin,turnstileSiteKey:null})});
     // Disable real authentication; only fictional data is used.
     if(/\/creator-auth\.js(?:\?|$)/.test(url))
       return route.fulfill({status:200,contentType:'text/javascript',body:'// Auth disabled: isolated console test'});
