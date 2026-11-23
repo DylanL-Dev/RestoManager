@@ -9,9 +9,9 @@ Livrable exact **sans migration** : recherche locale dans l'annuaire Root des é
 - `creator.html` : onglet Publications, filtre établissement et libellés accessibles.
 - `creator-console.js` : recherche parmi les lignes RLS existantes ; lecture uniquement de `app-release.json` et `reservation/runtime.json` du **même origin**.
 - `creator-console.css` : styles accessibles sur mobile.
-- `creator-auth.js` : **changement unique de query string d'import** `creator-console.js?v=20261123-rmrelease01a` pour invalider le cache. Authentification Root PROD, alias `root`, Supabase PROD, logout, permissions et URL import env inchangés.
+- **`creator-auth.js` totalement inchangé** (empreinte officielle préservée). Dans `creator.html`, les références CSS et Auth d'origine restent présentes ; une `importmap` native, avant le module Auth, résout son ancien import JS vers `creator-console.js?v=20261123-rmrelease01a` pour invalider uniquement le cache du module d'interface. Un second lien CSS versionné ajoute les styles. Le repli sur un navigateur ancien ne désactive pas l'accès Root.
 
-Aucun autre fichier applicatif, `app-release.json`, service worker, clés, base, inscriptions ou réservations n'est modifié.
+Aucun autre fichier applicatif, notamment `creator-auth.js`, `app-release.json`, service worker, clés, base, inscriptions ou réservations n'est modifié.
 
 ### Blocages documentés
 Supabase PROD inspecté **en lecture seule** le 23/11 :
@@ -27,7 +27,7 @@ Supabase PROD inspecté **en lecture seule** le 23/11 :
 
 ### Procédure de livraison
 1. V3 : `release/rmrelease01a-v3-20261123` → PR, workflows `release-guard.yml` + `rmrelease01a-creator.yml`; validation avant fusion.
-2. MAIN : branche fille `release/rmrelease01a-main-20261123` depuis MAIN, **rejeu ciblé de quatre fichiers seulement**, tests identiques, PR, fusion après succès V3.
+2. MAIN : branche fille `release/rmrelease01a-main-20261123` depuis MAIN, **rejeu ciblé de trois fichiers seulement**, tests identiques, PR, fusion après succès V3.
 3. Contrôler GitHub Pages si publication effective, ouvrir `creator.html`, s'assurer que Root PROD est inchangé, annuaire et Publications fonctionnent. Pas de test d'authentification réelle avec identifiants personnels ni de réservation fictive PROD.
 4. En cas de problème, revenir aux sauvegardes via une PR de restauration ciblée et les mêmes contrôles (ne pas réinitialiser brutalement des branches partagées).
 
