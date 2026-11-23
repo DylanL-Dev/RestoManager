@@ -13,17 +13,17 @@ const server=http.createServer((req,res)=>{
 });
 const fakeTurnstile="window.turnstile={render:function(el,options){window.__captchaOptions=options;window.setTimeout(function(){options.callback('mock-turnstile-token')},15);return 42;},reset:function(id){window.__captchaResets=(window.__captchaResets||0)+1;}};";
 const fakeSupabase="export function createClient(url,key,options){window.__clientOrigin=url;return {auth:{signUp:async function(payload){window.__signupPayload=payload;return {data:{session:null},error:null};},signOut:async function(){window.__signedOut=true;return {error:null};},getUser:async function(){return {data:{user:window.__mockVerifiedUser||null},error:null};}},rpc:async function(name,payload){window.__rpcCalled={name,payload};return {data:{restaurant_id:'50000000-0000-4000-8000-000000000123',status:'configuration_required'},error:null};}};}";
-async function setup(browser,{active=true,verified=false,width=390}={}){
+async function setup(browser,{active=true,verified=false,verifiedType='hotel',width=390}={}){
  const ctx=await browser.newContext({viewport:{width,height:900},locale:'fr-FR',serviceWorkers:'block'});
  const page=await ctx.newPage(),origin='http://127.0.0.1:'+server.address().port;
  const pageErrors=[];
  page.on('pageerror',e=>pageErrors.push(e.message));
- await page.addInitScript(({verified})=>{
+ await page.addInitScript(({verified,verifiedType})=>{
   if(verified)window.__mockVerifiedUser={
    email:'pilot@example.test',email_confirmed_at:'2026-11-22T16:00:00Z',
-   user_metadata:{rm017_name:'Restaurant pilote',rm017_city:'Rouen',rm017_type:'hotel',rm017_siret:'13002526500013'}
+   user_metadata:{rm017_name:'Restaurant pilote',rm017_city:'Rouen',rm017_type:verifiedType,rm017_siret:'13002526500013'}
   };
- },{verified});
+ },{verified,verifiedType});
  const unexpected=[];
  await page.route('**/*',route=>{
   const url=route.request().url();
@@ -34,7 +34,8 @@ async function setup(browser,{active=true,verified=false,width=390}={}){
    })});
   }
   if(url==='https://lykoybacslvmhtzftqsf.supabase.co/functions/v1/rm017-siret'){
-   return route.fulfill({contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify({verified:true,siret:'13002526500013',siren:'130025265',legalName:'RESTAURANT PILOTE OFFICIEL',city:'Rouen'})});
+   const requested=route.request().postDataJSON();
+   return route.fulfill({contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:JSON.stringify({verified:true,siret:requested.siret,siren:requested.siret.slice(0,9),legalName:'RESTAURANT PILOTE OFFICIEL',city:'Rouen'})});
   }
   if(url.startsWith('https://challenges.cloudflare.com/turnstile/v0/api.js')){
    return route.fulfill({contentType:'text/javascript',headers:{'Access-Control-Allow-Origin':'*'},body:fakeTurnstile});
@@ -47,8 +48,8 @@ async function setup(browser,{active=true,verified=false,width=390}={}){
  });
  return {ctx,page,origin,unexpected,pageErrors};
 }
-async function fillWizard(page){
- await page.locator('#typeHotel').click();await page.locator('#nextStep').click();
+async function fillWizard(page,type='hotel'){
+ await page.locator(type==='hotel'?'#typeHotel':'#typeIndependent').click();await page.locator('#nextStep').click();
  await page.locator('#businessName').fill('Restaurant pilote');
  await page.locator('#businessCity').fill('Rouen');
  await page.locator('#businessSiret').fill('13002526500013');
@@ -88,6 +89,50 @@ async function fillWizard(page){
   assert.deepEqual(active.pageErrors,[]);
   assert.equal(active.unexpected.length,0);await active.ctx.close();
   console.log('PASS pilot signup requires captcha and requests email confirmation');
+  // The second venue type exercises the complete browser preflight too.
+  const independent=await setup(browser,{active:true,width:390});
+  await independent.page.goto(independent.origin+'/inscription.html');
+  await fillWizard(independent.page,'independent');
+  await independent.page.waitForFunction(()=>!!window.__captchaOptions);
+  await independent.page.waitForFunction(()=>!document.getElementById('submitRegistration').disabled);
+  await independent.page.locator('#submitRegistration').click();
+  await independent.page.waitForFunction(()=>!!window.__signupPayload);
+  const independentPayload=await independent.page.evaluate(()=>window.__signupPayload);
+  assert.equal(independentPayload.options.data.rm017_type,'independent');
+  assert.equal(independentPayload.options.data.rm017_siret,'13002526500013');
+  assert.equal(independentPayload.options.captchaToken,'mock-turnstile-token');
+  assert.equal(independent.unexpected.length,0);
+  assert.deepEqual(independent.pageErrors,[]);
+  await independent.ctx.close();
+  console.log('PASS independent restaurant simulated signup, SIRET and CAPTCHA');
+
+  // A rejected official SIRET check must not reach Supabase Auth signup.
+  const rejected=await setup(browser,{active:true,width:390});
+  await rejected.page.goto(rejected.origin+'/inscription.html');
+  await fillWizard(rejected.page,'independent');
+  await rejected.page.route('**/functions/v1/rm017-siret',route=>route.fulfill({status:403,
+   contentType:'application/json',headers:{'Access-Control-Allow-Origin':'*'},body:'{"verified":false}'}));
+  await rejected.page.waitForFunction(()=>!!window.__captchaOptions);
+  await rejected.page.waitForFunction(()=>!document.getElementById('submitRegistration').disabled);
+  await rejected.page.locator('#submitRegistration').click();
+  await rejected.page.waitForFunction(()=>document.getElementById('registrationStatus').textContent.includes('ne peut pas'));
+  assert.equal(await rejected.page.evaluate(()=>!!window.__signupPayload),false,'No Auth user before official SIRET success');
+  assert.equal(rejected.unexpected.length,0);
+  assert.deepEqual(rejected.pageErrors,[]);
+  await rejected.ctx.close();
+  console.log('PASS server-rejected SIRET cannot reach Supabase Auth');
+
+  const validIndependent=await setup(browser,{active:true,verified:true,verifiedType:'independent',width:390});
+  await validIndependent.page.goto(validIndependent.origin+'/inscription.html?verified=1');
+  await validIndependent.page.locator('#registrationDone').waitFor({state:'visible'});
+  const independentRpc=await validIndependent.page.evaluate(()=>window.__rpcCalled);
+  assert.equal(independentRpc.name,'rm017_complete_signup_v1');
+  assert.equal(independentRpc.payload.p_type,'independent');
+  assert.equal(validIndependent.unexpected.length,0);
+  assert.deepEqual(validIndependent.pageErrors,[]);
+  await validIndependent.ctx.close();
+  console.log('PASS independent verified callback provisions through same gated RPC');
+
   const valid=await setup(browser,{active:true,verified:true,width:1440});
   await valid.page.goto(valid.origin+'/inscription.html?verified=1');
   await valid.page.locator('#registrationDone').waitFor({state:'visible'});

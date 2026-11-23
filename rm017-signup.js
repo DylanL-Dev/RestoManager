@@ -19,11 +19,16 @@
  };
  function clearErrors(){
   for(const id of ['name','city','email']){$(id+'Error').hidden=true;$(id+'Error').textContent='';$('business'+id[0].toUpperCase()+id.slice(1)).removeAttribute('aria-invalid');}
-  $('typeError').hidden=true;$('typeError').textContent='';$('formMessage').textContent='';
+  $('typeError').hidden=true;$('typeError').textContent='';
+  $('siretError').hidden=true;$('siretError').textContent='';$('businessSiret').removeAttribute('aria-invalid');
+  $('formMessage').textContent='';
  }
  function setError(id,text){
   const label=$(id+'Error');label.textContent=text;label.hidden=!text;
-  if(id!=='type')$('business'+id[0].toUpperCase()+id.slice(1)).setAttribute('aria-invalid',String(!!text));
+  if(id!=='type'){
+   const field=id==='siret'?$('businessSiret'):$('business'+id[0].toUpperCase()+id.slice(1));
+   field.setAttribute('aria-invalid',String(!!text));
+  }
  }
  function syncPreview(){
   const type=chosen(),v=type?M.types[type]:null;
@@ -79,8 +84,17 @@
   }
   if(step===2){
    const errors=M.validateDetails(data());
+   // Early feedback only: checksum is NOT a proof of business activity, SIRET
+   // ownership or permission to register. The backend checks those again.
+   if(!M.validSiret($('businessSiret').value.trim())){
+    errors.siret='SIRET invalide : saisissez 14 chiffres et vérifiez le numéro.';
+   }
    for(const [id,text] of Object.entries(errors))setError(id,text);
-   if(Object.keys(errors).length){const first=Object.keys(errors)[0];$('business'+first[0].toUpperCase()+first.slice(1)).focus();return;}
+   if(Object.keys(errors).length){
+    const first=Object.keys(errors)[0];
+    (first==='siret'?$('businessSiret'):$('business'+first[0].toUpperCase()+first.slice(1))).focus();
+    return;
+   }
    renderReview();syncPreview();showStep(3);
   }
  }
@@ -98,6 +112,10 @@
    if(id==='name')syncPreview();
   });
  }
+ $('businessSiret').addEventListener('input',()=>{
+  $('siretError').hidden=true;$('siretError').textContent='';
+  $('businessSiret').removeAttribute('aria-invalid');
+ });
  $('restart').addEventListener('click',()=>{
   form.reset();$('reviewFeatures').replaceChildren();syncPreview();showStep(1);
  });

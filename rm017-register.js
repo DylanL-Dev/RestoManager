@@ -48,15 +48,9 @@ function checkPassword(){
  if(pass!==confirmed)throw Error('Les mots de passe ne correspondent pas.');
  return pass;
 }
-function validSiret(value){
- if(!/^[0-9]{14}$/.test(value))return false;
- const digits=[...value].map(Number);
- const sum=digits.reduce((total,d,i)=>{
-   const v=i%2===0?d*2:d;
-   return total+(v>9?v-9:v);
- },0);
- return sum%10===0||(value.startsWith('356000000')&&digits.reduce((x,y)=>x+y,0)%5===0);
-}
+// The shared browser check cannot authorize a signup: the official SIRET
+// registry validation remains mandatory on the DEV server before Supabase Auth.
+const validSiret=value=>window.RestoSignupDraft?.validSiret(value)===true;
 async function verifyProfessionalSiret(profile,siret){
  const state=$('siretVerificationStatus');
  state.dataset.status='';

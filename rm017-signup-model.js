@@ -11,6 +11,18 @@
  });
  const limits=Object.freeze({name:90,city:80,email:160});
  const normalize=value=>String(value??'').trim().replace(/\s+/g,' ');
+ // Format-only check to help the professional before the final step. The
+ // actual establishment proof is ALWAYS verified by the DEV server registry.
+ function validSiret(value){
+  if(typeof value!=='string'||!/^[0-9]{14}$/.test(value))return false;
+  const digits=[...value].map(Number);
+  const checksum=digits.reduce((sum,d,i)=>{
+   const n=i%2===0?d*2:d;
+   return sum+(n>9?n-9:n);
+  },0);
+  // Historic La Poste exception, identical to the official Edge gateway.
+  return checksum%10===0||(value.startsWith('356000000')&&digits.reduce((a,b)=>a+b,0)%5===0);
+ }
  function validateType(value){return Object.hasOwn(types,value)?null:"Choisissez le type d’établissement pour continuer.";}
  function validateDetails(value){
   const v=value||{},errors={};
@@ -24,5 +36,5 @@
   if(validateType(type)||Object.keys(validateDetails(value)).length)throw Error('Le brouillon est incomplet.');
   return Object.freeze({type,label:types[type].label,icon:types[type].icon,name:normalize(value.name),city:normalize(value.city),email:String(value.email).trim(),features:types[type].features,fictional:true,registered:false});
  }
- return Object.freeze({types,limits,validateType,validateDetails,preview,normalize});
+ return Object.freeze({types,limits,validateType,validateDetails,validSiret,preview,normalize});
 });
