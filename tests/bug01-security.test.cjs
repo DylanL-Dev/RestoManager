@@ -52,7 +52,7 @@ test('BUG-01 creator preserves verified Root-only read and keeps the DEV alias a
  assert.match(creator,/installCreatorConsole\(\{client,installOwnerInbox\}\)/);
  assert.match(creator,/import \{installOwnerInbox\} from '\.\/creator-admin\.js/);
  assert.match(inbox,/from\('platform_reports'\)/);
- assert.match(inbox,/\.update\(\{status:selector\.value\}\)/);
+ assert.match(inbox,/\.update\(\{status:next\}\)\.eq\('id',item\.id\)/);
  assert.match(html,/id="ownerUsername"/);
  assert.match(html,/id="ownerInbox"/);
  assert.doesNotMatch(creator,/signUp|service_role|\.insert\(|auth\.admin/);
