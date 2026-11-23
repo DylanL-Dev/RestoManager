@@ -1,0 +1,24 @@
+name: RM-017.3.2 Lifecycle - fail-closed Owner and Root requests (DEV)
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  lifecycle-security:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Syntax and safe lifecycle contracts
+        run: npm run test:syntax && node --test tests/rm01732-lifecycle.test.cjs tests/creator-console.test.cjs tests/platform-owner-security.test.cjs
+      - name: Disposable PostgreSQL authorization, Root MFA, gates and non-deletion
+        run: node tests/postgres/rm01732.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Root responsive request queue, no writes
+        run: node tests/browser/rm01732-creator.cjs
