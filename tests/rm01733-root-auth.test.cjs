@@ -60,21 +60,16 @@ test('RM-017.3.3 only DEV and no hardcoded credential or privilege grant',()=>{
  assert.match(auth,/from\('platform_admins'\)/);
  assert.match(auth,/data\.role!=='platform_admin'/);
  assert.match(auth,/!data\.active/);
- assert.match(auth,/getAuthenticatorAssuranceLevel/);
+ assert.doesNotMatch(auth,/auth\.mfa\.|getAuthenticatorAssuranceLevel/);
  assert.match(auth,/@supabase\/supabase-js@2\.119\.2\/\+esm/);
  assert.match(auth,/clearTimeout\(watchdog\)/);
  assert.match(auth,/La vérification prend trop de temps/);
- assert.match(auth,/aal\.currentLevel==='aal2'/);
- assert.match(auth,/mfa\.enroll/);
- assert.match(auth,/mfa\.challenge/);
- assert.match(auth,/mfa\.verify/);
  assert.match(auth,/resetPasswordForEmail/);
  assert.doesNotMatch(auth,/ROOT_AUTH_EMAIL|accounts\.restomanager\.example\.com|auth\.signUp|auth\.admin|service_role|\.insert\(|\.update\(|\.upsert\(/);
  assert.doesNotMatch(auth,/value=['"][^'"]+@/);
  assert.match(html,/id="ownerUsername" type="text"/);
  assert.match(html,/placeholder="rootdev"/);
- assert.match(html,/id="creatorMfaStep"/);
- assert.match(html,/id="creatorMfaEnroll"/);
+ assert.doesNotMatch(html,/id="creatorMfaStep"|id="creatorMfaEnroll"/);
  assert.match(html,/id="creatorRecoverRequest"/);
  assert.match(recovery,/id="creatorPasswordRecovery"/);
  assert.match(reset,/auth\.updateUser\(\{password:p\}\)/);
@@ -96,38 +91,29 @@ test('RM-017.3.3 a valid password without Root membership never opens console',a
  assert.equal(f.state.installed,0);
  assert.equal(f.state.signed,false);
 });
-test('RM-017.3.3 an authorized Root remains blocked before verified MFA',async()=>{
- const f=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}]});
- await tick();
- f.el.ownerUsername.value='root-dev@example.test';f.el.ownerPassword.value='a-fake-password';
- await f.emit('creatorLogin','submit');
- assert.equal(f.el.ownerPanel.hidden,true);
- assert.equal(f.el.creatorMfaStep.hidden,false);
- assert.equal(f.state.installed,0);
- f.el.ownerMfaCode.value='123456';
- await f.emit('creatorMfaForm','submit');
- assert.equal(f.el.ownerPanel.hidden,false);
- assert.equal(f.state.installed,1);
- assert.equal(f.state.aal,'aal2');
- assert.equal(f.state.challenges,1);
- await f.emit('ownerLogout');
- assert.equal(f.state.signed,false);
- assert.equal(f.el.ownerPanel.hidden,true);
-});
-test('RM-017.3.3 Root with no factor must enroll TOTP before console',async()=>{
+test('RM-017.3.8 DEV authorized Root opens console after email and password without MFA',async()=>{
  const f=fixture({isRoot:true});
  await tick();
- f.el.ownerUsername.value='root-dev@example.test';f.el.ownerPassword.value='test-password';
+ f.el.ownerUsername.value='root-dev@example.test';
+ f.el.ownerPassword.value='test-password';
  await f.emit('creatorLogin','submit');
- assert.equal(f.el.creatorMfaEnroll.hidden,false);
- assert.equal(f.state.installed,0);
- await f.emit('ownerStartEnroll');
- assert.equal(f.el.ownerEnrollInstructions.hidden,false);
- assert.equal(f.el.ownerTotpSecret.textContent,'DUMMY_TEST_SECRET');
- f.el.ownerEnrollCode.value='123456';
- await f.emit('creatorMfaEnrollForm','submit');
  assert.equal(f.el.ownerPanel.hidden,false);
- assert.equal(f.state.aal,'aal2');
+ assert.equal(f.state.installed,1);
+ assert.equal(f.state.challenges,0);
+ assert.equal(f.cache.get('rm:rootdev:authorized-email-v1'),'root-dev@example.test');
+ assert.equal(f.el.ownerPassword.value,'');
+ await f.emit('ownerLogout');
+ assert.equal(f.el.ownerPanel.hidden,true);
+ assert.equal(f.state.signed,false);
+});
+test('RM-017.3.8 DEV restored session still requires active Root membership',async()=>{
+ const permitted=fixture({isRoot:true,signed:true});
+ await tick();
+ assert.equal(permitted.el.ownerPanel.hidden,false);
+ const rejected=fixture({isRoot:false,signed:true});
+ await tick();
+ assert.equal(rejected.el.ownerPanel.hidden,true);
+ assert.equal(rejected.state.installed,0);
 });
 test('RM-017.3.3 password recovery selects an explicit DEV redirect and never touches prod',async()=>{
  const f=fixture();
@@ -142,41 +128,34 @@ test('RM-017.3.3 password recovery selects an explicit DEV redirect and never to
  assert.equal(f.state.installed,0);
  assert.match(f.el.ownerAuthFeedback.textContent,/Si cette adresse dispose/);
 });
-test('RM-017.3.6 rootdev alias remains device-local and only remembers email after verified MFA',async()=>{
+test('RM-017.3.8 rootdev alias requires first verified DEV email login but never a QR code',async()=>{
  const cache=new Map();
- const initial=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ const initial=fixture({isRoot:true,cache});
  await tick();
  initial.el.ownerUsername.value='rootdev';
  initial.el.ownerPassword.value='fake-first-password';
  await initial.emit('creatorLogin','submit');
- assert.equal(initial.state.installed,0);
+ assert.equal(initial.state.lastAuthEmail,null);
  assert.equal(initial.el.ownerPanel.hidden,true);
  assert.match(initial.el.message.textContent,/Première connexion/);
  assert.equal(cache.size,0);
-
- const setup=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ const setup=fixture({isRoot:true,cache});
  await tick();
  setup.el.ownerUsername.value='root-dev@example.test';
  setup.el.ownerPassword.value='fake-login-password';
  await setup.emit('creatorLogin','submit');
- assert.equal(cache.size,0,'No email may be saved before MFA');
- setup.el.ownerMfaCode.value='123456';
- await setup.emit('creatorMfaForm','submit');
- assert.equal(setup.state.installed,1);
+ assert.equal(setup.el.ownerPanel.hidden,false);
  assert.equal(cache.get('rm:rootdev:authorized-email-v1'),'root-dev@example.test');
  assert.equal([...cache.values()].some(x=>x.includes('password')),false);
  await setup.emit('ownerLogout');
-
- const later=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ const later=fixture({isRoot:true,cache});
  await tick();
  later.el.ownerUsername.value='rootdev';
- later.el.ownerPassword.value='not-stored-password';
+ later.el.ownerPassword.value='fake-existing-password';
  await later.emit('creatorLogin','submit');
  assert.equal(later.state.lastAuthEmail,'root-dev@example.test');
- assert.equal(later.el.creatorMfaStep.hidden,false);
- later.el.ownerMfaCode.value='123456';
- await later.emit('creatorMfaForm','submit');
  assert.equal(later.el.ownerPanel.hidden,false);
+ assert.equal(later.state.challenges,0);
 });
 test('RM-017.3.6 reject MAIN-only root alias on DEV, even when the device remembers DEV email',async()=>{
  const cache=new Map([['rm:rootdev:authorized-email-v1','root-dev@example.test']]);
@@ -193,7 +172,7 @@ test('RM-017.3.6 reject MAIN-only root alias on DEV, even when the device rememb
 });
 test('RM-017.3.3 responsive style hooks and no saved password',()=>{
  const css=read('creator-console.css');
- assert.match(css,/\.rootDevNotice/);assert.match(css,/\.ownerTotpSecret/);assert.match(css,/@media\(max-width:560px\)/);
+ assert.match(css,/\.rootDevNotice/);assert.match(css,/\.ownerAuthFeedback/);assert.match(css,/@media\(max-width:560px\)/);
  assert.match(auth,/localStorage\.setItem\(aliasKey,email\)/);
  assert.doesNotMatch(auth+reset,/localStorage\.setItem\([^\n]*(?:password|token|secret)|sessionStorage\.setItem|indexedDB\.open/);
 });

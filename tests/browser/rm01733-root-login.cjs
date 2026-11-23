@@ -41,7 +41,7 @@ const server=http.createServer((request,response)=>{
      assert.equal(await page.locator('#ownerUsername').getAttribute('placeholder'),'rootdev');
      assert.match(await page.locator('#ownerAliasInfo').innerText(),/première connexion/);
      assert.equal(await page.locator('#creatorRecoverRequest').isVisible(),false);
-     assert.equal(await page.locator('#creatorMfaStep').isVisible(),false);
+     assert.equal(await page.locator('#creatorMfaStep').count(),0);
     }else{
      assert.equal(await page.locator('#creatorPasswordRecovery').isVisible(),false);
      assert.match(await page.locator('main').innerText(),/Aucun mot de passe de production n'est modifié/);
