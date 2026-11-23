@@ -12,6 +12,22 @@ const client=createClient(
 );
 const $=id=>document.getElementById(id);
 let verifying=false,installed=false,factorId=null,unverifiedFactorId=null;
+const aliasKey='rm:rootdev:authorized-email-v1';
+const emailPattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Store only the verified Root email as a local username hint, never a password,
+// factor, token, or role. On a new device, email login remains necessary.
+function rememberedEmail(){
+ try{
+  const email=String(localStorage.getItem(aliasKey)||'').trim().toLowerCase();
+  return emailPattern.test(email)?email:'';
+ }catch{return ''}
+}
+async function rememberVerifiedRootEmail(){
+ const {data:{user},error}=await client.auth.getUser();
+ const email=String(user?.email||'').trim().toLowerCase();
+ if(error||!emailPattern.test(email))return;
+ try{localStorage.setItem(aliasKey,email)}catch{}
+}
 const recoveryRedirect=new URL('creator-recovery.html',location.href).href;
 function feedback(message=''){
  $('ownerAuthFeedback').textContent=message;
@@ -65,6 +81,7 @@ async function proceedIfAuthorized(){
  const {data:aal,error:aalError}=await client.auth.mfa.getAuthenticatorAssuranceLevel();
  if(aalError||!aal)throw new Error('Contrôle MFA indisponible.');
  if(aal.currentLevel==='aal2'){
+  await rememberVerifiedRootEmail();
   showOwner();
   return;
  }
@@ -94,23 +111,31 @@ $('creatorLogin').addEventListener('submit',async event=>{
  $('ownerSubmit').disabled=true;
  feedback('Vérification de votre accès DEV…');
  try{
-  const email=$('ownerUsername').value.trim().toLowerCase();
+  const identifier=$('ownerUsername').value.trim().toLowerCase();
+  const email=identifier==='root'?rememberedEmail():identifier;
   const password=$('ownerPassword').value;
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Adresse email invalide.');
+  if(identifier==='root'&&!email){
+   throw new Error('FIRST_DEVICE_LOGIN');
+  }
+  if(!emailPattern.test(email))throw new Error('Adresse email invalide.');
   const {error}=await client.auth.signInWithPassword({email,password});
   $('ownerPassword').value='';
   if(error)throw new Error('Identifiants incorrects ou compte DEV absent.');
   await proceedIfAuthorized();
- }catch{
+ }catch(error){
+  const firstDevice=error?.message==='FIRST_DEVICE_LOGIN';
   await signOut();
-  showLogin('Connexion impossible. Vérifiez l’email DEV et son autorisation Root. Le compte PROD est distinct.');
+  showLogin(firstDevice
+   ?'Première connexion sur cet appareil : utilisez votre email Root DEV une fois, puis configurez la double authentification. Ensuite vous pourrez saisir root.'
+   :'Connexion impossible. Vérifiez votre identifiant DEV et son autorisation Root. Le compte PROD est distinct.');
  }finally{
   verifying=false;
   $('ownerSubmit').disabled=false;
  }
 });
 $('ownerForgotPassword').addEventListener('click',()=>{
- $('ownerRecoverEmail').value=$('ownerUsername').value.trim();
+ const username=$('ownerUsername').value.trim().toLowerCase();
+ $('ownerRecoverEmail').value=username==='root'?rememberedEmail():username;
  stages('recovery');
  feedback();
 });
@@ -141,6 +166,7 @@ async function verifyFactor(id,code){
  const {data:aal,error:aalError}=await client.auth.mfa.getAuthenticatorAssuranceLevel();
  if(aalError||aal?.currentLevel!=='aal2')throw new Error('MFA non vérifié.');
  if(!await verifyOwner())throw new Error('L’autorisation Root a changé.');
+ await rememberVerifiedRootEmail();
  showOwner();
 }
 $('creatorMfaForm').addEventListener('submit',async event=>{

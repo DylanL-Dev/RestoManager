@@ -40,3 +40,13 @@
 - `.github/workflows/rm01733-root.yml` + autres campagnes de CI de RestoManager, avant fusion DEV et Render DEV.
 
 **Règle de publication :** GitHub DEV → 100 % CI → Render DEV. Ne jamais mettre à jour V3/MAIN/PROD sans validation distincte.
+
+## Complément RM-017.3.4 — conserver l'identifiant `root` (23 novembre 2026)
+
+- Aucun email personnel n'est inscrit dans le code source, les tests, les constantes JavaScript ou le dépôt public.
+- Sur un **nouvel appareil**, le propriétaire Root DEV saisit son adresse email **une seule fois** avec son mot de passe DEV, puis valide son TOTP MFA. **Après** succès de la vérification de ses autorisations serveur et de MFA AAL2, le navigateur mémorise uniquement cet email dans son stockage local, sous `rm:rootdev:authorized-email-v1`. Le mot de passe, le code MFA, le facteur et le rôle Root ne sont jamais enregistrés par cette fonctionnalité.
+- Aux connexions suivantes sur **cet appareil**, le propriétaire saisit simplement **`root`** et son mot de passe DEV ; le navigateur traduit `root` en email mémorisé localement, avant l'authentification standard Supabase (et le MFA obligatoire).
+- Si l'appareil est neuf, si le stockage a été effacé, ou si le stockage local n'est pas disponible, `root` ne peut pas être traduit en email : **saisir à nouveau l'adresse email sur le formulaire**, puis repasser MFA. Aucun lookup public non authentifié de l'identité du Root n'est exposé.
+- La récupération de mot de passe `root` utilise cet email local uniquement si disponible ; sinon, un email doit être saisi explicitement. Aucun mot de passe PROD n'est copié.
+- Le compte Root DEV doit toujours être **créé/invité par un administrateur Supabase Auth DEV** (avec email vérifié), puis autorisé séparément dans la table `platform_admins`. L'accès Root reste inexistant avant ces deux opérations supervisées. Les inscriptions publiques restent désactivées.
+- La création manuelle doit passer par **Supabase Dashboard > Authentication > Users > Invite user** ; ne pas créer de compte via INSERT SQL dans `auth.users` et ne pas exposer de clé `service_role`. Le nom du compte et son email DEV ne sont jamais transmis à une fonction publique anonyme.

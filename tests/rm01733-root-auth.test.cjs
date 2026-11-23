@@ -3,8 +3,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),vm=requir
 const root=path.join(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const html=read('creator.html'),auth=read('creator-auth.js'),reset=read('creator-recovery.js'),recovery=read('creator-recovery.html');
-function fixture({isRoot=false,signed=false,factors=[],aal='aal1'}={}){
- const state={signed,isRoot,factors:[...factors],aal,installed:0,resetRecipient:null,resetRedirect:null,password:null,challenges:0};
+function fixture({isRoot=false,signed=false,factors=[],aal='aal1',cache=new Map()}={}){
+ const state={signed,isRoot,factors:[...factors],aal,installed:0,resetRecipient:null,resetRedirect:null,password:null,challenges:0,lastAuthEmail:null};
  const elements={};const handlers=new Map();
  for(const name of [...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1])){
   elements[name]={
@@ -15,8 +15,8 @@ function fixture({isRoot=false,signed=false,factors=[],aal='aal1'}={}){
  }
  const client={
   auth:{
-   async getUser(){return {data:{user:state.signed?{id:'user-1',email_confirmed_at:'2026-11-23T08:00:00Z',is_anonymous:false}:null},error:null};},
-   async signInWithPassword({email,password}){if(!email||!password)return {error:new Error('invalid credentials')};state.signed=true;return{error:null}},
+   async getUser(){return {data:{user:state.signed?{id:'user-1',email:'root-dev@example.test',email_confirmed_at:'2026-11-23T08:00:00Z',is_anonymous:false}:null},error:null};},
+   async signInWithPassword({email,password}){if(!email||!password)return {error:new Error('invalid credentials')};state.lastAuthEmail=email;state.signed=true;return{error:null}},
    async signOut(){state.signed=false;state.aal='aal1';return{error:null}},
    async resetPasswordForEmail(email,{redirectTo}){state.resetRecipient=email;state.resetRedirect=redirectTo;return{error:null}},
    mfa:{
@@ -42,11 +42,12 @@ function fixture({isRoot=false,signed=false,factors=[],aal='aal1'}={}){
   supabaseEnvironment:{name:'DEV',url:'https://mock.invalid',publishableKey:'mock'},
   installOwnerInbox(){},
   installCreatorConsole(){state.installed++},
+  localStorage:{getItem:key=>cache.get(key)??null,setItem:(key,value)=>cache.set(key,String(value))},
   URL,location:{href:'https://restomanager-v3-supabase-integration.onrender.com/creator.html'}
  };
  const safeSource=auth.replace(/^import .*;$/gm,'');
  vm.runInNewContext(safeSource,api,{filename:'creator-auth.js'});
- return{state,el:elements,async emit(id,type='click',e={preventDefault(){}}){
+ return{state,cache,el:elements,async emit(id,type='click',e={preventDefault(){}}){
   const handler=handlers.get(id+':'+type);assert.equal(typeof handler,'function',id+':'+type);
   return handler(e);
  }};
@@ -66,7 +67,8 @@ test('RM-017.3.3 only DEV and no hardcoded credential or privilege grant',()=>{
  assert.match(auth,/resetPasswordForEmail/);
  assert.doesNotMatch(auth,/ROOT_AUTH_EMAIL|accounts\.restomanager\.example\.com|auth\.signUp|auth\.admin|service_role|\.insert\(|\.update\(|\.upsert\(/);
  assert.doesNotMatch(auth,/value=['"][^'"]+@/);
- assert.match(html,/id="ownerUsername" type="email"/);
+ assert.match(html,/id="ownerUsername" type="text"/);
+ assert.match(html,/placeholder="root"/);
  assert.match(html,/id="creatorMfaStep"/);
  assert.match(html,/id="creatorMfaEnroll"/);
  assert.match(html,/id="creatorRecoverRequest"/);
@@ -133,8 +135,45 @@ test('RM-017.3.3 password recovery selects an explicit DEV redirect and never to
  assert.equal(f.state.installed,0);
  assert.match(f.el.ownerAuthFeedback.textContent,/Si cette adresse dispose/);
 });
+test('RM-017.3.4 root alias remains device-local and only remembers email after verified MFA',async()=>{
+ const cache=new Map();
+ const initial=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ await tick();
+ initial.el.ownerUsername.value='root';
+ initial.el.ownerPassword.value='fake-first-password';
+ await initial.emit('creatorLogin','submit');
+ assert.equal(initial.state.installed,0);
+ assert.equal(initial.el.ownerPanel.hidden,true);
+ assert.match(initial.el.message.textContent,/Première connexion/);
+ assert.equal(cache.size,0);
+
+ const setup=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ await tick();
+ setup.el.ownerUsername.value='root-dev@example.test';
+ setup.el.ownerPassword.value='fake-login-password';
+ await setup.emit('creatorLogin','submit');
+ assert.equal(cache.size,0,'No email may be saved before MFA');
+ setup.el.ownerMfaCode.value='123456';
+ await setup.emit('creatorMfaForm','submit');
+ assert.equal(setup.state.installed,1);
+ assert.equal(cache.get('rm:rootdev:authorized-email-v1'),'root-dev@example.test');
+ assert.equal([...cache.values()].some(x=>x.includes('password')),false);
+ await setup.emit('ownerLogout');
+
+ const later=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ await tick();
+ later.el.ownerUsername.value='root';
+ later.el.ownerPassword.value='not-stored-password';
+ await later.emit('creatorLogin','submit');
+ assert.equal(later.state.lastAuthEmail,'root-dev@example.test');
+ assert.equal(later.el.creatorMfaStep.hidden,false);
+ later.el.ownerMfaCode.value='123456';
+ await later.emit('creatorMfaForm','submit');
+ assert.equal(later.el.ownerPanel.hidden,false);
+});
 test('RM-017.3.3 responsive style hooks and no saved password',()=>{
  const css=read('creator-console.css');
  assert.match(css,/\.rootDevNotice/);assert.match(css,/\.ownerTotpSecret/);assert.match(css,/@media\(max-width:560px\)/);
- assert.doesNotMatch(auth+reset,/localStorage\.setItem|sessionStorage\.setItem|indexedDB\.open/);
+ assert.match(auth,/localStorage\.setItem\(aliasKey,email\)/);
+ assert.doesNotMatch(auth+reset,/localStorage\.setItem\([^\n]*(?:password|token|secret)|sessionStorage\.setItem|indexedDB\.open/);
 });

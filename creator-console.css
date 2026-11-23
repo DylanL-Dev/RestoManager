@@ -41,6 +41,7 @@ h1,h2,h3,p{margin-top:0}p{line-height:1.55;color:#607b70}h1{font-size:clamp(25px
 
 /* RM-017.3.3 — DEV Root login, recovery and TOTP MFA. */
 .loginCard .ownerBrand small{color:#3f6550}
+.ownerAliasHelp{margin:8px 0 6px;font-size:12px;line-height:1.55;color:#405f50}
 .rootDevNotice{background:#edf7f1;border:1px solid #c7e5d1;color:#245b44;padding:12px 14px;border-radius:12px;font-size:12px;line-height:1.5}
 .loginCard .ownerTextButton{background:transparent;color:#087453;border:0;box-shadow:none;padding:8px 0;margin:10px 0 0;text-align:left;font-size:12px;font-weight:700;width:auto;min-height:36px}
 .loginCard .ownerTextButton:hover{text-decoration:underline;background:transparent}

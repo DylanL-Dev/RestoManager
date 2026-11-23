@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Assistance & administration · RestoManager</title>
 <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
-<link rel="stylesheet" href="creator-console.css?v=20261123-rm01733">
+<link rel="stylesheet" href="creator-console.css?v=20261123-rm01734">
 </head>
 <body>
 <section id="loginPanel" class="loginSurface">
@@ -16,10 +16,11 @@
   <span class="ownerBadge">ESPACE ADMINISTRATION</span>
   <h1>Espace Assistance & administration</h1>
   <p class="ownerIntro">Accédez à votre espace de pilotage pour superviser les établissements, traiter les demandes d’assistance et suivre la plateforme. Connexion sécurisée réservée aux administrateurs autorisés.</p>
-  <p class="rootDevNotice">Administration DEV · Compte indépendant de la production. Connectez-vous avec l'adresse email autorisée dans Supabase DEV.</p>
+  <p class="rootDevNotice">Administration DEV · Compte indépendant de la production.</p>
   <form id="creatorLogin" autocomplete="on">
-   <label for="ownerUsername">Adresse email Créateur / Root</label>
-   <input id="ownerUsername" type="email" inputmode="email" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Votre adresse email de récupération" required>
+   <label for="ownerUsername">Identifiant Créateur / Root</label>
+   <input id="ownerUsername" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="root" required aria-describedby="ownerAliasInfo">
+   <p id="ownerAliasInfo" class="ownerAliasHelp">Saisissez votre email DEV uniquement pour la première connexion sur cet appareil. Après validation du code de sécurité, l'identifiant <strong>root</strong> suffira.</p>
    <label for="ownerPassword">Mot de passe DEV</label>
    <input id="ownerPassword" type="password" autocomplete="current-password" required>
    <button id="ownerSubmit" type="submit">Se connecter à l’administration</button>
@@ -124,6 +125,6 @@
  </div>
 </div>
 <p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
-<script type="module" src="creator-auth.js?v=20261123-rm01733"></script>
+<script type="module" src="creator-auth.js?v=20261123-rm01734"></script>
 </body>
 </html>

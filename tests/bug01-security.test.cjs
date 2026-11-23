@@ -40,7 +40,9 @@ test('BUG-01 staff app can only submit, never retrieve or list reports',()=>{
 
 test('BUG-01 creator preserves verified Root-only read and upgrades DEV alias to safe email/MFA',()=>{
  assert.match(creator,/supabaseEnvironment\.name!=='DEV'/);
- assert.match(creator,/const email=\$\('ownerUsername'\)\.value\.trim\(\)\.toLowerCase\(\)/);
+ assert.match(creator,/const identifier=\$\('ownerUsername'\)\.value\.trim\(\)\.toLowerCase\(\)/);
+ assert.match(creator,/identifier==='root'\?rememberedEmail\(\):identifier/);
+ assert.match(creator,/localStorage\.setItem\(aliasKey,email\)/);
  assert.match(creator,/getAuthenticatorAssuranceLevel/);
  assert.match(creator,/aal\.currentLevel==='aal2'/);
  assert.doesNotMatch(creator,/ROOT_AUTH_EMAIL|accounts\.restomanager\.example\.com/);
