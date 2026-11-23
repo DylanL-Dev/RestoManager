@@ -112,11 +112,12 @@ $('creatorLogin').addEventListener('submit',async event=>{
  feedback('Vérification de votre accès DEV…');
  try{
   const identifier=$('ownerUsername').value.trim().toLowerCase();
-  const email=identifier==='root'?rememberedEmail():identifier;
+  const email=identifier==='rootdev'?rememberedEmail():identifier;
   const password=$('ownerPassword').value;
-  if(identifier==='root'&&!email){
+  if(identifier==='rootdev'&&!email){
    throw new Error('FIRST_DEVICE_LOGIN');
   }
+  if(identifier==='root')throw new Error('PROD_ONLY_ALIAS');
   if(!emailPattern.test(email))throw new Error('Adresse email invalide.');
   const {error}=await client.auth.signInWithPassword({email,password});
   $('ownerPassword').value='';
@@ -124,10 +125,13 @@ $('creatorLogin').addEventListener('submit',async event=>{
   await proceedIfAuthorized();
  }catch(error){
   const firstDevice=error?.message==='FIRST_DEVICE_LOGIN';
+  const oldAlias=error?.message==='PROD_ONLY_ALIAS';
   await signOut();
   showLogin(firstDevice
-   ?'Première connexion sur cet appareil : utilisez votre email Root DEV une fois, puis configurez la double authentification. Ensuite vous pourrez saisir root.'
-   :'Connexion impossible. Vérifiez votre identifiant DEV et son autorisation Root. Le compte PROD est distinct.');
+   ?'Première connexion sur cet appareil : utilisez votre email Root DEV une fois, puis configurez la double authentification. Ensuite vous pourrez saisir rootdev.'
+   :oldAlias
+    ?'L’identifiant root est réservé à MAIN. Pour DEV, utilisez rootdev après une première connexion par email.'
+    :'Connexion impossible. Vérifiez votre identifiant DEV et son autorisation Root. Le compte PROD est distinct.');
  }finally{
   verifying=false;
   $('ownerSubmit').disabled=false;
@@ -135,7 +139,7 @@ $('creatorLogin').addEventListener('submit',async event=>{
 });
 $('ownerForgotPassword').addEventListener('click',()=>{
  const username=$('ownerUsername').value.trim().toLowerCase();
- $('ownerRecoverEmail').value=username==='root'?rememberedEmail():username;
+ $('ownerRecoverEmail').value=username==='rootdev'?rememberedEmail():(username==='root'?'':username);
  stages('recovery');
  feedback();
 });

@@ -68,7 +68,7 @@ test('RM-017.3.3 only DEV and no hardcoded credential or privilege grant',()=>{
  assert.doesNotMatch(auth,/ROOT_AUTH_EMAIL|accounts\.restomanager\.example\.com|auth\.signUp|auth\.admin|service_role|\.insert\(|\.update\(|\.upsert\(/);
  assert.doesNotMatch(auth,/value=['"][^'"]+@/);
  assert.match(html,/id="ownerUsername" type="text"/);
- assert.match(html,/placeholder="root"/);
+ assert.match(html,/placeholder="rootdev"/);
  assert.match(html,/id="creatorMfaStep"/);
  assert.match(html,/id="creatorMfaEnroll"/);
  assert.match(html,/id="creatorRecoverRequest"/);
@@ -138,11 +138,11 @@ test('RM-017.3.3 password recovery selects an explicit DEV redirect and never to
  assert.equal(f.state.installed,0);
  assert.match(f.el.ownerAuthFeedback.textContent,/Si cette adresse dispose/);
 });
-test('RM-017.3.4 root alias remains device-local and only remembers email after verified MFA',async()=>{
+test('RM-017.3.6 rootdev alias remains device-local and only remembers email after verified MFA',async()=>{
  const cache=new Map();
  const initial=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
  await tick();
- initial.el.ownerUsername.value='root';
+ initial.el.ownerUsername.value='rootdev';
  initial.el.ownerPassword.value='fake-first-password';
  await initial.emit('creatorLogin','submit');
  assert.equal(initial.state.installed,0);
@@ -165,7 +165,7 @@ test('RM-017.3.4 root alias remains device-local and only remembers email after 
 
  const later=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
  await tick();
- later.el.ownerUsername.value='root';
+ later.el.ownerUsername.value='rootdev';
  later.el.ownerPassword.value='not-stored-password';
  await later.emit('creatorLogin','submit');
  assert.equal(later.state.lastAuthEmail,'root-dev@example.test');
@@ -173,6 +173,19 @@ test('RM-017.3.4 root alias remains device-local and only remembers email after 
  later.el.ownerMfaCode.value='123456';
  await later.emit('creatorMfaForm','submit');
  assert.equal(later.el.ownerPanel.hidden,false);
+});
+test('RM-017.3.6 reject MAIN-only root alias on DEV, even when the device remembers DEV email',async()=>{
+ const cache=new Map([['rm:rootdev:authorized-email-v1','root-dev@example.test']]);
+ const f=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ await tick();
+ f.el.ownerUsername.value='root';
+ f.el.ownerPassword.value='fake-existing-password';
+ await f.emit('creatorLogin','submit');
+ assert.equal(f.state.lastAuthEmail,null,'MAIN alias must not be sent to Supabase DEV');
+ assert.equal(f.el.ownerPanel.hidden,true);
+ assert.equal(f.state.installed,0);
+ assert.match(f.el.message.textContent,/root est réservé à MAIN/);
+ assert.equal(cache.get('rm:rootdev:authorized-email-v1'),'root-dev@example.test');
 });
 test('RM-017.3.3 responsive style hooks and no saved password',()=>{
  const css=read('creator-console.css');

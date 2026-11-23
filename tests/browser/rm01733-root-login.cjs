@@ -38,7 +38,7 @@ const server=http.createServer((request,response)=>{
     if(route==='/creator.html'){
      assert.equal(await page.locator('#ownerPanel').isVisible(),false);
      assert.equal(await page.locator('#ownerUsername').getAttribute('type'),'text');
-     assert.equal(await page.locator('#ownerUsername').getAttribute('placeholder'),'root');
+     assert.equal(await page.locator('#ownerUsername').getAttribute('placeholder'),'rootdev');
      assert.match(await page.locator('#ownerAliasInfo').innerText(),/première connexion/);
      assert.equal(await page.locator('#creatorRecoverRequest').isVisible(),false);
      assert.equal(await page.locator('#creatorMfaStep').isVisible(),false);
