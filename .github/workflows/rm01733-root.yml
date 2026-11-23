@@ -16,7 +16,7 @@ jobs:
           cache: npm
       - run: npm ci
       - name: Root Auth security, recovery and MFA mocked verification
-        run: node --test tests/rm01733-root-auth.test.cjs tests/platform-owner-security.test.cjs && npm run test:syntax
+        run: node --test tests/rm01733-root-auth.test.cjs tests/rm01735-recovery.test.cjs tests/platform-owner-security.test.cjs && npm run test:syntax
       - run: npx playwright install --with-deps chromium
       - name: Login and recovery on mobile/tablet/desktop with WCAG and no backend calls
         run: node tests/browser/rm01733-root-login.cjs
