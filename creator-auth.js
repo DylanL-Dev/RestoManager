@@ -11,11 +11,11 @@ const client=createClient(
  {auth:{persistSession:true,autoRefreshToken:true}}
 );
 const $=id=>document.getElementById(id);
-let verifying=false,installed=false,factorId=null,unverifiedFactorId=null;
+let verifying=false,installed=false;
 const aliasKey='rm:rootdev:authorized-email-v1';
 const emailPattern=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Store only the verified Root email as a local username hint, never a password,
-// factor, token, or role. On a new device, email login remains necessary.
+// Store only the Root email verified through password + active platform_admin membership.
+// The local alias is a username hint; no passwords, roles or tokens are stored by this code.
 function rememberedEmail(){
  try{
   const email=String(localStorage.getItem(aliasKey)||'').trim().toLowerCase();
@@ -36,9 +36,6 @@ function stages(stage){
  $('creatorLogin').hidden=stage!=='login';
  $('ownerForgotPassword').hidden=stage!=='login';
  $('creatorRecoverRequest').hidden=stage!=='recovery';
- $('creatorMfaStep').hidden=stage!=='mfa';
- $('creatorMfaEnroll').hidden=stage!=='enroll';
- $('ownerMfaCancel').hidden=stage==='login'||stage==='recovery';
 }
 function showLogin(message=''){
  $('loginPanel').hidden=false;
@@ -46,11 +43,6 @@ function showLogin(message=''){
  stages('login');
  $('message').textContent=message;
  feedback();
- factorId=null;unverifiedFactorId=null;
- $('ownerTotpSecret').textContent='';
- $('ownerTotpQr').removeAttribute('src');
- $('ownerTotpQr').hidden=true;
- $('ownerEnrollInstructions').hidden=true;
 }
 function showOwner(){
  $('loginPanel').hidden=true;
@@ -58,11 +50,6 @@ function showOwner(){
  $('message').textContent='';
  feedback();
  $('ownerPassword').value='';
- $('ownerMfaCode').value='';
- $('ownerEnrollCode').value='';
- $('ownerTotpSecret').textContent='';
- $('ownerTotpQr').removeAttribute('src');
- $('ownerTotpQr').hidden=true;
  if(!installed){installCreatorConsole({client,installOwnerInbox});installed=true;}
 }
 async function verifyOwner(){
@@ -77,27 +64,11 @@ async function verifyOwner(){
  return true;
 }
 async function proceedIfAuthorized(){
+ // DEV-only explicit choice: password + server-side Root membership, no MFA step.
+ // Production host is rejected at module startup; never trust a browser-supplied role.
  if(!await verifyOwner())throw new Error('Accès Root non autorisé dans Supabase DEV.');
- const {data:aal,error:aalError}=await client.auth.mfa.getAuthenticatorAssuranceLevel();
- if(aalError||!aal)throw new Error('Contrôle MFA indisponible.');
- if(aal.currentLevel==='aal2'){
-  await rememberVerifiedRootEmail();
-  showOwner();
-  return;
- }
- const {data:factors,error:listError}=await client.auth.mfa.listFactors();
- if(listError)throw new Error('Impossible de consulter les facteurs MFA.');
- const verified=(factors?.totp||[]).find(item=>item.status==='verified');
- $('loginPanel').hidden=false;
- $('ownerPanel').hidden=true;
- if(verified){
-  factorId=verified.id;
-  stages('mfa');
-  feedback('Entrez le code affiché par votre application d’authentification.');
- }else{
-  stages('enroll');
-  feedback('Votre compte Root DEV doit activer la double authentification.');
- }
+ await rememberVerifiedRootEmail();
+ showOwner();
 }
 async function signOut(){
  await client.auth.signOut({scope:'local'}).catch(()=>{});
@@ -133,7 +104,7 @@ $('creatorLogin').addEventListener('submit',async event=>{
   const oldAlias=error?.message==='PROD_ONLY_ALIAS';
   await signOut();
   showLogin(firstDevice
-   ?'Première connexion sur cet appareil : utilisez votre email Root DEV une fois, puis configurez la double authentification. Ensuite vous pourrez saisir rootdev.'
+   ?'Première connexion sur cet appareil : utilisez votre email Root DEV et votre mot de passe une seule fois. Ensuite, vous pourrez vous connecter avec rootdev et ce même mot de passe.'
    :oldAlias
     ?'L’identifiant root est réservé à MAIN. Pour DEV, utilisez rootdev après une première connexion par email.'
     :'Connexion impossible. Vérifiez votre identifiant DEV et son autorisation Root. Le compte PROD est distinct.');
@@ -167,70 +138,6 @@ $('creatorRecoverRequest').addEventListener('submit',async event=>{
   $('ownerRecoverSubmit').disabled=false;
  }
 });
-async function verifyFactor(id,code){
- if(!id||!/^\d{6}$/.test(code))throw new Error('Code MFA invalide.');
- const {data:challenge,error:challengeError}=await client.auth.mfa.challenge({factorId:id});
- if(challengeError||!challenge?.id)throw new Error('Challenge MFA impossible.');
- const {error}=await client.auth.mfa.verify({factorId:id,challengeId:challenge.id,code});
- if(error)throw new Error('Le code MFA n’a pas été validé.');
- const {data:aal,error:aalError}=await client.auth.mfa.getAuthenticatorAssuranceLevel();
- if(aalError||aal?.currentLevel!=='aal2')throw new Error('MFA non vérifié.');
- if(!await verifyOwner())throw new Error('L’autorisation Root a changé.');
- await rememberVerifiedRootEmail();
- showOwner();
-}
-$('creatorMfaForm').addEventListener('submit',async event=>{
- event.preventDefault();
- if(verifying)return;
- verifying=true;
- $('ownerMfaSubmit').disabled=true;
- try{
-  await verifyFactor(factorId,$('ownerMfaCode').value.trim());
- }catch{
-  feedback('Le code de sécurité est incorrect ou a expiré. Réessayez.');
- }finally{
-  verifying=false;
-  $('ownerMfaSubmit').disabled=false;
- }
-});
-$('ownerStartEnroll').addEventListener('click',async()=>{
- if(verifying)return;
- verifying=true;
- $('ownerStartEnroll').disabled=true;
- try{
-  if(!await verifyOwner())throw new Error('Accès refusé');
-  const {data,error}=await client.auth.mfa.enroll({factorType:'totp',friendlyName:'RestoManager Root DEV'});
-  if(error||!data?.id||!data?.totp?.secret)throw new Error('Activation impossible');
-  unverifiedFactorId=data.id;
-  $('ownerTotpSecret').textContent=data.totp.secret;
-  // QR is returned by Supabase Auth after a verified Root password and role check.
-  const qr=String(data.totp.qr_code||'');
-  if(/^data:image\/svg\+xml[;,]/.test(qr)||/^data:image\/png;base64,/.test(qr)){
-   $('ownerTotpQr').src=qr;
-   $('ownerTotpQr').hidden=false;
-  }
-  $('ownerEnrollInstructions').hidden=false;
-  feedback('Ajoutez la clé dans votre application, puis saisissez son code à 6 chiffres.');
- }catch{
-  feedback('La configuration MFA a échoué. Vérifiez les paramètres Supabase Auth DEV.');
-  $('ownerStartEnroll').disabled=false;
- }finally{verifying=false;}
-});
-$('creatorMfaEnrollForm').addEventListener('submit',async event=>{
- event.preventDefault();
- if(verifying)return;
- verifying=true;
- $('ownerEnrollSubmit').disabled=true;
- try{
-  await verifyFactor(unverifiedFactorId,$('ownerEnrollCode').value.trim());
- }catch{
-  feedback('Activation MFA non confirmée. Vérifiez le code et réessayez.');
- }finally{
-  verifying=false;
-  $('ownerEnrollSubmit').disabled=false;
- }
-});
-$('ownerMfaCancel').addEventListener('click',()=>void signOut());
 $('ownerLogout').addEventListener('click',async()=>{
  $('ownerLogout').disabled=true;
  try{
