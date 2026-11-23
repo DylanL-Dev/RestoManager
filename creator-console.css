@@ -27,3 +27,14 @@ h1,h2,h3,p{margin-top:0}p{line-height:1.55;color:#607b70}h1{font-size:clamp(25px
  .ownerNavBackdrop:not([hidden]){display:block;position:fixed;inset:0;z-index:51;border:0;background:rgba(6,28,19,.43);padding:0;cursor:pointer}
  body.ownerDrawerOpen{overflow:hidden}
 }
+
+/* RM-017.3.2 — lifecycle queue: read-only and responsive */
+.ownerLifecycleList{display:grid;gap:12px;margin-top:17px}
+.ownerLifecycleEmpty{background:#f4f9f6;border:1px dashed #d3e5d9;padding:18px;border-radius:12px;color:#366550;font-size:13px}
+.ownerLifecycleItem{background:#f9fcfa;border:1px solid #dce9e0;border-radius:13px;padding:16px}
+.ownerLifecycleItemHead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ownerLifecycleItemHead strong{font-size:14px;color:#183f30}
+.ownerLifecycleMeta,.ownerLifecycleDetail{font-size:12px;color:#587362;margin:10px 0 0;overflow-wrap:anywhere}
+.ownerLifecycleHelp{margin-top:16px}
+.ownerLifecycleHelp a{font-weight:750;font-size:13px}
+@media(max-width:760px){.ownerLifecycleItem{padding:14px}.ownerLifecycleItemHead{align-items:flex-start}}
