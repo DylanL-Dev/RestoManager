@@ -38,3 +38,16 @@ h1,h2,h3,p{margin-top:0}p{line-height:1.55;color:#607b70}h1{font-size:clamp(25px
 .ownerLifecycleHelp{margin-top:16px}
 .ownerLifecycleHelp a{font-weight:750;font-size:13px}
 @media(max-width:760px){.ownerLifecycleItem{padding:14px}.ownerLifecycleItemHead{align-items:flex-start}}
+
+/* RM-017.3.3 — DEV Root login, recovery and TOTP MFA. */
+.rootDevNotice{background:#edf7f1;border:1px solid #c7e5d1;color:#245b44;padding:12px 14px;border-radius:12px;font-size:12px;line-height:1.5}
+.loginCard .ownerTextButton{background:transparent;color:#087453;border:0;box-shadow:none;padding:8px 0;margin:10px 0 0;text-align:left;font-size:12px;font-weight:700;width:auto;min-height:36px}
+.loginCard .ownerTextButton:hover{text-decoration:underline;background:transparent}
+.loginCard .ownerAuthStep{margin-top:16px;border-top:1px solid #e4eee6;padding-top:22px}
+.loginCard .ownerAuthStep h2{font-size:20px;color:#184836;margin-bottom:9px}
+.loginCard .ownerAuthStep p{color:#4b6d5d;font-size:13px}
+.loginCard .ownerAuthFeedback{font-size:12px;color:#3a674f;margin:15px 0 0;min-height:18px;overflow-wrap:anywhere}
+.loginCard .ownerTotpSecret{display:block;background:#f0f6f2;padding:12px;border:1px solid #d8e5da;border-radius:9px;word-break:break-all;font-size:12px;color:#1c5339;user-select:all}
+.loginCard #ownerTotpQr{display:block;width:min(100%,220px);height:auto;border:1px solid #d7e9dc;border-radius:13px;margin:12px auto;background:white;padding:8px}
+.loginCard #ownerTotpQr[hidden]{display:none}
+@media(max-width:560px){.loginCard .ownerAuthStep{padding-top:18px}.rootDevNotice{font-size:11px}}
