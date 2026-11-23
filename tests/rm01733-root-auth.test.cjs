@@ -174,6 +174,19 @@ test('RM-017.3.6 rootdev alias remains device-local and only remembers email aft
  await later.emit('creatorMfaForm','submit');
  assert.equal(later.el.ownerPanel.hidden,false);
 });
+test('RM-017.3.6 reject MAIN-only root alias on DEV, even when the device remembers DEV email',async()=>{
+ const cache=new Map([['rm:rootdev:authorized-email-v1','root-dev@example.test']]);
+ const f=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
+ await tick();
+ f.el.ownerUsername.value='root';
+ f.el.ownerPassword.value='fake-existing-password';
+ await f.emit('creatorLogin','submit');
+ assert.equal(f.state.lastAuthEmail,null,'MAIN alias must not be sent to Supabase DEV');
+ assert.equal(f.el.ownerPanel.hidden,true);
+ assert.equal(f.state.installed,0);
+ assert.match(f.el.message.textContent,/root est réservé à MAIN/);
+ assert.equal(cache.get('rm:rootdev:authorized-email-v1'),'root-dev@example.test');
+});
 test('RM-017.3.3 responsive style hooks and no saved password',()=>{
  const css=read('creator-console.css');
  assert.match(css,/\.rootDevNotice/);assert.match(css,/\.ownerTotpSecret/);assert.match(css,/@media\(max-width:560px\)/);
