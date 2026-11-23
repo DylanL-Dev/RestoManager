@@ -39,7 +39,7 @@ function fixture({
    assert.equal(table,'platform_admins');
    const q={select(){return q},eq(){return q},async maybeSingle(){
     state.rootReads++;
-    return{data:root?{user_id:'test-user',role:'platform_admin',active:true}:null,error:null};
+    return{data:state.root?{user_id:'test-user',role:'platform_admin',active:true}:null,error:null};
    }};
    return q;
   }
@@ -130,9 +130,12 @@ test('RM-017.3.5 cannot change password after Root role is revoked on submission
  assert.equal(f.elements.creatorPasswordRecovery.hidden,false);
  // Simulate a role revocation after initial link acceptance.
  f.state.root=false;
- // Stub reads root lexical option, so use a second mock check via override of .root later.
- // Role checks are separately asserted in source contract below.
- assert.match(source,/root\.active/);
+ f.elements.creatorNewPassword.value='a-new-verified-password-2026';
+ f.elements.creatorConfirmPassword.value='a-new-verified-password-2026';
+ await f.emit('creatorPasswordRecovery');
+ assert.equal(f.state.updated,0);
+ assert.equal(f.elements.creatorPasswordRecovery.hidden,false);
+ assert.match(f.elements.creatorRecoveryMessage.textContent,/pas pu être enregistré/);
 });
 test('RM-017.3.5 successfully updates only password and signs out',async()=>{
  const f=fixture({url:origin+'#access_token=token&refresh_token=refresh&type=recovery'});
