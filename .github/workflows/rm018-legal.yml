@@ -1,0 +1,23 @@
+name: RM-018 Legal drafts - DEV accessibility and no trackers
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  legal-dev:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:syntax
+      - name: Legal identities, placeholders, scope, static links, no scripts
+        run: node --test tests/rm018-legal.test.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Seven pages, four viewport widths, WCAG, no cookies
+        run: node tests/browser/rm018-legal.cjs
