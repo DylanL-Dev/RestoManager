@@ -68,7 +68,7 @@ test('RM-017.3.3 only DEV and no hardcoded credential or privilege grant',()=>{
  assert.doesNotMatch(auth,/ROOT_AUTH_EMAIL|accounts\.restomanager\.example\.com|auth\.signUp|auth\.admin|service_role|\.insert\(|\.update\(|\.upsert\(/);
  assert.doesNotMatch(auth,/value=['"][^'"]+@/);
  assert.match(html,/id="ownerUsername" type="text"/);
- assert.match(html,/placeholder="root"/);
+ assert.match(html,/placeholder="rootdev"/);
  assert.match(html,/id="creatorMfaStep"/);
  assert.match(html,/id="creatorMfaEnroll"/);
  assert.match(html,/id="creatorRecoverRequest"/);
@@ -138,11 +138,11 @@ test('RM-017.3.3 password recovery selects an explicit DEV redirect and never to
  assert.equal(f.state.installed,0);
  assert.match(f.el.ownerAuthFeedback.textContent,/Si cette adresse dispose/);
 });
-test('RM-017.3.4 root alias remains device-local and only remembers email after verified MFA',async()=>{
+test('RM-017.3.6 rootdev alias remains device-local and only remembers email after verified MFA',async()=>{
  const cache=new Map();
  const initial=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
  await tick();
- initial.el.ownerUsername.value='root';
+ initial.el.ownerUsername.value='rootdev';
  initial.el.ownerPassword.value='fake-first-password';
  await initial.emit('creatorLogin','submit');
  assert.equal(initial.state.installed,0);
@@ -165,7 +165,7 @@ test('RM-017.3.4 root alias remains device-local and only remembers email after 
 
  const later=fixture({isRoot:true,factors:[{id:'factor-1',status:'verified'}],cache});
  await tick();
- later.el.ownerUsername.value='root';
+ later.el.ownerUsername.value='rootdev';
  later.el.ownerPassword.value='not-stored-password';
  await later.emit('creatorLogin','submit');
  assert.equal(later.state.lastAuthEmail,'root-dev@example.test');
