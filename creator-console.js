@@ -5,7 +5,7 @@ export function installCreatorConsole({client,installOwnerInbox}){
  const navigation=[...document.querySelectorAll('[data-owner-nav]')];
  const setText=(id,value)=>{const node=byId(id);if(node)node.textContent=String(value);};
  const make=(tag,cls,text)=>{const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el;};
- let establishments=[],loaded=false,reportsLoaded=false,loading=false,lifecycleLoading=false;
+ let establishments=[],loaded=false,reportsLoaded=false,loading=false,lifecycleLoading=false,pilotLoading=false;
  const sidebar=byId('ownerSidebar'),navToggle=byId('ownerNavToggle'),navClose=byId('ownerNavClose'),navBackdrop=byId('ownerNavBackdrop');
  const mobileQuery=window.matchMedia('(max-width: 760px)');
  function setMenuOpen(open){
@@ -23,11 +23,12 @@ export function installCreatorConsole({client,installOwnerInbox}){
   const chosen=sections.some(s=>s.dataset.ownerSection===view)?view:'dashboard';
   for(const section of sections)section.hidden=section.dataset.ownerSection!==chosen;
   for(const link of navigation){const active=link.dataset.ownerNav===chosen;link.classList.toggle('active',active);link.setAttribute('aria-current',active?'page':'false');}
-  const names={dashboard:'Vue générale',restaurants:'Établissements',reports:'Assistance & signalements',lifecycle:'Comptes & demandes',monitoring:'Supervision',settings:'Paramètres'};
+  const names={dashboard:'Vue générale',restaurants:'Établissements',reports:'Assistance & signalements',lifecycle:'Comptes & demandes',pilot:'Préparation inscriptions',monitoring:'Supervision',settings:'Paramètres'};
   setText('ownerPageTitle',names[chosen]||'Vue générale');
   if(chosen==='reports'&&!reportsLoaded){installOwnerInbox({client});reportsLoaded=true;}
   if(chosen==='restaurants')renderEstablishments();
   if(chosen==='lifecycle')void loadLifecycle();
+  if(chosen==='pilot')void loadPilot();
   if(chosen==='dashboard'&&loaded)void load();
   setMenuOpen(false);
  }
@@ -43,6 +44,50 @@ export function installCreatorConsole({client,installOwnerInbox}){
    const badge=make('span','ownerReadOnlyTag','Lecture seule');
    row.append(icon,name,badge);container.append(row);
   });
+ }
+ // RM-017.4: status of the public DEV frontend only; never claims to verify
+ // private Supabase Auth settings, secret keys, invitation records or email delivery.
+ async function loadPilot(){
+  if(pilotLoading)return;
+  pilotLoading=true;
+  setText('ownerPilotSummary','Vérification du pilote DEV…');
+  setText('ownerPilotStatusDetail','Lecture de la configuration publique du site.');
+  setText('ownerPilotWebState','Vérification…');
+  setText('ownerPilotCaptchaState','Vérification…');
+  try{
+   const response=await fetch(new URL('rm017-runtime.json',location.href),{
+    cache:'no-store',credentials:'omit'
+   });
+   if(!response.ok)throw new Error('Configuration inaccessible');
+   const config=await response.json();
+   const valid=config?.schema===2&&config?.channel==='dev'&&
+    config?.pilotOnly===true&&config?.confirmationEmailRequired===true&&
+    config?.captchaRequired===true&&config?.redirectOrigin===location.origin&&
+    typeof config?.enabled==='boolean';
+   if(!valid){
+    setText('ownerPilotSummary','Configuration à vérifier — pilote non validé');
+    setText('ownerPilotStatusDetail','Le fichier public ne répond pas au contrat de sécurité RM-017. Aucune ouverture ne doit être présumée.');
+    setText('ownerPilotWebState','Paramètres incohérents ou incomplets.');
+   }else if(config.enabled===false){
+    setText('ownerPilotSummary','Pilote fermé côté interface DEV');
+    setText('ownerPilotStatusDetail','Le parcours d’inscription est désactivé sur ce site. Les contrôles serveur, email et anti-robots restent indépendants.');
+    setText('ownerPilotWebState','Désactivée (enabled=false).');
+   }else{
+    setText('ownerPilotSummary','Activation côté interface détectée — vérifications obligatoires');
+    setText('ownerPilotStatusDetail','La page autorise le pilote, mais ce seul fichier ne prouve ni les droits serveur ni le bon fonctionnement des emails et du CAPTCHA.');
+    setText('ownerPilotWebState','Activation déclarée (enabled=true) : ne pas ouvrir au public sans recette.');
+   }
+   const key=config?.turnstileSiteKey;
+   const validKey=typeof key==='string'&&/^0x[a-zA-Z0-9_-]{16,80}$/.test(key);
+   setText('ownerPilotCaptchaState',validKey
+    ?'Clé publique présente. La configuration du secret et les tests réels restent à vérifier.'
+    :'Clé publique absente ou invalide. CAPTCHA non prêt pour un pilote.');
+  }catch{
+   setText('ownerPilotSummary','État indisponible — ne pas ouvrir');
+   setText('ownerPilotStatusDetail','Impossible de lire la configuration Render DEV. Aucun statut serveur ne peut être déduit de cette erreur.');
+   setText('ownerPilotWebState','Statut non vérifiable.');
+   setText('ownerPilotCaptchaState','Statut non vérifiable.');
+  }finally{pilotLoading=false;}
  }
  async function loadLifecycle(){
   if(lifecycleLoading)return;
@@ -109,6 +154,7 @@ export function installCreatorConsole({client,installOwnerInbox}){
  navigation.forEach(el=>el.addEventListener('click',()=>navigate(el.dataset.ownerNav)));
  byId('ownerRefreshOverview')?.addEventListener('click',()=>void load());
  byId('ownerRefreshLifecycle')?.addEventListener('click',()=>void loadLifecycle());
+ byId('ownerRefreshPilot')?.addEventListener('click',()=>void loadPilot());
  window.addEventListener('restomanager:root-reports-updated',()=>void load());
  navToggle?.addEventListener('click',()=>setMenuOpen(!sidebar?.classList.contains('open')));
  navClose?.addEventListener('click',()=>{setMenuOpen(false);navToggle?.focus();});

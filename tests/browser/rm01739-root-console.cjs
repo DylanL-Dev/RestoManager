@@ -30,6 +30,11 @@ const server=http.createServer((req,res)=>{
    await context.route('**/*',route=>{
     const request=route.request(),url=request.url();
     if(new URL(url).origin!==origin)return route.abort();
+    // The shipped runtime uses the real DEV Render origin; tests use localhost.
+    // Replace only the public, closed configuration with matching local origin.
+    if(url===origin+'/rm017-runtime.json')return route.fulfill({status:200,contentType:'application/json',
+      body:JSON.stringify({schema:2,channel:'dev',enabled:false,pilotOnly:true,
+       confirmationEmailRequired:true,captchaRequired:true,redirectOrigin:origin,turnstileSiteKey:null})});
     // Disable real authentication; only fictional data is used.
     if(/\/creator-auth\.js(?:\?|$)/.test(url))
       return route.fulfill({status:200,contentType:'text/javascript',body:'// Auth disabled: isolated console test'});
@@ -98,6 +103,32 @@ const server=http.createServer((req,res)=>{
 
    await navigate('monitoring');
    assert.match(await page.locator('[data-owner-section="monitoring"]').innerText(),/En préparation/);
+
+   await navigate('pilot');
+   await page.waitForFunction(()=>document.getElementById('ownerPilotSummary')?.textContent.includes('Pilote fermé'));
+   assert.match(await page.locator('#ownerPilotWebState').innerText(),/enabled=false/);
+   assert.match(await page.locator('#ownerPilotCaptchaState').innerText(),/non prêt/);
+   assert.match(await page.locator('[data-owner-section="pilot"]').innerText(),/verrou privé/i);
+   assert.equal(await page.locator('[data-owner-section="pilot"] [data-enable-signups]').count(),0);
+   if(width===390){
+    // An enabled client flag is not proof of a secure operational pilot.
+    await page.route('**/rm017-runtime.json',route=>route.fulfill({status:200,contentType:'application/json',
+      body:JSON.stringify({schema:2,channel:'dev',enabled:true,pilotOnly:true,confirmationEmailRequired:true,
+       captchaRequired:true,redirectOrigin:origin,turnstileSiteKey:'0x4AAAAAAGLm9RaVvyWg-GtY'})}));
+    await page.locator('#ownerRefreshPilot').click();
+    await page.waitForFunction(()=>document.getElementById('ownerPilotSummary')?.textContent.includes('Activation côté interface'));
+    assert.match(await page.locator('#ownerPilotStatusDetail').innerText(),/ne prouve ni les droits serveur/);
+    assert.match(await page.locator('#ownerPilotCaptchaState').innerText(),/secret et les tests réels restent à vérifier/);
+    // Invalid config must never be reported as a ready-to-use pilot.
+    await page.unroute('**/rm017-runtime.json');
+    await page.route('**/rm017-runtime.json',route=>route.fulfill({status:200,contentType:'application/json',
+      body:JSON.stringify({enabled:true,channel:'prod'})}));
+    await page.locator('#ownerRefreshPilot').click();
+    await page.waitForFunction(()=>document.getElementById('ownerPilotSummary')?.textContent.includes('Configuration à vérifier'));
+    await page.unroute('**/rm017-runtime.json');
+    await page.locator('#ownerRefreshPilot').click();
+    await page.waitForFunction(()=>document.getElementById('ownerPilotSummary')?.textContent.includes('Pilote fermé'));
+   }
 
    await navigate('dashboard');
    await page.locator('#ownerRefreshOverview').click();

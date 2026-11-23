@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>Assistance & administration · RestoManager</title>
 <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
-<link rel="stylesheet" href="creator-console.css?v=20261123-rm01734">
+<link rel="stylesheet" href="creator-console.css?v=20261123-rm0174">
 </head>
 <body>
 <section id="loginPanel" class="loginSurface">
@@ -48,6 +48,7 @@
    <button type="button" data-owner-nav="restaurants">⌂ <span>Établissements</span></button>
    <button type="button" data-owner-nav="reports">✉ <span>Assistance & bugs</span></button>
    <button type="button" data-owner-nav="lifecycle">♧ <span>Comptes & demandes</span></button>
+   <button type="button" data-owner-nav="pilot"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3M9 12h7M9 16h7"/></svg><span>Préparation inscriptions</span></button>
    <button type="button" data-owner-nav="monitoring">◉ <span>Supervision</span></button>
    <button type="button" data-owner-nav="settings">⚙ <span>Paramètres</span></button>
   </nav>
@@ -87,6 +88,28 @@
     <div class="ownerSurface"><h2>Demandes de gestion</h2><p class="ownerHint">Les demandes sont vérifiées côté serveur. Les inscriptions et la réception de nouvelles demandes restent fermées pendant le pilote. Le futur traitement Root exigera une authentification multifacteur.</p><p class="ownerStatusLine" id="ownerLifecycleStatus" role="status" aria-live="polite">Ouvrez ce module pour consulter les demandes.</p><div class="ownerLifecycleList" id="ownerLifecycleList"></div></div>
     <div class="ownerSurface ownerLifecycleHelp"><h2>Protection des comptes et restaurants</h2><p><strong>Demander une suppression</strong> n’est pas supprimer immédiatement. Une fermeture d’établissement exige un propriétaire vérifié, et une demande de suppression de compte n’efface pas les réservations du restaurant.</p><a href="rm0173-simulation.html">Tester le parcours entièrement fictif</a></div>
    </section>
+   <section data-owner-section="pilot" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">RM-017.4 · PILOTE DEV</span><h1>Préparation des inscriptions</h1><p>Vérifiez les prérequis avant de tester l'inscription d'un restaurant indépendant ou d'hôtel. Consultation uniquement : aucune activation depuis cet écran.</p></div><button type="button" class="secondary" id="ownerRefreshPilot">Actualiser</button></div>
+    <div class="ownerPilotBanner" role="status" aria-live="polite"><strong id="ownerPilotSummary">Vérification du pilote DEV…</strong><p id="ownerPilotStatusDetail">Lecture de la configuration publique du site de développement.</p></div>
+    <div class="ownerPilotGrid">
+     <article class="ownerSurface"><h2>Inscription côté site</h2><p id="ownerPilotWebState">Lecture en cours…</p><small>État du fichier public RM-017 sur Render DEV. Ne reflète pas, à lui seul, le verrou serveur.</small></article>
+     <article class="ownerSurface"><h2>Protection anti-robots</h2><p id="ownerPilotCaptchaState">Lecture en cours…</p><small>La présence d'une clé publique Turnstile ne confirme pas la clé secrète côté Supabase.</small></article>
+     <article class="ownerSurface"><h2>Verrou Supabase et invitations</h2><p>À contrôler côté Supabase DEV.</p><small>Le verrou privé, les invitations nominatives et les preuves SIRET ne sont jamais rendus publics par cet écran.</small></article>
+     <article class="ownerSurface"><h2>Emails et ouverture</h2><p>Validation réelle nécessaire.</p><small>Confirmer l'email, le SMTP, les redirections, le hook Auth, les limites anti-abus et les conditions juridiques avant un pilote.</small></article>
+    </div>
+    <section class="ownerSurface ownerPilotChecklist" aria-label="Étapes avant activation du pilote">
+     <h2>Étapes de la recette</h2>
+     <ol>
+      <li>Vérifier l'envoi et la réception d'un email de confirmation dans Supabase DEV.</li>
+      <li>Configurer et tester Turnstile côté navigateur et côté Supabase Auth DEV.</li>
+      <li>Vérifier le hook « Before User Created » et inviter deux adresses de test autorisées.</li>
+      <li>Confirmer qu'un SIRET actif vérifié correspond à l'exploitant, puis tester l'isolation entre restaurant indépendant et hôtel.</li>
+      <li>Vérifier les documents juridiques avant toute ouverture à des établissements réels.</li>
+     </ol>
+     <div class="ownerPilotLinks"><a href="inscription.html" target="_blank" rel="noopener noreferrer">Voir le parcours d'inscription DEV</a><a href="https://supabase.com/dashboard/project/lykoybacslvmhtzftqsf/auth/providers" target="_blank" rel="noopener noreferrer">Paramètres Auth DEV</a></div>
+    </section>
+    <p class="ownerHint">Cet écran est informatif et volontairement non destructif. Il ne permet ni d'inviter des utilisateurs, ni d'ouvrir le pilote, ni de modifier les permissions.</p>
+   </section>
    <section data-owner-section="monitoring" hidden>
     <div class="ownerHeadline"><div><span class="ownerEyebrow">PROCHAIN MODULE</span><h1>Supervision</h1><p>Monitoring technique à venir.</p></div></div>
     <div class="ownerSurface"><h2>En préparation</h2><p>À terme : disponibilité de l'application, incidents Supabase, erreurs de synchronisation et état des déploiements.</p><p class="ownerHint">Aucune mesure de disponibilité en temps réel n'est affichée actuellement.</p></div>
@@ -100,6 +123,6 @@
  </div>
 </div>
 <p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
-<script type="module" src="creator-auth.js?v=20261123-rm01738"></script>
+<script type="module" src="creator-auth.js?v=20261123-rm0174"></script>
 </body>
 </html>

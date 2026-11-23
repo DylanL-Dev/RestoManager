@@ -2,7 +2,7 @@ import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 // RM-017.3.3 — DEV-only Root access. No account creation, no privilege grant.
 // Access is authorized exclusively by Supabase Auth + platform_admins RLS.
 import {installOwnerInbox} from './creator-admin.js?v=20261114-rm006-root1';
-import {installCreatorConsole} from './creator-console.js?v=20261123-rm01732';
+import {installCreatorConsole} from './creator-console.js?v=20261123-rm0174';
 import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm';
 if(supabaseEnvironment.name!=='DEV')throw new Error('Ce parcours Root est réservé à DEV.');
 const client=createClient(
