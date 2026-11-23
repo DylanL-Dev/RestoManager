@@ -35,6 +35,7 @@
    <button type="button" data-owner-nav="dashboard" class="active">▦ <span>Vue générale</span></button>
    <button type="button" data-owner-nav="restaurants">⌂ <span>Établissements</span></button>
    <button type="button" data-owner-nav="reports">✉ <span>Assistance & bugs</span></button>
+   <button type="button" data-owner-nav="lifecycle">♧ <span>Comptes & demandes</span></button>
    <button type="button" data-owner-nav="monitoring">◉ <span>Supervision</span></button>
    <button type="button" data-owner-nav="settings">⚙ <span>Paramètres</span></button>
   </nav>
@@ -68,6 +69,11 @@
    <section data-owner-section="reports" hidden>
     <div class="ownerHeadline"><div><span class="ownerEyebrow">SUPPORT PRIVÉ</span><h1>Assistance & signalements</h1><p>Traite les remontées transmises depuis Gestion. Accès réservé au compte Root actif.</p></div></div>
     <div class="ownerSurface" id="ownerInbox" aria-label="Signalements privés"><p>Chargement des signalements…</p></div>
+   </section>
+   <section data-owner-section="lifecycle" hidden>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">RM-017.3.2 · DEV</span><h1>Comptes & fermetures</h1><p>Consultez les demandes des propriétaires et utilisateurs en lecture seule. Aucune suppression, suspension ni archivage réel n’est disponible.</p></div><button class="secondary" type="button" id="ownerRefreshLifecycle">Actualiser</button></div>
+    <div class="ownerSurface"><h2>Demandes de gestion</h2><p class="ownerHint">Les demandes sont vérifiées côté serveur. Les inscriptions et la réception de nouvelles demandes restent fermées pendant le pilote. Le futur traitement Root exigera une authentification multifacteur.</p><p class="ownerStatusLine" id="ownerLifecycleStatus" role="status" aria-live="polite">Ouvrez ce module pour consulter les demandes.</p><div class="ownerLifecycleList" id="ownerLifecycleList"></div></div>
+    <div class="ownerSurface ownerLifecycleHelp"><h2>Protection des comptes et restaurants</h2><p><strong>Demander une suppression</strong> n’est pas supprimer immédiatement. Une fermeture d’établissement exige un propriétaire vérifié, et une demande de suppression de compte n’efface pas les réservations du restaurant.</p><a href="rm0173-simulation.html">Tester le parcours entièrement fictif</a></div>
    </section>
    <section data-owner-section="monitoring" hidden>
     <div class="ownerHeadline"><div><span class="ownerEyebrow">PROCHAIN MODULE</span><h1>Supervision</h1><p>Monitoring technique à venir.</p></div></div>
