@@ -1811,3 +1811,7 @@ html[data-theme="dark"] .rushSettingsShortcut:hover{background:#284838;color:#dc
 html[data-theme="dark"] .rushSettingsValue{background:#1c5139;color:#b6f4d0}
 html[data-theme="dark"] .rushSettingsHint{background:#203d30;border-color:#446953;color:#e1f3e7}
 @media(max-width:520px){.rushSettingsShortcut{width:40px;min-width:40px;height:40px;min-height:40px;padding:0}.rushSettingsValue{font-size:22px}.rushSettingsHeader{gap:8px}}
+
+/* RM-018 — small discoverable link in the existing sidebar meta area. */
+.sidebarMeta .sidebarLegalLink{color:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.sidebarMeta .sidebarLegalLink:focus-visible{outline:2px solid #4ac49b;outline-offset:3px}

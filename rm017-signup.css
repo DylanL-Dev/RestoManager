@@ -54,3 +54,7 @@
 .siret-verification[data-status="verified"]{color:#087f5b;font-weight:700}
 .siret-verification[data-status="error"]{color:#9b2c32;font-weight:650}
 .siret-field input{font-variant-numeric:tabular-nums;letter-spacing:.035em}
+
+/* RM-018 — non-intrusive legal links in the validated signup footer */
+.form-footer .legalFooterLinks{flex:0 0 100%;display:flex;flex-wrap:wrap;gap:8px 15px;justify-content:center;border-top:1px solid #e1eae4;padding-top:13px}
+.form-footer .legalFooterLinks a{display:inline-flex;align-items:center;min-height:32px}
