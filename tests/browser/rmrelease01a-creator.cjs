@@ -16,7 +16,7 @@ const server=http.createServer((req,res)=>{
  fs.readFile(file,(err,data)=>{if(err){res.writeHead(404);return res.end();}res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'});res.end(data);});
 });
 const stub=[
- 'im'+'port {installCreatorConsole} from "./creator-console.js?v=20261123-rmrelease01a";',
+ 'im'+'port {installCreatorConsole} from "./creator-console.js?v=20261114-rm006-root1";',
  'document.querySelector("#loginPanel").hidden=true;',
  'document.querySelector("#ownerPanel").hidden=false;',
  'const restaurants=[{id:"r-one",name:"À l’Épicerie — Mercure Rouen"},{id:"r-two",name:"Le Jardin"}];',
@@ -40,6 +40,8 @@ const stub=[
    page.on('pageerror',e=>errors.push(e.message));
    page.on('request',req=>{if(!req.url().startsWith(origin+'/'))external.push(req.url());if(req.method()!=='GET')writes.push(req.url());});
    await page.route('**/creator-auth.js*',route=>route.fulfill({status:200,contentType:'text/javascript',body:stub}));
+   await page.route('**/creator-console.js?v=20261114-rm006-root1',route=>route.abort('failed'));
+   // The inline import map must point the unchanged PROD Auth import to the new revision.
    async function go(view){
     if(width<=760)await page.locator('#ownerNavToggle').click();
     await page.locator('[data-owner-nav="'+view+'"]').first().click();
