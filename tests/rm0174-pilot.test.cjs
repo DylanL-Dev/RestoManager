@@ -1,0 +1,51 @@
+'use strict';
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs'),path=require('node:path');
+const root=path.resolve(__dirname,'..');
+const read=name=>fs.readFileSync(path.join(root,name),'utf8');
+const html=read('creator.html'),controller=read('creator-console.js'),auth=read('creator-auth.js');
+const css=read('creator-console.css'),runtime=JSON.parse(read('rm017-runtime.json'));
+const signup=read('rm017-register.js');
+test('RM-017.4 pilot dashboard lives behind the existing DEV-only Root auth',()=>{
+ assert.match(auth,/supabaseEnvironment\.name!=='DEV'/);
+ assert.match(auth,/if\(!await verifyOwner\(\)\)throw/);
+ assert.match(auth,/installCreatorConsole\(\{client,installOwnerInbox\}\)/);
+ assert.match(html,/data-owner-nav="pilot"/);
+ assert.match(html,/data-owner-section="pilot"/);
+ assert.match(controller,/chosen==='pilot'/);
+ assert.match(controller,/void loadPilot\(\)/);
+ assert.match(html,/RM-017\.4/);
+ assert.match(html,/role="status" aria-live="polite"/);
+});
+test('RM-017.4 is strictly read-only, with private server config never exposed',()=>{
+ const start=controller.indexOf(' async function loadPilot(){');
+ const end=controller.indexOf(' async function loadLifecycle(){',start);
+ assert.ok(start>=0&&end>start);
+ const pilot=controller.slice(start,end);
+ assert.match(pilot,/fetch\(new URL\('rm017-runtime\.json',location\.href\)/);
+ assert.match(pilot,/cache:'no-store',credentials:'omit'/);
+ assert.doesNotMatch(pilot,/\.rpc\(|\.insert\(|\.update\(|\.delete\(|\.upsert\(|auth\.signUp|service_role|secretKey/);
+ assert.doesNotMatch(html,/data-enable-signups|open-signup-button|rm017_pilot_invites/);
+ assert.match(html,/Verrou Supabase et invitations/);
+ assert.match(html,/ne sont jamais rendus publics/);
+ assert.match(html,/Vérifier les documents juridiques/);
+});
+test('RM-017.4 fail closed on missing or inconsistent config; DEV signup remains off',()=>{
+ assert.equal(runtime.channel,'dev');
+ assert.equal(runtime.enabled,false);
+ assert.equal(runtime.pilotOnly,true);
+ assert.equal(runtime.turnstileSiteKey,null);
+ assert.match(signup,/runtime\?\.enabled!==true/);
+ assert.match(controller,/Configuration à vérifier — pilote non validé/);
+ assert.match(controller,/État indisponible — ne pas ouvrir/);
+ assert.match(controller,/Le fichier public ne répond pas au contrat de sécurité/);
+ assert.match(controller,/ne prouve ni les droits serveur/);
+ assert.match(controller,/typeof config\?\.enabled==='boolean'/);
+});
+test('RM-017.4 mobile styling and no external font or icon dependency',()=>{
+ assert.match(html,/stroke="currentColor" stroke-width="2"/);
+ assert.match(css,/\.ownerPilotGrid/);
+ assert.match(css,/@media\(max-width:760px\)\{\.ownerPilotGrid/);
+ assert.match(css,/\.ownerPilotLinks a/);
+});
