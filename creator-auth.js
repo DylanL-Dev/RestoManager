@@ -3,7 +3,7 @@ import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 // Access is authorized exclusively by Supabase Auth + platform_admins RLS.
 import {installOwnerInbox} from './creator-admin.js?v=20261114-rm006-root1';
 import {installCreatorConsole} from './creator-console.js?v=20261123-rm01732';
-import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm';
 if(supabaseEnvironment.name!=='DEV')throw new Error('Ce parcours Root est réservé à DEV.');
 const client=createClient(
  supabaseEnvironment.url,
@@ -110,6 +110,11 @@ $('creatorLogin').addEventListener('submit',async event=>{
  verifying=true;
  $('ownerSubmit').disabled=true;
  feedback('Vérification de votre accès DEV…');
+ // An orphaned browser auth lock can leave a successful server login pending in the old SDK.
+ // Never grant access on a timeout: only display a useful recovery instruction.
+ const watchdog=setTimeout(()=>{
+  if(verifying)feedback('La vérification prend trop de temps. Fermez les autres onglets RestoManager, puis rechargez cette page et recommencez. Aucun accès administrateur n’est ouvert sans vérification complète.');
+ },12000);
  try{
   const identifier=$('ownerUsername').value.trim().toLowerCase();
   const email=identifier==='rootdev'?rememberedEmail():identifier;
@@ -133,6 +138,7 @@ $('creatorLogin').addEventListener('submit',async event=>{
     ?'L’identifiant root est réservé à MAIN. Pour DEV, utilisez rootdev après une première connexion par email.'
     :'Connexion impossible. Vérifiez votre identifiant DEV et son autorisation Root. Le compte PROD est distinct.');
  }finally{
+  clearTimeout(watchdog);
   verifying=false;
   $('ownerSubmit').disabled=false;
  }
