@@ -17,7 +17,7 @@ const stub=[
  'document.getElementById("ownerPanel").hidden=false;',
  'const restaurants=[{id:"one",name:"À l’Épicerie — Rouen"},{id:"two",name:"Le Jardin"}];',
  'const reports=[{id:"id-one",restaurant_id:"one",submitted_role:"reception",kind:"bug",severity:"urgent",title:"Problème fictif",description:"Test local",reply_contact:null,screen:"tables",status:"new",created_at:"2026-11-23T10:00:00Z"}];',
- 'const response=table=>({data:table==="restaurants"?restaurants:table==="platform_reports"?reports:[],error:null});',
+ 'const response=table=>window.__rmTestOverviewFail&&table==="restaurants"?{data:null,error:{message:"mock failure"}}:({data:table==="restaurants"?restaurants:table==="platform_reports"?reports:[],error:null});',
  'const client={from(table){',
  'if(!["restaurants","platform_reports","rm017_lifecycle_requests"].includes(table))throw Error("Unexpected table "+table);',
  'const chain={select(){return chain;},order(){return chain;},limit(){return Promise.resolve(response(table));},',
@@ -78,6 +78,23 @@ const stub=[
    await navigate('pilot');
    assert.equal(await page.locator('#ownerPilotSummary').count(),1);
    await navigate('monitoring');
+   await page.waitForFunction(()=>document.getElementById('ownerMonitorWebState').dataset.state==='ok'&&document.getElementById('ownerMonitorDbState').dataset.state==='ok');
+   assert.equal(await page.locator('#ownerMonitorUrgent').textContent(),'1');
+   assert.ok((await page.locator('#ownerMonitorRelease').textContent()).includes('dev'));
+   assert.equal(await page.locator('#ownerMonitorHistory li').count(),5);
+   const monitorOverflow=await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1);assert.ok(monitorOverflow,'Monitoring overflow '+width);
+   if(width===390){
+    await page.route('**/app-release.json?check=rm0204',route=>route.fulfill({status:503,body:'unavailable'}));
+    await page.evaluate(()=>{window.__rmTestOverviewFail=true});
+    await page.locator('#ownerRefreshMonitoring').click();
+    await page.waitForFunction(()=>document.getElementById('ownerMonitorWebState').dataset.state==='error'&&document.getElementById('ownerMonitorDbState').dataset.state==='error');
+    assert.equal(await page.locator('#ownerMonitorUrgent').textContent(),'—');
+    assert.equal(await page.locator('#ownerMonitorHistory li').count(),0);
+    await page.unroute('**/app-release.json?check=rm0204');
+    await page.evaluate(()=>{window.__rmTestOverviewFail=false});
+    await page.locator('#ownerRefreshMonitoring').click();
+    await page.waitForFunction(()=>document.getElementById('ownerMonitorWebState').dataset.state==='ok'&&document.getElementById('ownerMonitorDbState').dataset.state==='ok');
+   }
    await navigate('settings');
    await navigate('dashboard');
    await page.locator('#ownerThemeToggle').click();

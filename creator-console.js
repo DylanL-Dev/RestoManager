@@ -29,6 +29,7 @@ export function installCreatorConsole({client,installOwnerInbox}){
   if(chosen==='restaurants')renderEstablishments();
   if(chosen==='lifecycle')void loadLifecycle();
   if(chosen==='pilot')void loadPilot();
+  if(chosen==='monitoring')void refreshMonitoring();
   if(chosen==='dashboard'&&loaded)void load();
   setMenuOpen(false);
  }
@@ -127,9 +128,48 @@ export function installCreatorConsole({client,installOwnerInbox}){
    status.textContent='Accès impossible : assurez-vous d’utiliser un compte Root actif et de disposer de la migration DEV.';
   }finally{lifecycleLoading=false}
  }
+ // RM-020.4: only a same-origin manifest probe and the existing authorized overview reads.
+ // Do not infer platform uptime, Auth/Realtime health, or expose provider credentials.
+ let monitoringLoading=false;
+ const monitorTime=()=>new Intl.DateTimeFormat('fr-FR',{dateStyle:'short',timeStyle:'medium',timeZone:'Europe/Paris'}).format(new Date());
+ function monitorState(prefix,state,label,detail,when){
+  const status=byId('ownerMonitor'+prefix+'State');
+  if(status){status.dataset.state=state;status.textContent=label;}
+  setText('ownerMonitor'+prefix+'Detail',detail);
+  setText('ownerMonitor'+prefix+'Time',when||'—');
+ }
+ async function refreshMonitoring(){
+  if(monitoringLoading)return;
+  monitoringLoading=true;
+  const button=byId('ownerRefreshMonitoring');if(button)button.disabled=true;
+  monitorState('Web','checking','Vérification…','Lecture du manifeste public DEV.');
+  setText('ownerMonitorRelease','—');byId('ownerMonitorHistory')?.replaceChildren();
+  const start=Date.now();
+  const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),8000);
+  void load();
+  try{
+   // The check parameter is deliberately excluded from the service worker cache.
+   const url=new URL('app-release.json?check=rm0204',location.href);
+   const response=await fetch(url,{cache:'no-store',credentials:'omit',redirect:'error',signal:abort.signal});
+   if(!response.ok)throw new Error('Manifeste inaccessible');
+   const manifest=await response.json();
+   if(manifest?.schema!==1||manifest.channel!=='dev'||typeof manifest.currentVersion!=='string'||!manifest.currentVersion||!Array.isArray(manifest.releases))throw new Error('Manifeste non conforme');
+   setText('ownerMonitorRelease',manifest.currentVersion.slice(0,100));
+   const history=byId('ownerMonitorHistory');
+   for(const release of manifest.releases.slice(0,5)){
+    if(typeof release?.version!=='string'||typeof release?.title!=='string')continue;
+    history?.append(make('li','',release.version.slice(0,100)+' · '+release.title.slice(0,160)));
+   }
+   monitorState('Web','ok','Manifeste accessible','Réponse DEV valide · '+Math.max(0,Date.now()-start)+' ms depuis cet appareil.', 'Vérifié le '+monitorTime());
+  }catch{
+   monitorState('Web','error','Vérification impossible','Impossible de confirmer le manifeste DEV. Cela ne prouve pas une panne globale.','Tentative le '+monitorTime());
+  }finally{clearTimeout(timer);monitoringLoading=false;if(button)button.disabled=false;}
+ }
  async function load(){
   if(loading)return;
   loading=true;setText('ownerLoadState','Actualisation…');
+  const monitorStart=Date.now();monitorState('Db','checking','Vérification…','Lecture autorisée depuis la session Root.');
+  setText('ownerMonitorUrgent','—');setText('ownerMonitorUrgentTime','Vérification…');
   try{
    // RLS must grant active platform administrators read access to these rows.
    const [restaurantsResponse,reportsResponse]=await Promise.all([
@@ -146,8 +186,13 @@ export function installCreatorConsole({client,installOwnerInbox}){
    setText('ownerUrgentReports',reports.filter(x=>x.severity==='urgent'&&x.status!=='resolved').length);
    setText('ownerLoadState','Mis à jour le '+new Intl.DateTimeFormat('fr-FR',{timeStyle:'short',timeZone:'Europe/Paris'}).format(new Date()));
    loaded=true;renderEstablishments();
+   const urgent=reports.filter(x=>x.severity==='urgent'&&x.status!=='resolved').length;
+   monitorState('Db','ok','Lectures réussies','Établissements et signalements accessibles · '+Math.max(0,Date.now()-monitorStart)+' ms. Auth, Realtime et stockage non testés.','Vérifié le '+monitorTime());
+   setText('ownerMonitorUrgent',urgent);setText('ownerMonitorUrgentTime','Vérifié le '+monitorTime());
   }catch(error){
    setText('ownerLoadState','Chargement impossible : vérifiez les autorisations et la connexion.');
+   monitorState('Db','error','Lecture non vérifiée','Échec de lecture ou droits insuffisants. Aucun diagnostic de panne globale.','Tentative le '+monitorTime());
+   setText('ownerMonitorUrgent','—');setText('ownerMonitorUrgentTime','Données indisponibles.');
    if(!loaded){['ownerTotalRestaurants','ownerNewReports','ownerReviewingReports','ownerUrgentReports'].forEach(id=>setText(id,'—'));}
   }finally{loading=false;}
  }
@@ -155,6 +200,7 @@ export function installCreatorConsole({client,installOwnerInbox}){
  byId('ownerRefreshOverview')?.addEventListener('click',()=>void load());
  byId('ownerRefreshLifecycle')?.addEventListener('click',()=>void loadLifecycle());
  byId('ownerRefreshPilot')?.addEventListener('click',()=>void loadPilot());
+ byId('ownerRefreshMonitoring')?.addEventListener('click',()=>void refreshMonitoring());
  window.addEventListener('restomanager:root-reports-updated',()=>void load());
  navToggle?.addEventListener('click',()=>setMenuOpen(!sidebar?.classList.contains('open')));
  navClose?.addEventListener('click',()=>{setMenuOpen(false);navToggle?.focus();});
