@@ -1,0 +1,26 @@
+{
+  "name": "RM-SEC-01 — branches figées (backup, V3 historique)",
+  "target": "branch",
+  "enforcement": "active",
+  "bypass_actors": [],
+  "conditions": {
+    "ref_name": {
+      "include": [
+        "refs/heads/backup/**",
+        "refs/heads/feature/refonte-service-responsive-v3"
+      ],
+      "exclude": []
+    }
+  },
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
+      "type": "update"
+    }
+  ]
+}

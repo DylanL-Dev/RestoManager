@@ -1,5 +1,11 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-SEC-01 — Préparation des rulesets GitHub — PR DEV BROUILLON (24/11/2026)
+
+- Mission propriétaire autorisée en autonomie, issue #249, branche `claude/rm-sec-01-rulesets` depuis DEV `dbd2ec0`. Préparation uniquement : **aucune protection activée**.
+- Quatre rulesets importables (`docs/audits/rm-sec-01/`) : branches figées (`backup/**`, V3 historique), MAIN, `RestoManager-V3`, DEV ; suppression, push forcé et push direct interdits ; contrôles CI requis fiables uniquement. [Rapport et procédure](audits/RM-SEC-01_RULESETS_20261124.md).
+- Limite signalée : compte GitHub unique et administrateur pour le propriétaire et les agents ; séparation proposée en RM-SEC-02.
+
 ### RM-TEAM-01 — Règles communes des agents (AGENTS.md / CLAUDE.md) — PR DEV BROUILLON (24/11/2026)
 
 - Mission propriétaire explicite : documentation de coordination Claude Code / OpenAI Codex. Branche `claude/rm-team-01` depuis DEV `5f545de`, PR [#245](https://github.com/DylanL-Dev/RestoManager/pull/245) vers DEV uniquement, en brouillon.
