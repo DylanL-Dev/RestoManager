@@ -1,0 +1,109 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('node:http'),path=require('node:path');
+const {chromium}=require('playwright'),root=path.resolve(__dirname,'../..');
+const mime={'.html':'text/html;charset=utf-8','.css':'text/css;charset=utf-8','.js':'text/javascript;charset=utf-8','.svg':'image/svg+xml','.json':'application/json'};
+const requests=[];
+const server=http.createServer((req,res)=>{
+ requests.push({method:req.method,url:req.url});
+ let pathname;try{pathname=decodeURIComponent(new URL(req.url,'http://localhost').pathname);}catch{res.writeHead(400);return res.end();}
+ const name=path.resolve(root,'.'+pathname);
+ if(!name.startsWith(root+path.sep)){res.writeHead(403);return res.end();}
+ fs.readFile(name,(e,data)=>{if(e){res.writeHead(404);return res.end();}res.writeHead(200,{'Content-Type':mime[path.extname(name)]||'application/octet-stream'});res.end(data);});
+});
+const stub=[
+ 'im'+'port {installCreatorConsole} from "./creator-console.js?v=20261123-rm0174";',
+ 'im'+'port {installOwnerInbox} from "./creator-admin.js?v=20261123-rm019";',
+ 'document.getElementById("loginPanel").hidden=true;',
+ 'document.getElementById("ownerPanel").hidden=false;',
+ 'const restaurants=[{id:"one",name:"À l’Épicerie — Rouen"},{id:"two",name:"Le Jardin"}];',
+ 'const reports=[{id:"id-one",restaurant_id:"one",submitted_role:"reception",kind:"bug",severity:"urgent",title:"Problème fictif",description:"Test local",reply_contact:null,screen:"tables",status:"new",created_at:"2026-11-23T10:00:00Z"}];',
+ 'const response=table=>({data:table==="restaurants"?restaurants:table==="platform_reports"?reports:[],error:null});',
+ 'const client={from(table){',
+ 'if(!["restaurants","platform_reports","rm017_lifecycle_requests"].includes(table))throw Error("Unexpected table "+table);',
+ 'const chain={select(){return chain;},order(){return chain;},limit(){return Promise.resolve(response(table));},',
+ 'then(resolve,reject){return Promise.resolve(response(table)).then(resolve,reject)},',
+ 'update(){return{eq(){return Promise.resolve({error:null})}}}};',
+ 'return chain;}};',
+ 'installCreatorConsole({client,installOwnerInbox});'
+].join('\n');
+(async()=>{
+ let browser;
+ try{
+  await new Promise(ok=>server.listen(0,'127.0.0.1',ok));
+  const origin='http://127.0.0.1:'+server.address().port;
+  browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+  for(const width of [360,390,768,1280,1440]){
+   const context=await browser.newContext({viewport:{width,height:900},locale:'fr-FR',serviceWorkers:'block'});
+   const external=[],writes=[],errors=[];
+   await context.route('**/*',route=>{
+    const request=route.request(),url=request.url();
+    if(!url.startsWith(origin+'/')){external.push(url);return route.abort();}
+    if(request.method()!=='GET')writes.push(url);
+    if(/\/creator-auth\.js(?:\?|$)/.test(url))return route.fulfill({status:200,contentType:'text/javascript',body:stub});
+    return route.continue();
+   });
+   const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
+   await page.goto(origin+'/creator.html',{waitUntil:'load'});
+   await page.waitForFunction(()=>document.querySelectorAll('#ownerSidebar .ownerNavigation .lucide').length===7);
+   await page.waitForFunction(()=>document.getElementById('ownerTotalRestaurants').textContent==='2');
+   assert.equal(await page.locator('.ownerWelcomeBanner').isVisible(),true);
+   assert.equal(await page.locator('#ownerSidebar .ownerNavigation button').count(),7);
+   assert.equal(await page.locator('#ownerSidebar .ownerNavigation .lucide').count(),7);
+   assert.equal(await page.locator('.ownerMetricIcon svg.lucide').count(),4);
+   assert.equal(await page.locator('.ownerWelcomeIllustration svg.lucide').count(),1);
+   await page.waitForFunction(()=>document.querySelectorAll('.ownerRestaurantIcon svg.lucide').length===2);
+   assert.equal(await page.locator('#ownerSidebar [data-owner-nav="reports"]').getAttribute('aria-label'),'Centre d’assistance');
+   async function navigate(view){
+    if(width<=760){
+     await page.locator('#ownerNavToggle').click();
+     assert.equal(await page.locator('#ownerNavToggle').getAttribute('aria-expanded'),'true');
+     await page.locator('#ownerSidebar [data-owner-nav="'+view+'"]').click();
+     assert.equal(await page.locator('#ownerNavToggle').getAttribute('aria-expanded'),'false');
+    }else await page.locator('#ownerSidebar [data-owner-nav="'+view+'"]').click();
+    assert.equal(await page.locator('[data-owner-section="'+view+'"]').isVisible(),true);
+    assert.equal(await page.locator('#ownerSidebar [data-owner-nav="'+view+'"]').getAttribute('aria-current'),'page');
+   }
+   await navigate('restaurants');
+   assert.equal(await page.locator('.ownerRestaurantIcon svg.lucide-store').count(),2);
+   await navigate('reports');
+   assert.equal(await page.locator('#ownerSupportQueue').isVisible(),true);
+   await navigate('lifecycle');
+   assert.equal(await page.locator('#ownerLifecycleList').count(),1);
+   await navigate('pilot');
+   assert.equal(await page.locator('#ownerPilotSummary').count(),1);
+   await navigate('monitoring');
+   await navigate('settings');
+   await navigate('dashboard');
+   await page.locator('#ownerThemeToggle').click();
+   assert.equal(await page.locator('html').getAttribute('data-creator-theme'),'dark');
+   assert.equal(await page.locator('#ownerThemeToggle').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.locator('#ownerThemeToggle .lucide-sun').count(),1);
+   await page.locator('#ownerThemeToggle').click();
+   assert.equal(await page.locator('html').getAttribute('data-creator-theme'),'light');
+   if(width>=1001){
+    await page.locator('#ownerSidebarCollapse').click();
+    assert.equal(await page.locator('#ownerPanel').evaluate(el=>el.classList.contains('ownerShellCompact')),true);
+    assert.equal(await page.locator('#ownerSidebar [data-owner-nav="dashboard"]').getAttribute('aria-label'),'Vue générale');
+    await page.locator('#ownerSidebarCollapse').click();
+    assert.equal(await page.locator('#ownerPanel').evaluate(el=>el.classList.contains('ownerShellCompact')),false);
+   }
+   const overflow=await page.evaluate(()=>({vw:innerWidth,sw:document.documentElement.scrollWidth}));
+   assert.ok(overflow.sw<=overflow.vw+1,'Horizontal overflow at '+width+': '+JSON.stringify(overflow));
+   if(width===390||width===1440){
+    await page.addScriptTag({path:path.join(root,'node_modules/axe-core/axe.min.js')});
+    const violations=await page.evaluate(async()=>{
+     const results=await axe.run(document.getElementById('ownerPanel'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});
+     return results.violations.map(v=>({id:v.id,impact:v.impact,targets:v.nodes.map(n=>n.target)}));
+    });
+    assert.deepEqual(violations,[],'Creator accessibility '+width+': '+JSON.stringify(violations));
+   }
+   assert.deepEqual(errors,[],'JS errors '+width);
+   assert.deepEqual(external,[],'External network '+width);
+   assert.deepEqual(writes,[],'Network writes '+width);
+   await context.close();console.log('PASS RM-020.1 Creator shell '+width+' px');
+  }
+  assert.ok(requests.every(r=>r.method==='GET'));
+  console.log('PASS RM-020.1 all sections, icons, theme, responsive, zero real network');
+ }catch(e){console.error(e.stack||e);process.exitCode=1;}
+ finally{if(browser)await browser.close();await new Promise(ok=>server.close(ok));}
+})();

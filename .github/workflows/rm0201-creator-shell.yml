@@ -1,0 +1,24 @@
+name: RM-020.1 Creator redesign - DEV
+on:
+  pull_request:
+    branches: [feature/v3-supabase-full-clone]
+permissions:
+  contents: read
+jobs:
+  creator-shell-dev:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Syntax and Creator compatibility contracts
+        run: |
+          npm run test:syntax
+          node --test tests/rm0201-creator-shell.test.cjs tests/rm019-creator-assistance.test.cjs tests/creator-console.test.cjs
+      - run: npx playwright install --with-deps chromium
+      - name: Whole Creator shell, seven sections, five widths, WCAG, no remote calls
+        run: node tests/browser/rm0201-creator-shell.cjs
