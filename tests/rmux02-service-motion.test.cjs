@@ -13,7 +13,7 @@ test('RM-UX-02.1: only first visible cards and actual changes animate',()=>{
 });
 test('RM-UX-02.1: local assets, preserved actual text, reduced motion and no data operations',()=>{
  const js=fs.readFileSync('service-v3-motion.js','utf8'),css=fs.readFileSync('service-v3.css','utf8'),html=fs.readFileSync('v3-connected.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
- assert.match(html,/service-v3-motion\.js\?v=20261124-rmux02\.1/);
+ assert.match(html,/service-v3-motion\.js\?v=20261124-rmux02\.1b/);
  assert.match(sw,/"service-v3-motion.js"/);
  assert.match(css,/\.reservationItem,\.tableAdminItem\{animation:none\}/);
  assert.match(css,/\.tableCard:active,\.tableCard:hover\{transform:none\}/);
@@ -21,3 +21,5 @@ test('RM-UX-02.1: local assets, preserved actual text, reduced motion and no dat
  assert.doesNotMatch(js,/\bfetch\(|\.from\(|\.rpc\(|\.textContent\s*=|\.innerHTML\s*=|preventDefault\(|localStorage/);
  assert.match(js,/restomanager:screen/);
 });
+
+test('RM-UX-02.1: operational screens retain normal stacking and readable text',()=>{const css=fs.readFileSync('service-v3.css','utf8').split('/* RM-UX-02.1 — operational motion')[1];assert.match(css,/\.appScreenActive\{animation:none;transform:none\}/);assert.doesNotMatch(css, /opacity:|translateY\(|scale\(/);});

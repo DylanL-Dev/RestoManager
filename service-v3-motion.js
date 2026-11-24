@@ -30,7 +30,7 @@
    const root=document.getElementById(config.id);
    if(!root||!visible(root))continue;
    const nodes=[...root.querySelectorAll(config.selector)];
-   if(!nodes.length){memory.delete(root);continue;}
+   if(!nodes.length)continue;
    const previous=memory.get(root);
    const first=!previous;
    const next=new Map();
@@ -45,10 +45,9 @@
      node.dataset.rmMotion=action;
      if(action==='enter'){node.style.setProperty('--rm-service-delay',(enters++*65)+'ms');}
      else node.style.removeProperty('--rm-service-delay');
-     node.addEventListener('animationend',event=>{
-      if(event.target!==node&&event.target!==node.querySelector('strong'))return;
-      delete node.dataset.rmMotion;node.style.removeProperty('--rm-service-delay');
-     },{once:true});
+     const clear=()=>{delete node.dataset.rmMotion;node.style.removeProperty('--rm-service-delay');};
+     // Bounded cleanup even when reduced motion is toggled during an animation.
+     window.setTimeout(clear,750);
     }
     next.set(key,{value,node});
    }

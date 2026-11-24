@@ -1816,27 +1816,25 @@ html[data-theme="dark"] .rushSettingsHint{background:#203d30;border-color:#44695
 .sidebarMeta .sidebarLegalLink{color:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 .sidebarMeta .sidebarLegalLink:focus-visible{outline:2px solid #4ac49b;outline-offset:3px}
 
-/* RM-UX-02.1 — operational motion, no delayed controls or moving table targets. */
-:root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:300ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
-@keyframes rmServiceScreen{from{opacity:.65;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-@keyframes rmServiceCard{from{opacity:.38;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+/* RM-UX-02.1 — operational motion. Never transform a screen (fixed descendants),
+   fade operational text, or move interactive targets. */
+:root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:320ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
+@keyframes rmServiceCard{from{box-shadow:inset 0 0 0 2px #16815e}to{box-shadow:inset 0 0 0 2px transparent}}
 @keyframes rmServiceChange{from{box-shadow:inset 0 0 0 2px currentColor}to{box-shadow:inset 0 0 0 2px transparent}}
-@keyframes rmServiceNumber{from{opacity:.55;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
-@keyframes rmServiceDialog{from{opacity:.55;transform:translateY(12px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
-.appScreenActive{animation:rmServiceScreen 240ms var(--rm-service-ease) backwards}
+@keyframes rmServiceNumber{from{text-shadow:0 0 9px #16815e88}to{text-shadow:none}}
+.appScreenActive{animation:none;transform:none}
 .appScreenActive :is(.serviceIntro,.quickActions,.kpis){animation:none}
 .reservationItem,.tableAdminItem{animation:none}
 :is(.kpi,.receptionServiceMetric,.reservationItem)[data-rm-motion="enter"]{animation:rmServiceCard var(--rm-service-enter) var(--rm-service-ease) var(--rm-service-delay,0ms) backwards}
-:is(.kpi,.receptionServiceMetric)[data-rm-motion="change"]>strong{animation:rmServiceNumber var(--rm-service-normal) var(--rm-service-ease) backwards}
+:is(.kpi,.receptionServiceMetric)[data-rm-motion="change"]>strong{animation:rmServiceNumber 420ms ease-out}
 :is(.tableCard,.reservationItem)[data-rm-motion="change"]{animation:rmServiceChange 450ms ease-out}
 .tableCard{transition:background-color var(--rm-service-fast) ease,border-color var(--rm-service-fast) ease,box-shadow var(--rm-service-fast) ease;transform:none}
 .tableCard:active,.tableCard:hover{transform:none}
 .tableCard:active{box-shadow:inset 0 0 0 2px currentColor}
 :is(.kpiInteractive,.receptionMetricInteractive,.quickAction,.rmBookingOpen,.rmBookingActionText,.mobileNavItem,.tableChoiceTrigger){transition:background-color var(--rm-service-fast) ease,border-color var(--rm-service-fast) ease,color var(--rm-service-fast) ease,box-shadow var(--rm-service-fast) ease}
 :is(.kpiInteractive,.receptionMetricInteractive,.rmBookingOpen,.tableChoiceTrigger):active{box-shadow:inset 0 0 0 1px currentColor}
-:is(.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet){animation:rmServiceDialog 260ms var(--rm-service-ease) backwards}
-:is(.tablePickerOverlay:not([hidden]) .tablePickerSheet,.roomPickerOverlay:not([hidden]) .roomPickerSheet,.tableDetailModal:not([hidden]) .tableDetailSheet){animation:rmServiceDialog 260ms var(--rm-service-ease) backwards}
+:is(.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet){animation:rmServiceCard 260ms ease-out}
 #syncBadge[data-state="ok"]::before{animation:none}
 @media(prefers-reduced-motion:reduce){
- .appScreenActive,.appScreenActive *,[data-rm-motion],[data-rm-motion]>strong,.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet,.tablePickerSheet,.roomPickerSheet,.tableDetailSheet{animation:none!important;transition:none!important}
+ .appScreenActive,.appScreenActive *,[data-rm-motion],[data-rm-motion]>strong,.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet{animation:none!important;transition:none!important}
 }
