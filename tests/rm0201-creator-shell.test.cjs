@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.resolve(__dirname,'..'),read=file=>fs.readFileSync(path.join(root,file),'utf8');
-const html=read('creator.html'),css=read('creator-shell.css'),js=read('creator-shell.js'),icons=['creator-lucide.js','creator-lucide-nav.js','creator-lucide-indicators.js','creator-lucide-actions.js'].map(read).join('\n'),auth=read('creator-auth.js'),core=read('creator-console.js');
+const html=read('creator.html'),css=read('creator-shell.css'),js=read('creator-shell.js'),icons=['creator-lucide.js','lucide-local.js'].map(read).join('\n'),auth=read('creator-auth.js'),core=read('creator-console.js');
 test('RM-020.1: every existing Creator section has local Lucide navigation and remains addressable',()=>{
  const views=['dashboard','restaurants','reports','lifecycle','pilot','monitoring','settings'];
  const iconNames=['layout-dashboard','store','life-buoy','users-round','clipboard-check','activity','settings-2'];
@@ -23,7 +23,7 @@ test('RM-020.1: redesigned shell mounts only local files, preserves separate Roo
  assert.match(html,/creator-shell\.css\?v=20261124-rm0201/);
  assert.match(html,/creator-shell\.js\?v=20261124-rm0201/);
  assert.match(html,/creator-auth\.js\?v=20261124-rm0191-visible/);
- assert.match(js,/from '\.\/creator-lucide\.js\?v=20261124-rm0202'/);
+ assert.match(js,/from '\.\/creator-lucide\.js\?v=20261124-rm0203'/);
  assert.match(auth,/from\('platform_admins'\)/);
  assert.match(auth,/if\(supabaseEnvironment\.name!=='DEV'\)throw/);
  assert.match(auth,/creator-admin\.js\?v=20261123-rm019/);

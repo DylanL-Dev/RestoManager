@@ -1,6 +1,6 @@
 // RM-020.1 — Creator front-end shell only.
 // Runs independently of DEV Root authentication. No Supabase access or network requests.
-import {mountLucideIcons,createLucideIcon} from './creator-lucide.js?v=20261124-rm0202';
+import {mountLucideIcons,createLucideIcon} from './creator-lucide.js?v=20261124-rm0203';
 const shell=document.getElementById('ownerPanel');
 const themeButton=document.getElementById('ownerThemeToggle');
 const collapseButton=document.getElementById('ownerSidebarCollapse');
