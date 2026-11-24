@@ -10,10 +10,10 @@
  <meta name="description" content="RestoManager : inscription professionnelle sécurisée pour restaurants et hôtels, avec vérification SIRET. Pilote DEV fermé.">
  <title>Créer mon établissement · RestoManager — Aperçu DEV</title>
  <link rel="icon" href="pwa-icon.svg" type="image/svg+xml">
- <link rel="stylesheet" href="rm017-signup.css?v=20261122-rm0171">
+ <link rel="stylesheet" href="rm017-signup.css?v=20261124-rmux032">
  <script defer src="lucide-local.js?v=20261122-rm0171-rm0203"></script>
  <script defer src="rm017-signup-model.js?v=20261123-rm0175"></script>
- <script defer src="rm017-signup.js?v=20261123-rm0175"></script>
+ <script defer src="rm017-signup.js?v=20261124-rmux032"></script>
  <script type="module" src="rm017-register.js?v=20261123-rm0175"></script>
 </head>
 <body>
@@ -44,7 +44,7 @@
         <p><i data-lucide="check" aria-hidden="true"></i> Vos données, votre établissement, votre équipe.</p>
       </div>
     </div>
-    <div class="story-bottom"><span>Une solution née sur le terrain.</span><span class="story-tag">RestoManager <span>•</span> 2026</span></div>
+    <div class="story-bottom"><span>Une solution née sur le terrain.</span><span class="story-tag">RestoManager <span>•</span> Vision 2027</span></div>
   </aside>
 
   <section class="signup-side" aria-labelledby="setupTitle">
@@ -52,6 +52,11 @@
      <div class="form-heading">
       <div class="step-label"><span class="step-count" id="stepCount">01 / 03</span><span id="stepCaption">Votre activité</span></div>
       <div class="progress" aria-label="Progression : étape 1 sur 3" role="progressbar" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1" id="progressTrack"><span id="progressFill"></span></div>
+      <ol class="rmSignupJourney" id="signupJourney" aria-label="Étapes de découverte">
+       <li data-step="1" aria-current="step"><span class="journey-icon"><i data-lucide="utensils" aria-hidden="true"></i></span><span>Activité</span></li>
+       <li data-step="2"><span class="journey-icon"><i data-lucide="building-2" aria-hidden="true"></i></span><span>Établissement</span></li>
+       <li data-step="3"><span class="journey-icon"><i data-lucide="clipboard-check" aria-hidden="true"></i></span><span>Récapitulatif</span></li>
+      </ol>
       <span class="form-eyebrow">BIENVENUE SUR RESTOMANAGER</span>
       <h2 id="setupTitle">Commençons par votre établissement.</h2>
       <p class="setup-subtitle" id="setupSubtitle">Chaque restaurant est différent. Choisissez votre activité pour découvrir une configuration adaptée.</p>
@@ -75,6 +80,7 @@
         </label>
        </div>
        <p class="field-error" id="typeError" role="alert" hidden></p>
+       <p class="rmSignupTypeHint" id="signupTypeHint" hidden></p>
        <div class="hint-card"><i data-lucide="circle-help" aria-hidden="true"></i><p>Ce choix adapte les fonctionnalités proposées. Les deux types d'établissements bénéficient des mêmes outils de gestion des tables et des disponibilités.</p></div>
       </fieldset>
 

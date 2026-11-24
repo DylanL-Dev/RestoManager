@@ -40,15 +40,19 @@ async function context(browser,origin,width){
    assert.match(storyHeading,/Votre façon\s+de travailler\./,'Mobile and desktop title must contain a space between « façon » and « de »');
    assert.equal(await page.getByRole('radio').count(),2);
    assert.equal(await page.locator('#progressTrack').getAttribute('aria-valuenow'),'1');
+   assert.equal(await page.locator('#signupJourney [aria-current=step]').getAttribute('data-step'),'1');
    assert.equal(await page.locator('#typeHotel .type-icon svg').evaluate(svg=>!!svg.querySelector('rect[x="4"][y="2"]')),true,'Lucide hotel');
    await assertLayout(page,width);await axe(page,origin);
    await page.screenshot({path:path.join(out,'step1-'+width+'.png'),fullPage:true,animations:'disabled'});
    await page.locator('#nextStep').click();
    assert.equal(await page.locator('#typeError').isVisible(),true,'Type required');
    await page.locator('#typeHotel').click();
+   assert.match(await page.locator('#signupTypeHint').innerText(),/coordination de la Réception/);
    assert.equal(await page.getByRole('radio',{name:/Restaurant d'hôtel/}).isChecked(),true);
    await page.locator('#nextStep').click();
    assert.equal(await page.locator('#stepDetails').isVisible(),true);
+   assert.equal(await page.locator('#signupJourney [aria-current=step]').getAttribute('data-step'),'2');
+   assert.equal(await page.locator('#signupJourney [data-step="1"]').getAttribute('data-state'),'complete');
    assert.equal(await page.locator('#selectedTypeLabel').innerText(),"Restaurant d’hôtel");
    assert.match(await page.locator('#siretHelp').innerText(),/Si le restaurant est exploité par l'hôtel/);
    assert.doesNotMatch(await page.locator('#siretHelp').innerText(),/Indiquez le SIRET de l'établissement qui exploite votre restaurant/);
@@ -66,6 +70,8 @@ async function context(browser,origin,width){
    await page.locator('#businessSiret').fill('13002526500013');
    await page.locator('#nextStep').click();
    assert.equal(await page.locator('#stepPreview').isVisible(),true);
+   assert.equal(await page.locator('#signupJourney [aria-current=step]').getAttribute('data-step'),'3');
+   await page.emulateMedia({reducedMotion:'reduce'});assert.equal(await page.locator('#stepPreview').evaluate(e=>getComputedStyle(e).animationName),'none');
    assert.equal(await page.locator('#reviewName').innerText(),'Les Rives');
    assert.equal(await page.locator('#reviewSiret').innerText(),'13002526500013');
    assert.equal(await page.locator('#reviewType').innerText(),"Restaurant d’hôtel");
@@ -75,6 +81,7 @@ async function context(browser,origin,width){
    await page.screenshot({path:path.join(out,'review-hotel-'+width+'.png'),fullPage:true,animations:'disabled'});
    await page.locator('#backStep').click();
    assert.equal(await page.locator('#businessName').inputValue(),'Les Rives','Back preserves draft only in current page');
+   assert.equal(await page.locator('#signupJourney [aria-current=step]').getAttribute('data-step'),'2');
    await page.locator('#nextStep').click();
    await page.locator('#restart').click();
    assert.equal(await page.locator('#progressTrack').getAttribute('aria-valuenow'),'1');
