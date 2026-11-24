@@ -71,7 +71,7 @@
 .story h1{font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-weight:730;letter-spacing:-.055em}
 .form-heading h2{font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-weight:720}
 .story h1 em{color:#a4e3bf}
-@keyframes rmSignupStepEnter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rmSignupStepEnter{from{transform:translateY(4px)}to{transform:none}}
 .rmSignupStepEnter{animation:rmSignupStepEnter 240ms ease-out both}
 @media(max-width:560px){.rmSignupJourney{gap:5px;margin-bottom:18px}.rmSignupJourney li{flex-direction:column;align-items:center;text-align:center;padding:8px 4px;font-size:10px}.rmSignupJourney .journey-icon{width:20px;height:20px}}
 @media(prefers-reduced-motion:reduce){.rmSignupStepEnter{animation:none!important}}
