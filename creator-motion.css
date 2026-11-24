@@ -1,0 +1,55 @@
+/* RM-UX-01.1 — local motion tokens. Creator only. No layout or business rules. */
+:root{
+ --rm-motion-fast:140ms;
+ --rm-motion-normal:200ms;
+ --rm-motion-enter:240ms;
+ --rm-motion-ease:cubic-bezier(.2,.8,.2,1);
+ --rm-motion-stagger:35ms;
+}
+@keyframes rmMotionEnter{from{opacity:.88;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rmMotionFade{from{opacity:.45}to{opacity:1}}
+@keyframes rmMotionValue{from{transform:translateY(3px);opacity:.82}to{transform:translateY(0);opacity:1}}
+@keyframes rmMotionSpin{to{transform:rotate(360deg)}}
+@keyframes rmMotionSkeleton{from{background-position:100% 0}to{background-position:-100% 0}}
+@keyframes rmMotionIcon{from{transform:scale(.88)}to{transform:scale(1)}}
+#ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>.ownerHeadline,
+#ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>.ownerWelcomeBanner,
+#ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>.ownerSurface,
+#ownerPanel:not([hidden]) [data-owner-section]:not([hidden]) :is(.ownerMetrics>.ownerMetric,.ownerDashboardGrid>.ownerSurface,.ownerMonitorGrid>.ownerMonitorCard){
+ animation:rmMotionEnter var(--rm-motion-enter) var(--rm-motion-ease) both;
+}
+#ownerPanel .ownerMetrics>.ownerMetric:nth-child(2),#ownerPanel .ownerMonitorGrid>.ownerMonitorCard:nth-child(2){animation-delay:var(--rm-motion-stagger)}
+#ownerPanel .ownerMetrics>.ownerMetric:nth-child(3),#ownerPanel .ownerMonitorGrid>.ownerMonitorCard:nth-child(3){animation-delay:calc(2 * var(--rm-motion-stagger))}
+#ownerPanel .ownerMetrics>.ownerMetric:nth-child(4){animation-delay:calc(3 * var(--rm-motion-stagger))}
+#ownerPanel button:not(.ownerNavBackdrop),#loginPanel button{
+ transition:background-color var(--rm-motion-fast) ease,border-color var(--rm-motion-fast) ease,color var(--rm-motion-fast) ease,box-shadow var(--rm-motion-fast) ease,transform var(--rm-motion-fast) var(--rm-motion-ease);
+}
+#ownerPanel button:not(:disabled):not(.ownerNavBackdrop):active,#loginPanel button:not(:disabled):active{transform:scale(.98)}
+#ownerPanel .ownerNavigation button.active .ownerNavIcon svg,
+#ownerThemeToggle[data-rm-motion-theme] svg{animation:rmMotionIcon var(--rm-motion-normal) var(--rm-motion-ease) both}
+#ownerPanel .ownerMetric,#ownerPanel .ownerMonitorCard{transition:box-shadow var(--rm-motion-normal) ease,border-color var(--rm-motion-normal) ease}
+@media(hover:hover) and (pointer:fine){
+ #ownerPanel :is(.ownerMetric,.ownerMonitorCard):hover{border-color:var(--rm-muted);box-shadow:0 7px 20px #17382d15}
+}
+#ownerPanel .ownerSidebar{transition:width var(--rm-motion-enter) var(--rm-motion-ease),flex-basis var(--rm-motion-enter) var(--rm-motion-ease)}
+@media(max-width:760px){
+ #ownerPanel .ownerSidebar{transition:transform var(--rm-motion-enter) var(--rm-motion-ease)}
+ #ownerPanel .ownerNavBackdrop:not([hidden]){animation:rmMotionFade var(--rm-motion-normal) ease both}
+}
+#ownerPanel[data-rm-motion-loading="true"] #ownerRefreshOverview svg,
+#ownerPanel :is(#ownerRefreshMonitoring,#ownerRefreshReports,#ownerRefreshPilot,#ownerRefreshLifecycle):disabled svg{
+ animation:rmMotionSpin 650ms linear 3;
+}
+#ownerPanel .ownerMetric strong{position:relative;min-height:1.15em;font-variant-numeric:tabular-nums}
+#ownerPanel[data-rm-motion-loading="true"] .ownerMetric strong[data-rm-motion-empty="true"]::after{
+ content:"";position:absolute;left:1.15em;top:25%;width:min(44%,3.2em);height:.55em;border-radius:6px;
+ background:linear-gradient(100deg,var(--rm-border) 25%,var(--rm-surface) 50%,var(--rm-border) 75%);background-size:200% 100%;
+ animation:rmMotionSkeleton 1000ms linear 3;pointer-events:none;
+}
+#ownerPanel .ownerMetric strong[data-rm-motion-changed]{animation:rmMotionValue var(--rm-motion-normal) var(--rm-motion-ease) both}
+@media(prefers-reduced-motion:reduce){
+ #ownerPanel,#ownerPanel *,#ownerPanel *::before,#ownerPanel *::after,#loginPanel,#loginPanel *,#loginPanel *::before,#loginPanel *::after{
+  animation:none!important;transition:none!important;scroll-behavior:auto!important;
+ }
+ #ownerPanel button:active,#loginPanel button:active{transform:none}
+}

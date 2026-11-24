@@ -97,6 +97,16 @@ const stub=[
    }
    await navigate('settings');
    await navigate('dashboard');
+   assert.equal(await page.locator('.ownerMetric').first().evaluate(el=>getComputedStyle(el).animationName),'rmMotionEnter');
+   assert.equal(await page.locator('#ownerTotalRestaurants').textContent(),'2','Motion never substitutes fake KPI values');
+   if(width===390){
+    await page.emulateMedia({reducedMotion:'reduce'});
+    assert.equal(await page.locator('.ownerMetric').first().evaluate(el=>getComputedStyle(el).animationName),'none');
+    assert.equal(await page.locator('#ownerSidebar').evaluate(el=>getComputedStyle(el).transitionDuration),'0s');
+    await navigate('restaurants');await navigate('dashboard');
+    assert.equal(await page.locator('#ownerTotalRestaurants').textContent(),'2');
+    await page.emulateMedia({reducedMotion:'no-preference'});
+   }
    await page.locator('#ownerThemeToggle').click();
    assert.equal(await page.locator('html').getAttribute('data-creator-theme'),'dark');
    assert.equal(await page.locator('#ownerThemeToggle').getAttribute('aria-pressed'),'true');
