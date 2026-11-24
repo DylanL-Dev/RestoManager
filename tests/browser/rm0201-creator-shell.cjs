@@ -44,7 +44,7 @@ const stub=[
    });
    const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));
    await page.goto(origin+'/creator.html',{waitUntil:'load'});
-   await page.waitForFunction(()=>document.querySelectorAll('#ownerSidebar .lucide').length===7);
+   await page.waitForFunction(()=>document.querySelectorAll('#ownerSidebar .ownerNavigation .lucide').length===7);
    await page.waitForFunction(()=>document.getElementById('ownerTotalRestaurants').textContent==='2');
    assert.equal(await page.locator('.ownerWelcomeBanner').isVisible(),true);
    assert.equal(await page.locator('#ownerSidebar .ownerNavigation button').count(),7);
