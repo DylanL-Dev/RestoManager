@@ -40,3 +40,26 @@
  .hotel-stay{padding:15px}
 }
 @media(max-width:350px){.guest-choice .choice label{flex-direction:column}}
+
+/* RM-UX-03.3 — premium portal; real availability and profile remain server driven. */
+:root{--bg:#f2f7f4;--green:#17634b;--line:#d6e4db;--muted:#496658}
+.restaurant-intro h1,.story-text h2{font-family:system-ui,-apple-system,Segoe UI,sans-serif;font-weight:720;letter-spacing:-.045em}
+.booking-card{box-shadow:0 18px 54px #163c3014;border-radius:26px}
+.booking-head h2{font-size:clamp(1.35rem,2vw,1.65rem)}
+.steps{gap:7px;padding-bottom:18px;margin-block:23px 22px}
+.steps li{padding:8px 6px;border-radius:10px;background:#f1f5f2;color:#496658;font-size:.7rem}
+.steps [aria-current=step]{background:#e4f2e8;color:#174d36}
+.steps .done{background:#edf5ef}
+.steps li:before{width:24px;height:24px;background:#fff}
+.steps [aria-current=step]:before{background:var(--green);color:#fff}
+.choice input:checked+label{border-color:var(--green);background:#e7f3eb;color:#174d36}
+.slots label{min-height:54px;font-variant-numeric:tabular-nums}
+.slots input:not(:disabled)+label:hover{border-color:var(--green)}
+.rmPortalSelection{display:flex;gap:12px;align-items:flex-start;background:#edf6f0;border:1px solid #c3dfcd;border-radius:14px;padding:13px;margin:14px 0 16px;color:#194d37;min-width:0}
+.rmPortalSelectionIcon{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;background:#d9ebdf;flex:none}
+.rmPortalSelection>div{min-width:0}.rmPortalSelection strong{font-size:.8rem}.rmPortalSelection p{font-size:.85rem;font-weight:650;line-height:1.45;margin-top:4px}.rmPortalSelection small{display:block;font-size:.7rem;line-height:1.45;margin-top:5px;color:#496658}
+.rmPortalLoading{font-size:.8rem;color:#496658}.rmPortalSkeleton{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0}.rmPortalSkeleton span{height:54px;border-radius:10px;background:linear-gradient(100deg,#e4ece7 30%,#f4f7f5 50%,#e4ece7 70%);background-size:220% 100%;animation:rmPortalLoading 1s ease 3}
+@keyframes rmPortalLoading{from{background-position:100% 0}to{background-position:0 0}}
+@media(max-width:1023px){.steps li{align-items:center;text-align:center}}
+@media(max-width:699px){.booking-card,.compact-story .booking-card{border-radius:20px}.steps li{font-size:.68rem;padding:7px 3px}.rmPortalSelection{padding:11px;gap:8px}}
+@media(prefers-reduced-motion:reduce){.rmPortalSkeleton span{animation:none!important}}

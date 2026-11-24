@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-UX-03.4d — Consolidation graphique et accessibilité — RECETTE CANDIDAT (24/11/2026)
+
+PR #244 : 18/18 suites GitHub Actions réussies sur `5a3d12b8d4996711d319621c45e4a38e6c7e47ca` avant synchronisation documentaire DEV. Nouvelle recette requise avant fusion ; Render DEV non confirmé. MAIN, V3 et Supabase PROD hors périmètre.
+
 ### RM-SEC-02 — Conception de la séparation des identités GitHub — PR DEV BROUILLON (24/11/2026)
 
 - Phase de conception autorisée par le propriétaire, issue #251, branche `claude/rm-sec-02-identities` depuis DEV `dbd2ec0`. **Aucun compte, connexion ni accès modifié.**

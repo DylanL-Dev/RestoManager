@@ -106,7 +106,7 @@ test('RM-015.13: hotel demo requires guest status and fictional room, unlike ind
  for(const expected of ['function hotelChoice()', 'function roomFields()', 'function hotelRecap()', 'guestType', 'hotelRoom', 'blankContact()']) assert.ok(portal.includes(expected),expected);
  assert.match(css,/guest-choice.*choice-row/);
  assert.match(css,/site-footer>div.*flex-wrap:wrap/);
- assert.match(html,/portal\.js\?v=20261122-rm01513-hotel-icon/);
+ assert.match(html,/portal\.js\?v=20261124-rmux033/);
  assert.match(portal,/brand-mark \[data-lucide\]/);
  assert.match(portal,/cover-label \[data-lucide\]/);
  assert.match(portal,/icon\('hotel'\)/);
@@ -115,7 +115,7 @@ test('RM-015.13: hotel demo requires guest status and fictional room, unlike ind
  assert.match(connected,/radio\('guestType','hotel',icon\('hotel'\)/);
  assert.match(connected,/profile.hotelGuestsEnabled===true/);
  assert.match(connected,/brand-mark \[data-lucide\]/);
- assert.match(liveHtml,/live\.mjs\?v=20261122-rm01513-hotel-icon/);
+ assert.match(liveHtml,/live\.mjs\?v=20261124-rmux033/);
  assert.match(staffWeb,/hotel.prepend\(icon\('hotel'\)\)/);
  assert.match(staffWeb,/stay.prepend\(icon\('hotel'\)\)/);
  for(const part of ['name="walkinType" value="hotel" checked','name="bookingTypeVisual" value="hotel" checked','id="bookingHotelRoomField"','id="editHotelRoomField"']){

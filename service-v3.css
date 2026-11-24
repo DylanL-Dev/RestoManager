@@ -225,7 +225,7 @@ html{scroll-padding-bottom:110px}
 /* Independent screens: one active destination, no long vertical page */
 .appScreen[hidden]{display:none!important}
 .appScreenActive{animation:restoScreenEnter 230ms cubic-bezier(.2,.8,.2,1) both;min-width:0}
-@keyframes restoScreenEnter{from{opacity:.45;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes restoScreenEnter{from{transform:translateY(4px)}to{transform:none}}
 .appScreen>.panel,.appScreen>.actionPanel{margin-top:0}
 .appScreen>.content{min-width:0}
 @media(prefers-reduced-motion:reduce){.appScreenActive{animation:none!important}}
@@ -1906,7 +1906,10 @@ html[data-theme="dark"] .rmLiveLegendMark.threshold{background:#e5ad70}
 .tableCard{transition:background-color var(--rm-service-fast) ease,border-color var(--rm-service-fast) ease,box-shadow var(--rm-service-fast) ease;transform:none}
 .tableCard:active,.tableCard:hover{transform:none}
 .tableCard:active{box-shadow:inset 0 0 0 2px currentColor}
-:is(.kpiInteractive,.receptionMetricInteractive,.quickAction,.rmBookingOpen,.rmBookingActionText,.mobileNavItem,.tableChoiceTrigger){transition:background-color var(--rm-service-fast) ease,border-color var(--rm-service-fast) ease,color var(--rm-service-fast) ease,box-shadow var(--rm-service-fast) ease}
+:is(.kpiInteractive,.receptionMetricInteractive,.quickAction,.rmBookingActionText,.mobileNavItem,.tableChoiceTrigger){transition:background-color var(--rm-service-fast) ease,border-color var(--rm-service-fast) ease,color var(--rm-service-fast) ease,box-shadow var(--rm-service-fast) ease}
+/* RM-UX-03.4d: switch reservation-name foreground and background together on theme changes. */
+.rmBookingOpen{transition:box-shadow var(--rm-service-fast) ease}
+
 :is(.kpiInteractive,.receptionMetricInteractive,.rmBookingOpen,.tableChoiceTrigger):active{box-shadow:inset 0 0 0 1px currentColor}
 :is(.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet){animation:rmServiceCard 260ms ease-out}
 #syncBadge[data-state="ok"]::before{animation:none}
