@@ -14,8 +14,9 @@ S'applique à tout agent (OpenAI Codex, Claude Code…). Le propriétaire du pro
 | Cible | Rôle | Règle agent |
 | --- | --- | --- |
 | `feature/v3-supabase-full-clone` (DEV) | intégration, déployée sur Render | jamais de push direct ; PR uniquement |
-| V3 (`feature/refonte-service-responsive-v3` / `RestoManager-V3`) | version utilisée en service | **interdit** sans autorisation écrite du propriétaire |
+| `RestoManager-V3` (V3) | branche de publication V3 : reçoit les promotions validées depuis DEV, **avant** `main` | **interdit** sans autorisation écrite du propriétaire |
 | `main` | production (GitHub Pages) | **interdit** sans autorisation écrite du propriétaire |
+| `feature/refonte-service-responsive-v3` | historique : interface V3 d'origine (avant Supabase), source de Full Clone, plus alimentée | **interdit** : référence à préserver, ne pas modifier ni supprimer |
 | Supabase DEV | base de développement | migration ou écriture seulement si la mission l'autorise |
 | Supabase PROD | données réelles | **interdit** : ni écriture, ni migration, ni test, ni `db push` |
 
@@ -41,7 +42,7 @@ Le dépôt est **public**. Ne jamais écrire dans le code, les commits, les PR, 
 
 ## 5. Éviter les conflits entre agents (à chaque mission)
 
-1. `git fetch` puis lire les 15 derniers commits de DEV.
+1. `git fetch` puis lire les 15 derniers commits de DEV et les premières entrées de `docs/RELEASE_TRACKER.md`.
 2. Lister les PR ouvertes vers DEV et leurs fichiers modifiés.
 3. Si un fichier visé est déjà modifié par une PR ouverte d'un autre agent : **signaler avant d'écrire** et attendre l'arbitrage du propriétaire.
 4. Avant d'ouvrir ou de mettre à jour la PR, refaire l'étape 1 ; en cas de nouveau commit DEV, fusionner DEV dans sa branche (jamais de rebase d'une branche déjà poussée) et relancer les tests.
@@ -64,7 +65,12 @@ Puis les suites ciblées de `package.json` correspondant aux fichiers touchés (
 - Commits : `<TICKET> DEV — <résumé>` (ex. `RM-021 DEV — horaires de fermeture`).
 - Ajouter dans le message un trailer identifiant l'agent (ex. `Co-Authored-By:`), car l'auteur Git est partagé.
 - PR : objectif, fichiers modifiés, tests exécutés avec leur résultat réel, risques, ce qui n'a **pas** été vérifié. Ne jamais présenter comme validé ce qui n'a pas été testé.
-- Mission significative : rapport dans `docs/audits/<TICKET>_<SUJET>_<AAAAMMJJ>.md` et entrée dans `docs/RELEASE_TRACKER.md` si le propriétaire le demande.
+- **Registre obligatoire** (règle du `README.md`) : lire `docs/RELEASE_TRACKER.md` avant toute modification destinée à DEV et ajouter une entrée dans la même PR. Pour éviter les conflits entre agents :
+  - insérer sa nouvelle entrée `### <TICKET> — <titre> — <STATUT> (JJ/MM/AAAA)` juste sous le titre du fichier ;
+  - ne jamais modifier ni réordonner l'entrée d'un autre agent ;
+  - en cas de conflit Git sur ce fichier, conserver toutes les entrées (la plus récente en haut) ;
+  - n'y consigner que des faits vérifiés (SHA, PR, résultats de tests), jamais de secret.
+- Mission significative : rapport détaillé dans `docs/audits/<TICKET>_<SUJET>_<AAAAMMJJ>.md`, référencé depuis l'entrée du registre.
 
 ## 8. Validation
 

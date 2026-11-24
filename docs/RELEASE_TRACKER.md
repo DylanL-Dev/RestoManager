@@ -1,5 +1,11 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-TEAM-01 — Règles communes des agents (AGENTS.md / CLAUDE.md) — PR DEV BROUILLON (24/11/2026)
+
+- Mission propriétaire explicite : documentation de coordination Claude Code / OpenAI Codex. Branche `claude/rm-team-01` depuis DEV `5f545de`, PR [#245](https://github.com/DylanL-Dev/RestoManager/pull/245) vers DEV uniquement, en brouillon.
+- Ajout de `AGENTS.md` (règles communes : environnements, interdictions MAIN/V3/Supabase PROD, branches, anti-conflit, tests, traçabilité, validation) et `CLAUDE.md` (consignes propres à Claude Code). Tableau des branches du `README.md` clarifié : `RestoManager-V3` = publication V3 active, `feature/refonte-service-responsive-v3` = historique préservé.
+- Documentation uniquement : aucun code, workflow, configuration Supabase/Render, ni donnée modifiés. Aucune fusion ni déploiement ; validation du propriétaire attendue.
+
 ### RM-015.1 — Portail public de démonstration — RECETTE DEV (18/11/2026)
 
 - Mission propriétaire explicite après lecture du cahier des charges #173. Départ DEV `62d8fda`, branche `feature/rm015-public-demo`, sauvegarde distante `backup/rm0151-dev-before-20261118`. Aperçu Render DEV autorisé par cette mission ; aucune promotion V3/MAIN ni activation publique de production.
