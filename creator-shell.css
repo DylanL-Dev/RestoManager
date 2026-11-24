@@ -240,3 +240,10 @@ body{background:var(--rm-canvas);color:var(--rm-ink)}
 .ownerDirectoryToolbar p{margin:9px 0 0;font-size:12px}
 .ownerDirectoryToolbar p:empty{display:none}
 .ownerRestaurantRow[hidden]{display:none!important}
+
+/* RM-020.2 — WCAG text contrast in both themes and accessible compact controls. */
+.ownerBreadcrumb small,.ownerBreadcrumbSeparator,.ownerFooter,.ownerLegalLinks{color:var(--rm-muted)}
+.ownerEyebrow{color:#106a4c}
+.ownerLegalLinks a{color:#315e48}
+:root[data-creator-theme="dark"] .ownerEyebrow{color:#9cdeb8}
+:root[data-creator-theme="dark"] .ownerLegalLinks a{color:#aed5bc}
