@@ -17,7 +17,7 @@ function fixture({isRoot=false,signed=false,factors=[],aal='aal1',cache=new Map(
   auth:{
    async getUser(){return {data:{user:state.signed?{id:'user-1',email:'root-dev@example.test',email_confirmed_at:'2026-11-23T08:00:00Z',is_anonymous:false}:null},error:null};},
    async signInWithPassword({email,password}){if(!email||!password)return {error:new Error('invalid credentials')};state.lastAuthEmail=email;state.signed=true;return{error:null}},
-   async signOut(){state.signed=false;state.aal='aal1';return{error:null}},
+   async signOut(options){state.signOutScope=options?.scope;cache.delete(state.storageKey);state.signed=false;state.aal='aal1';return{error:null}},
    async resetPasswordForEmail(email,{redirectTo}){state.resetRecipient=email;state.resetRedirect=redirectTo;return{error:null}},
    mfa:{
     async getAuthenticatorAssuranceLevel(){return{data:{currentLevel:state.aal,nextLevel:state.factors.length?'aal2':'aal1'},error:null}},
@@ -38,7 +38,7 @@ function fixture({isRoot=false,signed=false,factors=[],aal='aal1',cache=new Map(
  };
  const api={
   document:{getElementById(id){const found=elements[id];if(!found)throw Error('Missing '+id);return found;}},
-  createClient(){return client},
+  createClient(url,key,options){state.storageKey=options.auth.storageKey;return client},
   supabaseEnvironment:{name:'DEV',url:'https://mock.invalid',publishableKey:'mock'},
   installOwnerInbox(){},
   installCreatorConsole(){state.installed++},
@@ -175,4 +175,22 @@ test('RM-017.3.3 responsive style hooks and no saved password',()=>{
  assert.match(css,/\.rootDevNotice/);assert.match(css,/\.ownerAuthFeedback/);assert.match(css,/@media\(max-width:560px\)/);
  assert.match(auth,/localStorage\.setItem\(aliasKey,email\)/);
  assert.doesNotMatch(auth+reset,/localStorage\.setItem\([^\n]*(?:password|token|secret)|sessionStorage\.setItem|indexedDB\.open/);
+});
+
+test('RM-AUTH-01 Root logout cannot remove the staff session from shared browser storage',async()=>{
+ const staffKey='sb-lykoybacslvmhtzftqsf-auth-token';
+ const cache=new Map([[staffKey,'fixture-staff-session']]);
+ const f=fixture({isRoot:true,cache});await tick();
+ assert.equal(f.state.storageKey,'restomanager-dev-creator-auth-v1');
+ f.el.ownerUsername.value='root-dev@example.test';f.el.ownerPassword.value='fixture-password';
+ await f.emit('creatorLogin','submit');
+ assert.equal(f.el.ownerPanel.hidden,false);
+ cache.set(f.state.storageKey,'fixture-root-session');
+ await f.emit('ownerLogout');
+ assert.equal(f.state.signOutScope,'local');
+ assert.equal(cache.get(staffKey),'fixture-staff-session');
+ assert.equal(cache.has(f.state.storageKey),false);
+ const staff=read('supabase-login.js')+read('supabase-service-bridge.js');
+ assert.doesNotMatch(staff,/restomanager-dev-creator-auth-v1/);
+ assert.match(reset,/storageKey:'restomanager-dev-creator-auth-v1'/);
 });
