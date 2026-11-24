@@ -1876,6 +1876,23 @@ html[data-theme="dark"] .rmServiceAdvice[data-kind="unknown"]{background:#263a31
 @keyframes rmServiceSkeleton{from{background-position:100% 0}to{background-position:0 0}}
 html[data-theme="dark"] .rmServiceSkeleton{--rm-sk-base:#2c483b;--rm-sk-shine:#3d5a4b}
 @media(prefers-reduced-motion:reduce){.rmServiceSkeleton span{animation:none!important}}
+/* RM-UX-02.2d — direct, stable, accessible service shortcuts. */
+.rmArrivalShortcutRow{display:flex;align-items:center;gap:8px;min-width:0}
+.rmArrivalShortcutWords{flex:1;min-width:0;display:grid;gap:4px;overflow-wrap:anywhere}
+.rmArrivalShortcut{width:44px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #c9e0d2;border-radius:12px;background:#edf6f0;color:#176a4d;flex:0 0 44px;cursor:pointer;transition:background-color 140ms,border-color 140ms}
+.rmArrivalShortcut :is(svg,i){width:20px;height:20px;pointer-events:none}
+.rmArrivalShortcut:focus-visible{outline:3px solid #16815e;outline-offset:2px}
+.rmArrivalShortcut:active{background:#d3e9da}
+html[data-theme="dark"] .rmArrivalShortcut{background:#254b3b;border-color:#547b66;color:#e4f5e9}
+@media(max-width:420px){.receptionServiceArrival{flex-wrap:wrap}.receptionServiceArrival .receptionServiceDetails{flex:1 1 calc(100% - 66px)}.receptionServiceArrival .receptionServiceStatus{margin-left:0}.receptionServiceArrival .rmArrivalShortcut{margin-left:auto}}
+.rmLiveTimelineLegend{display:flex;align-items:center;flex-wrap:wrap;gap:7px 13px;font-size:11px;line-height:1.4;color:#496857}
+.rmLiveLegendEntry{display:inline-flex;align-items:center;gap:5px}
+.rmLiveLegendMark{width:9px;height:9px;border-radius:3px;background:#16815e;flex:none}
+.rmLiveLegendMark.installed{background:#82ac9b}
+.rmLiveLegendMark.threshold{width:3px;height:13px;background:#946019}
+html[data-theme="dark"] .rmLiveTimelineLegend{color:#bbd3c3}
+html[data-theme="dark"] .rmLiveLegendMark.threshold{background:#e5ad70}
+@media(prefers-reduced-motion:reduce){.rmArrivalShortcut{transition:none!important}}
 /* RM-UX-02.1 — operational motion. Preserve existing screen stacking and never add moving targets or faded text. */
 :root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:320ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
 @keyframes rmServiceCard{from{box-shadow:inset 0 0 0 2px #16815e}to{box-shadow:inset 0 0 0 2px transparent}}

@@ -54,3 +54,20 @@ test('RM-UX-02.2c: placeholders only during actual load; no fake metrics or cont
  assert.match(s,/skeleton.setAttribute\('aria-hidden','true'\)/);
  assert.match(read('service-v3.css'),/\.rmServiceSkeleton span\{animation:none!important\}/);
 });
+
+test('RM-UX-02.2d: exact service shortcut protects navigation and does not write',async()=>{
+ const s=read('service-v3-reservations.js'),start=s.indexOf('window.RestoOpenServiceReservation=async function'),end=s.indexOf('// Notifications navigate',start);
+ const run=new Function('window','load','$','notify','errorMessage','departedStatuses','render', 'let reservationView,expanded;'+s.slice(start,end)+'return ()=>({reservationView,expanded});');
+ let allowed=false,loads=0,renders=0,focus=0,scroll=0;
+ const target={id:'second',date:'2032-11-08',status:'confirmed'},fields={reservationQuery:{value:'same name'},reservationDate:{value:''},reservationList:{querySelectorAll:()=>[{dataset:{rmMotionKey:'first'}},{dataset:{rmMotionKey:'second'},querySelector:()=>({focus:()=>focus++}),scrollIntoView:()=>scroll++}]}};
+ const win={RestoScreens:{request:async()=>allowed},matchMedia:()=>({matches:true})};
+ const state=run(win,()=>{loads++;return [{...target,id:'first'},target]},id=>fields[id],()=>{},String,new Set(),()=>renders++);
+ assert.equal(await win.RestoOpenServiceReservation('second'),false);assert.equal(loads,0);
+ allowed=true;assert.equal(await win.RestoOpenServiceReservation('second'),true);
+ assert.deepEqual(state(),{reservationView:'upcoming',expanded:'second'});
+ assert.equal(fields.reservationQuery.value,'');assert.equal(fields.reservationDate.value,target.date);
+ assert.equal(renders,1);assert.equal(focus,1);assert.equal(scroll,1);
+ assert.equal(await win.RestoOpenServiceReservation('missing'),false);assert.equal(renders,1);
+ assert.match(read('service-v3.js'),/RestoOpenServiceReservation\?\.\(String\(r.id\)\)/);
+ assert.match(read('reception-service-overview.js'),/RestoOpenServiceReservation\?\.\(String\(r.id\)\)/);
+});

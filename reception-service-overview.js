@@ -70,7 +70,11 @@
    details.append(node('strong',null,r.hotelRoom?'Chambre '+r.hotelRoom:r.client||'Client'));
    details.append(node('small',null,Number(r.guests||0)+' couvert(s) · '+((r.tables||[]).length?'Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + '):'Attribution en cours')));
    const status=node('span','receptionServiceStatus',statusNames[r.status]||r.status);
-   row.append(time,details,status);section.append(row);
+   const button=node('button','rmArrivalShortcut');button.type='button';button.dataset.rmArrivalId=String(r.id);
+   button.setAttribute('aria-label','Ouvrir la réservation de '+(r.hotelRoom?'la chambre '+r.hotelRoom:r.client||'ce client')+' à '+(r.time||'—'));
+   const ico=node('i');ico.dataset.lucide='chevron-right';ico.setAttribute('aria-hidden','true');button.append(ico);
+   button.addEventListener('click',()=>window.RestoOpenServiceReservation?.(String(r.id)));
+   row.append(time,details,status,button);section.append(row);
   }
   root.append(section);
   const syncedAt=Number(window.RestoLastSyncAt)||0;

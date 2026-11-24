@@ -159,6 +159,11 @@ function arrivalTimeline(date,all,windows=arrivalWindows(date),limit){
   const words=rushNode('div','rmServiceAdviceText');
   words.append(rushNode('span','rmServiceAdviceLabel','CONSEIL DE SERVICE'),rushNode('strong','',advice.title),rushNode('p','',advice.detail));card.append(icon,words);section.append(card);
  }
+ const legend=rushNode('div','rmLiveTimelineLegend');
+ for(const [kind,label] of [['waiting','Attendus'],['installed','Installés'],['threshold','Seuil conseillé']]){
+  const entry=rushNode('span','rmLiveLegendEntry'),dot=rushNode('span','rmLiveLegendMark '+kind);dot.setAttribute('aria-hidden','true');entry.append(dot,rushNode('span','',label));legend.append(entry);
+ }
+ section.append(legend);
  for(const row of rows){
   const item=rushNode('div','rmLiveTimelineRow'),label=rushNode('div','rmLiveTimelineLabel');
   label.append(rushNode('strong','',clock(row.w.start)+' – '+clock(row.w.end)),rushNode('span','',row.planned+' / '+limit+' couverts'+(row.planned>=limit?' · Seuil atteint':'') ));
@@ -700,7 +705,14 @@ occupancy.replaceChildren(
 );
 window.lucide?.createIcons?.({nodes:[occupancy]});
 
-$('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{const c=node('div','arrival');c.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));return c}));if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
+$('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{
+ const c=node('div','arrival rmArrivalShortcutRow'),words=node('div','rmArrivalShortcutWords');
+ words.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));
+ const button=node('button','rmArrivalShortcut');button.type='button';button.dataset.rmArrivalId=String(r.id);
+ button.setAttribute('aria-label','Ouvrir la réservation de '+(r.client||'ce client')+' à '+r.time);
+ const ico=node('i');ico.dataset.lucide='chevron-right';ico.setAttribute('aria-hidden','true');button.append(ico);
+ button.addEventListener('click',()=>window.RestoOpenServiceReservation?.(String(r.id)));
+ c.append(words,button);return c}));window.lucide?.createIcons?.({nodes:[$('upcoming')]});if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
 function occupationProgress(r){
  const scheduled=new Date(r.date+'T'+r.time+':00').getTime();
  const actual=r.seatedAt?new Date(r.seatedAt).getTime():NaN;

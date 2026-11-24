@@ -80,6 +80,17 @@ const results=[];function pass(name){results.push({name,status:'passed'});consol
   assert.ok((await v.page.evaluate(()=>window.__motionChanges)).some(x=>x.includes('kpi')));
   assert.deepEqual(v.errors,[]);await v.context.close();pass('Motion only on actual snapshot status/value changes; unchanged snapshot stays still');
  }
+ for(const role of ['fb_admin','reception']){
+  const v=await open(browser,origin,{role,width:390});await v.page.waitForFunction(()=>window.RestoSupabaseReady===true);
+  if(role==='reception')await v.page.evaluate(()=>window.RestoScreens.show('passages'));
+  const root=role==='reception'?'#receptionServiceOverview':'#upcoming';
+  const button=v.page.locator(root+' [data-rm-arrival-id]').first();await button.waitFor({state:'visible'});
+  const id=await button.getAttribute('data-rm-arrival-id');await button.click();
+  await v.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
+  const card=v.page.locator('#reservationList [data-rm-motion-key="'+id+'"]');await card.locator('.reservationExpanded').waitFor({state:'visible'});
+  assert.equal(await v.page.locator('#reservationQuery').inputValue(),'');assert.deepEqual(v.errors,[]);
+  await v.context.close();pass('One-click exact reservation shortcut, no write '+role);
+ }
  for(const mode of ['empty-tables','empty-arrivals']){const v=await open(browser,origin,{mode});await v.page.waitForFunction(()=>window.RestoSupabaseReady);if(mode==='empty-tables'){assert.equal(await v.page.locator('.tableCard').count(),0);assert.match(await v.page.locator('#tableGrid').innerText(),/Aucune table active/)}else assert.equal(await v.page.locator('.tableCard').count(),22);assert.match(await v.page.locator('#upcoming').innerText(),/Aucune arrivée en attente/);assert.deepEqual(v.errors,[]);await v.context.close();pass('Confirmed '+mode+' has an explicit empty state');}
  for(const mode of ['loading','error']){
   const v=await open(browser,origin,{mode});await v.page.waitForFunction(mode=>document.getElementById('serviceDataStatus')?.dataset.state===mode,mode);
