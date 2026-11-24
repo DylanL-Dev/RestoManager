@@ -5,7 +5,7 @@ const inbox=read('creator-admin.js'),html=read('creator.html'),auth=read('creato
 test('RM-019 : centre de support uniquement visible après authentification Root DEV',()=>{
  assert.match(html,/data-owner-section="reports" hidden/);
  assert.match(html,/id="ownerInbox" aria-label="Signalements privés"/);
- assert.match(html,/data-owner-nav="reports">✉ <span>Centre d’assistance/);
+ assert.match(html,/data-owner-nav="reports"><span class="ownerNavIcon" data-lucide="life-buoy"><\/span> <span>Centre d’assistance/);
  assert.match(auth,/if\(!await verifyOwner\(\)\)throw/);
  assert.match(auth,/from\('platform_admins'\)/);
  assert.match(auth,/creator-admin\.js\?v=20261123-rm019/);
