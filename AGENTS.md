@@ -74,6 +74,8 @@ Puis les suites ciblées de `package.json` correspondant aux fichiers touchés (
 
 ## 8. Validation
 
+« Une seule évolution active à la fois » (registre) = **une seule intégration/publication à la fois** : plusieurs branches peuvent être développées en parallèle, mais chaque fusion DEV, publication Render et promotion V3/MAIN est autorisée individuellement, et la suivante attend que la précédente soit VALIDÉE CLONE ou BLOQUÉE / REPORTÉE.
+
 1. L'agent livre une PR brouillon vers DEV avec CI verte.
 2. Le propriétaire (assisté de ChatGPT) relit et valide.
 3. Fusion DEV, déploiement Render, promotion V3/MAIN et toute action Supabase : **uniquement sur instruction écrite du propriétaire**, chacune séparément.
