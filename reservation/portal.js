@@ -75,6 +75,10 @@
     const id = name + '-' + value;
     return `<div class="choice"><input type="radio" name="${name}" id="${esc(id)}" value="${esc(value)}"${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}><label for="${esc(id)}">${label}${extra}</label></div>`;
   }
+  function selectedVenue(a){
+    if(!a.slots.some(s=>s.available&&s.time===draft.time))return '';
+    return '<div class="rmPortalSelection"><span class="rmPortalSelectionIcon">'+icon('calendar-clock')+'</span><div><strong>Votre venue sélectionnée</strong><p>'+esc(M.relativeDateLabel(draft.date))+' · '+esc(draft.time)+' · '+Number(draft.party)+' personne'+(draft.party>1?'s':'')+'</p><small>Exemple fictif, sans réservation réelle.</small></div></div>';
+  }
   function venueForm() {
     const a = M.availability(config, draft);
     return `${heading(editing ? 'Modifier votre exemple' : 'Réservez votre table', 'Quelques instants pour préparer votre venue.')}${steps()}${hotelChoice()}
@@ -83,7 +87,7 @@
       <fieldset><legend>Quel service ?</legend><div class="choice-row service-row">${Object.entries(config.services).map(([key, s]) => radio('service', key, icon(key === 'lunch' ? 'sun' : 'moon') + esc(s.label), draft.service === key)).join('')}</div></fieldset>
       <fieldset><legend>À quelle heure ?</legend><p class="hint" id="slotsHint">${esc(a.message)}</p>${a.slots.length ? `<div class="choice-row slots" aria-describedby="slotsHint">${a.slots.map(s => radio('time', s.time, esc(s.time), draft.time === s.time, !s.available, s.available ? '' : '<small>Non proposé</small>')).join('')}</div>` : '<p class="empty">' + esc(a.message) + '</p>'}</fieldset>
       ${notice ? '<p class="error-box" role="alert">' + esc(notice) + '</p>' : ''}
-      <button class="primary" type="button" data-action="coordinates"${draft.time && a.slots.some(s => s.available && s.time === draft.time) && (config.type !== 'hotel' || ['hotel', 'external'].includes(contact.guestType)) ? '' : ' disabled'}>Continuer ${icon('arrow-up-right')}</button>
+      ${selectedVenue(a)}<button class="primary" type="button" data-action="coordinates"${draft.time && a.slots.some(s => s.available && s.time === draft.time) && (config.type !== 'hotel' || ['hotel', 'external'].includes(contact.guestType)) ? '' : ' disabled'}>Continuer ${icon('arrow-up-right')}</button>
       <p class="booking-foot">${icon('check-circle-2')}Sans compte · Exercice sans engagement</p>${editing ? '<button class="text-button" type="button" data-action="abandonEdit">Conserver mon exemple actuel</button>' : ''}`;
   }
   function field(name, label, type = 'text', max = 80) {

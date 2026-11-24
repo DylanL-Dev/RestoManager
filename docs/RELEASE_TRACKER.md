@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-UX-03.4d — Consolidation graphique et accessibilité — RECETTE CANDIDAT (24/11/2026)
+
+PR #244 : 18/18 suites GitHub Actions réussies sur `5a3d12b8d4996711d319621c45e4a38e6c7e47ca` avant synchronisation documentaire DEV. Nouvelle recette requise avant fusion ; Render DEV non confirmé. MAIN, V3 et Supabase PROD hors périmètre.
+
 ### RM-SEC-01 — Préparation des rulesets GitHub — PR DEV BROUILLON (24/11/2026)
 
 - Mission propriétaire autorisée en autonomie, issue #249, branche `claude/rm-sec-01-rulesets` depuis DEV `dbd2ec0`. Préparation uniquement : **aucune protection activée**.
