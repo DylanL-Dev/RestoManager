@@ -43,6 +43,8 @@ test('RM-020.1: responsive theme and accessible interactive controls have real h
  assert.match(js,/new MutationObserver\(upgradeRestaurantIcons\)/);
  assert.match(js,/matchMedia\('\(min-width: 1001px\)'\)/);
  assert.match(css,/@media\(max-width:760px\)/);
+ assert.match(css,/@media\(min-width:761px\) and \(max-width:1000px\)/);
+ assert.match(css,/\.ownerQuickAccess>span:last-child,\.ownerAccount\{display:none\}/);
  assert.match(css,/@media\(min-width:1001px\)/);
  assert.match(css,/\[data-creator-theme="dark"\]/);
  assert.match(css,/prefers-reduced-motion/);
