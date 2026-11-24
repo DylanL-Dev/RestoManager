@@ -1,5 +1,11 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-AUDIT-02 — Audit de MAIN phase 1 (lecture/simulation) — RAPPORT (24/11/2026)
+
+- Phase 1 autorisée, issue #144. MAIN figé `d852c19` dans un worktree détaché ; aucun contact Supabase PROD (garde-fou réseau : 0 requête), aucun workflow, aucune fusion.
+- Syntaxe 173/173, unitaires 221/221, `release-guard` PASS, 13/14 suites navigateur réussies sur simulation (244 vérifications) ; `rm016-learning` en échec d'environnement (Chromium local), `rm012-closeout` bloqué (Docker).
+- Pas de verdict GO/NO GO : domaines service simulé, Realtime réel, RLS et SQL réservés à la phase 2. Constats P2 : SDK Supabase par CDN sans intégrité ni version unique, pas de CSP sur les pages équipe, racine du dépôt publiée. [Rapport](audits/RM-AUDIT-02_MAIN_PHASE1_20261124.md).
+
 ### RM-UX-03.4d — Consolidation graphique et accessibilité — RECETTE CANDIDAT (24/11/2026)
 
 PR #244 : 18/18 suites GitHub Actions réussies sur `5a3d12b8d4996711d319621c45e4a38e6c7e47ca` avant synchronisation documentaire DEV. Nouvelle recette requise avant fusion ; Render DEV non confirmé. MAIN, V3 et Supabase PROD hors périmètre.
