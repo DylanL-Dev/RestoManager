@@ -68,6 +68,7 @@
   "service-v3-history.js",
   "service-v3-kpi-detail.js",
   "service-v3-lucide.js",
+  "service-v3-motion.js",
   "service-v3-management-categories.css",
   "service-v3-mobile-nav.js",
   "service-v3-notification-model.js",
