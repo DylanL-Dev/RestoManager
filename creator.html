@@ -5,17 +5,18 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#103e33">
 <meta name="robots" content="noindex,nofollow">
-<title>Assistance & administration · RestoManager</title>
+<title>Console Créateur · RestoManager DEV</title>
 <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
 <link rel="stylesheet" href="creator-console.css?v=20261124-rm0191-visible">
+<link rel="stylesheet" href="creator-shell.css?v=20261124-rm0201">
 </head>
 <body>
 <section id="loginPanel" class="loginSurface">
  <main class="loginCard">
   <div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div>
-  <span class="ownerBadge">ESPACE ADMINISTRATION</span>
-  <h1>Espace Assistance & administration</h1>
-  <p class="ownerIntro">Accédez à votre espace de pilotage pour superviser les établissements, traiter les demandes d’assistance et suivre la plateforme. Connexion sécurisée réservée aux administrateurs autorisés.</p>
+  <span class="ownerBadge"><span data-lucide="shield-check"></span> CONSOLE CRÉATEUR · DEV</span>
+  <h1>Bienvenue dans votre espace Créateur</h1>
+  <p class="ownerIntro">Pilotez vos établissements, l’assistance et le développement de RestoManager depuis une console dédiée. Accès réservé aux administrateurs autorisés.</p>
   <p class="rootDevNotice">Administration DEV · Compte indépendant de la production.</p>
   <form id="creatorLogin" autocomplete="on">
    <label for="ownerUsername">Identifiant Créateur / Root</label>
@@ -41,36 +42,46 @@
 <div id="ownerPanel" class="ownerShell" hidden>
  <button id="ownerNavBackdrop" class="ownerNavBackdrop" type="button" aria-label="Fermer le menu de navigation" hidden></button>
  <aside class="ownerSidebar" id="ownerSidebar" aria-label="Menu de navigation administration">
-  <div class="ownerSidebarHeader"><div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Assistance & administration</small></div></div><button id="ownerNavClose" class="ownerNavClose" type="button" aria-label="Fermer le menu">×</button></div>
-  <span class="ownerSidebarCaption">PLATEFORME</span>
+  <div class="ownerSidebarHeader"><div class="ownerBrand"><img src="pwa-icon.svg" alt=""><div><strong>RestoManager</strong><small>Console Créateur</small></div></div><button id="ownerNavClose" class="ownerNavClose" type="button" aria-label="Fermer le menu"><span data-lucide="x"></span></button></div>
+  <div class="ownerSidebarEnvironment"><span class="ownerEnvironmentDot" aria-hidden="true"></span><span class="ownerEnvironmentName">Environnement DEV</span><span class="ownerEnvironmentTag">TEST</span></div>
+  <span class="ownerSidebarCaption">ESPACE DE PILOTAGE</span>
   <nav class="ownerNavigation" aria-label="Navigation Root">
-   <button type="button" data-owner-nav="dashboard" class="active">▦ <span>Vue générale</span></button>
-   <button type="button" data-owner-nav="restaurants">⌂ <span>Établissements</span></button>
-   <button type="button" data-owner-nav="reports">✉ <span>Centre d’assistance</span><small class="ownerSupportNavNew">Nouveau</small></button>
-   <button type="button" data-owner-nav="lifecycle">♧ <span>Comptes & demandes</span></button>
-   <button type="button" data-owner-nav="pilot"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="8" y="3" width="8" height="4" rx="1"/><path d="M8 5H5a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3M9 12h7M9 16h7"/></svg><span>Préparation inscriptions</span></button>
-   <button type="button" data-owner-nav="monitoring">◉ <span>Supervision</span></button>
-   <button type="button" data-owner-nav="settings">⚙ <span>Paramètres</span></button>
+   <button type="button" data-owner-nav="dashboard" class="active"><span class="ownerNavIcon" data-lucide="layout-dashboard"></span> <span>Vue générale</span></button>
+   <button type="button" data-owner-nav="restaurants"><span class="ownerNavIcon" data-lucide="store"></span> <span>Établissements</span></button>
+   <button type="button" data-owner-nav="reports"><span class="ownerNavIcon" data-lucide="life-buoy"></span> <span>Centre d’assistance</span><small class="ownerSupportNavNew">Nouveau</small></button>
+   <button type="button" data-owner-nav="lifecycle"><span class="ownerNavIcon" data-lucide="users-round"></span> <span>Comptes & demandes</span></button>
+   <button type="button" data-owner-nav="pilot"><span class="ownerNavIcon" data-lucide="clipboard-check"></span><span>Préparation inscriptions</span></button>
+   <div class="ownerSidebarNavDivider" role="separator"></div><span class="ownerSidebarCaption ownerSidebarCaptionSecondary">ADMINISTRATION</span><button type="button" data-owner-nav="monitoring"><span class="ownerNavIcon" data-lucide="activity"></span> <span>Supervision</span></button>
+   <button type="button" data-owner-nav="settings"><span class="ownerNavIcon" data-lucide="settings-2"></span> <span>Paramètres</span></button>
   </nav>
-  <div class="ownerSidebarBottom"><span class="ownerBadge">ROOT · ACTIF</span><small>Administration séparée du service restaurant.</small><button id="ownerLogout" class="ownerLogout" type="button">Se déconnecter</button></div>
+  <div class="ownerSidebarBottom"><div class="ownerSidebarIdentity"><span class="ownerIdentityAvatar"><span data-lucide="shield-check"></span></span><div class="ownerIdentityText"><strong>Compte Créateur</strong><small>ROOT · Accès DEV</small></div></div><button id="ownerLogout" class="ownerLogout" type="button"><span data-lucide="log-out"></span><span>Se déconnecter</span></button><span class="ownerSidebarLegal">RestoManager · Web Labs</span></div>
  </aside>
  <div class="ownerWorkspace">
   <header class="ownerTopbar">
-   <div class="ownerTopbarLeft"><button id="ownerNavToggle" class="ownerNavToggle" type="button" aria-label="Ouvrir la navigation" aria-expanded="false">☰</button><div><small>RestoManager / Administration</small><strong id="ownerPageTitle">Vue générale</strong></div></div>
-   <span class="ownerAccount">● Administration</span>
+   <div class="ownerTopbarLeft">
+    <button id="ownerNavToggle" class="ownerNavToggle ownerIconButton" type="button" aria-label="Ouvrir la navigation" aria-expanded="false"><span data-lucide="menu"></span></button>
+    <button id="ownerSidebarCollapse" class="ownerIconButton ownerDesktopOnly" type="button" aria-label="Réduire le menu latéral" aria-pressed="false" title="Réduire le menu latéral"><span data-lucide="panel-left-close"></span></button>
+    <div class="ownerBreadcrumb"><small>RestoManager <span class="ownerBreadcrumbSeparator">/</span> <span id="ownerBreadcrumbSection">Vue générale</span></small><strong id="ownerPageTitle">Vue générale</strong></div>
+   </div>
+   <div class="ownerTopbarRight">
+    <button type="button" class="ownerQuickAccess" data-owner-nav="restaurants"><span data-lucide="store"></span><span>Établissements</span></button>
+    <button id="ownerThemeToggle" class="ownerIconButton ownerThemeToggle" type="button" aria-label="Activer le thème sombre" aria-pressed="false" title="Activer le thème sombre"><span data-lucide="moon"></span></button>
+    <span class="ownerAccount"><span class="ownerAccountStatus" aria-hidden="true"></span><span>Créateur</span></span>
+   </div>
   </header>
   <main class="ownerContent">
    <section data-owner-section="dashboard">
-    <div class="ownerHeadline"><div><span class="ownerEyebrow">CONSOLE DE CONTRÔLE</span><h1>Vue générale</h1><p>Suivez l’activité de la plateforme et les demandes d’assistance, sans intervenir dans les réservations.</p></div><button id="ownerRefreshOverview" class="secondary" type="button">↻ Actualiser</button></div>
+    <div class="ownerWelcomeBanner"><div class="ownerWelcomeText"><span class="ownerWelcomeKicker"><span data-lucide="sparkles"></span> VOTRE ESPACE DE PILOTAGE</span><h2>Tout RestoManager, au même endroit.</h2><p>Une vue claire de vos établissements, du support et des opérations de la plateforme.</p><div class="ownerWelcomeActions"><button type="button" data-owner-nav="reports" class="ownerWelcomePrimary"><span data-lucide="life-buoy"></span>Voir l’assistance<span data-lucide="arrow-up-right"></span></button><button type="button" data-owner-nav="restaurants" class="ownerWelcomeSecondary">Mes établissements <span data-lucide="chevron-right"></span></button></div></div><div class="ownerWelcomeIllustration" aria-hidden="true"><span data-lucide="chef-hat" data-icon-size="68"></span></div></div>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">SYNTHÈSE DE LA PLATEFORME</span><h1>Vue générale</h1><p>Suivez l’activité de la plateforme et les demandes d’assistance, sans intervenir dans les réservations.</p></div><button id="ownerRefreshOverview" class="secondary" type="button"><span data-lucide="refresh-cw"></span>Actualiser</button></div>
     <div class="ownerMetrics">
-     <article class="ownerMetric"><small>Établissements</small><strong id="ownerTotalRestaurants">—</strong><span>Enregistrés sur la plateforme</span></article>
-     <article class="ownerMetric"><small>Nouveaux signalements</small><strong id="ownerNewReports">—</strong><span>Demandes à examiner</span></article>
-     <article class="ownerMetric"><small>En cours de traitement</small><strong id="ownerReviewingReports">—</strong><span>Demandes prises en charge</span></article>
-     <article class="ownerMetric"><small>Urgences ouvertes</small><strong id="ownerUrgentReports">—</strong><span>Signalements urgents non résolus</span></article>
+     <article class="ownerMetric"><span class="ownerMetricIcon" data-lucide="building-2"></span><small>Établissements</small><strong id="ownerTotalRestaurants">—</strong><span>Enregistrés sur la plateforme</span></article>
+     <article class="ownerMetric"><span class="ownerMetricIcon" data-lucide="inbox"></span><small>Nouveaux signalements</small><strong id="ownerNewReports">—</strong><span>Demandes à examiner</span></article>
+     <article class="ownerMetric"><span class="ownerMetricIcon" data-lucide="clock-3"></span><small>En cours de traitement</small><strong id="ownerReviewingReports">—</strong><span>Demandes prises en charge</span></article>
+     <article class="ownerMetric"><span class="ownerMetricIcon" data-lucide="triangle-alert"></span><small>Urgences ouvertes</small><strong id="ownerUrgentReports">—</strong><span>Signalements urgents non résolus</span></article>
     </div>
     <div class="ownerDashboardGrid">
-     <section class="ownerSurface"><h2>Centre d'assistance</h2><p>Les signalements Restaurant et Réception sont regroupés dans une boîte privée.</p><button type="button" data-owner-nav="reports" class="ownerAction">Consulter les signalements →</button></section>
-     <section class="ownerSurface"><h2>Établissements</h2><p>Consulte les établissements enregistrés. Aucune entrée dans les comptes des équipes n'est autorisée depuis cette version.</p><button type="button" data-owner-nav="restaurants" class="ownerAction">Afficher les établissements →</button></section>
+     <section class="ownerSurface ownerShortcutSurface"><span class="ownerShortcutIcon" data-lucide="life-buoy"></span><h2>Centre d'assistance</h2><p>Les signalements Restaurant et Réception sont regroupés dans une boîte privée.</p><button type="button" data-owner-nav="reports" class="ownerAction">Consulter les signalements</button></section>
+     <section class="ownerSurface ownerShortcutSurface"><span class="ownerShortcutIcon" data-lucide="store"></span><h2>Établissements</h2><p>Consulte les établissements enregistrés. Aucune entrée dans les comptes des équipes n'est autorisée depuis cette version.</p><button type="button" data-owner-nav="restaurants" class="ownerAction">Afficher les établissements</button></section>
     </div>
     <p class="ownerStatusLine" id="ownerLoadState" role="status">Chargement des données…</p>
    </section>
@@ -119,10 +130,11 @@
     <div class="ownerSurface"><h2>Accès administrateur</h2><p>Rôle : <strong>platform_admin</strong></p><p>Les identifiants et le mot de passe sont gérés exclusivement dans Supabase. Aucun mot de passe n'est enregistré ici.</p><p class="ownerHint">À prévoir avant ouverture à d'autres établissements : adresse de récupération réelle, MFA, comptes administrateurs nominatifs et journal d'audit.</p></div>
    </section>
   </main>
-  <footer class="ownerFooter">RestoManager · Administration de la plateforme <span id="ownerToday"></span><nav class="ownerLegalLinks" aria-label="Informations légales"><a href="legal.html">Cadre juridique</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="cookies.html">Cookies</a></nav></footer>
+  <footer class="ownerFooter"><span>© 2026 Web Labs · Console Créateur DEV</span><span class="ownerFooterLegacy" hidden>RestoManager · Administration de la plateforme <span id="ownerToday"></span></span><nav class="ownerLegalLinks" aria-label="Informations légales"><a href="legal.html">Cadre juridique</a> · <a href="confidentialite.html">Confidentialité</a> · <a href="cookies.html">Cookies</a></nav></footer>
  </div>
 </div>
 <p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
+<script type="module" src="creator-shell.js?v=20261124-rm0201"></script>
 <script type="module" src="creator-auth.js?v=20261124-rm0191-visible"></script>
 </body>
 </html>
