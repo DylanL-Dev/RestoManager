@@ -54,6 +54,8 @@ const results=[];function pass(name){results.push({name,status:'passed'});consol
   assert.equal(await v.page.locator('.tableCard').count(),22);await v.page.locator('.tableCard').first().waitFor({state:'visible'});
   assert.match(await v.page.locator('#upcoming').innerText(),/Arrivée fictive/);assert.match(await v.page.locator('#currentOccupancy').innerText(),/Occupation actuelle/);
   assert.ok(await v.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2));assert.deepEqual(v.errors,[]);
+  assert.equal(await v.page.locator('.tableCard').first().evaluate(el=>getComputedStyle(el).animationName),'none','Initial tables must not jump');
+  if(width===390){await v.page.emulateMedia({reducedMotion:'reduce'});assert.equal(await v.page.locator('.tableCard').first().evaluate(el=>getComputedStyle(el).animationName),'none');await v.page.emulateMedia({reducedMotion:'no-preference'});}
   for(const [filter,count] of [['free',20],['expected',1],['present',1],['all',22]]){await v.page.locator('#filters [data-filter='+filter+']').click();assert.equal(await v.page.locator('.tableCard').count(),count)}
   if(out){fs.mkdirSync(out,{recursive:true});await v.page.screenshot({path:path.join(out,'tables-'+role+'-'+width+'.png'),fullPage:true})}
   await v.context.close();pass('22 actual snapshot tables, upcoming arrivals and visible text '+role+' '+width);

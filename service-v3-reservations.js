@@ -406,7 +406,7 @@ function render(){
  root.append(headings);
  shown.forEach(r=>{
  const card=el('article',undefined,'reservationItem rmBookingCard');
- card.dataset.status=r.status;card.dataset.type=r.type;
+ card.dataset.status=r.status;card.dataset.type=r.type;card.dataset.rmMotionKey=String(r.id);
  const line=el('div',undefined,'rmBookingGrid');
  const time=el('strong',undefined,'rmBookingTime');time.append(icon('clock-3'),el('span',r.time));line.append(time);
  const client=el('div',undefined,'rmBookingClient');
