@@ -1816,14 +1816,12 @@ html[data-theme="dark"] .rushSettingsHint{background:#203d30;border-color:#44695
 .sidebarMeta .sidebarLegalLink{color:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 .sidebarMeta .sidebarLegalLink:focus-visible{outline:2px solid #4ac49b;outline-offset:3px}
 
-/* RM-UX-02.1 — operational motion. Never transform a screen (fixed descendants),
-   fade operational text, or move interactive targets. */
+/* RM-UX-02.1 — operational motion. Preserve existing screen stacking and never add moving targets or faded text. */
 :root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:320ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
 @keyframes rmServiceCard{from{box-shadow:inset 0 0 0 2px #16815e}to{box-shadow:inset 0 0 0 2px transparent}}
 @keyframes rmServiceChange{from{box-shadow:inset 0 0 0 2px currentColor}to{box-shadow:inset 0 0 0 2px transparent}}
 @keyframes rmServiceNumber{from{text-shadow:0 0 9px #16815e88}to{text-shadow:none}}
-.appScreenActive{animation:none;transform:none}
-.appScreenActive :is(.serviceIntro,.quickActions,.kpis){animation:none}
+/* Retain the existing screen stacking context and mobile layout. */
 .reservationItem,.tableAdminItem{animation:none}
 :is(.kpi,.receptionServiceMetric,.reservationItem)[data-rm-motion="enter"]{animation:rmServiceCard var(--rm-service-enter) var(--rm-service-ease) var(--rm-service-delay,0ms) backwards}
 :is(.kpi,.receptionServiceMetric)[data-rm-motion="change"]>strong{animation:rmServiceNumber 420ms ease-out}
@@ -1836,5 +1834,5 @@ html[data-theme="dark"] .rushSettingsHint{background:#203d30;border-color:#44695
 :is(.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet){animation:rmServiceCard 260ms ease-out}
 #syncBadge[data-state="ok"]::before{animation:none}
 @media(prefers-reduced-motion:reduce){
- .appScreenActive,.appScreenActive *,[data-rm-motion],[data-rm-motion]>strong,.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet{animation:none!important;transition:none!important}
+ [data-rm-motion],[data-rm-motion]>strong,.rmNoticeCard,.bookingSuccessCard,.restoConfirmSheet{animation:none!important;transition:none!important}
 }
