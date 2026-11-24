@@ -5,7 +5,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),http=require('n
 const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'../..');
 const mime={'.html':'text/html;charset=utf-8','.js':'text/javascript;charset=utf-8','.css':'text/css;charset=utf-8','.svg':'image/svg+xml'};
-const requests=[];
+const requests=[],authImports=[];
 const server=http.createServer((req,res)=>{
  requests.push(req.method+' '+req.url);
  let url;try{url=new URL(req.url,'http://127.0.0.1');}catch{res.writeHead(400);return res.end();}
@@ -29,8 +29,10 @@ const server=http.createServer((req,res)=>{
     const request=route.request(),url=request.url();
     if(new URL(url).origin!==origin){external.push(url);return route.abort();}
     if(request.method()!=='GET')writes.push(url);
-    if(/\/creator-auth\.js(?:\?|$)/.test(url))
+    if(/\/creator-auth\.js(?:\?|$)/.test(url)){
+     authImports.push(new URL(url).searchParams.get('v'));
      return route.fulfill({status:200,contentType:'text/javascript',body:'// Auth disabled ONLY in the mock browser test'});
+    }
     return route.continue();
    });
    const page=await ctx.newPage();
@@ -126,6 +128,7 @@ const server=http.createServer((req,res)=>{
    console.log('PASS RM-019 support queue, search, status, rollback and accessibility '+width+'px');
   }
   assert.ok(requests.every(r=>r.startsWith('GET ')));
+  assert.deepEqual(authImports,['20261124-rm0191-visible','20261124-rm0191-visible','20261124-rm0191-visible'],'The Creator entry point must not load stale RM0174 on any viewport');
   console.log('PASS RM-019 no remote calls, account changes, reservations or real tickets');
  }catch(error){console.error(error.stack||error);process.exitCode=1;}
  finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}

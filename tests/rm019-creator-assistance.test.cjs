@@ -10,7 +10,11 @@ test('RM-019 : centre de support uniquement visible après authentification Root
  assert.match(auth,/from\('platform_admins'\)/);
  assert.match(auth,/creator-admin\.js\?v=20261123-rm019/);
  assert.match(auth,/supabaseEnvironment\.name!=='DEV'/);
- assert.match(html,/creator-console\.css\?v=20261123-rm019/);
+ assert.match(html,/creator-console\.css\?v=20261124-rm0191-visible/);
+ assert.match(html,/creator-auth\.js\?v=20261124-rm0191-visible/);
+ assert.doesNotMatch(html,/creator-auth\.js\?v=20261123-rm0174/,'The old Auth URL could keep the old import cached');
+ assert.match(html,/class="ownerSupportNavNew">Nouveau/);
+ assert.match(html,/SUPPORT PRIVÉ · RM-019\.1/);
  assert.doesNotMatch(inbox,/rootdev|ROOT_AUTH_EMAIL|signInWithPassword/);
 });
 test('RM-019 : même structure et statut SQL que les demandes existantes',()=>{

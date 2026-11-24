@@ -151,3 +151,8 @@ html[data-theme="dark"] #ownerInbox :is(.ownerSupportTitle h2,.ownerSupportStat 
 html[data-theme="dark"] #ownerInbox .ownerSupportMessage{background:#1c3329;color:#e2f4e8;border-color:#43644e}
 html[data-theme="dark"] #ownerInbox :is(.ownerSupportStat small,.ownerSupportStat span,.ownerSupportLead,.ownerSupportTicketPreview,.ownerSupportMeta,.ownerSupportInfoRow span,.ownerSupportChange p){color:#b9d5c1}
 @media(prefers-reduced-motion:reduce){#ownerInbox .ownerSupportTicket{transition:none}}
+
+/* RM-019.1 — unmistakable DEV entry to the refreshed Creator support centre. */
+.ownerNavigation button .ownerSupportNavNew{font-size:10px;font-weight:850;letter-spacing:.02em;color:#0d7150;background:#ddf3e6;border:1px solid #b9e5cb;border-radius:20px;padding:4px 7px;white-space:nowrap;flex:none}
+.ownerNavigation button.active .ownerSupportNavNew{background:#fff;color:#0c6b4c}
+@media(max-width:760px){.ownerNavigation button .ownerSupportNavNew{font-size:10px}}
