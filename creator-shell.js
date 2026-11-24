@@ -97,3 +97,39 @@ function upgradeSupportIcons(){
  for(const node of inbox.querySelectorAll('.ownerSupportEmptySymbol'))decorate(node,'mail',true);
 }
 if(inbox){new MutationObserver(upgradeSupportIcons).observe(inbox,{childList:true,subtree:true});upgradeSupportIcons();}
+
+// RM-UX-01.1 — presentation only: actual metric text remains the source of truth.
+const motionStatus=document.getElementById('ownerLoadState');
+const motionMetrics=['ownerTotalRestaurants','ownerNewReports','ownerReviewingReports','ownerUrgentReports'].map(id=>document.getElementById(id)).filter(Boolean);
+const motionReduced=window.matchMedia('(prefers-reduced-motion: reduce)');
+const motionValues=new WeakMap();
+const motionTimers=new WeakMap();
+function updateMotionLoading(){
+ if(!shell||!motionStatus)return;
+ const label=motionStatus.textContent.trim();
+ shell.dataset.rmMotionLoading=String(/^(Chargement des données|Actualisation)/.test(label));
+}
+function updateMotionMetric(node){
+ const value=node.textContent.trim(),previous=motionValues.get(node);
+ if(previous===value)return;
+ motionValues.set(node,value);
+ node.dataset.rmMotionEmpty=String(value==='—');
+ if(!/^\d+$/.test(value)||motionReduced.matches||shell?.hidden)return;
+ node.removeAttribute('data-rm-motion-changed');
+ // Keep values and focus untouched; the finite animation only emphasizes a real change.
+ clearTimeout(motionTimers.get(node));
+ void node.offsetWidth;
+ node.dataset.rmMotionChanged='';
+ motionTimers.set(node,setTimeout(()=>node.removeAttribute('data-rm-motion-changed'),240));
+}
+if(motionStatus){new MutationObserver(updateMotionLoading).observe(motionStatus,{childList:true,characterData:true,subtree:true});updateMotionLoading();}
+for(const node of motionMetrics){updateMotionMetric(node);new MutationObserver(()=>updateMotionMetric(node)).observe(node,{childList:true,characterData:true,subtree:true});}
+let motionThemeTimer;
+themeButton?.addEventListener('click',()=>{
+ if(motionReduced.matches)return;
+ themeButton.removeAttribute('data-rm-motion-theme');
+ void themeButton.offsetWidth;
+ themeButton.dataset.rmMotionTheme='';
+ clearTimeout(motionThemeTimer);
+ motionThemeTimer=setTimeout(()=>themeButton.removeAttribute('data-rm-motion-theme'),240);
+});
