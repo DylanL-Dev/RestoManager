@@ -10,6 +10,11 @@ const layoutKey='rm:creator:sidebar-collapsed';
 const safeGet=(key)=>{try{return localStorage.getItem(key)}catch{return null}};
 const safeSet=(key,value)=>{try{localStorage.setItem(key,value)}catch{}};
 mountLucideIcons(document);
+for(const button of document.querySelectorAll('#ownerSidebar [data-owner-nav]')){
+ const label=button.querySelector('span:not(.ownerNavIcon)')?.textContent?.trim();
+ if(label)button.setAttribute('aria-label',label);
+}
+
 function setTheme(theme){
  const dark=theme==='dark';
  document.documentElement.dataset.creatorTheme=dark?'dark':'light';
