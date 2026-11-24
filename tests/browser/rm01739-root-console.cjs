@@ -102,7 +102,9 @@ const server=http.createServer((req,res)=>{
    assert.match(await page.locator('[data-owner-section="settings"]').innerText(),/platform_admin/);
 
    await navigate('monitoring');
-   assert.match(await page.locator('[data-owner-section="monitoring"]').innerText(),/En préparation/);
+   await page.waitForFunction(()=>document.getElementById('ownerMonitorWebState').dataset.state==='ok'&&document.getElementById('ownerMonitorDbState').dataset.state==='ok');
+   assert.equal(await page.locator('#ownerMonitorUrgent').innerText(),'0');
+   assert.match(await page.locator('[data-owner-section="monitoring"]').innerText(),/Diagnostic ponctuel/);
 
    await navigate('pilot');
    await page.waitForFunction(()=>document.getElementById('ownerPilotSummary')?.textContent.includes('Pilote fermé'));
