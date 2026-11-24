@@ -651,6 +651,26 @@ function openChangeTablePicker(id){
 window.addEventListener('restomanager:quick-change-table',event=>{
  openChangeTablePicker(event.detail?.reservationId);
 });
+// Read-only shortcut from live arrival cards. Existing navigation protects every draft.
+window.RestoOpenServiceReservation=async function(id){
+ if(typeof id!=='string'||!id)return false;
+ if(!await window.RestoScreens?.request?.('reservations'))return false;
+ let target;
+ try{target=load().find(r=>String(r.id)===id)}catch(error){notify(errorMessage(error));return false}
+ if(!target){notify('Cette réservation n’est plus disponible. Actualisez le service.');return false}
+ reservationView=target.status==='seated'?'seated':departedStatuses.has(target.status)?'departed':'upcoming';
+ expanded=target.id;
+ // Match the unique reservation, never a potentially duplicated name or room number.
+ $('reservationQuery').value='';
+ $('reservationDate').value=target.date;
+ render();
+ const card=[...$('reservationList').querySelectorAll('[data-rm-motion-key]')].find(n=>n.dataset.rmMotionKey===id);
+ if(!card)return false;
+ const control=card.querySelector('.rmBookingOpen');
+ control?.focus({preventScroll:true});
+ card.scrollIntoView({block:'nearest',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+ return true;
+};
 // Notifications navigate to the appropriate status tab and expand the exact booking.
 window.addEventListener('restomanager:open-reservation',event=>{
  const data=event.detail||{};

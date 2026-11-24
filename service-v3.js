@@ -110,6 +110,76 @@ const parisClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',hour:'
 const currentMinutes=()=>{const parts=parisClock.formatToParts(new Date());const h=parts.find(p=>p.type==='hour')?.value||'0';const m=parts.find(p=>p.type==='minute')?.value||'0';return Number(h)*60+Number(m)};
 let lastRushDashboard=null;
 let rushHelpExpanded=false;
+function arrivalWindows(date,shifts=Object.entries(ReservationEngine.getShiftsForDate(date)).filter(([,s])=>s.enabled)){
+ const windows=[];
+ for(const [name,s] of shifts){
+  for(let at=mins(s.start);at<=mins(s.end);at+=60){
+   // Includes weekly closures and legacy Saturday/Sunday lunch closure flags.
+   if(!ReservationEngine.isServiceOpen(date,clock(at)))continue;
+   const end=Math.min(at+60,mins(s.end)+1);
+   if(end>at)windows.push({start:at,end,name});
+  }
+ }
+ return windows.sort((a,b)=>a.start-b.start);
+}
+// A read-only explanation of the existing operational indicators, not a reservation engine.
+function serviceAdvice({rows,limit,overdue=0,finished=false,fresh=true}){
+ if(!fresh)return {kind:'unknown',title:'Données à vérifier',detail:'Synchronisation non confirmée. Vérifiez la connexion avant de proposer un créneau.'};
+ if(finished)return {kind:'neutral',title:'Dernier créneau terminé',detail:overdue?overdue+' couvert(s) restent attendus. Vérifiez leur statut.':'Consultez les prochains jours pour une nouvelle réservation.'};
+ if(!Number.isFinite(limit)||limit<=0||!rows.length)return null;
+ if(overdue>0)return {kind:'attention',title:'Arrivées en retard à vérifier',detail:overdue+' couvert(s) encore attendus. Consultez les réservations avant d’organiser les nouvelles arrivées.'};
+ const busy=rows.find(row=>row.planned>=limit);
+ const approaching=rows.find(row=>row.planned>=limit*.8);
+ const focus=busy||approaching;
+ if(focus){
+  const later=rows.find(row=>row.w.start>focus.w.start&&row.planned<limit*.8);
+  return {kind:busy?'attention':'watch',title:(busy?'Seuil atteint':'Arrivées nombreuses')+' · '+clock(focus.w.start),detail:focus.planned+' / '+limit+' couverts actifs. '+(later?'Charge plus faible à '+clock(later.w.start)+' : vérifier les disponibilités avant de proposer cet horaire.':'Vérifiez les disponibilités et organisez l’accueil avant de confirmer.')};
+ }
+ return {kind:'neutral',title:'Arrivées sous le seuil conseillé',detail:'Les créneaux affichés restent sous le seuil. Vérifiez toujours la disponibilité réelle avant de confirmer.'};
+}
+function arrivalTimeline(date,all,windows=arrivalWindows(date),limit){
+ if(!Array.isArray(all)||!windows.length)return null;
+ if(limit===undefined){const percent=settings().percent,max=capacity();if(!validPercent(percent)||!max)return null;limit=Math.max(1,Math.ceil(max*percent/100));}
+ if(!Number.isFinite(limit)||limit<=0)return null;
+ const current=currentMinutes(),today=date===rushLocalDate();
+ let index=today?windows.findIndex(w=>current<w.end):0;
+ const finished=(today&&index<0)||date<rushLocalDate();
+ if(index<0)index=windows.length-1;
+ const rows=windows.slice(index,index+3).map(w=>({w,...rushArrivalBreakdown(date,w.start,w.end,all)}));
+ const scale=Math.max(limit,...rows.map(r=>r.planned));
+ const section=rushNode('section','rmLiveTimeline');
+ section.setAttribute('aria-label','Charge des arrivées par créneau');
+ section.append(rushNode('h3','','Charge des arrivées'),rushNode('p','rmLiveTimelineHint',(finished?'Derniers créneaux de service':'Créneau actuel ou prochain, puis les suivants')+' · Seuil conseillé : '+limit+' couverts par période.'));
+ const overdue=today?all.filter(r=>relevant(r,date)&&rushStatuses.waiting.has(r.status)&&mins(r.time)<current).reduce((sum,r)=>sum+Math.max(0,Number(r.guests)||0),0):0;
+ const fresh=!expectsSharedThreshold()||(window.RestoSyncState==='ok'&&window.RestoSupabaseReady===true);
+ const advice=serviceAdvice({rows,limit,overdue,finished,fresh});
+ if(advice){
+  const card=rushNode('div','rmServiceAdvice');card.dataset.kind=advice.kind;
+  const icon=rushNode('i','rmServiceAdviceIcon');icon.dataset.lucide=advice.kind==='attention'?'alert-triangle':advice.kind==='watch'?'clock-3':advice.kind==='unknown'?'info':'activity';icon.setAttribute('aria-hidden','true');
+  const words=rushNode('div','rmServiceAdviceText');
+  words.append(rushNode('span','rmServiceAdviceLabel','CONSEIL DE SERVICE'),rushNode('strong','',advice.title),rushNode('p','',advice.detail));card.append(icon,words);section.append(card);
+ }
+ const legend=rushNode('div','rmLiveTimelineLegend');
+ for(const [kind,label] of [['waiting','Attendus'],['installed','Installés'],['threshold','Seuil conseillé']]){
+  const entry=rushNode('span','rmLiveLegendEntry'),dot=rushNode('span','rmLiveLegendMark '+kind);dot.setAttribute('aria-hidden','true');entry.append(dot,rushNode('span','',label));legend.append(entry);
+ }
+ section.append(legend);
+ for(const row of rows){
+  const item=rushNode('div','rmLiveTimelineRow'),label=rushNode('div','rmLiveTimelineLabel');
+  label.append(rushNode('strong','',clock(row.w.start)+' – '+clock(row.w.end)),rushNode('span','',row.planned+' / '+limit+' couverts'+(row.planned>=limit?' · Seuil atteint':'') ));
+  const track=rushNode('div','rmLiveTimelineTrack');track.setAttribute('aria-hidden','true');
+  const fill=rushNode('div','rmLiveTimelineStack');
+  for(const [type,count] of [['waiting',row.waiting],['installed',row.arrived]]){
+   const bar=rushNode('span','rmLiveBarFill '+type);const value=Math.max(0,Math.min(100,count/scale*100));
+   bar.dataset.rmBarKey=date+'-'+row.w.start+'-'+type;bar.dataset.rmBarValue=String(value);bar.style.width=value+'%';fill.append(bar);
+  }
+  const marker=rushNode('span','rmLiveTimelineThreshold');marker.style.left=Math.min(100,limit/scale*100)+'%';
+  track.append(fill,marker);
+  item.append(label,track,rushNode('p','rmLiveTimelineDetail',row.waiting+' attendus · '+row.arrived+' installés'));section.append(item);
+ }
+ section.append(rushNode('p','rmLiveTimelineHint','Arrivées actives, passages inclus. Le seuil n’est pas une garantie de disponibilité.'));
+ return section;
+}
 function dashboard(date,all){
  const target=$('rushDashboard');if(!target)return;
  lastRushDashboard={date,all};
@@ -174,15 +244,7 @@ function dashboard(date,all){
   });
  }
  if(window.lucide?.createIcons)window.lucide.createIcons({nodes:[heading]});
- const windows=[];
- for(const [name,s] of shifts){
-  for(let at=mins(s.start);at<=mins(s.end);at+=60){
-   // Includes weekly closures and legacy Saturday/Sunday lunch closure flags.
-   if(!ReservationEngine.isServiceOpen(date,clock(at)))continue;
-   const end=Math.min(at+60,mins(s.end)+1);
-   if(end>at)windows.push({start:at,end,name});
-  }
- }
+ const windows=arrivalWindows(date,shifts);
  if(!windows.length){
   target.append(rushNode('p','rushHint','Restaurant fermé : aucun service ouvert à cette date.'));
   const occupancy=isReception?null:$('currentOccupancy');
@@ -253,6 +315,7 @@ function dashboard(date,all){
   :covers>=limit*.8?'Les arrivées approchent de la limite conseillée. Surveillez les nouvelles réservations.'
   :'Les passages encore installés sur ce créneau sont inclus. Une table libérée retire immédiatement ses couverts ; le seuil conseillé n’est pas la capacité du restaurant.');
  result.append(hint);
+ const timeline=arrivalTimeline(date,all,windows,limit);if(timeline)result.append(timeline);
  // An hour change must not hide guests who are still awaiting arrival.
  // Keep this operational warning separate from the current hour's forecast.
  if(date===rushLocalDate()){
@@ -397,7 +460,7 @@ function setup(){
  });
  show();box.append(header,p,label,slider,markers,hint,status);section.append(box);
 }
-window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count,windowFor};setup();
+window.RestoRush={evaluate,suggestions,confirm,dashboard,settings,capacity,count,windowFor,timeline:arrivalTimeline};setup();
 })();
 (function(){const k=document.getElementById('kpis');if(k&&!document.getElementById('rushDashboard')){const section=document.createElement('section');section.id='rushDashboard';section.className='rushDashboard';section.setAttribute('aria-label','Affluence des réservations');k.after(section)}})();
 'use strict';
@@ -568,6 +631,7 @@ function serviceDisplayReady(){
  if(loaded)return true;
  const placeholder=kind==='error'?'Les données ne sont pas disponibles pour le moment. Réessayez après vérification de la connexion.':'Chargement des informations du service…';
  $('tableGrid').replaceChildren(node('p','muted',text));$('upcoming').textContent=placeholder;
+ if(kind==='loading'){const skeleton=node('div','rmServiceSkeleton');skeleton.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)skeleton.append(node('span',''));$('tableGrid').append(skeleton);}
  $('kpis').replaceChildren(node('p','muted',placeholder));$('currentOccupancy')?.replaceChildren(node('p','muted',placeholder));$('rushDashboard')?.replaceChildren(node('p','muted',placeholder));
  return false;
 }
@@ -627,15 +691,28 @@ occupancyMetrics.append(
  occupancyTile('check-circle-2',totalTables-occupiedTables,'Tables libres'),
  occupancyTile('layout-grid',totalTables,'Tables au total')
 );
+const liveOccupancy=node('div','rmLiveOccupancy');
+if(totalTables){
+ const gauge=node('div','rmLiveGauge');gauge.dataset.rmGaugeKey='tables';gauge.dataset.rmGaugeValue=String(Math.max(0,Math.min(100,tablesPercent)));gauge.style.setProperty('--rm-gauge-value',gauge.dataset.rmGaugeValue+'%');
+ gauge.setAttribute('aria-hidden','true');gauge.append(node('strong','',tablesPercent+' %'));liveOccupancy.append(gauge);
+}
+liveOccupancy.append(progressRow('Tables occupées / tables actives',occupiedTables,totalTables,tablesPercent));
 occupancy.replaceChildren(
  occupancyTitle,occupancyMetrics,
- progressRow('Tables occupées / tables actives',occupiedTables,totalTables,tablesPercent),
+ liveOccupancy,
  node('p','rmOccupationCapacity',guestsPresent+' couverts installés sur '+totalSeats+' places ('+seatsPercent+' % des places).'),
  node('p','occupancyHelp','Une table réservée pour plus tard reste libre tant qu’aucun client n’y est installé. Les tables fusionnées sont comptées individuellement.')
 );
 window.lucide?.createIcons?.({nodes:[occupancy]});
 
-$('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{const c=node('div','arrival');c.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));return c}));if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
+$('upcoming').replaceChildren(...waiting.sort((a,b)=>a.time.localeCompare(b.time)).slice(0,8).map(r=>{
+ const c=node('div','arrival rmArrivalShortcutRow'),words=node('div','rmArrivalShortcutWords');
+ words.append(node('b','',r.time+' · '+r.client),node('small','',r.guests+' pers. · Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + ')));
+ const button=node('button','rmArrivalShortcut');button.type='button';button.dataset.rmArrivalId=String(r.id);
+ button.setAttribute('aria-label','Ouvrir la réservation de '+(r.client||'ce client')+' à '+r.time);
+ const ico=node('i');ico.dataset.lucide='chevron-right';ico.setAttribute('aria-hidden','true');button.append(ico);
+ button.addEventListener('click',()=>window.RestoOpenServiceReservation?.(String(r.id)));
+ c.append(words,button);return c}));window.lucide?.createIcons?.({nodes:[$('upcoming')]});if(!waiting.length)$('upcoming').textContent='Aucune arrivée en attente.';if(selected){const t=plan.tables.find(t=>t.number===selected);if(t)detail(t,state(t))}}
 function occupationProgress(r){
  const scheduled=new Date(r.date+'T'+r.time+':00').getTime();
  const actual=r.seatedAt?new Date(r.seatedAt).getTime():NaN;

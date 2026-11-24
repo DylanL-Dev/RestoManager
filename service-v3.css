@@ -1816,6 +1816,83 @@ html[data-theme="dark"] .rushSettingsHint{background:#203d30;border-color:#44695
 .sidebarMeta .sidebarLegalLink{color:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 .sidebarMeta .sidebarLegalLink:focus-visible{outline:2px solid #4ac49b;outline-offset:3px}
 
+
+/* RM-UX-02.2 — real occupation, a visual aid beside the accessible actual values. */
+@property --rm-gauge-value{syntax:"<percentage>";inherits:true;initial-value:0%}
+@keyframes rmLiveGaugeFill{from{--rm-gauge-value:var(--rm-gauge-from,0%)}}
+.rmLiveOccupancy{display:grid;grid-template-columns: minmax(0,1fr);gap:14px;align-items:center;min-width:0}
+.rmLiveOccupancy:has(.rmLiveGauge){grid-template-columns:104px minmax(0,1fr)}
+.rmLiveGauge{--rm-gauge-track:#e1ebe5;--rm-gauge-center:#fff;--rm-gauge-ink:#176a4d;aspect-ratio:1;width:100%;max-width:104px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#138a62 var(--rm-gauge-value),var(--rm-gauge-track) 0);position:relative;isolation:isolate}
+.rmLiveGauge::before{content:"";position:absolute;inset:9px;background:var(--rm-gauge-center);border-radius:50%;z-index:-1}
+.rmLiveGauge strong{font-size:21px;line-height:1;font-variant-numeric:tabular-nums;color:var(--rm-gauge-ink)}
+.rmLiveGauge[data-rm-gauge-animate]{animation:rmLiveGaugeFill 560ms cubic-bezier(.2,.8,.2,1)}
+.rmReceptionLive{border:1px solid #e3eae6;border-radius:14px;padding:16px;display:grid;gap:12px;min-width:0}
+.rmReceptionLive h3{margin:0;font-size:17px}
+.rmLiveLabels{display:grid;gap:6px;min-width:0}
+.rmLiveLabels strong{font-size:15px}
+.rmLiveLabels p,.rmLiveLabels small{font-size:12px;line-height:1.5;margin:0;color:#496857;overflow-wrap:anywhere}
+html[data-theme="dark"] .rmLiveGauge{--rm-gauge-track:#355447;--rm-gauge-center:#1c352a;--rm-gauge-ink:#a2ebc5}
+html[data-theme="dark"] .rmReceptionLive{background:#172c24;border-color:#355347;color:#effaf2}
+html[data-theme="dark"] .rmLiveLabels :is(p,small){color:#bbd3c3}
+@media(max-width:420px){.rmLiveOccupancy:has(.rmLiveGauge){grid-template-columns:80px minmax(0,1fr);gap:10px}.rmLiveGauge strong{font-size:17px}.rmLiveGauge::before{inset:7px}.rmLiveOccupancy .occupancyProgressLine{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.rmLiveGauge[data-rm-gauge-animate]{animation:none!important}}
+
+/* RM-UX-02.2b — compact arrival timeline from the existing service-hour model. */
+.rmLiveTimeline{display:grid;gap:11px;border:1px solid #dce8e0;border-radius:14px;padding:13px;min-width:0}
+.rmLiveTimeline h3{font-size:15px;margin:0;color:#163c33}
+.rmLiveTimelineHint,.rmLiveTimelineDetail{font-size:12px;line-height:1.45;color:#496857;margin:0;overflow-wrap:anywhere}
+.rmLiveTimelineRow{display:grid;gap:5px;min-width:0}
+.rmLiveTimelineLabel{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 8px;font-size:12px;line-height:1.4}
+.rmLiveTimelineLabel strong{font-variant-numeric:tabular-nums}
+.rmLiveTimelineTrack{height:9px;border-radius:6px;background:#e1ebe5;position:relative}
+.rmLiveTimelineStack{display:flex;align-items:stretch;width:100%;height:100%;overflow:hidden;border-radius:6px}
+.rmLiveBarFill{display:block;height:100%;flex:0 0 auto}
+.rmLiveBarFill.waiting{background:#16815e}
+.rmLiveBarFill.installed{background:#82ac9b}
+.rmLiveTimelineThreshold{position:absolute;top:-2px;height:13px;width:2px;background:#946019;border-radius:1px;transform:translateX(-1px)}
+@keyframes rmLiveBarFill{from{width:var(--rm-bar-from,0%)}}
+.rmLiveBarFill[data-rm-bar-animate]{animation:rmLiveBarFill 480ms cubic-bezier(.2,.8,.2,1)}
+html[data-theme="dark"] .rmLiveTimeline{border-color:#476658}
+html[data-theme="dark"] .rmLiveTimeline h3{color:#effaf2}
+html[data-theme="dark"] :is(.rmLiveTimelineHint,.rmLiveTimelineDetail){color:#bbd3c3}
+html[data-theme="dark"] .rmLiveTimelineTrack{background:#355447}
+html[data-theme="dark"] .rmLiveTimelineThreshold{background:#e5ad70}
+@media(prefers-reduced-motion:reduce){.rmLiveBarFill[data-rm-bar-animate]{animation:none!important}}
+/* RM-UX-02.2c — operational guidance and bounded loading treatment. */
+.rmServiceAdvice{display:flex;gap:11px;align-items:flex-start;padding:12px;border:1px solid #b9d9c7;border-radius:12px;background:#edf6f0;color:#194d37;min-width:0}
+.rmServiceAdviceIcon{width:20px;height:20px;flex:0 0 20px;margin-top:2px}
+.rmServiceAdviceText{min-width:0;display:grid;gap:5px}
+.rmServiceAdviceLabel{font-size:10px;letter-spacing:.07em;font-weight:750}
+.rmServiceAdviceText strong{font-size:14px;line-height:1.35}
+.rmServiceAdviceText p{font-size:12px;line-height:1.45;margin:0;overflow-wrap:anywhere;color:inherit}
+.rmServiceAdvice[data-kind="attention"],.rmServiceAdvice[data-kind="watch"]{background:#fff4e3;border-color:#e1bf86;color:#70480f}
+.rmServiceAdvice[data-kind="unknown"]{background:#f1f5f3;border-color:#cbd9d1;color:#435b4f}
+html[data-theme="dark"] .rmServiceAdvice{background:#254b3b;border-color:#547b66;color:#e4f5e9}
+html[data-theme="dark"] .rmServiceAdvice[data-kind="attention"],html[data-theme="dark"] .rmServiceAdvice[data-kind="watch"]{background:#503d24;border-color:#aa8b50;color:#fff0c1}
+html[data-theme="dark"] .rmServiceAdvice[data-kind="unknown"]{background:#263a31;border-color:#526b5f;color:#d5e6da}
+.rmServiceSkeleton{display:grid;gap:9px;width:100%;grid-column:1/-1;padding:6px 0;pointer-events:none;--rm-sk-base:#e4ece7;--rm-sk-shine:#f5f8f6}
+.rmServiceSkeleton span{display:block;height:13px;width:100%;border-radius:6px;background:linear-gradient(100deg,var(--rm-sk-base) 30%,var(--rm-sk-shine) 50%,var(--rm-sk-base) 70%);background-size:220% 100%;animation:rmServiceSkeleton 1000ms ease 3}
+.rmServiceSkeleton span:nth-child(2){width:77%}.rmServiceSkeleton span:nth-child(3){width:55%}
+@keyframes rmServiceSkeleton{from{background-position:100% 0}to{background-position:0 0}}
+html[data-theme="dark"] .rmServiceSkeleton{--rm-sk-base:#2c483b;--rm-sk-shine:#3d5a4b}
+@media(prefers-reduced-motion:reduce){.rmServiceSkeleton span{animation:none!important}}
+/* RM-UX-02.2d — direct, stable, accessible service shortcuts. */
+.rmArrivalShortcutRow{display:flex;align-items:center;gap:8px;min-width:0}
+.rmArrivalShortcutWords{flex:1;min-width:0;display:grid;gap:4px;overflow-wrap:anywhere}
+.rmArrivalShortcut{width:44px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;padding:0;border:1px solid #c9e0d2;border-radius:12px;background:#edf6f0;color:#176a4d;flex:0 0 44px;cursor:pointer;transition:background-color 140ms,border-color 140ms}
+.rmArrivalShortcut :is(svg,i){width:20px;height:20px;pointer-events:none}
+.rmArrivalShortcut:focus-visible{outline:3px solid #16815e;outline-offset:2px}
+.rmArrivalShortcut:active{background:#d3e9da}
+html[data-theme="dark"] .rmArrivalShortcut{background:#254b3b;border-color:#547b66;color:#e4f5e9}
+@media(max-width:420px){.receptionServiceArrival{flex-wrap:wrap}.receptionServiceArrival .receptionServiceDetails{flex:1 1 calc(100% - 66px)}.receptionServiceArrival .receptionServiceStatus{margin-left:0}.receptionServiceArrival .rmArrivalShortcut{margin-left:auto}}
+.rmLiveTimelineLegend{display:flex;align-items:center;flex-wrap:wrap;gap:7px 13px;font-size:11px;line-height:1.4;color:#496857}
+.rmLiveLegendEntry{display:inline-flex;align-items:center;gap:5px}
+.rmLiveLegendMark{width:9px;height:9px;border-radius:3px;background:#16815e;flex:none}
+.rmLiveLegendMark.installed{background:#82ac9b}
+.rmLiveLegendMark.threshold{width:3px;height:13px;background:#946019}
+html[data-theme="dark"] .rmLiveTimelineLegend{color:#bbd3c3}
+html[data-theme="dark"] .rmLiveLegendMark.threshold{background:#e5ad70}
+@media(prefers-reduced-motion:reduce){.rmArrivalShortcut{transition:none!important}}
 /* RM-UX-02.1 — operational motion. Preserve existing screen stacking and never add moving targets or faded text. */
 :root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:320ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
 @keyframes rmServiceCard{from{box-shadow:inset 0 0 0 2px #16815e}to{box-shadow:inset 0 0 0 2px transparent}}
