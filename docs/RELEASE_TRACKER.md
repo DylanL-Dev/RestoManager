@@ -1,5 +1,11 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-TEAM-02 — Coordination GitHub Claude / Codex — PR DEV BROUILLON (24/11/2026)
+
+- Mission propriétaire (protocole de collaboration IA). Issue #247, branche `claude/rm-team-02-coordination` depuis DEV `dbd2ec0`, PR vers DEV uniquement, en brouillon.
+- Étiquettes `agent:claude`, `agent:codex`, `status:en-cours`, `status:bloqué` créées ; RM-UX-03 (Codex) suivi dans #242, RM-CI-01 (Claude) ouvert en #246 et bloqué par le recouvrement avec la PR #244.
+- `AGENTS.md` : protocole des issues (déclaration avant modification, états, réservation non bloquante). Documentation uniquement ; aucune fusion ni déploiement.
+
 ### RM-TEAM-01 — Règles communes des agents (AGENTS.md / CLAUDE.md) — PR DEV BROUILLON (24/11/2026)
 
 - Mission propriétaire explicite : documentation de coordination Claude Code / OpenAI Codex. Branche `claude/rm-team-01` depuis DEV `5f545de`, PR [#245](https://github.com/DylanL-Dev/RestoManager/pull/245) vers DEV uniquement, en brouillon.
