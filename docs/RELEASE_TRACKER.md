@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-SEC-02 — Conception de la séparation des identités GitHub — PR DEV BROUILLON (24/11/2026)
+
+- Phase de conception autorisée par le propriétaire, issue #251, branche `claude/rm-sec-02-identities` depuis DEV `dbd2ec0`. **Aucun compte, connexion ni accès modifié.**
+- Recommandation : un compte technique commun (seul compte technique gratuit autorisé par les conditions GitHub), collaborateur non administrateur, relié à Claude Code et à Codex ; approbation du propriétaire exigée ensuite sur MAIN/V3 via rulesets et CODEOWNERS. [Conception, tests préalables et procédure de migration](audits/RM-SEC-02_IDENTITES_20261124.md).
+
 ### RM-TEAM-01 — Règles communes des agents (AGENTS.md / CLAUDE.md) — PR DEV BROUILLON (24/11/2026)
 
 - Mission propriétaire explicite : documentation de coordination Claude Code / OpenAI Codex. Branche `claude/rm-team-01` depuis DEV `5f545de`, PR [#245](https://github.com/DylanL-Dev/RestoManager/pull/245) vers DEV uniquement, en brouillon.
