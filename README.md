@@ -18,8 +18,11 @@ Le **registre des mises à jour** et la règle « **une évolution à la fois ju
 | --- | --- | --- |
 | **Application V3 intégration** | [Ouvrir RestoManager sur Render](https://restomanager-v3-supabase-integration.onrender.com/v3-connected.html) | Tests et validation de la version connectée |
 | **Branche Full Clone** | `feature/v3-supabase-full-clone` | Développement / intégration Supabase |
-| **Version opérationnelle préservée** | `feature/refonte-service-responsive-v3` | Ne pas modifier pendant les travaux V3 connectée |
-| **Branche principale Git** | `main` | Ne pas fusionner sans décision explicite |
+| **Publication V3** | `RestoManager-V3` | Reçoit les promotions validées depuis DEV avant `main` ; ne pas modifier sans autorisation explicite |
+| **Branche principale Git** | `main` | Production GitHub Pages ; ne pas fusionner sans décision explicite |
+| **V3 historique préservée** | `feature/refonte-service-responsive-v3` | Interface V3 d'origine, plus alimentée ; ne pas modifier ni supprimer |
+
+Règles communes des agents de développement : [AGENTS.md](AGENTS.md).
 
 `index.html` et `service-v3.html` redirigent vers `v3-connected.html` sur Full Clone. L'interface possède cinq écrans de navigation : **Tables, Réservations, Ajouter, Service, Gestion**. Le même produit s'adapte au téléphone, à la tablette et à l'ordinateur ; il peut être utilisé en mode application web installable selon les possibilités du navigateur.
 
