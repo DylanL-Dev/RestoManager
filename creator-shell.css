@@ -193,6 +193,7 @@ body{background:var(--rm-canvas);color:var(--rm-ink)}
  .ownerNavigation button{min-height:51px}
  .ownerNavigation button.active{box-shadow:inset 3px 0 #8ae0b7}
 }
+@media(max-width:460px){.ownerAccount{display:none}.ownerBreadcrumb small{font-size:10px}.ownerBreadcrumb strong{font-size:14px}}
 @media(max-width:380px){
  .ownerWelcomeBanner{padding:20px 16px}
  .ownerWelcomeBanner h2{font-size:24px}
