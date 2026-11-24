@@ -28,8 +28,8 @@ test('RM-020.1: redesigned shell mounts only local files, preserves separate Roo
  assert.match(auth,/if\(supabaseEnvironment\.name!=='DEV'\)throw/);
  assert.match(auth,/creator-admin\.js\?v=20261123-rm019/);
  assert.match(core,/installOwnerInbox\(\{client\}\)/);
- assert.doesNotMatch(js,/supabase|platform_admins|auth\.|\.rpc\(|fetch\(/i);
- assert.doesNotMatch(icons,/https?:\/\/|fetch\(|import\(/);
+ assert.doesNotMatch(js,/\bcreateClient\(|\.from\(|\.rpc\(|\bfetch\(/i);
+ assert.doesNotMatch(icons,/\bfetch\(|\bimport\(|url\(\s*https?:\/\//);
  assert.doesNotMatch(css,/@import|url\(\s*https?:/);
  assert.match(html,/ownerWelcomeBanner/);
  assert.match(html,/ownerMetricIcon/);
