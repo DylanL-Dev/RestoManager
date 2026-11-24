@@ -58,6 +58,7 @@
    if(demand/totalSeats>=.8)pressure.append(node('p','receptionServiceWarning','Forte affluence prévue. Vérifiez les créneaux disponibles avant de proposer une réservation.'));
   }
   root.append(pressure);
+  const timeline=window.RestoRush?.timeline?.(today,list);if(timeline)root.append(timeline);
   const section=node('section','receptionServiceArrivals');section.append(iconLabel('h3','Prochaines arrivées','calendar-days'));
   const ordered=pending.slice().sort((a,b)=>String(a.time).localeCompare(String(b.time))).slice(0,12);
   if(!ordered.length)section.append(node('p','muted','Aucune arrivée en attente pour aujourd’hui.'));

@@ -14,7 +14,7 @@
  }
  if(typeof module==='object'&&module.exports){module.exports={classify};return;}
  const reduced=window.matchMedia('(prefers-reduced-motion: reduce)');
- const memory=new WeakMap(),gaugeMemory=new WeakMap();
+ const memory=new WeakMap(),gaugeMemory=new WeakMap(),barMemory=new WeakMap();
  let scheduled=false;
  function visible(root){
   return !root.closest('[hidden]')&&root.getClientRects().length>0&&getComputedStyle(document.body).visibility!=='hidden';
@@ -44,9 +44,26 @@
    gaugeMemory.set(root,{value});
   }
  }
+ function scanBars(){
+  for(const id of ['rushDashboard','receptionServiceOverview']){
+   const root=document.getElementById(id);if(!root||!visible(root))continue;
+   const previous=barMemory.get(root),next=new Map();
+   for(const bar of root.querySelectorAll('[data-rm-bar-key]')){
+    const key=bar.dataset.rmBarKey,value=Number(bar.dataset.rmBarValue);
+    if(!key||!Number.isFinite(value)||value<0||value>100)continue;
+    const old=previous?.get(key)??0;
+    if(!reduced.matches&&old!==value){
+     bar.style.setProperty('--rm-bar-from',old+'%');bar.dataset.rmBarAnimate='true';
+     window.setTimeout(()=>{delete bar.dataset.rmBarAnimate;bar.style.removeProperty('--rm-bar-from');},650);
+    }
+    next.set(key,value);
+   }
+   barMemory.set(root,next);
+  }
+ }
  function scan(){
   scheduled=false;
-  scanGauges();
+  scanGauges();scanBars();
   for(const config of roots){
    const root=document.getElementById(config.id);
    if(!root||!visible(root))continue;
@@ -78,7 +95,7 @@
  function schedule(){if(scheduled)return;scheduled=true;queueMicrotask(scan);}
  function install(){
   const observer=new MutationObserver(records=>{
-   if(records.some(r=>[...roots,{id:'currentOccupancy'}].some(c=>{
+   if(records.some(r=>[...roots,{id:'currentOccupancy'},{id:'rushDashboard'}].some(c=>{
     const root=document.getElementById(c.id);
     return root&&(root===r.target||root.contains(r.target));
    })))schedule();

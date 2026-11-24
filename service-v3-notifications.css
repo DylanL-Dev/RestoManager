@@ -89,3 +89,8 @@ html[data-theme="dark"] .rmNotificationCenter button.rmNcFilter[aria-pressed="tr
 #manageNews .rmNewsLaunch:focus-visible{outline:3px solid #238466;outline-offset:3px}
 html[data-theme="dark"] #manageNews .rmNewsLaunch{background:#146c55;border-color:#61bd95;color:#fff}
 @media(max-width:700px){#manageNews .rmNewsLaunch{width:100%}}
+
+/* RM-UX-02.2b: actual new events only; never move swipe targets or fade readable text. */
+@keyframes rmNcNewEvent{from{box-shadow:inset 0 0 0 2px var(--nc-accent)}to{box-shadow:inset 0 0 0 2px transparent}}
+.rmNcCard[data-rm-new-notice]{animation:rmNcNewEvent 550ms ease-out}
+@media(prefers-reduced-motion:reduce){.rmNcCard[data-rm-new-notice]{animation:none!important}}

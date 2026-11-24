@@ -18,3 +18,17 @@ test('RM-UX-02.2a: gauge uses actual occupied tables, not estimated availability
  assert.match(read('service-v3-motion.js'),/previous\?\.value!==value/);
  assert.match(read('service-v3.css'),/prefers-reduced-motion:reduce/);
 });
+
+test('RM-UX-02.2b: arrivals use the existing schedule, breakdown and shared threshold',()=>{
+ const s=read('service-v3.js'),rec=read('reception-service-overview.js');
+ assert.match(s,/function arrivalTimeline\(date,all,windows=arrivalWindows\(date\),limit\)/);
+ assert.match(s,/rows=windows.slice\(index,index\+3\).map\(w=>\(\{w,\.\.\.rushArrivalBreakdown/);
+ assert.match(s,/Le seuil n’est pas une garantie de disponibilité/);
+ assert.match(rec,/RestoRush\?\.timeline\?\.\(today,list\)/);
+});
+test('RM-UX-02.2b: notification animation is keyed to new unread ids and respects reduced motion',()=>{
+ const js=read('service-v3-reminders.js');
+ assert.match(js,/!previousVisibleIds.has\(item.id\)&&!item.read/);
+ assert.match(js,/previousUnread!==count/);
+ assert.match(js,/prefers-reduced-motion: reduce/);
+});

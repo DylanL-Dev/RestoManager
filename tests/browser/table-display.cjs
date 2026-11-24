@@ -63,6 +63,7 @@ const results=[];function pass(name){results.push({name,status:'passed'});consol
  {const v=await open(browser,origin,{width:1440});await v.page.waitForFunction(()=>window.RestoSupabaseReady===true);
   await v.page.waitForFunction(()=>document.querySelectorAll('#tableGrid .tableCard').length===22);
   await v.page.waitForTimeout(700);
+  assert.equal(await v.page.locator('#currentOccupancy .rmLiveGauge').getAttribute('data-rm-gauge-value'),'5');
   await v.page.evaluate(()=>{
    window.__motionChanges=[];
    const observer=new MutationObserver(records=>{for(const r of records){if(r.target.dataset.rmMotion==='change')window.__motionChanges.push(r.target.className);}});
@@ -71,9 +72,11 @@ const results=[];function pass(name){results.push({name,status:'passed'});consol
   });
   await v.page.waitForTimeout(500);
   assert.deepEqual(await v.page.evaluate(()=>window.__motionChanges),[],'Identical snapshot must not replay motion');
+  assert.equal(await v.page.locator('#currentOccupancy .rmLiveGauge').getAttribute('data-rm-gauge-animate'),null);
   await v.page.evaluate(()=>{window.__displayMode='motion-changed';window.dispatchEvent(new Event('display:push'));});
   await v.page.waitForFunction(()=>window.__motionChanges.some(x=>x.includes('tableCard')));
   assert.equal(await v.page.locator('.tableCard.present').count(),2);
+  assert.equal(await v.page.locator('#currentOccupancy .rmLiveGauge').getAttribute('data-rm-gauge-value'),'9');
   assert.ok((await v.page.evaluate(()=>window.__motionChanges)).some(x=>x.includes('kpi')));
   assert.deepEqual(v.errors,[]);await v.context.close();pass('Motion only on actual snapshot status/value changes; unchanged snapshot stays still');
  }

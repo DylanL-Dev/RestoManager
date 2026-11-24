@@ -1837,6 +1837,27 @@ html[data-theme="dark"] .rmLiveLabels :is(p,small){color:#bbd3c3}
 @media(max-width:420px){.rmLiveOccupancy:has(.rmLiveGauge){grid-template-columns:80px minmax(0,1fr);gap:10px}.rmLiveGauge strong{font-size:17px}.rmLiveGauge::before{inset:7px}.rmLiveOccupancy .occupancyProgressLine{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){.rmLiveGauge[data-rm-gauge-animate]{animation:none!important}}
 
+/* RM-UX-02.2b — compact arrival timeline from the existing service-hour model. */
+.rmLiveTimeline{display:grid;gap:11px;border:1px solid #dce8e0;border-radius:14px;padding:13px;min-width:0}
+.rmLiveTimeline h3{font-size:15px;margin:0;color:#163c33}
+.rmLiveTimelineHint,.rmLiveTimelineDetail{font-size:12px;line-height:1.45;color:#496857;margin:0;overflow-wrap:anywhere}
+.rmLiveTimelineRow{display:grid;gap:5px;min-width:0}
+.rmLiveTimelineLabel{display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 8px;font-size:12px;line-height:1.4}
+.rmLiveTimelineLabel strong{font-variant-numeric:tabular-nums}
+.rmLiveTimelineTrack{height:9px;border-radius:6px;background:#e1ebe5;position:relative}
+.rmLiveTimelineStack{display:flex;align-items:stretch;width:100%;height:100%;overflow:hidden;border-radius:6px}
+.rmLiveBarFill{display:block;height:100%;flex:0 0 auto}
+.rmLiveBarFill.waiting{background:#16815e}
+.rmLiveBarFill.installed{background:#82ac9b}
+.rmLiveTimelineThreshold{position:absolute;top:-2px;height:13px;width:2px;background:#946019;border-radius:1px;transform:translateX(-1px)}
+@keyframes rmLiveBarFill{from{width:var(--rm-bar-from,0%)}}
+.rmLiveBarFill[data-rm-bar-animate]{animation:rmLiveBarFill 480ms cubic-bezier(.2,.8,.2,1)}
+html[data-theme="dark"] .rmLiveTimeline{border-color:#476658}
+html[data-theme="dark"] .rmLiveTimeline h3{color:#effaf2}
+html[data-theme="dark"] :is(.rmLiveTimelineHint,.rmLiveTimelineDetail){color:#bbd3c3}
+html[data-theme="dark"] .rmLiveTimelineTrack{background:#355447}
+html[data-theme="dark"] .rmLiveTimelineThreshold{background:#e5ad70}
+@media(prefers-reduced-motion:reduce){.rmLiveBarFill[data-rm-bar-animate]{animation:none!important}}
 /* RM-UX-02.1 — operational motion. Preserve existing screen stacking and never add moving targets or faded text. */
 :root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:320ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
 @keyframes rmServiceCard{from{box-shadow:inset 0 0 0 2px #16815e}to{box-shadow:inset 0 0 0 2px transparent}}
