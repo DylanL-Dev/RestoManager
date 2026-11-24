@@ -2,25 +2,29 @@
 :root{
  --rm-motion-fast:140ms;
  --rm-motion-normal:200ms;
- --rm-motion-enter:240ms;
+ --rm-motion-enter:360ms;
+ --rm-motion-sidebar:300ms;
  --rm-motion-ease:cubic-bezier(.2,.8,.2,1);
- --rm-motion-stagger:35ms;
+ --rm-motion-stagger:85ms;
 }
-@keyframes rmMotionEnter{from{opacity:.88;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes rmMotionEnter{from{opacity:.18;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
 @keyframes rmMotionFade{from{opacity:.45}to{opacity:1}}
-@keyframes rmMotionValue{from{transform:translateY(3px);opacity:.82}to{transform:translateY(0);opacity:1}}
+@keyframes rmMotionValue{from{transform:translateY(5px);opacity:.55}to{transform:translateY(0);opacity:1}}
 @keyframes rmMotionSpin{to{transform:rotate(360deg)}}
 @keyframes rmMotionSkeleton{from{background-position:100% 0}to{background-position:-100% 0}}
 @keyframes rmMotionIcon{from{transform:scale(.88)}to{transform:scale(1)}}
-#ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>.ownerHeadline,
-#ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>.ownerWelcomeBanner,
-#ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>.ownerSurface,
-#ownerPanel:not([hidden]) [data-owner-section]:not([hidden]) :is(.ownerMetrics>.ownerMetric,.ownerDashboardGrid>.ownerSurface,.ownerMonitorGrid>.ownerMonitorCard){
- animation:rmMotionEnter var(--rm-motion-enter) var(--rm-motion-ease) both;
+/* Animate actual visible cards, including the pilot banner and its previously missed grid. */
+#ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>:is(.ownerHeadline,.ownerWelcomeBanner,.ownerSurface,.ownerPilotBanner,.ownerDirectoryToolbar,.ownerMonitorNotice),
+#ownerPanel:not([hidden]) [data-owner-section]:not([hidden]) :is(.ownerMetrics>.ownerMetric,.ownerDashboardGrid>.ownerSurface,.ownerMonitorGrid>.ownerMonitorCard,.ownerPilotGrid>.ownerSurface){
+ animation:rmMotionEnter var(--rm-motion-enter) var(--rm-motion-ease) backwards;
 }
-#ownerPanel .ownerMetrics>.ownerMetric:nth-child(2),#ownerPanel .ownerMonitorGrid>.ownerMonitorCard:nth-child(2){animation-delay:var(--rm-motion-stagger)}
-#ownerPanel .ownerMetrics>.ownerMetric:nth-child(3),#ownerPanel .ownerMonitorGrid>.ownerMonitorCard:nth-child(3){animation-delay:calc(2 * var(--rm-motion-stagger))}
-#ownerPanel .ownerMetrics>.ownerMetric:nth-child(4){animation-delay:calc(3 * var(--rm-motion-stagger))}
+#ownerPanel [data-owner-section]:not([hidden])>.ownerHeadline{animation-duration:280ms}
+#ownerPanel [data-owner-section]:not([hidden])>.ownerPilotBanner{animation-delay:var(--rm-motion-stagger)}
+#ownerPanel :is(.ownerMetrics,.ownerDashboardGrid,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(1){animation-delay:var(--rm-motion-stagger)}
+#ownerPanel :is(.ownerMetrics,.ownerDashboardGrid,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(2){animation-delay:calc(2 * var(--rm-motion-stagger))}
+#ownerPanel :is(.ownerMetrics,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(3){animation-delay:calc(3 * var(--rm-motion-stagger))}
+#ownerPanel :is(.ownerMetrics,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(4){animation-delay:calc(4 * var(--rm-motion-stagger))}
+#ownerPanel [data-owner-section]:not([hidden])>.ownerPilotChecklist{animation-delay:calc(4 * var(--rm-motion-stagger))}
 #ownerPanel button:not(.ownerNavBackdrop),#loginPanel button{
  transition:background-color var(--rm-motion-fast) ease,border-color var(--rm-motion-fast) ease,color var(--rm-motion-fast) ease,box-shadow var(--rm-motion-fast) ease,transform var(--rm-motion-fast) var(--rm-motion-ease);
 }
@@ -31,9 +35,23 @@
 @media(hover:hover) and (pointer:fine){
  #ownerPanel :is(.ownerMetric,.ownerMonitorCard):hover{border-color:var(--rm-muted);box-shadow:0 7px 20px #17382d15}
 }
-#ownerPanel .ownerSidebar{transition:width var(--rm-motion-enter) var(--rm-motion-ease),flex-basis var(--rm-motion-enter) var(--rm-motion-ease)}
+/* One width transition drives the desktop layout; clip long labels without moving icons. */
+#ownerPanel .ownerSidebar{transition:width var(--rm-motion-sidebar) var(--rm-motion-ease),flex-basis var(--rm-motion-sidebar) var(--rm-motion-ease)}
+@media(min-width:1001px){
+ #ownerPanel .ownerSidebar{min-width:0;overflow-x:hidden}
+ #ownerPanel .ownerNavigation{grid-template-columns:minmax(0,1fr);width:100%;min-width:0}
+ #ownerPanel .ownerNavigation button{min-width:0;max-width:100%;overflow:hidden;justify-content:flex-start;padding:7px 9px;gap:10px}
+ #ownerPanel .ownerNavigation button>.ownerNavIcon{flex:0 0 33px!important;min-width:33px}
+ #ownerPanel .ownerNavigation button>span:not(.ownerNavIcon){flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ #ownerPanel .ownerNavigation button>.ownerSupportNavNew{flex:0 0 auto;white-space:nowrap}
+ #ownerPanel.ownerShellCompact .ownerNavigation button{justify-content:center;padding:7px 0;gap:0}
+ #ownerPanel.ownerShellCompact .ownerNavigation button>.ownerSupportNavNew{display:none!important}
+ #ownerPanel:not(.ownerShellCompact) .ownerNavigation button>span:not(.ownerNavIcon),
+ #ownerPanel:not(.ownerShellCompact) .ownerNavigation button>.ownerSupportNavNew{animation:rmMotionFade 160ms ease 140ms backwards}
+ #ownerPanel .ownerWorkspace,#ownerPanel .ownerContent,#ownerPanel [data-owner-section]{min-width:0}
+}
 @media(max-width:760px){
- #ownerPanel .ownerSidebar{transition:transform var(--rm-motion-enter) var(--rm-motion-ease)}
+ #ownerPanel .ownerSidebar{transition:transform var(--rm-motion-sidebar) var(--rm-motion-ease)}
  #ownerPanel .ownerNavBackdrop:not([hidden]){animation:rmMotionFade var(--rm-motion-normal) ease both}
 }
 #ownerPanel[data-rm-motion-loading="true"] #ownerRefreshOverview svg,

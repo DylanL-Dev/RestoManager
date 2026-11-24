@@ -154,6 +154,7 @@ body{background:var(--rm-canvas);color:var(--rm-ink)}
  .ownerShellCompact .ownerSidebarCaption,
  .ownerShellCompact .ownerSidebarNavDivider,
  .ownerShellCompact .ownerNavigation button>span:not(.ownerNavIcon),
+ .ownerShellCompact .ownerNavigation button>.ownerSupportNavNew,
  .ownerShellCompact .ownerSidebarIdentity .ownerIdentityText,
  .ownerShellCompact .ownerSidebarLegal,
  .ownerShellCompact .ownerSidebarBottom .ownerLogout span:not(:first-child){display:none!important}
