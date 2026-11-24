@@ -1,6 +1,6 @@
 // RM-020.1 — Creator front-end shell only.
 // Runs independently of DEV Root authentication. No Supabase access or network requests.
-import {mountLucideIcons,createLucideIcon} from './creator-lucide.js?v=20261124-rm0201';
+import {mountLucideIcons,createLucideIcon} from './creator-lucide.js?v=20261124-rm0202';
 const shell=document.getElementById('ownerPanel');
 const themeButton=document.getElementById('ownerThemeToggle');
 const collapseButton=document.getElementById('ownerSidebarCollapse');
@@ -67,3 +67,33 @@ if(pageTitle&&breadcrumb){
  new MutationObserver(update).observe(pageTitle,{childList:true,characterData:true,subtree:true});
  update();
 }
+
+// RM-020.2 — local, presentation-only directory filter and dynamic support icons.
+const directorySearch=document.getElementById('ownerRestaurantSearch');
+const directoryCount=document.getElementById('ownerRestaurantSearchCount');
+const normalizeDirectory=value=>String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('fr-FR').trim();
+function filterDirectory(){
+ const rows=[...restaurants?.querySelectorAll('.ownerRestaurantRow')||[]];
+ const query=normalizeDirectory(directorySearch?.value);
+ let visible=0;
+ for(const row of rows){const matches=normalizeDirectory(row.textContent).includes(query);row.hidden=!matches;if(matches)visible++;}
+ if(directoryCount){const label=rows.length?visible+' établissement(s) affiché(s) sur '+rows.length:'';if(directoryCount.textContent!==label)directoryCount.textContent=label;}
+}
+if(restaurants&&directorySearch){directorySearch.addEventListener('input',filterDirectory);new MutationObserver(filterDirectory).observe(restaurants,{childList:true,subtree:true});filterDirectory();}
+const inbox=document.getElementById('ownerInbox');
+function decorate(target,name,replace=false){
+ if(!target||target.dataset.rm0202Icon)return;
+ const icon=createLucideIcon(name,17);if(!icon)return;
+ target.dataset.rm0202Icon=name;icon.classList.add('ownerInlineSvg');
+ if(replace)target.replaceChildren(icon);else target.prepend(icon);
+}
+function upgradeSupportIcons(){
+ if(!inbox)return;
+ decorate(inbox.querySelector('#ownerRefreshReports'),'refresh-cw');
+ decorate(inbox.querySelector('#ownerReportUrgentOnly'),'flag');
+ decorate(inbox.querySelector('.ownerSupportSearch>span'),'search');
+ decorate(inbox.querySelector('.ownerSupportQueueHeader h3'),'inbox');
+ for(const [id,name] of [['ownerSupportOpen','inbox'],['ownerSupportUrgent','flag'],['ownerSupportResolved','circle-check']])decorate(inbox.querySelector('#'+id)?.parentElement?.querySelector('small'),name);
+ for(const node of inbox.querySelectorAll('.ownerSupportEmptySymbol'))decorate(node,'mail',true);
+}
+if(inbox){new MutationObserver(upgradeSupportIcons).observe(inbox,{childList:true,subtree:true});upgradeSupportIcons();}
