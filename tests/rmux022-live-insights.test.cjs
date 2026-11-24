@@ -32,3 +32,25 @@ test('RM-UX-02.2b: notification animation is keyed to new unread ids and respect
  assert.match(js,/previousUnread!==count/);
  assert.match(js,/prefers-reduced-motion: reduce/);
 });
+
+test('RM-UX-02.2c: advice is based on shared counts, prioritises overdue and fails closed on stale data',()=>{
+ const s=read('service-v3.js'),start=s.indexOf('function serviceAdvice('),end=s.indexOf('function arrivalTimeline(',start);
+ const advice=new Function('clock',s.slice(start,end)+'\nreturn serviceAdvice;')(n=>String(n));
+ const rows=[{w:{start:1140},planned:22},{w:{start:1200},planned:10}];
+ const info={rows,limit:22};
+ assert.equal(advice({...info,fresh:false}).kind,'unknown');
+ assert.equal(advice({...info,finished:true}).title,'Dernier créneau terminé');
+ assert.equal(advice({...info,overdue:3}).title,'Arrivées en retard à vérifier');
+ assert.equal(advice(info).kind,'attention');
+ assert.match(advice(info).detail,/vérifier les disponibilités/);
+ assert.equal(advice({rows:[{w:{start:1140},planned:18}],limit:22}).kind,'watch');
+ assert.equal(advice({rows:[{w:{start:1140},planned:10}],limit:22}).kind,'neutral');
+ assert.equal(advice({...info,limit:0}),null);
+});
+test('RM-UX-02.2c: placeholders only during actual load; no fake metrics or controls',()=>{
+ const s=read('service-v3.js'),rec=read('reception-service-overview.js');
+ assert.match(s,/if\(kind==='loading'\)\{const skeleton/);
+ assert.match(rec,/!Array.isArray\(info\)&&window.RestoSyncState==='pending'/);
+ assert.match(s,/skeleton.setAttribute\('aria-hidden','true'\)/);
+ assert.match(read('service-v3.css'),/\.rmServiceSkeleton span\{animation:none!important\}/);
+});

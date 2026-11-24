@@ -1858,6 +1858,24 @@ html[data-theme="dark"] :is(.rmLiveTimelineHint,.rmLiveTimelineDetail){color:#bb
 html[data-theme="dark"] .rmLiveTimelineTrack{background:#355447}
 html[data-theme="dark"] .rmLiveTimelineThreshold{background:#e5ad70}
 @media(prefers-reduced-motion:reduce){.rmLiveBarFill[data-rm-bar-animate]{animation:none!important}}
+/* RM-UX-02.2c — operational guidance and bounded loading treatment. */
+.rmServiceAdvice{display:flex;gap:11px;align-items:flex-start;padding:12px;border:1px solid #b9d9c7;border-radius:12px;background:#edf6f0;color:#194d37;min-width:0}
+.rmServiceAdviceIcon{width:20px;height:20px;flex:0 0 20px;margin-top:2px}
+.rmServiceAdviceText{min-width:0;display:grid;gap:5px}
+.rmServiceAdviceLabel{font-size:10px;letter-spacing:.07em;font-weight:750}
+.rmServiceAdviceText strong{font-size:14px;line-height:1.35}
+.rmServiceAdviceText p{font-size:12px;line-height:1.45;margin:0;overflow-wrap:anywhere;color:inherit}
+.rmServiceAdvice[data-kind="attention"],.rmServiceAdvice[data-kind="watch"]{background:#fff4e3;border-color:#e1bf86;color:#70480f}
+.rmServiceAdvice[data-kind="unknown"]{background:#f1f5f3;border-color:#cbd9d1;color:#435b4f}
+html[data-theme="dark"] .rmServiceAdvice{background:#254b3b;border-color:#547b66;color:#e4f5e9}
+html[data-theme="dark"] .rmServiceAdvice[data-kind="attention"],html[data-theme="dark"] .rmServiceAdvice[data-kind="watch"]{background:#503d24;border-color:#aa8b50;color:#fff0c1}
+html[data-theme="dark"] .rmServiceAdvice[data-kind="unknown"]{background:#263a31;border-color:#526b5f;color:#d5e6da}
+.rmServiceSkeleton{display:grid;gap:9px;width:100%;grid-column:1/-1;padding:6px 0;pointer-events:none;--rm-sk-base:#e4ece7;--rm-sk-shine:#f5f8f6}
+.rmServiceSkeleton span{display:block;height:13px;width:100%;border-radius:6px;background:linear-gradient(100deg,var(--rm-sk-base) 30%,var(--rm-sk-shine) 50%,var(--rm-sk-base) 70%);background-size:220% 100%;animation:rmServiceSkeleton 1000ms ease 3}
+.rmServiceSkeleton span:nth-child(2){width:77%}.rmServiceSkeleton span:nth-child(3){width:55%}
+@keyframes rmServiceSkeleton{from{background-position:100% 0}to{background-position:0 0}}
+html[data-theme="dark"] .rmServiceSkeleton{--rm-sk-base:#2c483b;--rm-sk-shine:#3d5a4b}
+@media(prefers-reduced-motion:reduce){.rmServiceSkeleton span{animation:none!important}}
 /* RM-UX-02.1 — operational motion. Preserve existing screen stacking and never add moving targets or faded text. */
 :root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:320ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
 @keyframes rmServiceCard{from{box-shadow:inset 0 0 0 2px #16815e}to{box-shadow:inset 0 0 0 2px transparent}}

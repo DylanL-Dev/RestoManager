@@ -17,7 +17,7 @@
  const memory=new WeakMap(),gaugeMemory=new WeakMap(),barMemory=new WeakMap();
  let scheduled=false;
  function visible(root){
-  return !root.closest('[hidden]')&&root.getClientRects().length>0&&getComputedStyle(document.body).visibility!=='hidden';
+  return !root.closest('[hidden]')&&root.getClientRects().length>0&&getComputedStyle(root).visibility!=='hidden'&&getComputedStyle(document.body).visibility!=='hidden';
  }
  function item(node,kind){
   if(kind==='metric')return [node.getAttribute('aria-label')||'',node.querySelector('strong')?.textContent.trim()||''];

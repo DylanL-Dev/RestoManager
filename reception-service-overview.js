@@ -17,6 +17,7 @@
   root.append(intro);
   if(!Array.isArray(info)||!window.RestoSupabaseReady){
    root.append(node('p','receptionServiceEmpty','Synchronisation en cours ou indisponible. Vérifiez la connexion dans Gestion.'));
+   if(!Array.isArray(info)&&window.RestoSyncState==='pending'){const skeleton=node('div','rmServiceSkeleton');skeleton.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)skeleton.append(node('span'));root.append(skeleton);}
    return;
   }
   const today=day();

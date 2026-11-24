@@ -122,18 +122,43 @@ function arrivalWindows(date,shifts=Object.entries(ReservationEngine.getShiftsFo
  }
  return windows.sort((a,b)=>a.start-b.start);
 }
+// A read-only explanation of the existing operational indicators, not a reservation engine.
+function serviceAdvice({rows,limit,overdue=0,finished=false,fresh=true}){
+ if(!fresh)return {kind:'unknown',title:'Données à vérifier',detail:'Synchronisation non confirmée. Vérifiez la connexion avant de proposer un créneau.'};
+ if(finished)return {kind:'neutral',title:'Dernier créneau terminé',detail:overdue?overdue+' couvert(s) restent attendus. Vérifiez leur statut.':'Consultez les prochains jours pour une nouvelle réservation.'};
+ if(!Number.isFinite(limit)||limit<=0||!rows.length)return null;
+ if(overdue>0)return {kind:'attention',title:'Arrivées en retard à vérifier',detail:overdue+' couvert(s) encore attendus. Consultez les réservations avant d’organiser les nouvelles arrivées.'};
+ const busy=rows.find(row=>row.planned>=limit);
+ const approaching=rows.find(row=>row.planned>=limit*.8);
+ const focus=busy||approaching;
+ if(focus){
+  const later=rows.find(row=>row.w.start>focus.w.start&&row.planned<limit*.8);
+  return {kind:busy?'attention':'watch',title:(busy?'Seuil atteint':'Arrivées nombreuses')+' · '+clock(focus.w.start),detail:focus.planned+' / '+limit+' couverts actifs. '+(later?'Charge plus faible à '+clock(later.w.start)+' : vérifier les disponibilités avant de proposer cet horaire.':'Vérifiez les disponibilités et organisez l’accueil avant de confirmer.')};
+ }
+ return {kind:'neutral',title:'Arrivées sous le seuil conseillé',detail:'Les créneaux affichés restent sous le seuil. Vérifiez toujours la disponibilité réelle avant de confirmer.'};
+}
 function arrivalTimeline(date,all,windows=arrivalWindows(date),limit){
  if(!Array.isArray(all)||!windows.length)return null;
  if(limit===undefined){const percent=settings().percent,max=capacity();if(!validPercent(percent)||!max)return null;limit=Math.max(1,Math.ceil(max*percent/100));}
  if(!Number.isFinite(limit)||limit<=0)return null;
  const current=currentMinutes(),today=date===rushLocalDate();
  let index=today?windows.findIndex(w=>current<w.end):0;
+ const finished=(today&&index<0)||date<rushLocalDate();
  if(index<0)index=windows.length-1;
  const rows=windows.slice(index,index+3).map(w=>({w,...rushArrivalBreakdown(date,w.start,w.end,all)}));
  const scale=Math.max(limit,...rows.map(r=>r.planned));
  const section=rushNode('section','rmLiveTimeline');
  section.setAttribute('aria-label','Charge des arrivées par créneau');
- section.append(rushNode('h3','','Charge des arrivées'),rushNode('p','rmLiveTimelineHint','Créneau actuel ou prochain, puis les suivants · Seuil conseillé : '+limit+' couverts par période.'));
+ section.append(rushNode('h3','','Charge des arrivées'),rushNode('p','rmLiveTimelineHint',(finished?'Derniers créneaux de service':'Créneau actuel ou prochain, puis les suivants')+' · Seuil conseillé : '+limit+' couverts par période.'));
+ const overdue=today?all.filter(r=>relevant(r,date)&&rushStatuses.waiting.has(r.status)&&mins(r.time)<current).reduce((sum,r)=>sum+Math.max(0,Number(r.guests)||0),0):0;
+ const fresh=!expectsSharedThreshold()||(window.RestoSyncState==='ok'&&window.RestoSupabaseReady===true);
+ const advice=serviceAdvice({rows,limit,overdue,finished,fresh});
+ if(advice){
+  const card=rushNode('div','rmServiceAdvice');card.dataset.kind=advice.kind;
+  const icon=rushNode('i','rmServiceAdviceIcon');icon.dataset.lucide=advice.kind==='attention'?'alert-triangle':advice.kind==='watch'?'clock-3':advice.kind==='unknown'?'info':'activity';icon.setAttribute('aria-hidden','true');
+  const words=rushNode('div','rmServiceAdviceText');
+  words.append(rushNode('span','rmServiceAdviceLabel','CONSEIL DE SERVICE'),rushNode('strong','',advice.title),rushNode('p','',advice.detail));card.append(icon,words);section.append(card);
+ }
  for(const row of rows){
   const item=rushNode('div','rmLiveTimelineRow'),label=rushNode('div','rmLiveTimelineLabel');
   label.append(rushNode('strong','',clock(row.w.start)+' – '+clock(row.w.end)),rushNode('span','',row.planned+' / '+limit+' couverts'+(row.planned>=limit?' · Seuil atteint':'') ));
@@ -601,6 +626,7 @@ function serviceDisplayReady(){
  if(loaded)return true;
  const placeholder=kind==='error'?'Les données ne sont pas disponibles pour le moment. Réessayez après vérification de la connexion.':'Chargement des informations du service…';
  $('tableGrid').replaceChildren(node('p','muted',text));$('upcoming').textContent=placeholder;
+ if(kind==='loading'){const skeleton=node('div','rmServiceSkeleton');skeleton.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)skeleton.append(node('span',''));$('tableGrid').append(skeleton);}
  $('kpis').replaceChildren(node('p','muted',placeholder));$('currentOccupancy')?.replaceChildren(node('p','muted',placeholder));$('rushDashboard')?.replaceChildren(node('p','muted',placeholder));
  return false;
 }
