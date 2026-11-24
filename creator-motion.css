@@ -16,15 +16,15 @@
 /* Animate actual visible cards, including the pilot banner and its previously missed grid. */
 #ownerPanel:not([hidden]) [data-owner-section]:not([hidden])>:is(.ownerHeadline,.ownerWelcomeBanner,.ownerSurface,.ownerPilotBanner,.ownerDirectoryToolbar,.ownerMonitorNotice),
 #ownerPanel:not([hidden]) [data-owner-section]:not([hidden]) :is(.ownerMetrics>.ownerMetric,.ownerDashboardGrid>.ownerSurface,.ownerMonitorGrid>.ownerMonitorCard,.ownerPilotGrid>.ownerSurface){
- animation:rmMotionEnter var(--rm-motion-enter) var(--rm-motion-ease) backwards;
+ animation:rmMotionEnter var(--rm-motion-duration,var(--rm-motion-enter)) var(--rm-motion-ease) var(--rm-motion-delay,0ms) backwards;
 }
-#ownerPanel [data-owner-section]:not([hidden])>.ownerHeadline{animation-duration:280ms}
-#ownerPanel [data-owner-section]:not([hidden])>.ownerPilotBanner{animation-delay:var(--rm-motion-stagger)}
-#ownerPanel :is(.ownerMetrics,.ownerDashboardGrid,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(1){animation-delay:var(--rm-motion-stagger)}
-#ownerPanel :is(.ownerMetrics,.ownerDashboardGrid,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(2){animation-delay:calc(2 * var(--rm-motion-stagger))}
-#ownerPanel :is(.ownerMetrics,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(3){animation-delay:calc(3 * var(--rm-motion-stagger))}
-#ownerPanel :is(.ownerMetrics,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(4){animation-delay:calc(4 * var(--rm-motion-stagger))}
-#ownerPanel [data-owner-section]:not([hidden])>.ownerPilotChecklist{animation-delay:calc(4 * var(--rm-motion-stagger))}
+#ownerPanel [data-owner-section]:not([hidden])>.ownerHeadline{--rm-motion-duration:280ms}
+#ownerPanel [data-owner-section]:not([hidden])>.ownerPilotBanner{--rm-motion-delay:var(--rm-motion-stagger)}
+#ownerPanel :is(.ownerMetrics,.ownerDashboardGrid,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(1){--rm-motion-delay:var(--rm-motion-stagger)}
+#ownerPanel :is(.ownerMetrics,.ownerDashboardGrid,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(2){--rm-motion-delay:calc(2 * var(--rm-motion-stagger))}
+#ownerPanel :is(.ownerMetrics,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(3){--rm-motion-delay:calc(3 * var(--rm-motion-stagger))}
+#ownerPanel :is(.ownerMetrics,.ownerMonitorGrid,.ownerPilotGrid)>:is(.ownerMetric,.ownerSurface):nth-child(4){--rm-motion-delay:calc(4 * var(--rm-motion-stagger))}
+#ownerPanel [data-owner-section]:not([hidden])>.ownerPilotChecklist{--rm-motion-delay:calc(4 * var(--rm-motion-stagger))}
 #ownerPanel button:not(.ownerNavBackdrop),#loginPanel button{
  transition:background-color var(--rm-motion-fast) ease,border-color var(--rm-motion-fast) ease,color var(--rm-motion-fast) ease,box-shadow var(--rm-motion-fast) ease,transform var(--rm-motion-fast) var(--rm-motion-ease);
 }
