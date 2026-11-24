@@ -6,7 +6,7 @@ const {chromium}=require('playwright');const root=path.resolve(__dirname,'../..'
 const out=process.env.BROWSER_ARTIFACTS;const day='2032-11-08';let calls=0,sequence=0;
 const id=(kind,n)=>kind+'0000000-0000-4000-8000-'+String(n).padStart(12,'0');
 function snapshot(mode){const result={syncSequence:++sequence,revision:'10',capabilities:mode==='readonly'?{}:{reservation_edits:4,booking_recovery:1,snapshot:1},
- hours:{lunch_enabled:true,lunch_start:'11:00:00',lunch_end:'15:00:00',dinner_enabled:true,dinner_start:'18:00:00',dinner_end:'23:00:00',duration:90},
+ hours:{lunch_enabled:true,lunch_start:'11:00:00',lunch_end:'15:00:00',dinner_enabled:true,dinner_start:'18:00:00',dinner_end:'23:00:00',duration:90,arrival_limit_percent:60},
  rooms:[{id:id('3',1),name:'Salle principale',active:true,sort_order:0}],
  tables:Array.from({length:23},(_,i)=>({id:id('4',i+1),label:'Table '+(i+1),seats:4,active:i<22,room_id:id('3',1)})),
  reservations:[{id:id('5',1),guest_name:'Arrivée fictive',hotel_room:null,party_size:2,starts_at:day+'T11:30:00Z',ends_at:day+'T13:00:00Z',status:'reserved',notes:'[RESTOMANAGER:EXTERIEUR]',edit_version:id('6',1)},
@@ -82,13 +82,32 @@ const results=[];function pass(name){results.push({name,status:'passed'});consol
  }
  for(const role of ['fb_admin','reception']){
   const v=await open(browser,origin,{role,width:390});await v.page.waitForFunction(()=>window.RestoSupabaseReady===true);
+  // Complete the normal first-use invitation before clicking a mobile service action.
+  await v.page.waitForFunction(()=>Boolean(window.RestoTutorial));
+  const welcome=v.page.locator('#restoTourWelcome');if(await welcome.isVisible())await welcome.getByRole('button',{name:'Plus tard',exact:true}).click();
   if(role==='reception')await v.page.evaluate(()=>window.RestoScreens.show('passages'));
+  await v.page.locator('#restoTourWelcome').waitFor({state:'hidden'});
+  const overview=role==='reception'?'#receptionServiceOverview':'#rushDashboard';
+  const gauge=v.page.locator((role==='reception'?'#receptionServiceOverview':'#currentOccupancy')+' .rmLiveGauge');
+  await gauge.waitFor({state:'visible'});assert.equal(await gauge.getAttribute('data-rm-gauge-value'),'5');
+  const timeline=v.page.locator(overview+' .rmLiveTimeline');await timeline.waitFor({state:'visible'});
+  assert.equal(await timeline.locator('.rmLiveTimelineRow').count(),3);
+  assert.match(await timeline.innerText(),/Attendus/);assert.match(await timeline.innerText(),/Installés/);
+  assert.match(await timeline.innerText(),/Seuil conseillé/);
+  assert.equal(await timeline.locator('.rmLiveTimelineRow').first().locator('.rmLiveTimelineDetail').innerText(),'2 attendus · 0 installés');
+  for(const theme of ['dark','light']){
+   await v.page.evaluate(value=>document.documentElement.dataset.theme=value,theme);
+   assert.ok(await v.page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'No mobile overflow in '+theme);
+  }
+  await v.page.emulateMedia({reducedMotion:'reduce'});
+  assert.equal(await gauge.evaluate(e=>getComputedStyle(e).animationName),'none');
+  await v.page.emulateMedia({reducedMotion:'no-preference'});
   const root=role==='reception'?'#receptionServiceOverview':'#upcoming';
   const button=v.page.locator(root+' [data-rm-arrival-id]').first();await button.waitFor({state:'visible'});
-  const id=await button.getAttribute('data-rm-arrival-id');await button.click();
+  const id=await button.getAttribute('data-rm-arrival-id'),writesBefore=calls;await button.click();
   await v.page.waitForFunction(()=>window.RestoScreens.current()==='reservations');
   const card=v.page.locator('#reservationList [data-rm-motion-key="'+id+'"]');await card.locator('.reservationExpanded').waitFor({state:'visible'});
-  assert.equal(await v.page.locator('#reservationQuery').inputValue(),'');assert.deepEqual(v.errors,[]);
+  assert.equal(await v.page.locator('#reservationQuery').inputValue(),'');assert.equal(calls,writesBefore);assert.deepEqual(v.errors,[]);
   await v.context.close();pass('One-click exact reservation shortcut, no write '+role);
  }
  for(const mode of ['empty-tables','empty-arrivals']){const v=await open(browser,origin,{mode});await v.page.waitForFunction(()=>window.RestoSupabaseReady);if(mode==='empty-tables'){assert.equal(await v.page.locator('.tableCard').count(),0);assert.match(await v.page.locator('#tableGrid').innerText(),/Aucune table active/)}else assert.equal(await v.page.locator('.tableCard').count(),22);assert.match(await v.page.locator('#upcoming').innerText(),/Aucune arrivée en attente/);assert.deepEqual(v.errors,[]);await v.context.close();pass('Confirmed '+mode+' has an explicit empty state');}
