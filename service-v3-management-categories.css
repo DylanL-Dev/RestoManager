@@ -168,3 +168,6 @@ html[data-theme="dark"] .rmManagementSettings .restaurantDurationSetting{backgro
 html[data-theme="dark"] .rmManagementSettings .restaurantDurationSetting label{color:#e5f5e9}
 html[data-theme="dark"] .rmManagementSettings .restaurantDurationSetting p{color:#b7cebf}
 html[data-theme="dark"] .rmManagementSettings .durationSelectTrigger{background:#284c3c!important;color:#e5f5e9!important}
+
+/* RM-UX-03.4: room actions retain a stable physical touch target during navigation. */
+.roomManager .roomManagerActions button{box-sizing:border-box;min-height:46px;min-width:44px;flex-shrink:0;transform:none}

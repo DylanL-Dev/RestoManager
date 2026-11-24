@@ -33,6 +33,9 @@
  function syncPreview(){
   const type=chosen(),v=type?M.types[type]:null;
   $('siretHelp').textContent=siretHelpByType[type]||"Le numéro SIRET est vérifié auprès d'un registre officiel français.";
+  const hint=$('signupTypeHint');
+  hint.hidden=!v;
+  hint.textContent=type==='hotel'?'Profil hôtelier : coordination de la Réception et du Restaurant, avec gestion des chambres.':type==='independent'?'Profil indépendant : gestion de vos tables et de vos réservations, sans parcours hôtelier.':'';
   $('storyBusiness').textContent=v?$('businessName').value.trim()||v.label:'Votre futur établissement';
   replaceIcon('.insight-logo',v?v.icon:'utensils');
   if(v){$('selectedTypeLabel').textContent=v.label;replaceIcon('.mini-icon',v.icon);}
@@ -58,7 +61,7 @@
   ['Votre futur espace prend forme.','Un aperçu de votre configuration, avant toute inscription réelle.','Votre aperçu']
  ];
  function showStep(next,{focus=true}={}){
-  step=next;clearErrors();
+  const changed=step!==next;step=next;clearErrors();
   $('stepType').hidden=next!==1;$('stepDetails').hidden=next!==2;$('stepPreview').hidden=next!==3;
   $('stepCount').textContent='0'+next+' / 03';
   $('stepCaption').textContent=titles[next-1][2];
@@ -67,6 +70,14 @@
   $('progressTrack').setAttribute('aria-valuenow',String(next));
   $('progressTrack').setAttribute('aria-label','Progression : étape '+next+' sur 3');
   $('progressFill').style.width=(next/3*100)+'%';
+  for(const item of $('signupJourney').querySelectorAll('[data-step]')){
+   const number=Number(item.dataset.step);
+   item.dataset.state=number<next?'complete':number===next?'current':'upcoming';
+   if(number===next)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');
+  }
+  // Restart the short entry animation only after a real step change, not a field edit.
+  for(const panel of [$('stepType'),$('stepDetails'),$('stepPreview')])panel.classList.remove('rmSignupStepEnter');
+  if(changed&&focus)[$('stepType'),$('stepDetails'),$('stepPreview')][next-1].classList.add('rmSignupStepEnter');
   $('backStep').hidden=next===1;
   $('nextStep').hidden=next===3;
   $('restart').hidden=next!==3;
@@ -74,7 +85,7 @@
   const arrow=document.createElement('i');arrow.setAttribute('data-lucide','chevron-right');arrow.setAttribute('aria-hidden','true');$('nextStep').append(arrow);
   drawIcons();
   if(next===3)window.dispatchEvent(new Event('restomanager:registration-preview'));
-  if(focus){$('setupTitle').setAttribute('tabindex','-1');$('setupTitle').focus({preventScroll:true});}
+  if(focus){const heading=$('setupTitle');heading.setAttribute('tabindex','-1');heading.focus({preventScroll:true});heading.scrollIntoView({block:'nearest',behavior:'instant'});}
  }
  function advance(){
   if(step===1){
