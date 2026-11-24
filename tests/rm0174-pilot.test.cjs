@@ -44,7 +44,9 @@ test('RM-017.4 fail closed on missing or inconsistent config; DEV signup remains
  assert.match(controller,/typeof config\?\.enabled==='boolean'/);
 });
 test('RM-017.4 mobile styling and no external font or icon dependency',()=>{
- assert.match(html,/stroke="currentColor" stroke-width="2"/);
+ assert.match(html,/data-owner-nav="pilot"><span class="ownerNavIcon" data-lucide="clipboard-check"><\/span>/);
+ assert.match(read('creator-lucide.js'),/'clipboard-check':/);
+ assert.match(read('creator-shell.css'),/@media\(max-width:760px\)/);
  assert.match(css,/\.ownerPilotGrid/);
  assert.match(css,/@media\(max-width:760px\)\{\.ownerPilotGrid/);
  assert.match(css,/\.ownerPilotLinks a/);
