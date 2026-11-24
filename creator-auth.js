@@ -8,7 +8,8 @@ if(supabaseEnvironment.name!=='DEV')throw new Error('Ce parcours Root est réser
 const client=createClient(
  supabaseEnvironment.url,
  supabaseEnvironment.publishableKey,
- {auth:{persistSession:true,autoRefreshToken:true}}
+ // RM-AUTH-01: separate Root tokens, refresh lock and cross-tab events from staff.
+ {auth:{storageKey:'restomanager-dev-creator-auth-v1',persistSession:true,autoRefreshToken:true}}
 );
 const $=id=>document.getElementById(id);
 let verifying=false,installed=false;

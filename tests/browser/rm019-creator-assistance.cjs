@@ -128,7 +128,7 @@ const server=http.createServer((req,res)=>{
    console.log('PASS RM-019 support queue, search, status, rollback and accessibility '+width+'px');
   }
   assert.ok(requests.every(r=>r.startsWith('GET ')));
-  assert.deepEqual(authImports,['20261124-rm0191-visible-rm0204','20261124-rm0191-visible-rm0204','20261124-rm0191-visible-rm0204'],'The Creator entry point must not load stale RM0174 on any viewport');
+  assert.deepEqual(authImports,['20261124-rm0191-visible-rm0204-rmauth01','20261124-rm0191-visible-rm0204-rmauth01','20261124-rm0191-visible-rm0204-rmauth01'],'The Creator entry point must not load stale RM0174 on any viewport');
   console.log('PASS RM-019 no remote calls, account changes, reservations or real tickets');
  }catch(error){console.error(error.stack||error);process.exitCode=1;}
  finally{if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));}

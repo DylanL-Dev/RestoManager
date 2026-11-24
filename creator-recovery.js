@@ -17,10 +17,11 @@ const hasLinkProof=!query.has('error')&&!fragment.has('error')&&(
 );
 
 import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
-import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
+import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm';
 if(supabaseEnvironment.name!=='DEV')throw new Error('Récupération réservée à DEV.');
 const client=createClient(supabaseEnvironment.url,supabaseEnvironment.publishableKey,
- {auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+ // Same Root-only key as creator-auth.js, including PKCE recovery verifier.
+ {auth:{storageKey:'restomanager-dev-creator-auth-v1',persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 const $=id=>document.getElementById(id);
 let authorized=false,submitting=false,accepting=false;
 function setStatus(message){$('creatorRecoveryMessage').textContent=message;}
@@ -92,7 +93,7 @@ $('creatorPasswordRecovery').addEventListener('submit',async event=>{
   $('creatorNewPassword').value='';$('creatorConfirmPassword').value='';
   $('creatorPasswordRecovery').hidden=true;authorized=false;
   await client.auth.signOut({scope:'local'});
-  setStatus('Mot de passe DEV enregistré. Reconnectez-vous avec votre email Root puis configurez la double authentification.');
+  setStatus('Mot de passe DEV enregistré. Reconnectez-vous avec votre email Root ou votre identifiant rootdev.');
  }catch{
   setStatus('Le nouveau mot de passe n’a pas pu être enregistré. Demandez un nouveau lien de récupération DEV.');
  }finally{

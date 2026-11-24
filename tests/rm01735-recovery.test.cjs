@@ -51,7 +51,7 @@ function fixture({
   URLSearchParams,URL,
   setTimeout(fn){state.scheduled.push(fn);return state.scheduled.length},
   supabaseEnvironment:{name:'DEV',url:'https://fake.supabase.co',publishableKey:'fake'},
-  createClient(){return client}
+  createClient(url,key,options){state.storageKey=options.auth.storageKey;return client}
  };
  vm.runInNewContext(sourceToRun,context,{filename:'creator-recovery.js',timeout:2000});
  return{
@@ -158,4 +158,10 @@ test('RM-017.3.5 no password form for normal Root login, no secret logging or de
  assert.match(source,/root\.active/);
  assert.doesNotMatch(source,/\bconsole\.log|window\.alert|localStorage\.setItem|service_role|auth\.signUp/);
  assert.match(html,/creator-recovery\.js\?v=20261123-rm01735/);
+});
+test('RM-AUTH-01 recovery uses the Root-only storage key and the same SDK version',async()=>{
+ const f=fixture({url:origin+'?code=opaque'});await f.afterLoad();
+ assert.equal(f.state.storageKey,'restomanager-dev-creator-auth-v1');
+ assert.match(source,/@supabase\/supabase-js@2\.119\.2\/\+esm/);
+ assert.match(fs.readFileSync(path.join(root,'creator-auth.js'),'utf8'),/storageKey:'restomanager-dev-creator-auth-v1'/);
 });
