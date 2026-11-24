@@ -627,9 +627,15 @@ occupancyMetrics.append(
  occupancyTile('check-circle-2',totalTables-occupiedTables,'Tables libres'),
  occupancyTile('layout-grid',totalTables,'Tables au total')
 );
+const liveOccupancy=node('div','rmLiveOccupancy');
+if(totalTables){
+ const gauge=node('div','rmLiveGauge');gauge.dataset.rmGaugeKey='tables';gauge.dataset.rmGaugeValue=String(Math.max(0,Math.min(100,tablesPercent)));gauge.style.setProperty('--rm-gauge-value',gauge.dataset.rmGaugeValue+'%');
+ gauge.setAttribute('aria-hidden','true');gauge.append(node('strong','',tablesPercent+' %'));liveOccupancy.append(gauge);
+}
+liveOccupancy.append(progressRow('Tables occupées / tables actives',occupiedTables,totalTables,tablesPercent));
 occupancy.replaceChildren(
  occupancyTitle,occupancyMetrics,
- progressRow('Tables occupées / tables actives',occupiedTables,totalTables,tablesPercent),
+ liveOccupancy,
  node('p','rmOccupationCapacity',guestsPresent+' couverts installés sur '+totalSeats+' places ('+seatsPercent+' % des places).'),
  node('p','occupancyHelp','Une table réservée pour plus tard reste libre tant qu’aucun client n’y est installé. Les tables fusionnées sont comptées individuellement.')
 );

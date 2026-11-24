@@ -36,6 +36,17 @@
    const c=node('button','receptionServiceMetric receptionMetricInteractive');c.type='button';c.setAttribute('aria-label','Voir le détail : '+label);c.append(iconLabel('span',label,iconName,'receptionMetricLabel'),node('strong',null,value));c.addEventListener('click',()=>window.RestoKpiDetails?.open(label,detailLists[index]));cards.append(c);
   }
   root.append(cards);
+  // Actual occupied tables, not a prediction of available seats for future reservations.
+  if(tables.length){
+   const count=tables.length-free,percent=Math.round(count/tables.length*100);
+   const live=node('section','rmReceptionLive');
+   const heading=iconLabel('h3','Occupation actuelle','armchair');
+   const layout=node('div','rmLiveOccupancy');
+   const gauge=node('div','rmLiveGauge');gauge.dataset.rmGaugeKey='tables';gauge.dataset.rmGaugeValue=String(percent);gauge.style.setProperty('--rm-gauge-value',percent+'%');gauge.setAttribute('aria-hidden','true');gauge.append(node('strong',null,percent+' %'));
+   const labels=node('div','rmLiveLabels');
+   labels.append(node('strong',null,count+' / '+tables.length+' tables occupées · '+percent+' %'),node('p',null,free+' table(s) sans client installé actuellement.'),node('small',null,'Occupation réelle, hors réservations futures. Ce chiffre ne garantit pas la disponibilité d’un créneau.'));
+   layout.append(gauge,labels);live.append(heading,layout);root.append(live);
+  }
   const totalSeats=tables.reduce((n,t)=>n+Number(t.capacity||0),0);
   const demand=expected+inRoom;
   const pressure=node('section','receptionServicePressure');

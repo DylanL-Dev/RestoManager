@@ -1816,6 +1816,27 @@ html[data-theme="dark"] .rushSettingsHint{background:#203d30;border-color:#44695
 .sidebarMeta .sidebarLegalLink{color:inherit;font-size:11px;text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
 .sidebarMeta .sidebarLegalLink:focus-visible{outline:2px solid #4ac49b;outline-offset:3px}
 
+
+/* RM-UX-02.2 — real occupation, a visual aid beside the accessible actual values. */
+@property --rm-gauge-value{syntax:"<percentage>";inherits:true;initial-value:0%}
+@keyframes rmLiveGaugeFill{from{--rm-gauge-value:var(--rm-gauge-from,0%)}}
+.rmLiveOccupancy{display:grid;grid-template-columns: minmax(0,1fr);gap:14px;align-items:center;min-width:0}
+.rmLiveOccupancy:has(.rmLiveGauge){grid-template-columns:104px minmax(0,1fr)}
+.rmLiveGauge{--rm-gauge-track:#e1ebe5;--rm-gauge-center:#fff;--rm-gauge-ink:#176a4d;aspect-ratio:1;width:100%;max-width:104px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(#138a62 var(--rm-gauge-value),var(--rm-gauge-track) 0);position:relative;isolation:isolate}
+.rmLiveGauge::before{content:"";position:absolute;inset:9px;background:var(--rm-gauge-center);border-radius:50%;z-index:-1}
+.rmLiveGauge strong{font-size:21px;line-height:1;font-variant-numeric:tabular-nums;color:var(--rm-gauge-ink)}
+.rmLiveGauge[data-rm-gauge-animate]{animation:rmLiveGaugeFill 560ms cubic-bezier(.2,.8,.2,1)}
+.rmReceptionLive{border:1px solid #e3eae6;border-radius:14px;padding:16px;display:grid;gap:12px;min-width:0}
+.rmReceptionLive h3{margin:0;font-size:17px}
+.rmLiveLabels{display:grid;gap:6px;min-width:0}
+.rmLiveLabels strong{font-size:15px}
+.rmLiveLabels p,.rmLiveLabels small{font-size:12px;line-height:1.5;margin:0;color:#496857;overflow-wrap:anywhere}
+html[data-theme="dark"] .rmLiveGauge{--rm-gauge-track:#355447;--rm-gauge-center:#1c352a;--rm-gauge-ink:#a2ebc5}
+html[data-theme="dark"] .rmReceptionLive{background:#172c24;border-color:#355347;color:#effaf2}
+html[data-theme="dark"] .rmLiveLabels :is(p,small){color:#bbd3c3}
+@media(max-width:420px){.rmLiveOccupancy:has(.rmLiveGauge){grid-template-columns:80px minmax(0,1fr);gap:10px}.rmLiveGauge strong{font-size:17px}.rmLiveGauge::before{inset:7px}.rmLiveOccupancy .occupancyProgressLine{flex-wrap:wrap}}
+@media(prefers-reduced-motion:reduce){.rmLiveGauge[data-rm-gauge-animate]{animation:none!important}}
+
 /* RM-UX-02.1 — operational motion. Preserve existing screen stacking and never add moving targets or faded text. */
 :root{--rm-service-fast:140ms;--rm-service-normal:200ms;--rm-service-enter:320ms;--rm-service-stagger:65ms;--rm-service-ease:cubic-bezier(.2,.8,.2,1)}
 @keyframes rmServiceCard{from{box-shadow:inset 0 0 0 2px #16815e}to{box-shadow:inset 0 0 0 2px transparent}}

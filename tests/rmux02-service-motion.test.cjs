@@ -13,7 +13,7 @@ test('RM-UX-02.1: only first visible cards and actual changes animate',()=>{
 });
 test('RM-UX-02.1: local assets, preserved actual text, reduced motion and no data operations',()=>{
  const js=fs.readFileSync('service-v3-motion.js','utf8'),css=fs.readFileSync('service-v3.css','utf8'),html=fs.readFileSync('v3-connected.html','utf8'),sw=fs.readFileSync('sw.js','utf8');
- assert.match(html,/service-v3-motion\.js\?v=20261124-rmux02\.1c/);
+ assert.match(html,/service-v3-motion\.js\?v=20261124-rmux02\.2a/);
  assert.match(sw,/"service-v3-motion.js"/);
  assert.match(css,/\.reservationItem,\.tableAdminItem\{animation:none\}/);
  assert.match(css,/\.tableCard:active,\.tableCard:hover\{transform:none\}/);
