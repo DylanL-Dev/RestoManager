@@ -65,7 +65,13 @@ const stub=[
    }
    await navigate('restaurants');
    assert.equal(await page.locator('.ownerRestaurantIcon svg.lucide-store').count(),2);
+   await page.locator('#ownerRestaurantSearch').fill('epicerie');
+   assert.equal(await page.locator('.ownerRestaurantRow:visible').count(),1);
+   await page.locator('#ownerRestaurantSearch').fill('');
+   assert.equal(await page.locator('.ownerRestaurantRow:visible').count(),2);
    await navigate('reports');
+   await page.waitForFunction(()=>document.querySelector('#ownerRefreshReports svg.lucide-refresh-cw'));
+   assert.equal(await page.locator('#ownerReportUrgentOnly svg.lucide-flag').count(),1);
    assert.equal(await page.locator('#ownerSupportQueue').isVisible(),true);
    await navigate('lifecycle');
    assert.equal(await page.locator('#ownerLifecycleList').count(),1);
