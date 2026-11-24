@@ -64,3 +64,19 @@ Prérequis : aucune PR prête à fusionner en cours de validation (idéalement a
 
 - **RM-SEC-02 — Séparer les identités** : un compte GitHub dédié aux agents (ou à chacun), rôle *Write* (non administrateur), connecté à Claude Code et à Codex. On pourra alors exiger l'approbation du propriétaire sur `main`/V3, voire sur DEV, et réserver le contournement au seul propriétaire. C'est la seule protection technique de bout en bout.
 - Après RM-CI-01 : ajouter `public-booking` et `management-responsive` aux contrôles requis.
+
+## 7. Vérifications complémentaires (demandées le 24/11/2026)
+
+**Compatibilité des JSON.** Les quatre fichiers ont été validés contre la description OpenAPI officielle de l'API REST GitHub (`github/rest-api-description`, opération `POST /repos/{owner}/{repo}/rulesets`) : champs requis, énumérations (`enforcement`, types de règles, `allowed_merge_methods`), types. Résultat : **4/4 conformes**. Le validateur a été contrôlé par un test négatif (3 erreurs volontaires, 3 détectées). Limite : seul un import réel par GitHub confirmera l'acceptation finale ; les fichiers n'ont pas de champ `bypass_actors` à rajouter (liste vide voulue).
+
+**Fiabilité des contrôles requis.** Indicateur retenu : les PR purement documentaires de Claude (#245, #248, #250 ; 5 commits), sur lesquelles tout échec est nécessairement étranger à la PR.
+
+| Contrôle | Échecs sur PR documentaires | Décision |
+| --- | --- | --- |
+| 19 contrôles DEV proposés | 0 | Requis |
+| `management-responsive` | 1/5 (cible tactile 430 px) | Non requis avant RM-CI-01 |
+| `public-booking` | 4/4 | Non requis : échec **systématique** sur le code DEV actuel (contraste axe), pas seulement instable ; correctif attendu via #244/RM-CI-01 |
+
+Sur 600 exécutions de PR du 24/11, aucun commit n'a donné des résultats contradictoires pour un même contrôle ; les autres échecs observés correspondent à des développements en cours, corrigés par le commit suivant. Historique court (une journée) : à réévaluer avant l'activation de DEV.
+
+**Effet de RM-SEC-02.** Tant que les agents utilisent le compte administrateur, ces rulesets (0 approbation) restent la phase 1. Après séparation des identités, une variante avec approbation du propriétaire sera proposée.
