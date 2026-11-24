@@ -1,5 +1,11 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-TEAM-01 — Règles communes des agents (AGENTS.md / CLAUDE.md) — PR DEV BROUILLON (24/11/2026)
+
+- Mission propriétaire explicite : documentation de coordination Claude Code / OpenAI Codex. Branche `claude/rm-team-01` depuis DEV `5f545de`, PR [#245](https://github.com/DylanL-Dev/RestoManager/pull/245) vers DEV uniquement, en brouillon.
+- Ajout de `AGENTS.md` (règles communes : environnements, interdictions MAIN/V3/Supabase PROD, branches, anti-conflit, tests, traçabilité, validation) et `CLAUDE.md` (consignes propres à Claude Code). Tableau des branches du `README.md` clarifié : `RestoManager-V3` = publication V3 active, `feature/refonte-service-responsive-v3` = historique préservé. Règle « une seule évolution active à la fois » précisée pour le développement parallèle (voir section Règle absolue).
+- Documentation uniquement : aucun code, workflow, configuration Supabase/Render, ni donnée modifiés. Aucune fusion ni déploiement ; validation du propriétaire attendue.
+
 ### RM-015.1 — Portail public de démonstration — RECETTE DEV (18/11/2026)
 
 - Mission propriétaire explicite après lecture du cahier des charges #173. Départ DEV `62d8fda`, branche `feature/rm015-public-demo`, sauvegarde distante `backup/rm0151-dev-before-20261118`. Aperçu Render DEV autorisé par cette mission ; aucune promotion V3/MAIN ni activation publique de production.
@@ -95,6 +101,8 @@ Les éléments ci-dessous décrivent la livraison initiale, avant cette autorisa
 **Source de vérité du projet : ce document sur `feature/v3-supabase-full-clone`.**  
 Créé le 10 novembre 2026, après l'incident de synchronisation lié à la journée de service.  
 **Règle absolue : une seule évolution active à la fois.** Ne pas passer à une nouvelle fonctionnalité tant que la précédente n'est pas **VALIDÉE CLONE** par l'utilisateur ou explicitement **BLOQUÉE / REPORTÉE**. Une réparation urgente mettant le service en sécurité fait exception et suspend la fonctionnalité en cours.
+
+**Précision du 24/11/2026 (décision du propriétaire, RM-TEAM-01) — travail en parallèle de plusieurs agents.** Plusieurs fonctionnalités peuvent être *développées* simultanément, chacune sur sa propre branche et sa PR brouillon vers DEV, avec des fichiers distincts. La règle « une seule évolution active à la fois » s'applique à l'**intégration et à la publication** : une seule PR fusionnée dans DEV et publiée sur Render à la fois, chacune avec l'autorisation explicite du propriétaire ; l'évolution suivante n'est fusionnée qu'après que la précédente est **VALIDÉE CLONE** ou explicitement **BLOQUÉE / REPORTÉE**. Après chaque fusion DEV, les autres branches intègrent DEV et relancent leurs tests. Les promotions V3/MAIN restent ciblées et individuelles.
 
 ## Statuts autorisés
 
