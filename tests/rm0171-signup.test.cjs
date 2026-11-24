@@ -59,3 +59,15 @@ test('RM-017.1: onboarding has explicit 3-step accessible UX and no backend sign
  assert.doesNotMatch(script,/\bfetch\s*\(|\bXMLHttpRequest\b|\.rpc\s*\(|\.insert\s*\(|\blocalStorage\b|sessionStorage|sendBeacon/);
  assert.match(read('login.html'),/href="inscription\.html"/);
 });
+
+test('RM-UX-03.2: visual journey is derived from existing step state, never registration authorization',()=>{
+ const html=read('inscription.html'),script=read('rm017-signup.js'),css=read('rm017-signup.css');
+ assert.match(html,/id="signupJourney"/);
+ assert.equal([...html.matchAll(/<li data-step="[123]"/g)].length,3);
+ assert.match(script,/item\.dataset\.state=number<next/);
+ assert.match(script,/item\.setAttribute\('aria-current','step'\)/);
+ assert.match(script,/if\(changed&&focus\)/);
+ assert.match(css,/\.rmSignupStepEnter\{animation:none!important\}/);
+ assert.match(html,/id="submitRegistration" disabled/);
+ assert.match(html,/id="signupTypeHint" hidden/);
+});

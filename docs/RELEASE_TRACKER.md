@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-UX-03.4d — Consolidation graphique et accessibilité — RECETTE CANDIDAT (24/11/2026)
+
+PR #244 : 18/18 suites GitHub Actions réussies sur `5a3d12b8d4996711d319621c45e4a38e6c7e47ca` avant synchronisation documentaire DEV. Nouvelle recette requise avant fusion ; Render DEV non confirmé. MAIN, V3 et Supabase PROD hors périmètre.
+
+
 ### RM-TEAM-01 — Règles communes des agents (AGENTS.md / CLAUDE.md) — PR DEV BROUILLON (24/11/2026)
 
 - Mission propriétaire explicite : documentation de coordination Claude Code / OpenAI Codex. Branche `claude/rm-team-01` depuis DEV `5f545de`, PR [#245](https://github.com/DylanL-Dev/RestoManager/pull/245) vers DEV uniquement, en brouillon.

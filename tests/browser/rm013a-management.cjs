@@ -233,7 +233,8 @@ if(require.main===module)(async()=>{let browser;try{
    assert.ok(metrics.height<=metrics.lineHeight*2+1,'Salle Prestige stays horizontal');
    const labels=await page.locator('.roomManagerName').evaluateAll(nodes=>nodes.map(n=>({title:n.title,text:n.textContent,height:n.getBoundingClientRect().height,lineHeight:parseFloat(getComputedStyle(n).lineHeight)})));
    assert.ok(labels.every(n=>n.title===n.text&&n.height<=n.lineHeight*2+1),'All room names stay horizontal with their full name accessible');
-   assert.ok((await page.locator('.roomManagerActions button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height))).every(height=>height>=44),'Room actions retain touch targets');
+   const touchTargets=await page.locator('.roomManagerActions button').evaluateAll(nodes=>nodes.map(n=>({label:n.textContent,height:n.getBoundingClientRect().height,width:n.getBoundingClientRect().width})));
+   assert.ok(touchTargets.length>0&&touchTargets.every(n=>n.height>=44&&n.width>=44),'Room actions retain touch targets: '+JSON.stringify(touchTargets));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    if([390,768,1440].includes(width))await capture(page,'after-rooms-'+width);
    await page.locator('[data-category="manageTables"]').click();

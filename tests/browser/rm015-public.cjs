@@ -32,6 +32,8 @@ async function context(options = {}) {
 }
 async function chooseTime(page) {
   await page.locator('input[name=time]:not(:disabled)').first().check();
+  await page.locator('.rmPortalSelection').waitFor({state:'visible'});
+  assert.match(await page.locator('.rmPortalSelection').innerText(),/Exemple fictif, sans réservation réelle/);
   await page.getByRole('button', { name: 'Continuer', exact: false }).click();
 }
 async function complete(page) {

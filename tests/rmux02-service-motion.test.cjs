@@ -23,3 +23,5 @@ test('RM-UX-02.1: local assets, preserved actual text, reduced motion and no dat
 });
 
 test('RM-UX-02.1: operational screens retain normal stacking and readable text',()=>{const css=fs.readFileSync('service-v3.css','utf8').split('/* RM-UX-02.1 — operational motion')[1];assert.doesNotMatch(css,/\.appScreenActive/);assert.doesNotMatch(css, /opacity:|translateY\(|scale\(/);});
+
+test('RM-UX-03.4: service screen transitions never lower text contrast',()=>{const css=fs.readFileSync('service-v3.css','utf8');assert.match(css,/@keyframes restoScreenEnter\{from\{transform:translateY\(4px\)\}to\{transform:none\}\}/);assert.match(fs.readFileSync('service-v3-management-categories.css','utf8'),/\.roomManager \.roomManagerActions button\{[^}]*min-height:46px;min-width:44px/);});
