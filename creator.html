@@ -8,7 +8,7 @@
 <title>Console Créateur · RestoManager DEV</title>
 <link rel="icon" type="image/svg+xml" href="pwa-icon.svg">
 <link rel="stylesheet" href="creator-console.css?v=20261124-rm0191-visible">
-<link rel="stylesheet" href="creator-shell.css?v=20261124-rm0201-rm0202">
+<link rel="stylesheet" href="creator-shell.css?v=20261124-rm0201-rm0202-rm0204">
 </head>
 <body>
 <section id="loginPanel" class="loginSurface">
@@ -122,8 +122,17 @@
     <p class="ownerHint">Cet écran est informatif et volontairement non destructif. Il ne permet ni d'inviter des utilisateurs, ni d'ouvrir le pilote, ni de modifier les permissions.</p>
    </section>
    <section data-owner-section="monitoring" hidden>
-    <div class="ownerHeadline"><div><span class="ownerEyebrow">PROCHAIN MODULE</span><h1>Supervision</h1><p>Monitoring technique à venir.</p></div></div>
-    <div class="ownerSurface"><h2>En préparation</h2><p>À terme : disponibilité de l'application, incidents Supabase, erreurs de synchronisation et état des déploiements.</p><p class="ownerHint">Aucune mesure de disponibilité en temps réel n'est affichée actuellement.</p></div>
+    <div class="ownerHeadline"><div><span class="ownerEyebrow">CENTRE TECHNIQUE · DEV</span><h1>Supervision</h1><p>Contrôlez la connexion et les versions accessibles depuis votre session Créateur. Aucun changement de configuration.</p></div><button type="button" class="secondary" id="ownerRefreshMonitoring"><span data-lucide="refresh-cw"></span>Vérifier maintenant</button></div>
+    <p class="ownerMonitorNotice">Diagnostic ponctuel depuis cet appareil : il ne constitue pas une surveillance 24 h/24 ni une mesure globale de disponibilité.</p>
+    <div class="ownerMonitorGrid">
+     <article class="ownerSurface ownerMonitorCard"><span class="ownerMonitorIcon" data-lucide="server"></span><h2>Hébergement DEV</h2><strong class="ownerMonitorState" id="ownerMonitorWebState" data-state="unknown" role="status">Non vérifié</strong><p id="ownerMonitorWebDetail">Lecture directe du manifeste de version du site.</p><small id="ownerMonitorWebTime">—</small></article>
+     <article class="ownerSurface ownerMonitorCard"><span class="ownerMonitorIcon" data-lucide="shield-check"></span><h2>Supabase DEV</h2><strong class="ownerMonitorState" id="ownerMonitorDbState" data-state="unknown" role="status">Non vérifié</strong><p id="ownerMonitorDbDetail">Vérification des lectures déjà autorisées à votre compte Root.</p><small id="ownerMonitorDbTime">—</small></article>
+     <article class="ownerSurface ownerMonitorCard"><span class="ownerMonitorIcon" data-lucide="flag"></span><h2>Signalements urgents</h2><strong class="ownerMonitorMetric" id="ownerMonitorUrgent">—</strong><p>Parmi les 1 000 signalements les plus récents accessibles. Ce compteur ne représente pas les incidents techniques détectés automatiquement.</p><small id="ownerMonitorUrgentTime">—</small><button type="button" class="ownerAction" data-owner-nav="reports"><span data-lucide="inbox"></span>Ouvrir l’assistance</button></article>
+    </div>
+    <div class="ownerMonitorGrid ownerMonitorLower">
+     <article class="ownerSurface ownerMonitorCard"><span class="ownerMonitorIcon" data-lucide="calendar-days"></span><h2>Versions déclarées des équipes</h2><strong class="ownerMonitorVersion" id="ownerMonitorRelease">—</strong><p>Informations lues dans le manifeste public DEV. Elles ne prouvent pas le dernier commit déployé ni la version du Créateur.</p><ul class="ownerMonitorHistory" id="ownerMonitorHistory"></ul></article>
+     <article class="ownerSurface ownerMonitorCard"><span class="ownerMonitorIcon" data-lucide="activity"></span><h2>Diagnostic et déploiements</h2><p>Consultez les sources officielles pour l’historique réel des déploiements, les journaux et les contrôles automatiques.</p><div class="ownerMonitorLinks"><a href="https://dashboard.render.com/static/srv-dbm8o15g1s2s73cemju0" target="_blank" rel="noopener noreferrer">Render DEV · déploiements <span data-lucide="external-link"></span></a><a href="https://supabase.com/dashboard/project/lykoybacslvmhtzftqsf" target="_blank" rel="noopener noreferrer">Supabase DEV · journaux <span data-lucide="external-link"></span></a><a href="https://github.com/DylanL-Dev/RestoManager/actions" target="_blank" rel="noopener noreferrer">GitHub · tests et historique <span data-lucide="external-link"></span></a></div><small>Les journaux privés et les alertes automatiques ne sont pas encore intégrés dans cette console.</small></article>
+    </div>
    </section>
    <section data-owner-section="settings" hidden>
     <div class="ownerHeadline"><div><span class="ownerEyebrow">SÉCURITÉ</span><h1>Paramètres Root</h1><p>Votre identité Root est vérifiée par Supabase Auth et la table platform_admins.</p></div></div>
@@ -135,6 +144,6 @@
 </div>
 <p id="message" role="status" aria-live="polite" class="ownerGlobalMessage"></p>
 <script type="module" src="creator-shell.js?v=20261124-rm0201-rm0202"></script>
-<script type="module" src="creator-auth.js?v=20261124-rm0191-visible"></script>
+<script type="module" src="creator-auth.js?v=20261124-rm0191-visible-rm0204"></script>
 </body>
 </html>

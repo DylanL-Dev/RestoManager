@@ -18,7 +18,7 @@ jobs:
       - name: Syntax and Creator compatibility contracts
         run: |
           npm run test:syntax
-          node --test tests/rm0201-creator-shell.test.cjs tests/rm0202-creator-icons.test.cjs tests/rm0174-pilot.test.cjs tests/rm019-creator-assistance.test.cjs tests/creator-console.test.cjs
+          node --test tests/rm0201-creator-shell.test.cjs tests/rm0202-creator-icons.test.cjs tests/rm0204-monitoring.test.cjs tests/rm0174-pilot.test.cjs tests/rm019-creator-assistance.test.cjs tests/creator-console.test.cjs
       - run: npx playwright install --with-deps chromium
       - name: Whole Creator shell, seven sections, five widths, WCAG, no remote calls
         run: node tests/browser/rm0201-creator-shell.cjs
