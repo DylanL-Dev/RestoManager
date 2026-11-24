@@ -20,5 +20,5 @@ test('RM-020.3: keep classic replacement and Creator nested renderer options',()
 });
 test('RM-020.3: cache version, all public/staff static icon references, bundled licenses',()=>{
  const {lib}=setup();for(const name of ['v3-connected.html','inscription.html','reservation/index.html','reservation/live.html','creator.html']){const html=read(name);for(const [,icon] of html.matchAll(/data-lucide=["']([\w-]+)["']/g))assert.ok(lib.hasIcon(icon),name+': '+icon);if(name!=='creator.html')assert.match(html,/lucide-local\.js\?v=[\w.-]*rm0203/);}
- assert.match(read('sw.js'),/restomanager-shell-20261124-dev-rm0203/);assert.match(read('sw.js'),/"lucide-local.js"/);assert.match(source,/ISC License/);assert.match(source,/MIT License/);
+ assert.match(read('sw.js'),/restomanager-shell-20261124-dev-rmux02\.1/);assert.match(read('sw.js'),/"lucide-local.js"/);assert.match(source,/ISC License/);assert.match(source,/MIT License/);
 });

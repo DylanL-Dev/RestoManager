@@ -38,7 +38,6 @@
    for(const node of nodes){
     const [key,value]=item(node,config.kind);
     if(!key||!value)continue;
-    next.set(key,value);
     const action=classify(previous?.get(key)?.value,value,config.kind,first);
     const sameNode=previous?.get(key)?.node===node;
     if(!reduced.matches&&action&&(!sameNode||previous?.get(key)?.value!==value)&&

@@ -11,7 +11,7 @@ function snapshot(mode){const result={syncSequence:++sequence,revision:'10',capa
  tables:Array.from({length:23},(_,i)=>({id:id('4',i+1),label:'Table '+(i+1),seats:4,active:i<22,room_id:id('3',1)})),
  reservations:[{id:id('5',1),guest_name:'Arrivée fictive',hotel_room:null,party_size:2,starts_at:day+'T11:30:00Z',ends_at:day+'T13:00:00Z',status:'reserved',notes:'[RESTOMANAGER:EXTERIEUR]',edit_version:id('6',1)},
  {id:id('5',2),guest_name:'Client installé fictif',hotel_room:null,party_size:2,starts_at:day+'T10:30:00Z',ends_at:day+'T12:00:00Z',status:'seated',notes:'[RESTOMANAGER:EXTERIEUR]',edit_version:id('6',2)}],
- assignments:[{reservation_id:id('5',1),table_id:id('4',1)},{reservation_id:id('5',2),table_id:id('4',2)}],holds:[],fusionLinks:[]};if(mode==='empty-tables'){result.tables=[];result.reservations=[];result.assignments=[]}if(mode==='empty-arrivals'){result.reservations=[];result.assignments=[]}return result;}
+ assignments:[{reservation_id:id('5',1),table_id:id('4',1)},{reservation_id:id('5',2),table_id:id('4',2)}],holds:[],fusionLinks:[]};if(mode==='empty-tables'){result.tables=[];result.reservations=[];result.assignments=[]}if(mode==='empty-arrivals'){result.reservations=[];result.assignments=[]}if(mode==='motion-changed'){result.reservations[0].status='seated'}return result;}
 const bridge=`
 export async function requireStaff(){return {user:{id:'fictional-user'},profile:{role:window.__displayRole,active:true,display_name:'Équipe fictive',restaurant_id:'fictional-restaurant'}}}
 export async function loadSharedService(){if(window.__displayMode==='loading')return new Promise(()=>{});if(window.__displayMode==='error')throw Object.assign(Error('Forbidden fixture'),{code:'42501'});return window.__displaySnapshot(window.__displayMode)}
@@ -59,6 +59,23 @@ const results=[];function pass(name){results.push({name,status:'passed'});consol
   for(const [filter,count] of [['free',20],['expected',1],['present',1],['all',22]]){await v.page.locator('#filters [data-filter='+filter+']').click();assert.equal(await v.page.locator('.tableCard').count(),count)}
   if(out){fs.mkdirSync(out,{recursive:true});await v.page.screenshot({path:path.join(out,'tables-'+role+'-'+width+'.png'),fullPage:true})}
   await v.context.close();pass('22 actual snapshot tables, upcoming arrivals and visible text '+role+' '+width);
+ }
+ {const v=await open(browser,origin,{width:1440});await v.page.waitForFunction(()=>window.RestoSupabaseReady===true);
+  await v.page.waitForFunction(()=>document.querySelectorAll('#tableGrid .tableCard').length===22);
+  await v.page.waitForTimeout(700);
+  await v.page.evaluate(()=>{
+   window.__motionChanges=[];
+   const observer=new MutationObserver(records=>{for(const r of records){if(r.target.dataset.rmMotion==='change')window.__motionChanges.push(r.target.className);}});
+   observer.observe(document.body,{attributes:true,attributeFilter:['data-rm-motion'],subtree:true});
+   window.dispatchEvent(new Event('display:push'));
+  });
+  await v.page.waitForTimeout(500);
+  assert.deepEqual(await v.page.evaluate(()=>window.__motionChanges),[],'Identical snapshot must not replay motion');
+  await v.page.evaluate(()=>{window.__displayMode='motion-changed';window.dispatchEvent(new Event('display:push'));});
+  await v.page.waitForFunction(()=>window.__motionChanges.some(x=>x.includes('tableCard')));
+  assert.equal(await v.page.locator('.tableCard.present').count(),2);
+  assert.ok((await v.page.evaluate(()=>window.__motionChanges)).some(x=>x.includes('kpi')));
+  assert.deepEqual(v.errors,[]);await v.context.close();pass('Motion only on actual snapshot status/value changes; unchanged snapshot stays still');
  }
  for(const mode of ['empty-tables','empty-arrivals']){const v=await open(browser,origin,{mode});await v.page.waitForFunction(()=>window.RestoSupabaseReady);if(mode==='empty-tables'){assert.equal(await v.page.locator('.tableCard').count(),0);assert.match(await v.page.locator('#tableGrid').innerText(),/Aucune table active/)}else assert.equal(await v.page.locator('.tableCard').count(),22);assert.match(await v.page.locator('#upcoming').innerText(),/Aucune arrivée en attente/);assert.deepEqual(v.errors,[]);await v.context.close();pass('Confirmed '+mode+' has an explicit empty state');}
  for(const mode of ['loading','error']){
