@@ -98,6 +98,12 @@ const stub=[
    await navigate('settings');
    await navigate('dashboard');
    assert.equal(await page.locator('.ownerMetric').first().evaluate(el=>getComputedStyle(el).animationName),'rmMotionEnter');
+   const stagger=await page.locator('.ownerMetric').evaluateAll(nodes=>nodes.map(n=>parseFloat(getComputedStyle(n).animationDelay)));
+   assert.ok(stagger.every((v,i)=>i===0||v-stagger[i-1]>=0.08),'Visible sequential stagger '+stagger);
+   await navigate('pilot');
+   assert.equal(await page.locator('.ownerPilotBanner').evaluate(el=>getComputedStyle(el).animationName),'rmMotionEnter');
+   assert.ok(await page.locator('.ownerPilotGrid>.ownerSurface').count()>0);
+   await navigate('dashboard');
    assert.equal(await page.locator('#ownerTotalRestaurants').textContent(),'2','Motion never substitutes fake KPI values');
    if(width===390){
     await page.emulateMedia({reducedMotion:'reduce'});
@@ -114,15 +120,36 @@ const stub=[
    await page.locator('#ownerThemeToggle').click();
    assert.equal(await page.locator('html').getAttribute('data-creator-theme'),'light');
    if(width>=1001){
-    await page.locator('#ownerSidebarCollapse').click();
-    assert.equal(await page.locator('#ownerPanel').evaluate(el=>el.classList.contains('ownerShellCompact')),true);
-    assert.equal(await page.locator('#ownerSidebar [data-owner-nav="dashboard"]').getAttribute('aria-label'),'Vue générale');
-    await page.locator('#ownerSidebarCollapse').click();
-    assert.equal(await page.locator('#ownerPanel').evaluate(el=>el.classList.contains('ownerShellCompact')),false);
+    const toggle=page.locator('#ownerSidebarCollapse');
+    const layout=()=>page.evaluate(()=>{
+     const sidebar=document.getElementById('ownerSidebar'), nav=sidebar.querySelector('.ownerNavigation');
+     const rect=nav.getBoundingClientRect();
+     const icons=[...nav.querySelectorAll('button>.ownerNavIcon')].map(el=>el.getBoundingClientRect());
+     return {width:sidebar.getBoundingClientRect().width,navWidth:nav.clientWidth,navScroll:nav.scrollWidth,
+      badge:getComputedStyle(nav.querySelector('.ownerSupportNavNew')).display,
+      spread:Math.max(...icons.map(r=>r.left))-Math.min(...icons.map(r=>r.left)),
+      inside:icons.every(r=>r.left>=rect.left-1&&r.right<=rect.right+1)};
+    });
+    for(let cycle=0;cycle<3;cycle++){
+     await toggle.click();
+     assert.equal(await page.locator('#ownerPanel').evaluate(el=>el.classList.contains('ownerShellCompact')),true);
+     await page.waitForFunction(()=>Math.abs(document.getElementById('ownerSidebar').getBoundingClientRect().width-79)<1);
+     const compact=await layout();
+     assert.equal(compact.badge,'none','New badge must not overflow compact menu');
+     assert.ok(compact.spread<=1&&compact.inside&&compact.navScroll<=compact.navWidth+1,'Compact geometry '+JSON.stringify(compact));
+     assert.equal(await page.locator('#ownerSidebar [data-owner-nav="dashboard"]').getAttribute('aria-label'),'Vue générale');
+     await toggle.click();
+     assert.equal(await page.locator('#ownerPanel').evaluate(el=>el.classList.contains('ownerShellCompact')),false);
+     await page.waitForFunction(()=>Math.abs(document.getElementById('ownerSidebar').getBoundingClientRect().width-266)<1);
+     const expanded=await layout();
+     assert.notEqual(expanded.badge,'none');
+     assert.ok(expanded.spread<=1&&expanded.inside&&expanded.navScroll<=expanded.navWidth+1,'Expanded geometry '+JSON.stringify(expanded));
+    }
    }
    const overflow=await page.evaluate(()=>({vw:innerWidth,sw:document.documentElement.scrollWidth}));
    assert.ok(overflow.sw<=overflow.vw+1,'Horizontal overflow at '+width+': '+JSON.stringify(overflow));
    if(width===390||width===1440){
+    await page.waitForFunction(()=>document.getAnimations().every(a=>a.playState!=='running'));
     await page.addScriptTag({path:path.join(root,'node_modules/axe-core/axe.min.js')});
     const violations=await page.evaluate(async()=>{
      const results=await axe.run(document.getElementById('ownerPanel'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});
