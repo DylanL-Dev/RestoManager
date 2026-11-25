@@ -6,7 +6,7 @@
     "supabase-service-bridge.js": "458801cfc47b0998862c78d198fb704ac106261b4593056dafcb5ef45cf87cb7",
     "supabase-login.js": "02203e32a99e5a9e3713bb8544f44b3709a476a4061b11fea43c7daade7f4682",
     "creator-auth.js": "ff227bdc7baeab334bad7ccc8a24a5d80bd5d4471ed14d3a727003e3a33fa594",
-    "login.html": "cd0a1060556b4ba9ffe741fc3d63b006680412303b88b058a3ed20a41c8be35a",
+    "login.html": "3d3d4d889550dbe6027c5aed9c41be114aa1c5220885c0082d3801d3847556eb",
     "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14",
     "service-v3-screens.js": "e9097214804ab7340800c8b3ff8e073a436001219c62fb12660606849d852a44",
     "restomanager-env.js": "2e6607423e773e31cea3a77d5b045f24d1de724ccfc063dcf4faba21c72964c3"
@@ -32,7 +32,7 @@
   "emailDeliveryEnabled": false,
   "publicPortalUrl": "https://dylanl-dev.github.io/RestoManager/reservation/live.html?restaurant=a-lepicerie-rouen",
   "antiAbuseSiteKey": "0x4AAAAAAGLm9RaVvyWg-GtY",
-  "scope": "RM-RELEASE-UX-L1 (L1-A) — interface Restaurant/Réception issue de #240, #243 et de la partie service de #244 ; fichiers de connexion, Créateur, inscription, portail public et SQL exclus.",
+  "scope": "RM-RELEASE-UX-L1 (L1-A) — interface Restaurant/Réception issue de #240, #243 et de la partie service de #244 ; fichiers de connexion, Créateur, inscription, portail public et SQL exclus. L1-B : connexion premium (login.html, fichier protégé) — empreinte mise à jour, à approuver explicitement.",
   "promoted_assets": {
     "service-v3-public-booking.js": "79bc9c6e6f79230ddf6344b8b0d382dcb0f134dcf591bcf8b47b3bf5e37b55be",
     "service-v3-publication-model.js": "c030966658ec672527ab9d1c3061667bb96f8c51ceec84b2f10d7603a0b541d9",
