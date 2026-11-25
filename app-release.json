@@ -1,8 +1,21 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.22-rm015.13.2-main",
+  "currentVersion": "2026.11.25-rmuxl1-main",
   "releases": [
+    {
+      "version": "2026.11.25-rmuxl1-main",
+      "date": "2026-11-25",
+      "title": "Un service plus lisible et plus vivant, sans changer vos règles",
+      "changes": [
+        "Les cartes, tables et compteurs signalent visuellement ce qui vient de changer (arrivée, installation, libération), avec des animations discrètes qui respectent le réglage « réduire les animations ».",
+        "Restaurant et Réception partagent une frise des arrivées en direct et des jauges d’occupation calculées sur les réservations réelles.",
+        "Un conseil de service explicable s’appuie sur le seuil commun et la charge des créneaux, et un raccourci ouvre directement la fiche d’une arrivée.",
+        "Les notifications indiquent précisément l’élément concerné ; les zones tactiles et les contrastes ont été renforcés."
+      ],
+      "impact": "Mise à jour de l’interface uniquement. Aucune migration Supabase, aucun changement de droits, de capacité ou de connexion, aucune nouvelle ouverture des réservations en ligne.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.22-rm015.13.2-main",
       "date": "2026-11-22",

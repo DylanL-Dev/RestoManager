@@ -17,6 +17,7 @@
   root.append(intro);
   if(!Array.isArray(info)||!window.RestoSupabaseReady){
    root.append(node('p','receptionServiceEmpty','Synchronisation en cours ou indisponible. Vérifiez la connexion dans Gestion.'));
+   if(!Array.isArray(info)&&window.RestoSyncState==='pending'){const skeleton=node('div','rmServiceSkeleton');skeleton.setAttribute('aria-hidden','true');for(let i=0;i<3;i++)skeleton.append(node('span'));root.append(skeleton);}
    return;
   }
   const today=day();
@@ -36,6 +37,17 @@
    const c=node('button','receptionServiceMetric receptionMetricInteractive');c.type='button';c.setAttribute('aria-label','Voir le détail : '+label);c.append(iconLabel('span',label,iconName,'receptionMetricLabel'),node('strong',null,value));c.addEventListener('click',()=>window.RestoKpiDetails?.open(label,detailLists[index]));cards.append(c);
   }
   root.append(cards);
+  // Actual occupied tables, not a prediction of available seats for future reservations.
+  if(tables.length){
+   const count=tables.length-free,percent=Math.round(count/tables.length*100);
+   const live=node('section','rmReceptionLive');
+   const heading=iconLabel('h3','Occupation actuelle','armchair');
+   const layout=node('div','rmLiveOccupancy');
+   const gauge=node('div','rmLiveGauge');gauge.dataset.rmGaugeKey='tables';gauge.dataset.rmGaugeValue=String(percent);gauge.style.setProperty('--rm-gauge-value',percent+'%');gauge.setAttribute('aria-hidden','true');gauge.append(node('strong',null,percent+' %'));
+   const labels=node('div','rmLiveLabels');
+   labels.append(node('strong',null,count+' / '+tables.length+' tables occupées · '+percent+' %'),node('p',null,free+' table(s) sans client installé actuellement.'),node('small',null,'Occupation réelle, hors réservations futures. Ce chiffre ne garantit pas la disponibilité d’un créneau.'));
+   layout.append(gauge,labels);live.append(heading,layout);root.append(live);
+  }
   const totalSeats=tables.reduce((n,t)=>n+Number(t.capacity||0),0);
   const demand=expected+inRoom;
   const pressure=node('section','receptionServicePressure');
@@ -47,6 +59,7 @@
    if(demand/totalSeats>=.8)pressure.append(node('p','receptionServiceWarning','Forte affluence prévue. Vérifiez les créneaux disponibles avant de proposer une réservation.'));
   }
   root.append(pressure);
+  const timeline=window.RestoRush?.timeline?.(today,list);if(timeline)root.append(timeline);
   const section=node('section','receptionServiceArrivals');section.append(iconLabel('h3','Prochaines arrivées','calendar-days'));
   const ordered=pending.slice().sort((a,b)=>String(a.time).localeCompare(String(b.time))).slice(0,12);
   if(!ordered.length)section.append(node('p','muted','Aucune arrivée en attente pour aujourd’hui.'));
@@ -57,7 +70,11 @@
    details.append(node('strong',null,r.hotelRoom?'Chambre '+r.hotelRoom:r.client||'Client'));
    details.append(node('small',null,Number(r.guests||0)+' couvert(s) · '+((r.tables||[]).length?'Table'+(r.tables.length>1?'s ':' ')+r.tables.join(' + '):'Attribution en cours')));
    const status=node('span','receptionServiceStatus',statusNames[r.status]||r.status);
-   row.append(time,details,status);section.append(row);
+   const button=node('button','rmArrivalShortcut');button.type='button';button.dataset.rmArrivalId=String(r.id);
+   button.setAttribute('aria-label','Ouvrir la réservation de '+(r.hotelRoom?'la chambre '+r.hotelRoom:r.client||'ce client')+' à '+(r.time||'—'));
+   const ico=node('i');ico.dataset.lucide='chevron-right';ico.setAttribute('aria-hidden','true');button.append(ico);
+   button.addEventListener('click',()=>window.RestoOpenServiceReservation?.(String(r.id)));
+   row.append(time,details,status,button);section.append(row);
   }
   root.append(section);
   const syncedAt=Number(window.RestoLastSyncAt)||0;
