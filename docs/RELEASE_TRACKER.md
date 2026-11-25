@@ -5,6 +5,7 @@
 - Phase 1 autorisée, issue #144. MAIN figé `d852c19` dans un worktree détaché ; aucun contact Supabase PROD (garde-fou réseau : 0 requête), aucun workflow, aucune fusion.
 - Syntaxe 173/173, unitaires 221/221, `release-guard` PASS, 13/14 suites navigateur réussies sur simulation (244 vérifications) ; `rm016-learning` en échec d'environnement (Chromium local), `rm012-closeout` bloqué (Docker).
 - Pas de verdict GO/NO GO : domaines service simulé, Realtime réel, RLS et SQL réservés à la phase 2. Constats P2 : SDK Supabase par CDN sans intégrité ni version unique, pas de CSP sur les pages équipe, racine du dépôt publiée. [Rapport](audits/RM-AUDIT-02_MAIN_PHASE1_20261124.md).
+- 25/11 — Plan de phase 2 : résultats PostgreSQL 62/62 et clôture RM-012 déjà acquis sur l'arbre identique de la PR #228 ; `mission3-validation.yml` réutilisable via `workflow_dispatch`, harnais Supabase à corriger (`restomanager-env.js`) ; scénario 54 places en deux sessions. Aucun déclenchement. [Plan](audits/RM-AUDIT-02_PHASE2_PLAN_20261125.md).
 
 ### RM-UX-03.4d — Consolidation graphique et accessibilité — RECETTE CANDIDAT (24/11/2026)
 
