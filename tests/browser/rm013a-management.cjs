@@ -62,7 +62,7 @@ export const supabase={from:query,rpc:(name,args)=>window.__rmRpc(name,args),aut
 const server=http.createServer((req,res)=>{
  const file=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(process.argv.includes('--pwa-fixture')?/^\/(?:RestoManager\/)?/:/^\//,'');
  if(file.split('/').some(p=>p==='..'||p.startsWith('.'))){res.writeHead(404).end();return}
- let data;try{data=process.argv.includes('--pwa-fixture')&&file==='supabase-service-bridge.js'?bridge:process.argv.includes('--pwa-fixture')&&file==='sw.js'?fs.readFileSync(path.join(root,file),'utf8').replace(/restomanager-shell-[^'"]+/,'restomanager-shell-rm-fixture'+workerRevision):baselineOnly?execFileSync('git',['show',baseline+':'+file],{cwd:root,maxBuffer:10*1024*1024,stdio:['ignore','pipe','ignore']}):fs.readFileSync(path.join(root,file));}catch{res.writeHead(404).end();return}
+ let data;try{data=process.argv.includes('--pwa-fixture')&&file==='supabase-service-bridge.js'?bridge:process.argv.includes('--pwa-fixture')&&file==='sw.js'?fs.readFileSync(path.join(root,file),'utf8').replace(/const CACHE='restomanager-shell-[^']+';/, "const CACHE='restomanager-shell-rm-fixture"+workerRevision+"';"):baselineOnly?execFileSync('git',['show',baseline+':'+file],{cwd:root,maxBuffer:10*1024*1024,stdio:['ignore','pipe','ignore']}):fs.readFileSync(path.join(root,file));}catch{res.writeHead(404).end();return}
  res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(data);
 });
 async function open(browser,origin,width,role,options={}){
@@ -232,7 +232,8 @@ if(require.main===module)(async()=>{let browser;try{
    assert.ok(metrics.height<=metrics.lineHeight*2+1,'Salle Prestige stays horizontal');
    const labels=await page.locator('.roomManagerName').evaluateAll(nodes=>nodes.map(n=>({title:n.title,text:n.textContent,height:n.getBoundingClientRect().height,lineHeight:parseFloat(getComputedStyle(n).lineHeight)})));
    assert.ok(labels.every(n=>n.title===n.text&&n.height<=n.lineHeight*2+1),'All room names stay horizontal with their full name accessible');
-   assert.ok((await page.locator('.roomManagerActions button').evaluateAll(nodes=>nodes.map(n=>n.getBoundingClientRect().height))).every(height=>height>=44),'Room actions retain touch targets');
+   const touchTargets=await page.locator('.roomManagerActions button').evaluateAll(nodes=>nodes.map(n=>({label:n.textContent,height:n.getBoundingClientRect().height,width:n.getBoundingClientRect().width})));
+   assert.ok(touchTargets.length>0&&touchTargets.every(n=>n.height>=44&&n.width>=44),'Room actions retain touch targets: '+JSON.stringify(touchTargets));
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    if([390,768,1440].includes(width))await capture(page,'after-rooms-'+width);
    await page.locator('[data-category="manageTables"]').click();
