@@ -4,6 +4,12 @@
 
 PR #244 : 18/18 suites GitHub Actions réussies sur `5a3d12b8d4996711d319621c45e4a38e6c7e47ca` avant synchronisation documentaire DEV. Nouvelle recette requise avant fusion ; Render DEV non confirmé. MAIN, V3 et Supabase PROD hors périmètre.
 
+### RM-SEC-01 — Préparation des rulesets GitHub — PR DEV BROUILLON (24/11/2026)
+
+- Mission propriétaire autorisée en autonomie, issue #249, branche `claude/rm-sec-01-rulesets` depuis DEV `dbd2ec0`. Préparation uniquement : **aucune protection activée**.
+- Quatre rulesets importables (`docs/audits/rm-sec-01/`) : branches figées (`backup/**`, V3 historique), MAIN, `RestoManager-V3`, DEV ; suppression, push forcé et push direct interdits ; contrôles CI requis fiables uniquement. [Rapport et procédure](audits/RM-SEC-01_RULESETS_20261124.md).
+- Limite signalée : compte GitHub unique et administrateur pour le propriétaire et les agents ; séparation proposée en RM-SEC-02.
+
 ### RM-TEAM-02 — Coordination GitHub Claude / Codex — PR DEV BROUILLON (24/11/2026)
 
 - Mission propriétaire (protocole de collaboration IA). Issue #247, branche `claude/rm-team-02-coordination` depuis DEV `dbd2ec0`, PR vers DEV uniquement, en brouillon.

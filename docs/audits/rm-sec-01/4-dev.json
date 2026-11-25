@@ -1,0 +1,121 @@
+{
+  "name": "RM-SEC-01 — DEV (intégration, Auto-Deploy Render)",
+  "target": "branch",
+  "enforcement": "active",
+  "bypass_actors": [],
+  "conditions": {
+    "ref_name": {
+      "include": [
+        "refs/heads/feature/v3-supabase-full-clone"
+      ],
+      "exclude": []
+    }
+  },
+  "rules": [
+    {
+      "type": "deletion"
+    },
+    {
+      "type": "non_fast_forward"
+    },
+    {
+      "type": "pull_request",
+      "parameters": {
+        "required_approving_review_count": 0,
+        "dismiss_stale_reviews_on_push": false,
+        "require_code_owner_review": false,
+        "require_last_push_approval": false,
+        "required_review_thread_resolution": false,
+        "allowed_merge_methods": [
+          "merge",
+          "squash"
+        ]
+      }
+    },
+    {
+      "type": "required_status_checks",
+      "parameters": {
+        "strict_required_status_checks_policy": true,
+        "do_not_enforce_on_create": false,
+        "required_status_checks": [
+          {
+            "context": "unit-audit",
+            "integration_id": 15368
+          },
+          {
+            "context": "unit",
+            "integration_id": 15368
+          },
+          {
+            "context": "postgres",
+            "integration_id": 15368
+          },
+          {
+            "context": "browser-mock",
+            "integration_id": 15368
+          },
+          {
+            "context": "supabase-isolated",
+            "integration_id": 15368
+          },
+          {
+            "context": "playwright-mocks",
+            "integration_id": 15368
+          },
+          {
+            "context": "closeout",
+            "integration_id": 15368
+          },
+          {
+            "context": "notifications",
+            "integration_id": 15368
+          },
+          {
+            "context": "learning",
+            "integration_id": 15368
+          },
+          {
+            "context": "production-package",
+            "integration_id": 15368
+          },
+          {
+            "context": "real-web-sync",
+            "integration_id": 15368
+          },
+          {
+            "context": "public-demo",
+            "integration_id": 15368
+          },
+          {
+            "context": "signup-preview",
+            "integration_id": 15368
+          },
+          {
+            "context": "registration-security",
+            "integration_id": 15368
+          },
+          {
+            "context": "lifecycle-security",
+            "integration_id": 15368
+          },
+          {
+            "context": "root-access",
+            "integration_id": 15368
+          },
+          {
+            "context": "legal-dev",
+            "integration_id": 15368
+          },
+          {
+            "context": "support-dev",
+            "integration_id": 15368
+          },
+          {
+            "context": "creator-shell-dev",
+            "integration_id": 15368
+          }
+        ]
+      }
+    }
+  ]
+}
