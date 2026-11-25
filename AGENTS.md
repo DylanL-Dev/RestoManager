@@ -42,9 +42,11 @@ Le dépôt est **public**. Ne jamais écrire dans le code, les commits, les PR, 
 
 ## 5. Éviter les conflits entre agents (à chaque mission)
 
+**Tableau de bord : les issues GitHub.** Chaque mission a une issue (identifiant RM, responsable, fichiers visés, critères de validation, état), **créée ou mise à jour avant la première modification** — le travail non poussé d'une session n'est visible par personne. Réutiliser l'issue existante plutôt que d'en créer une nouvelle. Étiquettes : `agent:claude` / `agent:codex` ; `status:en-cours`, `status:bloqué` ; disponible = ouverte sans `status:*` ; terminé = fermée. Commenter l'issue à chaque étape importante (commit, PR, CI, fusion). Ne jamais affirmer l'état du travail de l'autre agent sans l'avoir lu dans GitHub.
+
 1. `git fetch` puis lire les 15 derniers commits de DEV et les premières entrées de `docs/RELEASE_TRACKER.md`.
-2. Lister les PR ouvertes vers DEV et leurs fichiers modifiés.
-3. Si un fichier visé est déjà modifié par une PR ouverte d'un autre agent : **signaler avant d'écrire** et attendre l'arbitrage du propriétaire.
+2. Lister les PR ouvertes vers DEV et leurs fichiers modifiés, et les issues ouvertes `agent:*` / `status:en-cours`.
+3. Si un fichier ou une fonctionnalité visé est déjà modifié ou réservé par l'autre agent : **ne pas y toucher**, le signaler dans les deux issues, choisir une tâche indépendante ou demander l'arbitrage du propriétaire. La réservation donne une priorité de coordination, pas un verrou technique.
 4. Avant d'ouvrir ou de mettre à jour la PR, refaire l'étape 1 ; en cas de nouveau commit DEV, fusionner DEV dans sa branche (jamais de rebase d'une branche déjà poussée) et relancer les tests.
 5. Ne jamais modifier, pousser sur ou commenter la branche d'un autre agent sans instruction.
 

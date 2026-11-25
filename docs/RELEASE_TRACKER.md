@@ -1,9 +1,32 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-AUDIT-02 — Audit de MAIN phase 1 (lecture/simulation) — RAPPORT (24/11/2026)
+
+- Phase 1 autorisée, issue #144. MAIN figé `d852c19` dans un worktree détaché ; aucun contact Supabase PROD (garde-fou réseau : 0 requête), aucun workflow, aucune fusion.
+- Syntaxe 173/173, unitaires 221/221, `release-guard` PASS, 13/14 suites navigateur réussies sur simulation (244 vérifications) ; `rm016-learning` en échec d'environnement (Chromium local), `rm012-closeout` bloqué (Docker).
+- Pas de verdict GO/NO GO : domaines service simulé, Realtime réel, RLS et SQL réservés à la phase 2. Constats P2 : SDK Supabase par CDN sans intégrité ni version unique, pas de CSP sur les pages équipe, racine du dépôt publiée. [Rapport](audits/RM-AUDIT-02_MAIN_PHASE1_20261124.md).
+- 25/11 — Plan de phase 2 : résultats PostgreSQL 62/62 et clôture RM-012 déjà acquis sur l'arbre identique de la PR #228 ; `mission3-validation.yml` réutilisable via `workflow_dispatch`, harnais Supabase à corriger (`restomanager-env.js`) ; scénario 54 places en deux sessions. Aucun déclenchement. [Plan](audits/RM-AUDIT-02_PHASE2_PLAN_20261125.md).
+
 ### RM-UX-03.4d — Consolidation graphique et accessibilité — RECETTE CANDIDAT (24/11/2026)
 
 PR #244 : 18/18 suites GitHub Actions réussies sur `5a3d12b8d4996711d319621c45e4a38e6c7e47ca` avant synchronisation documentaire DEV. Nouvelle recette requise avant fusion ; Render DEV non confirmé. MAIN, V3 et Supabase PROD hors périmètre.
 
+### RM-SEC-02 — Conception de la séparation des identités GitHub — PR DEV BROUILLON (24/11/2026)
+
+- Phase de conception autorisée par le propriétaire, issue #251, branche `claude/rm-sec-02-identities` depuis DEV `dbd2ec0`. **Aucun compte, connexion ni accès modifié.**
+- Recommandation : un compte technique commun (seul compte technique gratuit autorisé par les conditions GitHub), collaborateur non administrateur, relié à Claude Code et à Codex ; approbation du propriétaire exigée ensuite sur MAIN/V3 via rulesets et CODEOWNERS. [Conception, tests préalables et procédure de migration](audits/RM-SEC-02_IDENTITES_20261124.md).
+
+### RM-SEC-01 — Préparation des rulesets GitHub — PR DEV BROUILLON (24/11/2026)
+
+- Mission propriétaire autorisée en autonomie, issue #249, branche `claude/rm-sec-01-rulesets` depuis DEV `dbd2ec0`. Préparation uniquement : **aucune protection activée**.
+- Quatre rulesets importables (`docs/audits/rm-sec-01/`) : branches figées (`backup/**`, V3 historique), MAIN, `RestoManager-V3`, DEV ; suppression, push forcé et push direct interdits ; contrôles CI requis fiables uniquement. [Rapport et procédure](audits/RM-SEC-01_RULESETS_20261124.md).
+- Limite signalée : compte GitHub unique et administrateur pour le propriétaire et les agents ; séparation proposée en RM-SEC-02.
+
+### RM-TEAM-02 — Coordination GitHub Claude / Codex — PR DEV BROUILLON (24/11/2026)
+
+- Mission propriétaire (protocole de collaboration IA). Issue #247, branche `claude/rm-team-02-coordination` depuis DEV `dbd2ec0`, PR vers DEV uniquement, en brouillon.
+- Étiquettes `agent:claude`, `agent:codex`, `status:en-cours`, `status:bloqué` créées ; RM-UX-03 (Codex) suivi dans #242, RM-CI-01 (Claude) ouvert en #246 et bloqué par le recouvrement avec la PR #244.
+- `AGENTS.md` : protocole des issues (déclaration avant modification, états, réservation non bloquante). Documentation uniquement ; aucune fusion ni déploiement.
 
 ### RM-TEAM-01 — Règles communes des agents (AGENTS.md / CLAUDE.md) — PR DEV BROUILLON (24/11/2026)
 
