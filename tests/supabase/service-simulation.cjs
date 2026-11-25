@@ -74,11 +74,15 @@ async function run({url,anonKey,accounts,sql,day,admin,assert=nodeAssert}){
 
   // ---------- S1 Realtime: each role listens to the other's changes ----------
   const seen=new Map(); // reservation id -> {at, by}
-  function listen(account,label){
+  async function listen(account,label){
+   const {data:{session}}=await account.client.auth.getSession();if(session?.access_token)account.client.realtime.setAuth(session.access_token);
    return new Promise(resolve=>{
-    const channel=account.client.channel(tag+'-'+label).on('postgres_changes',{event:'*',schema:'public',table:'reservations',filter:'restaurant_id=eq.'+C},payload=>{const id=payload?.new?.id||payload?.old?.id;if(id&&!seen.has(label+':'+id))seen.set(label+':'+id,Date.now());});
+    // Same subscription shape as the application (v3-connected-auth.js): no column filter,
+    // Realtime applies RLS with the signed-in user's token.
+    const channel=account.client.channel(tag+'-'+label).on('postgres_changes',{event:'*',schema:'public',table:'reservations'},payload=>{const id=payload?.new?.id||payload?.old?.id;if(id&&!seen.has(label+':'+id))seen.set(label+':'+id,Date.now());});
     channels.push({account,channel});let settled=false;
-    channel.subscribe(status=>{if(!settled&&status==='SUBSCRIBED'){settled=true;resolve(true);}if(!settled&&['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status)){settled=true;resolve(false);}});
+    // CLOSED can be transient while the socket reconnects; only an error or the timeout is a refusal.
+    channel.subscribe(status=>{if(!settled&&status==='SUBSCRIBED'){settled=true;resolve(true);}if(!settled&&['CHANNEL_ERROR','TIMED_OUT'].includes(status)){settled=true;resolve(false);}});
     setTimeout(()=>{if(!settled){settled=true;resolve(false);}},20000);
    });
   }
