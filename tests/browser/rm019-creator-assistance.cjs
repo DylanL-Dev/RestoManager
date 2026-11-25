@@ -114,7 +114,7 @@ const server=http.createServer((req,res)=>{
    const viewport=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
    assert.ok(viewport.scroll<=viewport.width+1,'Horizontal overflow '+width+': '+JSON.stringify(viewport));
    if(width===390||width===1440){
-    await page.addScriptTag({path:path.join(root,'node_modules/axe-core/axe.min.js')});
+    await page.evaluate(fs.readFileSync(path.join(root,'node_modules/axe-core/axe.min.js'),'utf8'))/* RM-SEC-04: CSP-exempt test injection, the page CSP stays active */;
     const violations=await page.evaluate(async()=>{
      const result=await axe.run(document.getElementById('ownerInbox'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});
      return result.violations.map(v=>({id:v.id,impact:v.impact,targets:v.nodes.map(n=>n.target)}));

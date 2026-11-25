@@ -15,7 +15,9 @@ test('RM-SEC-04: every staff/Creator page declares the CSP before any script, st
 test('RM-SEC-04: scripts are same-origin only; no inline script, handler, eval or plugin',()=>{
  for(const page of PAGES){
   const html=read(page),p=policyOf(html);
-  assert.deepEqual(p['script-src'],["'self'"],page);assert.deepEqual(p['object-src'],["'none'"],page);
+  // v3-connected.html also allows the static RM-016 training boot script (inherited by its srcdoc frame).
+  const trainingHash="'sha256-"+require('node:crypto').createHash('sha256').update(require('../service-v3-tutorial-training.js').bootScript(),'utf8').digest('base64')+"'";
+  assert.deepEqual(p['script-src'],page==='v3-connected.html'?["'self'",trainingHash]:["'self'"],page+' (if the training code changed, update the hash in v3-connected.html)');assert.deepEqual(p['object-src'],["'none'"],page);
   assert.deepEqual(p['base-uri'],["'self'"],page);assert.deepEqual(p['frame-src'],["'none'"],page);assert.deepEqual(p['default-src'],["'self'"],page);
   const inline=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].filter(m=>m[1].trim());
   assert.equal(inline.length,0,page+' still has inline scripts');

@@ -83,10 +83,16 @@
     role = role === 'reception' ? 'reception' : 'restaurant';
     scenario = ['welcome', 'booking', 'notifications'].includes(scenario) ? scenario : 'welcome';
     token = /^[a-zA-Z0-9-]{1,80}$/.test(token) ? token : '';
-    const script = '(' + trainingApp.toString() + ')(' + JSON.stringify(role) + ',' + JSON.stringify(scenario) + ',' + JSON.stringify(token) + ');';
+    // RM-SEC-04: the executable script is static (its SHA-256 is allowed by the page CSP inherited by
+    // this srcdoc document); per-session values travel in a non-executable JSON block.
+    const config = JSON.stringify({role, scenario, token}).replace(/</g, '\\u003c');
+    const script = bootScript();
     return '<!doctype html><html lang="fr"' + (dark ? ' data-theme="dark"' : '') + '><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; base-uri \'none\'; form-action \'none\'"><meta name="viewport" content="width=device-width, initial-scale=1"><style>' +
       '*{box-sizing:border-box}body{margin:0;padding:20px;font:16px/1.55 system-ui,sans-serif;color:#193f35;background:#f5faf7}h2{font-size:23px;line-height:1.3;margin:14px 0}p{margin:12px 0}button,input,select{font:inherit;border:1px solid #aac8bb;border-radius:12px;color:inherit;background:#fff;min-height:48px;padding:11px 14px}button{cursor:pointer;font-weight:650;margin:5px 8px 5px 0}input,select{display:block;width:100%;margin-top:8px}label{display:block;font-weight:650;margin:16px 0}.primary{background:#176d57;color:#fff;border-color:#176d57}.badge,.success{background:#dff3e8;border-radius:12px;padding:12px}.card,.choices{border:1px solid #b8d4c6;border-radius:16px;padding:16px;margin:14px 0;background:#fff}header{display:flex;gap:12px;justify-content:space-between;align-items:center;border-bottom:1px solid #c8ded2;padding-bottom:12px}header strong{font-size:12px;letter-spacing:.09em}#status{min-height:24px;font-weight:650}button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #218767;outline-offset:3px}[hidden]{display:none!important}[data-theme=dark] body{background:#142e27;color:#e5f3ed}[data-theme=dark] button,[data-theme=dark] input,[data-theme=dark] select,[data-theme=dark] .card,[data-theme=dark] .choices{background:#203f34;color:#e5f3ed}[data-theme=dark] .primary{background:#b6e2cf;color:#153f31}[data-theme=dark] .badge,[data-theme=dark] .success{background:#254d3d}@media(max-width:400px){body{padding:14px}header{align-items:flex-start}h2{font-size:21px}button{width:100%;margin-right:0}}' +
-      '</style></head><body><header><strong>ENTRAÎNEMENT · DONNÉES FICTIVES</strong><button type="button" id="restart">Recommencer</button></header><main id="exercise"></main><p id="status" role="status" aria-live="polite"></p><script>' + script + '</script></body></html>';
+      '</style></head><body><header><strong>ENTRAÎNEMENT · DONNÉES FICTIVES</strong><button type="button" id="restart">Recommencer</button></header><main id="exercise"></main><p id="status" role="status" aria-live="polite"></p><script type="application/json" id="rmTrainingConfig">' + config + '</script><script>' + script + '</script></body></html>';
   }
-  return Object.freeze({documentFor});
+  function bootScript() {
+    return '(function(){var c=JSON.parse(document.getElementById("rmTrainingConfig").textContent);(' + trainingApp.toString() + ')(c.role,c.scenario,c.token);})();';
+  }
+  return Object.freeze({documentFor, bootScript});
 });

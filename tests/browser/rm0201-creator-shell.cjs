@@ -150,7 +150,7 @@ const stub=[
    assert.ok(overflow.sw<=overflow.vw+1,'Horizontal overflow at '+width+': '+JSON.stringify(overflow));
    if(width===390||width===1440){
     await page.waitForFunction(()=>document.getAnimations().every(a=>a.playState!=='running'));
-    await page.addScriptTag({path:path.join(root,'node_modules/axe-core/axe.min.js')});
+    await page.evaluate(fs.readFileSync(path.join(root,'node_modules/axe-core/axe.min.js'),'utf8'))/* RM-SEC-04: CSP-exempt test injection, the page CSP stays active */;
     const violations=await page.evaluate(async()=>{
      const results=await axe.run(document.getElementById('ownerPanel'),{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}});
      return results.violations.map(v=>({id:v.id,impact:v.impact,targets:v.nodes.map(n=>n.target)}));
