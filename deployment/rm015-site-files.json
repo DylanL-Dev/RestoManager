@@ -129,5 +129,10 @@
   "vendor/LICENSE-supabase-js.txt",
   "vendor/jspdf-2.5.2.umd.min.js",
   "vendor/supabase-js-2.119.0.umd.js",
-  "vendor/supabase-js.mjs"
+  "vendor/supabase-js.mjs",
+  "login-environment.js",
+  "login-ui.js",
+  "redirect-v3-connected.js",
+  "v3-booking-type-visual.js",
+  "v3-quick-actions.js"
 ]

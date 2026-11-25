@@ -35,6 +35,13 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
   const file=path.resolve(root,'.'+decodeURIComponent(pathname));
   if(!file.startsWith(root+path.sep)||/\/\.(git|env)(\/|$)/.test(file)){res.writeHead(404);res.end();return;}
   fs.readFile(file,(error,data)=>{if(error){res.writeHead(404);res.end();return;}
+   // RM-SEC-04: pages keep their real CSP; only the DEV Supabase origin is pointed at the
+   // disposable local stack (HTTP + WebSocket). The policy itself is never removed or relaxed.
+   if(path.extname(file)==='.html'&&/Content-Security-Policy/.test(data.toString())){
+    const text=data.toString().replaceAll('https://lykoybacslvmhtzftqsf.supabase.co',url).replaceAll('wss://lykoybacslvmhtzftqsf.supabase.co',url.replace(/^http/,'ws'));
+    assert.match(text,/http-equiv="Content-Security-Policy"/);assert.doesNotMatch(text,/lykoybacslvmhtzftqsf|tnsrkargogckgtsxipwd/);
+    data=Buffer.from(text);
+   }
    if(['supabase-service-bridge.js','supabase-login.js'].includes(path.basename(file))){
     data=Buffer.from(data.toString().replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[^']+/,appUrl+'/__sdk.mjs').replaceAll('https://tnsrkargogckgtsxipwd.supabase.co',url).replace(/sb_publishable_[A-Za-z0-9_-]+/g,anonKey));
    }
