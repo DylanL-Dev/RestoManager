@@ -124,5 +124,10 @@
   "v3-connected.html",
   "v3-mobile-verification-20261109.html",
   "v3-supabase-booking.js",
-  "vendor/qrcode-generator-1.4.4.js"
+  "vendor/qrcode-generator-1.4.4.js",
+  "vendor/LICENSE-jspdf.txt",
+  "vendor/LICENSE-supabase-js.txt",
+  "vendor/jspdf-2.5.2.umd.min.js",
+  "vendor/supabase-js-2.119.0.umd.js",
+  "vendor/supabase-js.mjs"
 ]

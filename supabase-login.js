@@ -1,5 +1,5 @@
 import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm';
+import { createClient } from './vendor/supabase-js.mjs?v=20261125-rmsec03';
 // GitHub Pages may retain a stale browser-wide Supabase auth lock from an old PWA.
 // Isolate its session from the legacy default key; Render keeps its working key.
 const githubPages=location.hostname.endsWith('.github.io');

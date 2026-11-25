@@ -61,7 +61,7 @@ test('RM-017.3.3 only DEV and no hardcoded credential or privilege grant',()=>{
  assert.match(auth,/data\.role!=='platform_admin'/);
  assert.match(auth,/!data\.active/);
  assert.doesNotMatch(auth,/auth\.mfa\.|getAuthenticatorAssuranceLevel/);
- assert.match(auth,/@supabase\/supabase-js@2\.119\.2\/\+esm/);
+ assert.match(auth,/from '\.\/vendor\/supabase-js\.mjs\?v=[\w-]+'/);assert.doesNotMatch(auth,/cdn\.jsdelivr|unpkg/);
  assert.match(auth,/clearTimeout\(watchdog\)/);
  assert.match(auth,/La vérification prend trop de temps/);
  assert.match(auth,/resetPasswordForEmail/);

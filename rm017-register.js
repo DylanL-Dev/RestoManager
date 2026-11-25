@@ -29,7 +29,7 @@ function showVerification(title,details){
 }
 async function connect(){
  if(client)return client;
- const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm');
+ const {createClient}=await import('./vendor/supabase-js.mjs?v=20261125-rmsec03');
  client=createClient(supabaseEnvironment.url,supabaseEnvironment.publishableKey,{
   auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
  });

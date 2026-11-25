@@ -3,7 +3,7 @@ import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 // Access is authorized exclusively by Supabase Auth + platform_admins RLS.
 import {installOwnerInbox} from './creator-admin.js?v=20261123-rm019';
 import {installCreatorConsole} from './creator-console.js?v=20261123-rm0174-rm0204';
-import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm';
+import {createClient} from './vendor/supabase-js.mjs?v=20261125-rmsec03';
 if(supabaseEnvironment.name!=='DEV')throw new Error('Ce parcours Root est réservé à DEV.');
 const client=createClient(
  supabaseEnvironment.url,

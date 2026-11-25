@@ -8,7 +8,7 @@ const sdk=`export function createClient(){return {auth:{getSession:async()=>({da
  browser=await chromium.launch({args:['--no-sandbox']});fs.mkdirSync(out,{recursive:true});
  for(const width of [360,390,768,1024,1440,1920]){
   const context=await browser.newContext({viewport:{width,height:900},serviceWorkers:'block'});await context.addInitScript(()=>window.__attempts=[]);
-  await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin===origin)return route.continue();if(u.hostname==='cdn.jsdelivr.net'&&u.pathname.includes('@supabase/supabase-js'))return route.fulfill({contentType:'text/javascript',body:sdk,headers:{'access-control-allow-origin':'*'}});return route.abort()});
+  await context.route('**/*',route=>{const u=new URL(route.request().url());if(u.origin===origin&&u.pathname==='/vendor/supabase-js.mjs')return route.fulfill({contentType:'text/javascript',body:sdk});if(u.origin===origin)return route.continue();return route.abort()});
   const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto(origin+'/login.html');
   await page.locator('#environmentLabel').waitFor({state:'visible'});assert.match(await page.locator('#environmentLabel').innerText(),/DEV/);
   await page.locator('#username').fill('admin-fb');await page.locator('#password').fill('fictitious-only');

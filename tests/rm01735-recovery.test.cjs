@@ -162,6 +162,6 @@ test('RM-017.3.5 no password form for normal Root login, no secret logging or de
 test('RM-AUTH-01 recovery uses the Root-only storage key and the same SDK version',async()=>{
  const f=fixture({url:origin+'?code=opaque'});await f.afterLoad();
  assert.equal(f.state.storageKey,'restomanager-dev-creator-auth-v1');
- assert.match(source,/@supabase\/supabase-js@2\.119\.2\/\+esm/);
+ assert.match(source,/from '\.\/vendor\/supabase-js\.mjs\?v=[\w-]+'/);assert.doesNotMatch(source,/cdn\.jsdelivr|unpkg/);
  assert.match(fs.readFileSync(path.join(root,'creator-auth.js'),'utf8'),/storageKey:'restomanager-dev-creator-auth-v1'/);
 });

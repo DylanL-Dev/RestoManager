@@ -40,7 +40,7 @@ async function setup(browser,{active=true,verified=false,verifiedType='hotel',wi
   if(url.startsWith('https://challenges.cloudflare.com/turnstile/v0/api.js')){
    return route.fulfill({contentType:'text/javascript',headers:{'Access-Control-Allow-Origin':'*'},body:fakeTurnstile});
   }
-  if(url.startsWith('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@')){
+  if(url.startsWith(origin+'/vendor/supabase-js.mjs')){
    return route.fulfill({contentType:'text/javascript',headers:{'Access-Control-Allow-Origin':'*'},body:fakeSupabase});
   }
   if(url.startsWith(origin))return route.continue();
