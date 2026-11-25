@@ -1,4 +1,6 @@
 'use strict';
+// RM-AUDIT-02 phase 2: fail-closed loopback-only guard, loaded before any network-capable module.
+const noProdGuard=require('./no-prod-guard.cjs');
 // Disposable local integration stack. No remote URL, project ref or DB URL accepted.
 const {spawn}=require('node:child_process');
 const fs=require('node:fs');const os=require('node:os');const path=require('node:path');
@@ -77,9 +79,12 @@ async function main(){
  await waitFor(async()=>{const {data,error}=await accounts[0].client.rpc('service_sync_state_v1');return !error&&data?.capabilities?.reservation_edits===4;},'Mission 3 schema cache');
  const api=await require('./api-tests.cjs').run(context);
  const browser=await require('./browser-tests.cjs')(context);
- const result={status:'Réussi',backend:'real self-hosted Supabase components; loopback only',images,legacy,api,browser};
+ const simulation=await require('./service-simulation.cjs').run({...context,admin});
+ const networkGuard=noProdGuard.summary();
+ const result={status:simulation.failed===0&&networkGuard.nodeViolations===0?'Réussi':'Échec',backend:'real self-hosted Supabase components; loopback only',images,legacy,api,browser,simulation:{passed:simulation.passed,failed:simulation.failed,results:simulation.results,observations:simulation.observations,propagationMs:simulation.propagationMs},networkGuard};
  if(process.env.MISSION3_ARTIFACTS){fs.mkdirSync(process.env.MISSION3_ARTIFACTS,{recursive:true});fs.writeFileSync(path.join(process.env.MISSION3_ARTIFACTS,'supabase-results.json'),JSON.stringify(result,null,2));}
  console.log(JSON.stringify(result));
+ noProdGuard.assertClean();if(simulation.failed)process.exitCode=1;
  for(const a of accounts)if(a.client){await a.client.removeAllChannels();await a.client.auth.signOut();}
 }
 main().catch(async error=>{console.error(safe(error.stack||error));for(const container of created){const r=await docker(['logs','--tail','25',container]);fs.writeFileSync(path.join(work,container+'.log'),safe(r.stdout+r.stderr),{mode:0o600});}console.error('Sanitized local diagnostics: '+work);process.exitCode=1;}).finally(async()=>{gateway?.closeAllConnections();gateway?.close();for(const container of created.reverse())await docker(['rm','-f','-v',container]);await docker(['network','rm',network]);for(const file of fs.readdirSync(work))if(file.endsWith('.env'))fs.unlinkSync(path.join(work,file));});

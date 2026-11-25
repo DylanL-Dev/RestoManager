@@ -4,7 +4,8 @@ const assert=require('node:assert/strict');const {chromium}=require('playwright'
 
 module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=false}){
  assert.equal(new URL(url).hostname,'127.0.0.1');
- const results=[];const contexts=[];let browser;let appUrl;
+ const results=[];const contexts=[];let browser;let appUrl;const prodLeaks=[];const blockedOrigins=[];
+ const networkGuard=()=>{assert.deepEqual(prodLeaks,[],'No served file may keep a hosted Supabase target');return {prodLeaks:prodLeaks.length,blockedExternalRequests:blockedOrigins.length,blockedOrigins:[...new Set(blockedOrigins)].slice(0,20)};};
  const sdk=fs.readFileSync(require.resolve('@supabase/supabase-js').replace(/dist\/main\/index\.js$/,'dist/umd/supabase.js'),'utf8');
  const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
@@ -12,8 +13,14 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
   const file=path.resolve(root,'.'+decodeURIComponent(pathname));
   if(!file.startsWith(root+path.sep)||/\/\.(git|env)(\/|$)/.test(file)){res.writeHead(404);res.end();return;}
   fs.readFile(file,(error,data)=>{if(error){res.writeHead(404);res.end();return;}
-   if(['supabase-service-bridge.js','supabase-login.js'].includes(path.basename(file))){
-    data=Buffer.from(data.toString().replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[^']+/,appUrl+'/__sdk.mjs').replaceAll('https://tnsrkargogckgtsxipwd.supabase.co',url).replace(/sb_publishable_[A-Za-z0-9_-]+/g,anonKey));
+   // RM-AUDIT-02 phase 2: since RM-015.10 MAIN centralises the PROD URL, key and origin lock in
+   // restomanager-env.js; rewrite it like the two bridge files, then refuse to serve any of them
+   // if a hosted Supabase reference survives (fail closed: the browser never receives a PROD target).
+   if(['supabase-service-bridge.js','supabase-login.js','restomanager-env.js'].includes(path.basename(file))){
+    let text=data.toString().replace(/https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[^']+/,appUrl+'/__sdk.mjs').replaceAll('https://tnsrkargogckgtsxipwd.supabase.co',url).replace(/sb_publishable_[A-Za-z0-9_-]+/g,anonKey);
+    if(path.basename(file)==='restomanager-env.js')text=text.replace(/^if\(location\.origin!==[^\n]*\n/m,'');
+    if(/tnsrkargogckgtsxipwd|lykoybacslvmhtzftqsf|\.supabase\.(co|in)\b|sb_publishable_/i.test(text)){prodLeaks.push(path.basename(file));res.writeHead(500);res.end();return;}
+    data=Buffer.from(text);
    }
    res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.setHeader('Cache-Control','no-store');res.end(data);
   });
@@ -22,8 +29,8 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
   const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true,serviceWorkers:'block'});contexts.push(context);
   await context.addInitScript({content:sdk});
   if(!loginUi){const {data:{session}}=await account.client.auth.getSession();await context.addInitScript(session=>localStorage.setItem('sb-127-auth-token',JSON.stringify(session)),session);}
-  await context.route('**/*',route=>{const origin=new URL(route.request().url()).origin;return [appUrl,url].includes(origin)?route.continue():route.abort();});
-  await context.routeWebSocket('**/*',ws=>{const origin=new URL(ws.url()).origin.replace(/^ws/,'http');if(origin!==url){ws.close();return;}ws.connectToServer();});
+  await context.route('**/*',route=>{const origin=new URL(route.request().url()).origin;if([appUrl,url].includes(origin))return route.continue();blockedOrigins.push(origin.replace(/[^a-z0-9.:/-]/gi,'').slice(0,80));return route.abort();});
+  await context.routeWebSocket('**/*',ws=>{const origin=new URL(ws.url()).origin.replace(/^ws/,'http');if(origin!==url){blockedOrigins.push(origin.replace(/[^a-z0-9.:/-]/gi,'').slice(0,80));ws.close();return;}ws.connectToServer();});
   const page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));
   if(loginUi){await page.goto(appUrl+'/login.html');await page.locator('#username').fill(account.role==='reception'?'reception':'admin-fb');await page.locator('#password').fill(account.password);await page.locator('#submit').click();await page.waitForURL('**/v3-connected.html');}
   else await page.goto(appUrl+'/v3-connected.html');
@@ -48,7 +55,7 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
     assert.deepEqual(view.errors,[]);
     passed('Real pre-migration schema displays tables read-only and blocks writes: '+account.role);
    }
-   return {passed:results.length,failed:0,results,backend:'real Auth/REST on original schema, before Mission 2 and Mission 3 migrations'};
+   return {passed:results.length,failed:0,results,backend:'real Auth/REST on original schema, before Mission 2 and Mission 3 migrations',networkGuard:networkGuard()};
   }
   const a=await open(accounts[0],true),b=await open(accounts[2],true);
   passed('Real login UI: Restaurant and Reception use distinct Auth accounts and sessions');
@@ -78,7 +85,7 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
   passed('Independent second-restaurant browser receives only its authorized snapshot');
   for(const instance of [a,b,foreign])assert.deepEqual(instance.errors,[]);
   passed('Real browser contexts have no uncaught JavaScript errors');
-  return {passed:results.length,failed:0,results,backend:'real Auth/REST/Realtime; application bridge unchanged except local URL/key and same-version SDK source'};
+  return {passed:results.length,failed:0,results,backend:'real Auth/REST/Realtime; application bridge unchanged except local URL/key and same-version SDK source',networkGuard:networkGuard()};
  }catch(error){
   results.push({name:'Remaining real browser flow',status:'failed',code:error.name||'ASSERTION'});persist();
   if(process.env.MISSION3_ARTIFACTS){
