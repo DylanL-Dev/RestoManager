@@ -20,9 +20,10 @@
  const undoBar=node('div','rmNcUndo'),undoMessage=node('span','','Notification retirée sur cet appareil.'),undoButton=button('Annuler',()=>undoDismissal(),'rmNcTextButton');undoButton.setAttribute('aria-label','Annuler le retrait');undoBar.setAttribute('role','status');undoBar.setAttribute('aria-live','polite');undoBar.hidden=true;undoBar.append(undoMessage,undoButton);
  footer.append(history,snoozed);panel.append(header,status,undoBar,scroll,footer);
  let storageKey='',state={},items=[],renderKey='',returnFocus=null,marking=false,flowScroll=0,bodyLocked=false,previousOverflow='';
+ let previousVisibleIds=new Set(),previousUnread=null;
  const sourceRegistry=new Map(),undoStack=[];
  function context(){return window.RestoNotificationContext}
- function load(){const key=model.scope(context());const next=key?'restomanager:notifications:v1:'+key:'';if(next===storageKey)return;storageKey=next;state={};undoStack.length=0;undoBar.hidden=true;status.textContent='';if(next)try{const value=JSON.parse(localStorage.getItem(next)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))state=value}catch{}renderKey=''}
+ function load(){const key=model.scope(context());const next=key?'restomanager:notifications:v1:'+key:'';if(next===storageKey)return;storageKey=next;state={};previousVisibleIds=new Set();previousUnread=null;undoStack.length=0;undoBar.hidden=true;status.textContent='';if(next)try{const value=JSON.parse(localStorage.getItem(next)||'{}');if(value&&typeof value==='object'&&!Array.isArray(value))state=value}catch{}renderKey=''}
  function save(){if(!storageKey)return false;const now=Date.now();for(const [id,value] of Object.entries(state))if(!value||now-Number(value.updatedAt||0)>30*86400000)delete state[id];try{localStorage.setItem(storageKey,JSON.stringify(state));return true}catch{status.textContent='Les préférences de notifications ne peuvent pas être conservées sur cet appareil.';return false}}
  function setLocal(id,patch){state[id]={...state[id],...patch,updatedAt:Date.now()};return save()}
  function dismissItem(item){
@@ -153,16 +154,18 @@
   subtitle.textContent=showSnoozed?'Rappels reportés · Réactivables à tout moment':count+' non lue'+(count>1?'s':'')+' · Espace '+(context()?.role==='reception'?'Réception':'Restaurant');
   allRead.hidden=!items.some(n=>!n.read&&!n.snoozed&&!(n.type==='sync'&&n.read));snoozed.hidden=!items.some(n=>n.snoozed)&&!showSnoozed;snoozed.textContent=showSnoozed?'Retour au flux':'Reportés ('+items.filter(n=>n.snoozed).length+')';
   const key=JSON.stringify([visible,showSnoozed,unreadOnly]);if(!force&&key===renderKey)return;renderKey=key;
+  const newIds=new Set(!force?[...visible].filter(item=>!previousVisibleIds.has(item.id)&&!item.read).map(item=>item.id):[]);previousVisibleIds=new Set(visible.map(item=>item.id));
   const active=document.activeElement,focusId=active?.closest('[data-notification-id]')?.dataset.notificationId,focusLabel=active?.getAttribute('aria-label')||active?.textContent,position=scroll.scrollTop;
   scroll.dataset.releaseView='notifications';
   scroll.replaceChildren();
   if(!visible.length){const empty=node('div','rmNcEmpty'),glyph=node('span','rmNcGlyph');glyph.append(icon('bell-off'));empty.append(glyph,node('strong','',showSnoozed?'Aucun rappel reporté':unreadOnly?'Vous êtes à jour':'Aucune notification pour le moment'),node('p','',unreadOnly?'Les rappels importants encore actifs restent toujours visibles.':'Les informations utiles à votre équipe apparaîtront ici.'));scroll.append(empty)}
   const groups=[['attention','À votre attention',n=>n.group==='important'||n.priority==='high'],['service','Votre service',n=>n.group!=='important'&&n.priority!=='high'&&n.group!=='news'],['news','Nouveautés',n=>n.group==='news']];
   for(const [,label,predicate] of groups){const list=visible.filter(predicate);if(!list.length)continue;const section=node('section','rmNcSection'),h=node('h2','rmNcGroupTitle',label);h.append(node('span','',String(list.length)));section.append(h);for(const item of list)section.append(dismissibleCard(item.source==='release'?window.RestoAppRelease.card(item,{mark:()=>{setLocal(item.id,{readAt:Date.now()});update()},history:showHistory}):card(item),item));scroll.append(section)}
+  for(const card of scroll.querySelectorAll('[data-notification-id]'))if(newIds.has(card.dataset.notificationId))card.dataset.rmNewNotice='true';
   scroll.scrollTop=position;
   if(focusId){const candidate=[...scroll.querySelectorAll('[data-notification-id]')].find(n=>n.dataset.notificationId===focusId);const control=[...(candidate?.querySelectorAll('button')||[])].find(b=>(b.getAttribute('aria-label')||b.textContent)===focusLabel);(control||title).focus({preventScroll:true})}
  }
- function update(){load();items=collect();const count=items.filter(n=>!n.read&&!n.snoozed).length;bell.hidden=!ready();badge.textContent=count>99?'99+':String(count);badge.hidden=!count;bell.setAttribute('aria-label',count?'Notifications, '+count+' non lues':'Notifications, aucune non lue');if(!ready()&&panel.open)closePanel();render()}
+ function update(){load();items=collect();const count=items.filter(n=>!n.read&&!n.snoozed).length;bell.hidden=!ready();badge.textContent=count>99?'99+':String(count);badge.hidden=!count;if(previousUnread!==null&&previousUnread!==count&&count&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches){badge.animate?.([{boxShadow:'0 0 0 3px currentColor'},{boxShadow:'0 0 0 0 transparent'}],{duration:320});}previousUnread=count;bell.setAttribute('aria-label',count?'Notifications, '+count+' non lues':'Notifications, aucune non lue');if(!ready()&&panel.open)closePanel();render()}
  function mountModal(){if(panel.open)return;returnFocus=document.activeElement;previousOverflow=document.body.style.overflow;panel.showModal();bodyLocked=true;document.body.style.overflow='hidden';bell.setAttribute('aria-expanded','true')}
  function finishClose(restoreFocus=true){bell.setAttribute('aria-expanded','false');if(bodyLocked){bodyLocked=false;document.body.style.overflow=previousOverflow}if(restoreFocus)returnFocus?.focus?.({preventScroll:true});returnFocus=null}
  function closePanel({restoreFocus=true}={}){if(panel.open)panel.close();finishClose(restoreFocus)}
