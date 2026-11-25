@@ -9,10 +9,11 @@ module.exports=async function run({url,anonKey,accounts,root,sql,readOnlyPhase=f
  // same-version browser bundle from the package root, never inject Node CJS.
  const sdkRoot=path.dirname(require.resolve('@supabase/supabase-js/package.json'));
  const sdkVersion=JSON.parse(fs.readFileSync(path.join(sdkRoot,'package.json'),'utf8')).version;
- for(const file of ['supabase-login.js','supabase-service-bridge.js']){
-  const frontendVersion=fs.readFileSync(path.join(root,file),'utf8').match(/supabase-js@([0-9.]+)\//)?.[1];
-  assert.equal(sdkVersion,frontendVersion,'The real browser harness must use the frontend SDK version');
- }
+ // RM-SEC-03: the frontend imports the single local entry point vendor/supabase-js.mjs, which
+ // names the vendored build version; it must equal the locked SDK injected below.
+ const frontendVersion=fs.readFileSync(path.join(root,'vendor/supabase-js.mjs'),'utf8').match(/supabase-js-([0-9.]+)\.umd\.js/)?.[1];
+ assert.equal(sdkVersion,frontendVersion,'The real browser harness must use the frontend SDK version');
+ for(const file of ['supabase-login.js','supabase-service-bridge.js'])assert.match(fs.readFileSync(path.join(root,file),'utf8'),/from '\.\/vendor\/supabase-js\.mjs\?v=[\w-]+'/,'Frontend must import the local SDK entry point: '+file);
  const sdk=fs.readFileSync(path.join(sdkRoot,'dist/umd/supabase.js'),'utf8');
  const server=http.createServer((req,res)=>{
   const pathname=new URL(req.url,'http://localhost').pathname;
