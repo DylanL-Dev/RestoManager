@@ -1,6 +1,10 @@
 // Pure preparation: a malformed collection cannot partially replace live state.
 export function prepareServiceSnapshot(snapshot,decodeBookingDetails){
  const hours=snapshot.hours,shifts={};
+ // Express only consumes collections explicitly bound to one establishment.
+ const restaurantId=hours?.restaurant_id;
+ const scopedRestaurantId=restaurantId&&[snapshot.rooms,snapshot.tables,snapshot.reservations,snapshot.assignments]
+  .every(rows=>rows.every(row=>row.restaurant_id===restaurantId))?restaurantId:null;
  for(const key of ['lunch','dinner']){
   if(typeof hours?.[key+'_start']!=='string'||typeof hours?.[key+'_end']!=='string')throw Error('Horaires invalides.');
   shifts[key]={enabled:hours[key+'_enabled'],start:hours[key+'_start'].slice(0,5),end:hours[key+'_end'].slice(0,5)};
@@ -28,6 +32,7 @@ export function prepareServiceSnapshot(snapshot,decodeBookingDetails){
  });
  return {plan:{version:1,rooms,tables},values:{
   RestoSharedHours:{shifts,weeklySchedule:hours.weekly_schedule||null,duration:hours.duration,arrivalLimitPercent:Number.isInteger(hours.arrival_limit_percent)&&hours.arrival_limit_percent>=40&&hours.arrival_limit_percent<=90&&hours.arrival_limit_percent%5===0?hours.arrival_limit_percent:null,weekend:{supported:Object.prototype.hasOwnProperty.call(hours,'saturday_lunch_closed')&&Object.prototype.hasOwnProperty.call(hours,'sunday_lunch_closed'),saturdayLunchClosed:hours.saturday_lunch_closed===true,sundayLunchClosed:hours.sunday_lunch_closed===true}},RestoSharedReservations:reservations,
+  RestoExpressSnapshotRestaurantId:scopedRestaurantId,
   RestoSmartPlacementTableIds:new Map(tables.map(t=>[t.number,t.id])),
   RestoDraftHolds:snapshot.holds.map(h=>({id:h.id,number:number(h.table_id),start:Date.parse(h.starts_at),end:Date.parse(h.ends_at),expiry:Date.parse(h.expires_at),team:h.held_by===null?'Web':h.draft_role==='reception'?'Réception':'Restaurant'})),
   RestoInactiveRestaurantTables:snapshot.tables.filter(t=>!t.active),

@@ -33,3 +33,26 @@ npm run test:express:browser
 Les tests Express utilisés par `test:display` ouvrent la vraie entrée `v3-connected.html` avec un service isolé. Ils vérifient le parcours 214/215, la reprise, **Autre table**, le passage, la conservation du brouillon, le conflit entre onglets, la coupure, la mise à jour d’un instantané et les droits d’affichage Restaurant/Réception. Le serveur de test compte les mutations inattendues et le navigateur bloque les requêtes externes. Les captures et contrôles axe sont produits sur le scénario de confirmation. Les résultats détaillés sont publiés dans le brouillon GitHub et #266.
 
 Les commandes CI et les captures utilisent des données fictives. Une validation sur les appareils du pupitre et le raccordement au serveur sont les étapes suivantes de la recette.
+
+## Navigation entre les salles
+
+Suite du [cadrage #266](https://github.com/DylanL-Dev/RestoManager/issues/266#issuecomment-7190857861) dans le brouillon #271. Le sélecteur propose **Toutes les salles** et les salles actives de l’instantané. Le filtre agit sur le plan et les propositions fictives. La recherche, le dossier et les valeurs de saisie d’un passage sont conservés pendant la navigation. Si une salle est désactivée pendant le service, Express revient à la vue d’ensemble et conserve le dossier.
+
+Chaque salle affiche le nombre de tables configurées et, si elles diffèrent, les tables actives. Les compteurs montrent les tables prévues, les installations déclarées et les départs à vérifier. Un départ à vérifier est déjà compté dans les installations déclarées. L’affluence concerne l’ensemble du service. Une salle vide affiche **Aucune table configurée** et un accès aux autres salles reste disponible pendant le choix. Les états affichés décrivent les pointages reçus et les réservations prévues.
+
+L’adaptateur fictif privilégie la salle prévue dans la vue d’ensemble. Une salle ciblée filtre les suggestions validées par le simulateur. Si la table se trouve ailleurs, le parcours affiche la salle d’origine et la destination avant l’installation. Les fusions restent représentées dans la consultation. La simulation conserve le refus d’installer une fusion et laisse le contrat de placement multi-table à #265.
+
+### Isolation du cockpit
+
+La lecture conserve la source de service authentifiée existante. La préparation de l’instantané associe les horaires, la configuration et les attributions au même identifiant d’établissement. Express compare cet identifiant à celui de la session avant de lire plan, réservations ou paramètres. Un instantané en retard provenant d’un autre établissement, ou un instantané aux identifiants incohérents, laisse Express en attente. Le changement d’identité efface le filtre, la recherche, la sélection, les reprises et le formulaire fictif. Le simulateur conserve son stockage par établissement.
+
+Le contrôle de session et des lectures côté serveur reste celui du service existant. La recette de ce lot vérifie le cockpit et sa réaction aux événements de synchronisation avec un transport simulé. Les permutations et passages restent en simulation.
+
+### Recette inter-salles
+
+- Scénario de 200 couverts sur deux salles avec tables et une salle active vide. Couverture unitaire de 0/1/N salles, des tables toutes prévues ou toutes déclarées occupées et du traitement des fusions par le simulateur.
+- Parcours navigateur en 360, 390, 768, 834 et 1440 px. Consultation d’une salle vide, navigation au clavier, proposition inter-salles, repli vers toutes les salles, conservation du brouillon du mode complet et du passage, contrôle axe et thème sombre.
+- Deux établissements fictifs aux salles et numéros identiques mais aux réservations, états et seuils distincts. Vérification de l’isolation de leurs simulations et du changement de contexte dans le même document, suivi de l’arrivée d’un instantané tardif puis d’un instantané mixte.
+- Mise à jour du plan pendant le service, salle désactivée, table retirée, vue de consultation hors connexion, retour réseau et rôle Réception.
+
+Les captures `express-salles-390.png`, `express-salles-834.png` et `express-salles-1440.png` sont produites par `npm run test:express:browser`. `express-salles-834-prestige.png` montre le cas d’une salle configurée sans table dans les données fictives. Le bilan et l’artefact CI sont suivis dans #266 et #271.

@@ -1,4 +1,4 @@
-import {elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,serviceIndicators,tableStatus} from './service-v3-express-data.mjs';
+import {assignedRoom,elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,roomViews,serviceIndicators,tableStatus} from './service-v3-express-data.mjs';
 
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const symbols=()=>window.lucide?.createIcons();
@@ -37,12 +37,13 @@ export function mountExpress(main,readPlan){
    <label>${icon('search')}<span class="rmExpressVisuallyHidden">Chambre ou nom</span><input type="search" placeholder="Chambre ou nom" autocomplete="off"></label>
    <button type="button" class="rmExpressPrimary" data-action="passage">${icon('plus')} Passage</button>
   </div>
-  <div class="rmExpressMetrics" aria-label="Affluence">
+  <div class="rmExpressMetrics" aria-label="Affluence du service">
    <span>${icon('calendar-clock')}<span data-arrival-metric></span></span>
    <span>${icon('activity')}<span data-charge-metric></span></span>
    <span>${icon('circle-help')}<span data-check-metric></span></span>
   </div>
   <p class="rmExpressAlert" data-priority hidden></p>
+  <div class="rmExpressRoomTabs" role="group" aria-label="Filtrer les tables par salle" aria-controls="rmExpressFloor" hidden></div>
   <p class="rmExpressFeedback" role="status" data-feedback></p>
   <div class="rmExpressColumns">
    <div class="rmExpressStack">
@@ -54,7 +55,11 @@ export function mountExpress(main,readPlan){
      <div data-booking></div>
      <div class="rmExpressOptions" data-suggestions></div>
      <details data-other-tables hidden><summary>Autre table</summary><div class="rmExpressTiles" data-all-tables></div></details>
-     <div class="rmExpressConfirm" data-install hidden><p data-placement-summary></p><button type="button" class="rmExpressPrimary" data-action="install"></button></div>
+     <div class="rmExpressConfirm" data-install hidden>
+      <p data-placement-summary></p>
+      <p class="rmExpressRoomChange" data-room-change hidden>${icon('arrow-right-left')}<strong></strong></p>
+      <button type="button" class="rmExpressPrimary" data-action="install"></button>
+     </div>
     </section>
     <section class="rmExpressPanel" data-passage hidden aria-label="Passage express">
      <div class="rmExpressHeading"><h2 tabindex="-1">Passage express</h2><button type="button" data-action="cancel-passage">Retour aux arrivées</button></div>
@@ -66,7 +71,7 @@ export function mountExpress(main,readPlan){
      <p>Choisissez la table constatée sur place.</p><div class="rmExpressTiles" data-passage-tables></div>
      <button type="button" class="rmExpressPrimary" data-action="install-passage" disabled>Installer le passage</button>
     </section>
-    <details class="rmExpressPanel" data-floor open><summary>Tables du service</summary><div class="rmExpressTiles" data-floor-tiles></div></details>
+     <details class="rmExpressPanel" id="rmExpressFloor" data-floor open><summary>Tables du service</summary><div class="rmExpressRooms" data-floor-tiles></div></details>
    </div>
   </div>`;
  const $=selector=>root.querySelector(selector);
@@ -77,12 +82,17 @@ export function mountExpress(main,readPlan){
 
  let open=false,demo=null,simulation=null,selectedId=null,selectedTable=null,selectedPlan=null,otherDates=false;
  let passage=false,passageTable=null,busy=false,previousFocus=null,previousScroll=0,lastNotice='';
+ let scope=null,roomId=null,roomTabSignature='';
  const handoffs=new Set();
- const canOpen=()=>window.RestoNotificationContext?.role==='fb_admin'&&!window.RestoReception;
+ const canOpen=()=>{
+  const context=window.RestoNotificationContext;
+  return Boolean(context?.role==='fb_admin'&&context.restaurantId&&context.userId&&!window.RestoReception);
+ };
+ const currentScope=()=>canOpen()?JSON.stringify([window.RestoNotificationContext.userId,window.RestoNotificationContext.restaurantId]):null;
  const snapshot=()=>demo?demo.read():liveSnapshot(window,readPlan);
- const canAct=()=>Boolean(demo)&&canOpen()&&navigator.onLine!==false&&!busy;
+ const canAct=()=>Boolean(demo)&&scope===currentScope()&&navigator.onLine!==false&&!busy;
 
- const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops1',import.meta.url);
+ const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops2',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
  document.head.append(style);main.prepend(launch);main.append(root);
@@ -105,9 +115,26 @@ export function mountExpress(main,readPlan){
  }
 
  function update(){
+  const nextScope=currentScope();
+  const changed=scope!==nextScope;
+  if(changed){
+   scope=nextScope;demo?.close();demo=null;busy=false;
+   resetView();
+  }
   launch.hidden=!canOpen()||!styled;
-  if(!canOpen()&&open){setOpen(false);return;}
-  if(open)draw(snapshot());
+  if(!canOpen()&&open)setOpen(false);
+  if(open||changed)draw(snapshot());
+ }
+
+ function resetView(){
+  selectedId=selectedTable=selectedPlan=passageTable=roomId=null;
+  passage=otherDates=false;handoffs.clear();search.value='';message('');
+  $('[data-guests]').value='2';$('[data-guest-type]').value='external';$('[data-guest-room]').value='';
+  $('[data-other-tables]').open=false;
+  $('[data-all-tables]').replaceChildren();$('[data-passage-tables]').replaceChildren();
+  $('[data-placement-summary]').textContent='';$('[data-action=install]').textContent='';
+  $('[data-room-change] strong').textContent='';
+  $('[data-action=install-passage]').textContent='Installer le passage';
  }
 
  function showFixtureLabel(){
@@ -127,22 +154,43 @@ export function mountExpress(main,readPlan){
    :'Charge au-dessus du seuil partagé. Consultez l’affluence avant de proposer un horaire.';
   const indicators=serviceIndicators(snapshot);
   $('[data-arrival-metric]').textContent=snapshot.loaded?`${covers(indicators.covers)} prévus · 15 min`:'Arrivées en attente';
-  $('[data-charge-metric]').textContent=freshness&&snapshot.charge?`Charge · ${snapshot.charge.current} / ${snapshot.charge.limit} couverts`:'Charge à vérifier';
+  $('[data-charge-metric]').textContent=freshness&&snapshot.charge?`Charge du service · ${snapshot.charge.current} / ${snapshot.charge.limit} couverts`:'Charge du service à vérifier';
   $('[data-check-metric]').textContent=snapshot.loaded?`${indicators.toCheck} à vérifier`:'Vérifications en attente';
   const passageButton=$('[data-action=passage]');
   passageButton.disabled=!canAct();passageButton.title=demo?'':'Disponible dans la simulation Express et le mode complet';
   showFixtureLabel();
+  const rooms=roomViews(snapshot);
+  const room=rooms.find(item=>item.id===roomId);
+  if(!room)roomId=null;
+  drawRoomTabs(rooms,snapshot.loaded);
   drawArrivals(snapshot);
-  drawBooking(snapshot);
-  drawFloor(snapshot);
+  drawBooking(snapshot,room);
+  drawFloor(room?[room]:rooms,snapshot.loaded);
   root.classList.toggle('rmExpressSelection',Boolean(selectedId||passage));
+  root.classList.toggle('rmExpressRoomView',Boolean(room));
   $('[data-reservation]').hidden=passage;$('[data-passage]').hidden=!passage;
-  if(passage)drawPassage(snapshot);
+  if(passage)drawPassage(snapshot,room);
   if(focusKey){
    const replacement=[...root.querySelectorAll('[data-focus-key]')].find(node=>node.dataset.focusKey===focusKey);
    if(replacement?.getClientRects().length&&!replacement.disabled)replacement.focus({preventScroll:true});
-   else if(document.activeElement===document.body)search.focus({preventScroll:true});
+   else if(document.activeElement===document.body){
+    const fallback=focusKey.startsWith('room-')&&snapshot.loaded?$('[data-action=room]'):search;
+    fallback?.focus({preventScroll:true});
+   }
   }
+ }
+
+ function drawRoomTabs(rooms,loaded){
+  const tabs=$('.rmExpressRoomTabs');
+  tabs.hidden=!loaded;
+  const signature=JSON.stringify(rooms.map(({id,name})=>[id,name]));
+  if(signature!==roomTabSignature){
+   roomTabSignature=signature;
+   const all=button('Toutes les salles','room','');all.insertAdjacentHTML('afterbegin',icon('layers'));
+   tabs.replaceChildren(all,...rooms.map(room=>button(room.name,'room',room.id)));
+   symbols();
+  }
+  for(const tab of tabs.children)tab.setAttribute('aria-pressed',String(tab.dataset.value===(roomId??'')));
  }
 
  function arrivalCard(row,today){
@@ -166,16 +214,16 @@ export function mountExpress(main,readPlan){
   $('[data-handoff-list]').replaceChildren(...carrying.map(row=>arrivalCard(row,snapshot.now.date)));
  }
 
- function tableLabel(snapshot,table){return snapshot.rooms.find(room=>room.id===table.roomId)?.name??'';}
+ function roomName(snapshot,id){return snapshot.rooms.find(room=>room.id===id)?.name??'';}
 
- function tableButton(snapshot,table,detail,kind='choose'){
+ function tableButton(snapshot,table,detail,kind='choose',otherRoom=false){
   const tile=button('',kind,table.number);tile.className='rmExpressTile';
   tile.append(element('strong',`T${table.number}`),element('small',detail));
-  const room=tableLabel(snapshot,table);if(room)tile.append(element('small',room));
+  const room=roomName(snapshot,table.roomId);if(room)tile.append(element('small',otherRoom?`Autre salle · ${room}`:room));
   return tile;
  }
 
- function drawBooking(snapshot){
+ function drawBooking(snapshot,room){
   const row=snapshot.reservations.find(item=>item.id===selectedId);
   const notes=$('[data-suggestions]'),allTables=$('[data-other-tables]'),install=$('[data-install]');
   booking.replaceChildren();notes.replaceChildren();allTables.hidden=true;install.hidden=true;
@@ -198,7 +246,8 @@ export function mountExpress(main,readPlan){
   }
   const handoff=button(handoffs.has(row.id)?'Retirer de « À reprendre »':'Je l’accompagne','handoff',row.id);
   handoff.disabled=!canAct();booking.append(handoff);
-  const {primary,entries}=simulation.suggestions(snapshot,row);
+  const {primary,entries}=simulation.suggestions(snapshot,row,roomId);
+  const fromRoom=assignedRoom(snapshot,row);
   function option({table,plan}){
    let detail=plan.message;
    if(plan.ok){
@@ -206,13 +255,15 @@ export function mountExpress(main,readPlan){
     if(row.tables.includes(table.number))detail='Prévue pour ce client';
     if(plan.changes.length)detail=`Échange avec ${plan.changes[0].client}`;
    }
-   const tile=tableButton(snapshot,table,detail);
+   const tile=tableButton(snapshot,table,detail,'choose',Boolean(fromRoom&&fromRoom!==table.roomId));
    tile.disabled=!plan.ok||!canAct();tile.setAttribute('aria-pressed',String(selectedTable===table.number));
    return tile;
   }
   if(primary.length)notes.append(...primary.map(option));
-  else notes.append(element('p','Aucune table compatible dans cette simulation.','rmExpressMuted'));
-  allTables.hidden=false;$('[data-all-tables]').replaceChildren(...entries.filter(entry=>!primary.includes(entry)).map(option));
+  else notes.append(element('p',room?`Aucune proposition compatible dans ${room.name}.`:'Aucune table compatible dans cette simulation.','rmExpressMuted'));
+  appendOtherRooms(notes,snapshot,room);
+  const remaining=entries.filter(entry=>!primary.includes(entry));
+  allTables.hidden=!remaining.length;$('[data-all-tables]').replaceChildren(...remaining.map(option));
   if(selectedTable===null)return;
   const plan=demo.preview(snapshot,row.id,selectedTable);
   if(!plan.ok||plan.fingerprint!==selectedPlan?.fingerprint){
@@ -224,59 +275,87 @@ export function mountExpress(main,readPlan){
   const recap=plan.changes.length
    ?plan.changes.map(move=>`${move.client} passera de T${move.from[0]} à T${move.to[0]}.`)
    :['Confirmez la table réellement choisie en salle.'];
-  $('[data-placement-summary]').textContent=[...recap,...plan.warnings.map(warning=>warning.message)].join(' ');
+  const roomChange=plan.warnings.find(warning=>warning.code==='ROOM_CHANGE');
+  const change=$('[data-room-change]');change.hidden=!roomChange;
+  if(roomChange){
+   const destination=snapshot.tables.find(table=>table.number===plan.targetTables[0]);
+   change.querySelector('strong').textContent=`Changement de salle · ${roomName(snapshot,fromRoom)} → ${roomName(snapshot,destination.roomId)}`;
+  }
+  const warnings=plan.warnings.filter(warning=>warning!==roomChange).map(warning=>warning.message);
+  $('[data-placement-summary]').textContent=[...recap,...warnings].join(' ');
   const confirm=$('[data-action=install]');confirm.textContent=`Installer ${row.hotelRoom||row.client} en T${plan.targetTables[0]}`;confirm.disabled=!canAct();
  }
 
- function drawFloor(snapshot){
-  const floor=$('[data-floor-tiles]');floor.replaceChildren();
-  for(const room of snapshot.rooms){
-   floor.append(element('h3',room.name));
-   for(const table of snapshot.tables.filter(item=>item.roomId===room.id)){
-    const state=tableStatus(snapshot,table.number),tile=element('div','','rmExpressTile');
-    tile.dataset.state=state.kind;tile.append(element('strong',`T${table.number}`),element('small',state.label));floor.append(tile);
-   }
-  }
-  if(!floor.children.length)floor.append(element('p','Plan du restaurant en attente.','rmExpressMuted'));
+ function appendOtherRooms(container,snapshot,room){
+  if(!room||!snapshot.rooms.some(other=>other.id!==room.id&&other.active!==false))return;
+  const link=button('Voir les autres salles','all-rooms');link.className='rmExpressOtherRooms';
+  container.append(link);
  }
 
- function drawPassage(snapshot){
+ function drawFloor(rooms,loaded){
+  const floor=$('[data-floor-tiles]');floor.replaceChildren();
+  for(const room of rooms){
+   const section=element('section','','rmExpressRoom');section.append(element('h3',room.name));
+   const {configured,active,planned,installed,departures}=room.counts;
+   if(!configured){
+    section.append(element('p','Aucune table configurée','rmExpressMuted'));
+   }else{
+    const configuredLabel=`${configured} ${configured===1?'table configurée':'tables configurées'}`;
+    const config=active===configured?configuredLabel:`${active} ${active===1?'table active':'tables actives'} / ${configuredLabel}`;
+    const status=`${planned} ${planned===1?'prévue':'prévues'} · ${installed} ${installed===1?'installation déclarée':'installations déclarées'} · ${departures} ${departures===1?'départ à vérifier':'départs à vérifier'}`;
+    section.append(element('p',active?`${config} · ${status}`:`${config} · Aucune table active`,'rmExpressRoomMeta'));
+    const tiles=element('div','','rmExpressTiles');
+    for(const {table,state} of room.tables){
+     const tile=element('div','','rmExpressTile');tile.dataset.state=state.kind;
+     tile.append(element('strong',`T${table.number}`),element('small',state.label));tiles.append(tile);
+    }
+    if(active)section.append(tiles);
+   }
+   floor.append(section);
+  }
+  if(!rooms.length)floor.append(element('p',loaded?'Aucune salle active configurée.':'Plan du restaurant en attente.','rmExpressMuted'));
+ }
+
+ function drawPassage(snapshot,room){
   const guests=$('[data-guests]').valueAsNumber;
-  const choices=demo?simulation.suggestWalkIn(snapshot,guests):[];
+  const choices=demo?simulation.suggestWalkIn(snapshot,guests).filter(table=>!roomId||table.roomId===roomId):[];
   if(!choices.some(table=>table.number===passageTable))passageTable=null;
   const options=$('[data-passage-tables]');
   options.replaceChildren(...choices.map(table=>{
    const tile=tableButton(snapshot,table,'Aucun client enregistré','walk-table');
    tile.disabled=!canAct();tile.setAttribute('aria-pressed',String(passageTable===table.number));return tile;
   }));
-  if(!choices.length)options.append(element('p','Aucune table compatible avec ce passage.','rmExpressMuted'));
+  if(!choices.length)options.append(element('p',room?`Aucune table compatible avec ce passage dans ${room.name}.`:'Aucune table compatible avec ce passage.','rmExpressMuted'));
+  appendOtherRooms(options,snapshot,room);
   $('[data-room-field]').hidden=$('[data-guest-type]').value!=='hotel';
   const confirm=$('[data-action=install-passage]');
+  confirm.hidden=!choices.length;
   confirm.disabled=passageTable===null||!canAct();
   confirm.textContent=passageTable===null?'Installer le passage':`Installer ${covers(guests)} en T${passageTable}`;
  }
 
  async function run(action){
   if(!canAct())return;
+  const adapter=demo;
   busy=true;message('');update();
-  try{await action();}catch(error){message(error.message);}
-  finally{busy=false;update();}
+  try{await action(adapter);}catch(error){if(demo===adapter)message(error.message);}
+  finally{if(demo===adapter){busy=false;update();}}
  }
 
  async function switchSource(){
   if(busy)return;
   if(demo){demo.close();demo=null;}
   else{
+   const requestedScope=scope;
    const toggle=$('[data-action=simulation]');toggle.disabled=true;
    try{
     simulation??=await import('./service-v3-express-simulation.mjs');
-    if(!canOpen()||!open)return;
+    if(requestedScope!==currentScope()||!open)return;
     demo=simulation.createSimulation(window,window.RestoNotificationContext.restaurantId);demo.subscribe(update);
-   }catch{message('Impossible de charger la simulation Express. Réessayez.');return;}
+   }catch{if(requestedScope===currentScope())message('Impossible de charger la simulation Express. Réessayez.');return;}
    finally{toggle.disabled=false;}
   }
-  selectedId=selectedTable=selectedPlan=passageTable=null;passage=otherDates=false;
-  handoffs.clear();search.value='';message('');update();search.focus({preventScroll:true});
+  resetView();update();search.focus({preventScroll:true});
  }
 
  launch.addEventListener('click',()=>setOpen(true));
@@ -288,6 +367,16 @@ export function mountExpress(main,readPlan){
   const {action,value}=target.dataset;
   if(action==='close'){setOpen(false);return;}
   if(action==='simulation'){void switchSource();return;}
+  if(action==='room'||action==='all-rooms'){
+   roomId=value||null;
+   const tables=snapshot().tables;
+   if(roomId&&tables.find(table=>table.number===selectedTable)?.roomId!==roomId)selectedTable=selectedPlan=null;
+   if(roomId&&tables.find(table=>table.number===passageTable)?.roomId!==roomId)passageTable=null;
+   $('[data-floor]').open=true;
+   update();
+   if(action==='all-rooms')$('[data-action=room]').focus();
+   return;
+  }
   if(action==='other-dates')otherDates=!otherDates;
   if(action==='select'){
    selectedId=value;selectedTable=selectedPlan=null;passage=false;$('[data-other-tables]').open=false;message('');
@@ -305,8 +394,9 @@ export function mountExpress(main,readPlan){
   }
   if(action==='install'&&selectedPlan){
    const plan=selectedPlan;
-   void run(async()=>{
-    const result=await demo.seat(plan);handoffs.delete(result.reservationId);selectedTable=selectedPlan=null;
+   void run(async adapter=>{
+    const result=await adapter.seat(plan);if(demo!==adapter)return;
+    handoffs.delete(result.reservationId);selectedTable=selectedPlan=null;
     message(`Simulation · installation enregistrée en T${result.targetTables[0]}.`);
    });return;
   }
@@ -318,8 +408,9 @@ export function mountExpress(main,readPlan){
   if(action==='install-passage'&&passageTable!==null){
    const draft={revision:snapshot().revision,guests:$('[data-guests]').valueAsNumber,table:passageTable,
     type:$('[data-guest-type]').value,room:$('[data-guest-room]').value};
-   void run(async()=>{
-    await demo.walkIn(draft);passage=false;passageTable=null;$('[data-guest-room]').value='';
+   void run(async adapter=>{
+    await adapter.walkIn(draft);if(demo!==adapter)return;
+    passage=false;passageTable=null;$('[data-guest-room]').value='';
     message(`Simulation · passage installé en T${draft.table}.`);
    });return;
   }

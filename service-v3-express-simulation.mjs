@@ -1,14 +1,13 @@
-import {isWaiting,minute,normalize,parisTime} from './service-v3-express-data.mjs';
+import {assignedRoom,isWaiting,minute,normalize,parisTime} from './service-v3-express-data.mjs';
 
 const date='2032-11-08';
 const initialClock=Date.parse(`${date}T18:44:00Z`);
-const roomNames=['Salle principale','Salon'];
 const coversFor=number=>[18,19,20].includes(number)?6:2;
 const timeFor=minuteOfDay=>`${String(Math.floor(minuteOfDay/60)).padStart(2,'0')}:${String(minuteOfDay%60).padStart(2,'0')}`;
 
 export function makeSimulation(){
  const tables=Array.from({length:21},(_,i)=>({number:i+1,capacity:coversFor(i+1),roomId:i<11||i===20?'main':'salon'}));
- const rooms=roomNames.map((name,i)=>({id:i?'salon':'main',name}));
+ const rooms=[{id:'main',name:'Salle principale'},{id:'salon',name:'Salon'},{id:'verriere',name:'Verrière'}];
  const assigned=tables.filter(({number})=>![16,17].includes(number));
  const groups=[1080,1185,1290,1395].flatMap((start,wave)=>assigned.map(({number,capacity},index)=>{
   const hotelRoom=wave===1&&number===21?'214':wave===1&&number===4?'215':String(300+wave*30+number);
@@ -32,6 +31,7 @@ function blockers(snapshot,number,window,excluded=[]){
 }
 function held(snapshot,number,window){return snapshot.holds.some(hold=>hold.number===number&&overlaps(hold,window));}
 function fits(table,guests){return table.capacity>=guests;}
+function activeTable(snapshot,table){return table?.active!==false&&snapshot.rooms.some(room=>room.id===table?.roomId&&room.active!==false);}
 const refusal=(code,message)=>({ok:false,code,message});
 const failure=(code,message)=>Object.assign(Error(message),{code});
 const versionOf=row=>[row.id,row.status,row.guests,row.date,row.time,row.duration,row.tables];
@@ -42,7 +42,9 @@ export function previewPlacement(snapshot,reservationId,number){
  const table=snapshot.tables.find(item=>item.number===number);
  if(!row||!isWaiting(row)||row.date!==snapshot.now.date||!snapshot.service||row.time<snapshot.service.start||row.time>snapshot.service.end)
   return refusal('NOT_FOUND','Ce dossier ne peut pas être installé dans le service en cours.');
- if(!table||!fits(table,row.guests))return refusal('CAPACITY','Capacité insuffisante');
+ if(!table)return refusal('CAPACITY','Capacité insuffisante');
+ if(!activeTable(snapshot,table))return refusal('INACTIVE','Table hors du plan actif');
+ if(!fits(table,row.guests))return refusal('CAPACITY','Capacité insuffisante');
  if(row.tables.length!==1)return refusal('FUSION_UNSUPPORTED','Fusion à traiter en mode complet');
  const now=minute(snapshot.now.date,snapshot.now.time),reserved=interval(row);
  const window={start:Math.min(now,reserved.start),end:Math.max(now+row.duration,reserved.end)};
@@ -56,7 +58,7 @@ export function previewPlacement(snapshot,reservationId,number){
    blockers(snapshot,origin.number,interval(other),[row.id,other.id]).length||held(snapshot,origin.number,interval(other)))){
   return refusal('NO_SAFE_PLAN','Réservation ou fusion protégée');
  }
- const roomChange=origin?.roomId!==table.roomId,earlyMinutes=reserved.start-now;
+ const roomChange=Boolean(origin&&origin.roomId!==table.roomId),earlyMinutes=reserved.start-now;
  const warnings=[];
  if(roomChange)warnings.push({code:'ROOM_CHANGE',message:'Changement de salle pour le client.'});
  if(earlyMinutes>30)warnings.push({code:'EARLY_SEATING',message:`Installation ${earlyMinutes} min avant l’heure prévue.`});
@@ -66,11 +68,12 @@ export function previewPlacement(snapshot,reservationId,number){
   fingerprint:JSON.stringify([number,table.roomId,table.capacity,versionOf(row),other?versionOf(other):null,warnings])};
 }
 
-export function suggestions(snapshot,row){
- const origin=snapshot.tables.find(item=>item.number===row.tables[0]);
- const entries=snapshot.tables.map(table=>({table,plan:previewPlacement(snapshot,row.id,table.number)}));
+export function suggestions(snapshot,row,roomId=null){
+ const origin=assignedRoom(snapshot,row);
+ const entries=snapshot.tables.filter(table=>activeTable(snapshot,table)&&(!roomId||table.roomId===roomId))
+  .map(table=>({table,plan:previewPlacement(snapshot,row.id,table.number)}));
  const preferred=entries.filter(entry=>entry.plan.ok).sort((a,b)=>{
-  const order=entry=>entry.table.number===origin?.number?0:entry.table.roomId===origin?.roomId?1:2;
+  const order=entry=>row.tables.includes(entry.table.number)?0:entry.table.roomId===origin?1:2;
   return order(a)-order(b)||a.plan.changes.length-b.plan.changes.length||a.table.capacity-b.table.capacity||a.table.number-b.table.number;
  });
  // Give the crew a chance to exercise the known 214/215 exchange when it remains compatible.
@@ -83,7 +86,7 @@ export function suggestions(snapshot,row){
 export function suggestWalkIn(snapshot,guests){
  if(!Number.isInteger(guests)||guests<1)return [];
  const start=minute(snapshot.now.date,snapshot.now.time),window={start,end:start+snapshot.duration};
- return snapshot.tables.filter(table=>fits(table,guests)&&!blockers(snapshot,table.number,window).length&&!held(snapshot,table.number,window))
+ return snapshot.tables.filter(table=>activeTable(snapshot,table)&&fits(table,guests)&&!blockers(snapshot,table.number,window).length&&!held(snapshot,table.number,window))
   .sort((a,b)=>a.capacity-b.capacity||a.number-b.number);
 }
 
@@ -95,9 +98,10 @@ export function simulationSnapshot(state){
   const at=minute(time.date,time.time);
   return at>=start&&at<start+60;
  }).reduce((sum,row)=>sum+row.guests,0);
- const limit=Math.ceil(state.tables.reduce((sum,table)=>sum+table.capacity,0)*state.threshold/100);
+ const capacity=state.tables.filter(table=>activeTable(state,table)).reduce((sum,table)=>sum+table.capacity,0);
+ const limit=Math.ceil(capacity*state.threshold/100);
  return {...state,now,service:{start:'18:00',end:'23:59'},loaded:true,fresh:true,updatedAt:state.clock,
-  charge:{current:counted,limit,blocked:counted>limit}};
+  charge:limit?{current:counted,limit,blocked:counted>limit}:null};
 }
 
 export function createSimulation(source=window,scope='demo'){
@@ -105,6 +109,7 @@ export function createSimulation(source=window,scope='demo'){
  const fallback=makeSimulation();
  let state=fallback;
  let shared=false;
+ let closed=false;
  try{shared=typeof source.navigator.locks?.request==='function'&&!!source.localStorage;}catch{}
  const listeners=new Set();
  function read(){
@@ -124,6 +129,7 @@ export function createSimulation(source=window,scope='demo'){
  }
  function update(apply){
   function perform(){
+   if(closed)throw failure('CONTEXT_CHANGED','La simulation appartient à un autre contexte de service.');
    if(source.navigator.onLine===false)throw failure('OFFLINE','Simulation en consultation : connexion interrompue.');
    const {reservations,value}=apply(read());
    if(reservations)write({...state,reservations,revision:state.revision+1});
@@ -132,7 +138,7 @@ export function createSimulation(source=window,scope='demo'){
   return shared?source.navigator.locks.request(key,perform):Promise.resolve().then(perform);
  }
  return {read,subscribe(listener){listeners.add(listener);return ()=>listeners.delete(listener);},
-  close(){listeners.clear();source.removeEventListener('storage',sync);},
+  close(){closed=true;listeners.clear();source.removeEventListener('storage',sync);},
   preview:previewPlacement,
   seat(plan){return update(snapshot=>{
    const row=snapshot.reservations.find(item=>item.id===plan.reservationId);

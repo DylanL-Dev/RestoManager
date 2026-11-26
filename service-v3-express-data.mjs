@@ -38,7 +38,7 @@ export function tableStatus(snapshot,number){
  const attached=snapshot.reservations.filter(row=>row.tables.includes(number));
  const seated=attached.find(row=>row.status==='seated');
  if(seated)return elapsedMinutes(snapshot,seated)>=seated.duration
-  ?{kind:'check',label:'Départ à vérifier'}:{kind:'occupied',label:'Installé déclaré'};
+  ?{kind:'departure',label:'Départ à vérifier'}:{kind:'occupied',label:'Installé déclaré'};
  const waiting=attached.filter(isWaiting).filter(row=>row.date===snapshot.now.date&&elapsedMinutes(snapshot,row)<row.duration)
   .sort((a,b)=>a.time.localeCompare(b.time))[0];
  if(waiting)return elapsedMinutes(snapshot,waiting)>=20
@@ -56,14 +56,39 @@ export function serviceIndicators(snapshot){
  return {covers:next.reduce((sum,row)=>sum+row.guests,0),groups:next.length,toCheck:roomsToCheck.size};
 }
 
+export function roomViews(snapshot){
+ return snapshot.rooms.filter(room=>room.active!==false).map(room=>{
+  const tables=snapshot.tables.filter(table=>table.roomId===room.id&&table.active!==false)
+   .map(table=>({table,state:tableStatus(snapshot,table.number)}));
+  const configured=tables.length+(snapshot.inactiveTables??[]).filter(table=>table.roomId===room.id).length;
+  const counts={configured,active:tables.length,planned:0,installed:0,departures:0};
+  for(const {state} of tables){
+   if(['planned','check'].includes(state.kind))counts.planned++;
+   if(['occupied','departure'].includes(state.kind))counts.installed++;
+   if(state.kind==='departure')counts.departures++;
+  }
+  return {...room,tables,counts};
+ });
+}
+
+export function assignedRoom(snapshot,row){
+ const rooms=new Set(row.tables.map(number=>snapshot.tables.find(table=>table.number===number)?.roomId));
+ return rooms.size===1?[...rooms][0]??null:null;
+}
+
 export function liveSnapshot(source,readPlan,stamp=Date.now()){
  const now=parisTime(stamp);
- const loaded=source.RestoSharedDataLoaded===true;
+ const context=source.RestoNotificationContext;
+ const loaded=Boolean(context?.role==='fb_admin'&&!source.RestoReception&&context.restaurantId&&
+  context.restaurantId===source.RestoExpressSnapshotRestaurantId&&source.RestoSharedDataLoaded===true);
  const fresh=loaded&&source.navigator.onLine!==false&&['ok','readonly'].includes(source.RestoSyncState);
  const reservations=loaded?source.RestoSharedReservations:[];
  const {rooms,tables}=loaded?readPlan():{rooms:[],tables:[]};
- const service=currentService(source.ReservationEngine?.getShiftsForDate(now.date),now);
- const charge=fresh&&service?source.RestoRush?.evaluate({date:now.date,time:now.time,guests:0},reservations):null;
- return {now,service,reservations,tables,rooms,loaded,fresh,updatedAt:source.RestoLastSyncAt??null,
+ const roomKeys=new Map(rooms.map(room=>[source.RestoSharedRoomIds?.get(room.id),room.id]));
+ const inactiveTables=loaded?(source.RestoInactiveRestaurantTables??[])
+  .map(table=>({roomId:roomKeys.get(table.room_id)})):[];
+ const service=loaded?currentService(source.ReservationEngine?.getShiftsForDate(now.date),now):null;
+ const charge=fresh&&service&&tables.length?source.RestoRush?.evaluate({date:now.date,time:now.time,guests:0},reservations):null;
+ return {now,service,reservations,tables,rooms,inactiveTables,loaded,fresh,updatedAt:loaded?source.RestoLastSyncAt??null:null,
   charge:charge?.limit?charge:null};
 }

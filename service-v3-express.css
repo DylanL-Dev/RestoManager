@@ -22,7 +22,7 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
 .rmExpress :is(h1,h2,h3,p){margin:0}
 .rmExpress h1{font-size:clamp(1.35rem,3vw,1.75rem);letter-spacing:-.02em}
 .rmExpress h2{font-size:1.1rem;letter-spacing:-.01em}
-.rmExpress h3{font-size:.86rem;grid-column:1/-1;margin-block:4px 0}
+.rmExpress h3{font-size:.95rem}
 .rmExpress button:disabled{cursor:default;opacity:.68}
 .rmExpress :is(button,summary,input,select):focus-visible,.rmExpressLaunch:focus-visible{outline:3px solid #2a9670;outline-offset:3px}
 .rmExpress :is(button,summary)[aria-pressed="true"]{background:var(--express-soft);color:var(--express-soft-text);border-color:#3b9773}
@@ -41,6 +41,13 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
 .rmExpressMetrics > span{display:inline-flex;align-items:center;gap:6px}
 .rmExpressAlert,.rmExpressFeedback:not(:empty){padding:9px 11px;border-radius:10px;font-size:.875rem}
 .rmExpressAlert{background:var(--express-amber);color:var(--express-amber-text)}
+.rmExpressRoomTabs{display:flex;gap:8px;min-width:0;overflow-x:auto;padding:4px;scroll-padding-inline:4px}
+.rmExpressRoomTabs button{flex:none;max-width:100%;overflow-wrap:anywhere}
+.rmExpressRooms,.rmExpressRoom{display:grid;gap:8px}
+.rmExpressRoom+.rmExpressRoom{border-top:1px solid var(--express-border);padding-top:10px}
+.rmExpressRoomMeta{font-size:.85rem;color:var(--express-muted);line-height:1.4}
+.rmExpress .rmExpressOtherRooms,.rmExpressOptions>p,.rmExpressTiles>p{grid-column:1/-1}
+.rmExpress .rmExpressOtherRooms{justify-self:start;color:var(--express-soft-text)}
 .rmExpressFeedback:not(:empty){background:var(--express-soft);color:var(--express-soft-text)}
 .rmExpressFeedback:empty{display:none}
 .rmExpressColumns{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.5fr);gap:12px;align-items:start}
@@ -63,12 +70,13 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
 }
 .rmExpressTile strong{font-size:1rem}
 .rmExpressTile[data-state="occupied"]{background:var(--express-soft);color:var(--express-soft-text)}
-.rmExpressTile[data-state="check"]{background:var(--express-amber);color:var(--express-amber-text)}
-.rmExpressTile[data-state="check"] small{color:inherit}
+.rmExpressTile:is([data-state="check"],[data-state="departure"]){background:var(--express-amber);color:var(--express-amber-text)}
+.rmExpressTile:is([data-state="check"],[data-state="departure"]) small{color:inherit}
 .rmExpressTile[data-state="planned"]{border-color:#629b82}
 .rmExpress summary{display:list-item;width:100%}
 .rmExpress details[open]>summary{margin-bottom:8px}
 .rmExpressConfirm{display:grid;gap:7px;padding-top:8px;border-top:1px solid var(--express-border)}
+.rmExpressRoomChange{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--express-amber);color:var(--express-amber-text)}
 .rmExpressFields label{display:grid;gap:4px;font-size:.875rem}
 .rmExpressFields :is(input,select){
  background:var(--express-surface);color:inherit;border:1px solid var(--express-border);border-radius:9px;
@@ -78,7 +86,9 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
 @media (min-width:1100px){.rmExpressTiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
 @media (max-width:719px){
  .rmExpressColumns{grid-template-columns:minmax(0,1fr)}
+ .rmExpressRoomTabs:not(:has(button:nth-child(6))){flex-wrap:wrap;overflow:visible}
  .rmExpressSelection [data-workspace]{order:-1}
+ .rmExpressRoomView:not(.rmExpressSelection) :is([data-workspace],[data-floor]){order:-1}
  .rmExpressTiles{grid-template-columns:repeat(2,minmax(0,1fr))}
  .rmExpressHead{padding:10px}
 }

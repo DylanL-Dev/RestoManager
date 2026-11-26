@@ -248,7 +248,7 @@ show(initial,{keepScroll:true,force:true});
 
 // Express is an optional DEV presentation over the existing screen tree.
 if(document.currentScript?.src&&/^(localhost|127\.0\.0\.1)$|\.onrender\.com$/i.test(location.hostname)){
- import(new URL('./service-v3-express.mjs?v=20261126-rmops1',document.currentScript.src))
+ import(new URL('./service-v3-express.mjs?v=20261126-rmops2',document.currentScript.src))
   .then(({mountExpress})=>mountExpress(main,()=>TableStore.get()))
   .catch(error=>window.RestoErrors?.diagnostic('express-interface',error));
 }

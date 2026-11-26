@@ -8,10 +8,10 @@ test('Express simulates a 200-cover service and keeps unrecorded walk-ins visibl
  const snapshot=fixture.simulationSnapshot(fixture.makeSimulation());
  assert.deepEqual(snapshot.fixture,{groups:76,covers:200,unreportedWalkInCovers:30});
  assert.equal(snapshot.reservations.reduce((sum,row)=>sum+row.guests,0),170);
- assert.equal(snapshot.rooms.length,2);
+ assert.equal(data.roomViews(snapshot).filter(view=>view.counts.active>0).length,2);
  assert.ok(data.serviceIndicators(snapshot).groups>=12,'multiple arrivals in the same 15-minute window');
  assert.ok(snapshot.charge.blocked);
- assert.deepEqual(data.tableStatus(snapshot,12),{kind:'check',label:'Départ à vérifier'});
+ assert.deepEqual(data.tableStatus(snapshot,12),{kind:'departure',label:'Départ à vérifier'});
  assert.equal(data.tableStatus(snapshot,16).label,'Aucun client enregistré');
 });
 
@@ -43,6 +43,50 @@ test('the simulation proposes the 214/215 swap and protects seated guests, holds
  assert.equal(fixture.previewPlacement(snapshot,'214',4).code,'TARGET_HELD');
  snapshot.holds.pop();row.tables.push(5);
  assert.equal(fixture.previewPlacement(snapshot,'214',4).code,'FUSION_UNSUPPORTED');
+});
+
+test('Express retains empty rooms and reports recorded table states, including all-planned rooms and fusions',async()=>{
+ const [data,fixture]=await modules;
+ const snapshot=fixture.simulationSnapshot(fixture.makeSimulation());
+ const activeRooms=data.roomViews(snapshot);
+ assert.deepEqual(data.roomViews({...snapshot,rooms:[]}),[]);
+ assert.equal(data.roomViews({...snapshot,rooms:[snapshot.rooms[0]]}).length,1);
+ assert.deepEqual(activeRooms.find(room=>room.id==='verriere').counts,{configured:0,active:0,planned:0,installed:0,departures:0});
+ const salon=activeRooms.find(room=>room.id==='salon');
+ assert.equal(salon.counts.departures,1);assert.equal(salon.counts.installed,1);
+ const main=activeRooms.find(room=>room.id==='main');
+ assert.equal(main.counts.planned,main.counts.active);
+
+ const row=snapshot.reservations.find(item=>item.id==='214');
+ assert.deepEqual(fixture.suggestions(snapshot,row,'main').primary.map(({table})=>table.number),[21,4]);
+ assert.deepEqual(fixture.suggestions(snapshot,row,'salon').primary.map(({table})=>table.number),[16,17]);
+ assert.equal(fixture.previewPlacement(snapshot,'214',16).warnings[0].code,'ROOM_CHANGE');
+ assert.deepEqual(fixture.suggestions(snapshot,row,'verriere').primary,[]);
+
+ const occupied={...snapshot,reservations:[...snapshot.reservations,...main.tables.map(({table})=>({
+  ...row,id:`installed-${table.number}`,tables:[table.number],status:'seated'
+ }))]};
+ assert.equal(data.roomViews(occupied).find(room=>room.id==='main').counts.installed,main.counts.active);
+ assert.deepEqual(fixture.suggestions(occupied,row,'main').primary,[]);
+ assert.deepEqual(fixture.suggestions(occupied,row).primary.map(({table})=>table.number),[16,17]);
+
+ row.tables.push(4);
+ assert.equal(data.assignedRoom(snapshot,row),'main');
+ assert.deepEqual(fixture.suggestions(snapshot,row,'salon').primary,[]);
+ row.tables.push(16);
+ assert.equal(data.assignedRoom(snapshot,row),null);
+ snapshot.rooms.find(room=>room.id==='salon').active=false;
+ assert.ok(!data.roomViews(snapshot).some(room=>room.id==='salon'));
+ assert.equal(fixture.previewPlacement(snapshot,'214',16).code,'INACTIVE');
+ assert.ok(!fixture.suggestWalkIn(snapshot,2).some(table=>table.roomId==='salon'));
+});
+
+test('a live snapshot requires the authorized establishment before reading any plan or settings',async()=>{
+ const [data]=await modules;
+ const source={navigator:{onLine:true},RestoSharedDataLoaded:true,RestoSyncState:'ok',RestoExpressSnapshotRestaurantId:'a',
+  RestoNotificationContext:{role:'fb_admin',restaurantId:'b'}};
+ const view=data.liveSnapshot(source,()=>{assert.fail('plan from another establishment');});
+ assert.deepEqual([view.loaded,view.fresh,view.rooms,view.reservations,view.charge],[false,false,[],[],null]);
 });
 
 test('the mock adapter rejects duplicate and offline confirmation without a partial transfer',async()=>{

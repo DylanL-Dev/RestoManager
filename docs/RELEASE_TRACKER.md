@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS-02 — Navigation inter-salles et isolation par établissement — CANDIDAT (26/11/2026)
+
+- Suite du brouillon #271. Recherche et dossier conservés pendant la navigation. Vue globale, salles actives, états enregistrés, salle vide et avertissement avant un changement de salle simulé.
+- Express attend un instantané correspondant à l’établissement de la session. La recette fictive utilise deux établissements aux noms de salles et numéros de table identiques. [Navigation, périmètre et recette](audits/RM-OPS-02_EXPRESS_20261126.md#navigation-entre-les-salles).
+
 ### RM-OPS-02 — Mode Coup de feu, expérience Express — CANDIDAT (26/11/2026)
 
 - Coordination #247, expérience #266, contrat moteur #265. Base DEV `608fba9`. Tablette au pupitre, mobile et PC dans l’espace Restaurant connecté.
