@@ -23,7 +23,7 @@ function button(label,action,value){
 export function mountExpress(main,readPlan){
  const launch=button('','open');launch.className='rmExpressLaunch';launch.hidden=true;
  launch.innerHTML=`${icon('zap')}<span>Coup de feu</span>`;
- launch.setAttribute('aria-label','Ouvrir le Mode Coup de feu');
+ launch.setAttribute('aria-label','Mode Coup de feu');
  launch.title='Ouvrir le Mode Coup de feu';
  launch.setAttribute('aria-controls','rmExpress');launch.setAttribute('aria-expanded','false');
  const root=element('section','','rmExpress');root.id='rmExpress';root.hidden=true;
