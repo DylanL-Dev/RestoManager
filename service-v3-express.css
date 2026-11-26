@@ -94,10 +94,10 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
 }
 
 /* RM-OPS compact entry: an operational shortcut, not a full-width banner. */
-.rmExpressEntry{display:inline-flex;align-items:center;flex-wrap:wrap;gap:7px;max-width:100%}
-.rmExpressEntry .serviceRole{margin:0}
+.rmExpressEntry{display:flex;align-items:center;justify-content:flex-start;max-width:100%;margin:0 0 8px;padding:0}
+.rmExpressEntry:has(.rmExpressLaunch[hidden]){display:none!important}
 .rmExpressEntry .rmExpressLaunch{
- display:inline-flex;flex:0 0 auto;gap:6px;min-height:44px;width:auto;max-width:100%;margin:0;
+ display:inline-flex!important;flex:0 0 auto;gap:6px;min-height:44px;width:max-content!important;max-width:100%;margin:0!important;
  padding:8px 12px;border:1px solid #a7cfb6;border-radius:999px;
  background:#e9f5ed;color:#14583f;font-size:12px;font-weight:800;
  box-shadow:none;line-height:1.2;
@@ -110,9 +110,7 @@ html[data-theme="dark"] .rmExpressEntry .rmExpressLaunch{
 }
 html[data-theme="dark"] .rmExpressEntry .rmExpressLaunch:hover{background:#34624c}
 @media(max-width:700px){
- .serviceIntro .serviceContext:has(.rmExpressEntry){align-items:flex-start}
- .serviceIntro .rmExpressEntry{width:100%;flex-wrap:wrap;gap:8px}
- .serviceIntro .rmExpressEntry .rmExpressLaunch{align-self:center}
+ .rmExpressEntry{margin-bottom:8px}
 }
 /* Compact session menu on phone/tablet; all account and sync actions remain available. */
 @media(max-width:900px){
