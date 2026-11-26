@@ -170,11 +170,12 @@ async function startDocker(){
    const r1=await record(1),r2=await record(2);
    assert.equal(r2.status,'seated');assert.deepEqual(r2.tables,[table(2)]);assert.equal(r1.status,'reserved');assert.deepEqual(r1.tables,[table(1)]);
   });
-  await test('ENG-11b concurrence : échange d’abord, puis installation de 215 → sérialisées, sans double occupation',async()=>{
+  await test('ENG-11b [CONSTAT] échange d’abord, puis installation de 215 → sérialisées sans double occupation, mais 215 installé sur sa NOUVELLE table',async()=>{
    const [a,b]=await concurrent(1,place(1,[[1,1,2],[2,2,1]]),2,seat(2));
    assert.equal(a.code,0,a.stderr);assert.equal(b.code,0,b.stderr);
    const r1=await record(1),r2=await record(2);
    assert.deepEqual([r1.status,r1.tables,r2.status,r2.tables],['seated',[table(2)],'seated',[table(1)]]);
+   findings.push('ENG-11b : change_reservation_status_v3 n’a pas de paramètre table. Si un collègue vient d’échanger 2 vers T1, une installation demandée « sur T2 » installe 2 sur T1 sans erreur (course entre deux pupitres). La façade le détecte (SEATED_ELSEWHERE) ; correctif serveur proposé : seat_reservation_v1.');
   });
   await test('ENG-12 concurrence : deux appareils placent deux clients sur la même table libre',async()=>{
    const [a,b]=await concurrent(1,place(1,[[1,1,5]]),2,place(3,[[3,3,5]]));
@@ -271,6 +272,21 @@ async function startDocker(){
     const [a,b]=await concurrent(1,`select public.seat_with_release_v1(${lit(res(3))},'reserved',${lit(table(6))},array[${lit(res(6))}]::uuid[])`,2,v4(1,[[1,1,6]]));
     assert.equal(a.code,0,a.stderr);assert.notEqual(b.code,0);assert.match(b.stderr,/TARGET_OCCUPIED/);
     assert.equal(await ok(`select count(*) from public.reservations r join public.reservation_tables t on t.reservation_id=r.id where t.table_id=${lit(table(6))} and r.status='seated'`),'1');
+   });
+   await test('V4-10 seat_reservation_v1 : la table attendue est vérifiée ; course échange/installation refusée',async()=>{
+    const seatAt=(n,tbl,expected='reserved')=>`select public.seat_reservation_v1(${lit(res(n))},${lit(expected)},${lit(table(tbl))})`;
+    await fails(1,seatAt(2,1),'40001'); // 2 est sur T2, pas T1
+    // Course : A échange 1↔2 (2 part sur T1) pendant que B installe 2 « sur T2 » → B refusé, 2 reste à placer.
+    const [a,b]=await concurrent(1,v4(1,[[1,1,2],[2,2,1]]),2,seatAt(2,2));
+    assert.equal(a.code,0,a.stderr);assert.notEqual(b.code,0);assert.match(b.stderr,/40001/);
+    assert.deepEqual([(await record(2)).status,(await record(2)).tables],['reserved',[table(1)]]);
+    await ok(ctx(2,seatAt(2,1)));assert.equal((await record(2)).status,'seated');
+    assert.equal(await ok(`select action from public.placement_events where reservation_id=${lit(res(2))} order by id desc limit 1`),'seat');
+   });
+   await test('V4-11 seat_reservation_v1 : installation anticipée sur une table promise à un client en retard refusée',async()=>{
+    await ok(scenarioEarly);
+    await ok(`update public.reservation_tables set table_id=${lit(table(8))} where reservation_id=${lit(res(1))};`);
+    const stderr=await fails(1,`select public.seat_reservation_v1(${lit(res(1))},'reserved',${lit(table(8))})`,'23P01');assert.match(stderr,/TABLE_CONFLICT|TARGET_OCCUPIED/);
    });
   }
   console.log('\n'+count+' cas PostgreSQL réussis.');

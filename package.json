@@ -36,7 +36,8 @@
     "test:public-connected:browser": "node tests/browser/rm015-connected.cjs",
     "prepare:production": "node scripts/prepare-rm015-production.cjs",
     "test:public-sync:supabase": "node tests/supabase/mission3.cjs --rm015",
-    "test:rm-ops:postgres": "node tests/postgres/rm-ops-engine.cjs --with-proposals"
+    "test:rm-ops:postgres": "node tests/postgres/rm-ops-engine.cjs --with-proposals",
+    "test:rm-ops:browser": "node tests/browser/rm-ops-live-placement.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.119.0",

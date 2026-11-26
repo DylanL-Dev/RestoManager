@@ -15,6 +15,8 @@
 --     libération constatée + installation dans une seule transaction.
 --  4. public.move_seated_party_v1 : déplacement physique constaté d'un
 --     client déjà installé.
+--  5. public.seat_reservation_v1 : installation sur la table affectée avec
+--     vérification de cette table sous verrou (course entre deux pupitres).
 -- La v3 reste en place : l'interface actuelle continue de fonctionner.
 -- =====================================================================
 begin;
@@ -308,6 +310,59 @@ end
 $function$;
 revoke all on function public.move_seated_party_v1(uuid,uuid,uuid) from public,anon;
 grant execute on function public.move_seated_party_v1(uuid,uuid,uuid) to authenticated;
+
+-- Installation sur la table affectée, en VÉRIFIANT cette table sous verrou (course 214/215 entre deux
+-- pupitres : change_reservation_status_v3 installe sur la table courante, quelle qu'elle soit).
+create or replace function public.seat_reservation_v1(p_reservation_id uuid,p_expected_status text,p_table uuid)
+returns jsonb language plpgsql security definer set search_path='' as $function$
+declare
+ v_restaurant uuid := private.staff_restaurant();
+ v_time timestamptz := clock_timestamp();
+ v_res public.reservations%rowtype;
+ v_count integer;
+ v_current uuid;
+begin
+ perform private.lock_restaurant_mutation_v1();
+ if (select auth.uid()) is null or private.current_staff_role() is distinct from 'fb_admin' or v_restaurant is null then
+  raise exception 'Action réservée à l’équipe du restaurant.' using errcode='42501',detail='FORBIDDEN';
+ end if;
+ if p_reservation_id is null or p_expected_status is null or p_table is null then
+  raise exception 'Demande invalide.' using errcode='22023',detail='INVALID_INPUT';
+ end if;
+ perform pg_advisory_xact_lock(hashtextextended('smart-placement:'||v_restaurant::text,0));
+ perform pg_advisory_xact_lock(hashtextextended(p_table::text,0));
+ select * into v_res from public.reservations where id=p_reservation_id and restaurant_id=v_restaurant for update;
+ if not found then raise exception 'Réservation introuvable dans cet établissement.' using errcode='42501',detail='FORBIDDEN'; end if;
+ if v_res.status is distinct from p_expected_status or v_res.status not in ('reserved','confirmed','late','arrived') then
+  raise exception 'La réservation a changé. Actualisez.' using errcode='40001',detail='STALE_VERSION';
+ end if;
+ select count(*),(array_agg(table_id))[1] into v_count,v_current from public.reservation_tables
+  where reservation_id=p_reservation_id and restaurant_id=v_restaurant;
+ if v_count<>1 or v_current is distinct from p_table then
+  raise exception 'L’attribution a changé. Actualisez.' using errcode='40001',detail='STALE_VERSION';
+ end if;
+ if not exists(select 1 from public.restaurant_tables t where t.id=p_table and t.restaurant_id=v_restaurant and t.active
+   and exists(select 1 from public.restaurant_rooms m where m.id=t.room_id and m.restaurant_id=v_restaurant and m.active)) then
+  raise exception 'Table désactivée.' using errcode='22023',detail='INVALID_INPUT';
+ end if;
+ if exists(select 1 from public.reservations o join public.reservation_tables t on t.reservation_id=o.id
+   where t.table_id=p_table and o.id<>p_reservation_id and o.restaurant_id=v_restaurant and o.status='seated') then
+  raise exception 'Table occupée par un client installé.' using errcode='23P01',detail='TARGET_OCCUPIED';
+ end if;
+ if exists(select 1 from public.reservations o join public.reservation_tables t on t.reservation_id=o.id
+   where t.table_id=p_table and o.id<>p_reservation_id and o.restaurant_id=v_restaurant
+     and o.status in ('reserved','confirmed','late','arrived')
+     and tstzrange(o.starts_at,o.ends_at,'[)') && private.rm_ops_seat_span(v_res.starts_at,v_res.ends_at,v_time)) then
+  raise exception 'Table encore prévue pour un autre client.' using errcode='23P01',detail='TABLE_CONFLICT';
+ end if;
+ update public.reservations set status='seated',seated_at=v_time,updated_at=v_time where id=p_reservation_id;
+ insert into public.placement_events(restaurant_id,reservation_id,actor_id,action,to_tables)
+ values(v_restaurant,p_reservation_id,auth.uid(),'seat',array[p_table]);
+ return jsonb_build_object('seated_at',v_time);
+end
+$function$;
+revoke all on function public.seat_reservation_v1(uuid,text,uuid) from public,anon;
+grant execute on function public.seat_reservation_v1(uuid,text,uuid) to authenticated;
 
 notify pgrst,'reload schema';
 commit;

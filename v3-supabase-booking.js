@@ -234,6 +234,8 @@ if(window.RestoPlacementGateway&&window.RestoSmartPlacement){
   }:null,
   tableId:number=>window.RestoSmartPlacementTableIds instanceof Map?window.RestoSmartPlacementTableIds.get(number):null,
   isOnline:()=>navigator.onLine!==false,
+  // Activé seulement si le serveur annonce la proposition v4 appliquée (capacité « placement » ≥ 4).
+  serverFeatures:()=>({seatReservationV1:Number(window.RestoServiceCapabilities?.placement)>=4}),
   // Passage : RPC existante (install_walkin_group_v3) via la fonction déjà utilisée par le mode complet.
   installWalkin:(draft,options)=>{if(typeof window.RestoInstallWalkin!=='function')throw Object.assign(Error('Passage indisponible.'),{code:'PGRST202'});return window.RestoInstallWalkin(draft,options)},
   requireWrite,

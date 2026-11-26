@@ -81,7 +81,7 @@
 | `node tests/smart-placement.test.js` (historique) | 12/12 |
 | `node --test tests/rm-ops-engine.test.cjs` | 19/19, dont propriété aléatoire (400 états, plus de 200 propositions vérifiées sans double occupation) et charge 200 couverts |
 | `node --test tests/rm-ops-gateway.test.cjs` | 11/11 |
-| `npm test` | 442 réussis, 2 échecs **préexistants sur DEV `608fba9`** (`rm015-hotel`, `rm015-publication`), identiques sans ce lot |
+| `npm test` | 442 réussis ; 2 échecs `rm015-*` dus à l'absence de `node_modules` dans la session (rectifié le 26/11 : 0 échec après `npm ci`, voir le rapport d'intégration) |
 | `npm run test:syntax` | 0 échec |
 | `node tests/postgres/rm-ops-engine.cjs --local --with-proposals` | **26/26**. PostgreSQL 16 local, socket Unix temporaire, sans réseau : 17 cas sur les fonctions DEV + 9 cas sur la proposition v4. Les lignes `grant MAINTAIN` de l'export sont ignorées en PostgreSQL < 17. |
 

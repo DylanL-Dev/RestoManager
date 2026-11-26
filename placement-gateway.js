@@ -20,7 +20,8 @@
   RESULT_UNKNOWN:'Confirmation non reçue. Vérifiez la fiche avant toute nouvelle action.',
   INVALID_INPUT:'Demande invalide. Actualisez puis réessayez.',
   ROOM_CONFLICT:'Une réservation existe déjà pour cette chambre.',
-  CAPABILITY_REQUIRED:'Le service de réservation doit être mis à jour par le responsable.'
+  CAPABILITY_REQUIRED:'Le service de réservation doit être mis à jour par le responsable.',
+  SEATED_ELSEWHERE:'Un collègue venait de changer la table de ce client : il est enregistré sur une autre table. Vérifiez en salle et corrigez si besoin.'
  };
  class RestoEngineError extends Error{
   constructor(code,message,extra={}){
@@ -50,7 +51,7 @@
  }
 
  function createPlacementGateway(deps){
-  const {engine,getState,rpc,refresh,requireWrite=()=>{},getRole=async()=>null,isOnline=()=>true,tableId,now=()=>Date.now(),installWalkin}=deps;
+  const {engine,getState,rpc,refresh,requireWrite=()=>{},getRole=async()=>null,isOnline=()=>true,tableId,now=()=>Date.now(),installWalkin,serverFeatures=()=>({})}=deps;
   const inflight=new Map();
 
   function input(extra){
@@ -79,7 +80,10 @@
 
   async function write(fresh,current){
    if(sameTables(current.tables,fresh.targetTables)&&!fresh.changes.length){
-    // Installation sur la table déjà affectée : RPC de statut existante.
+    // Installation sur la table déjà affectée. seat_reservation_v1 (proposé) vérifie la table sous verrou ;
+    // à défaut, la RPC de statut v3 installe sur la table courante, sans contrôle : course détectée après coup.
+    if(serverFeatures().seatReservationV1&&current.tables.length===1)
+     return rpc('seat_reservation_v1',{p_reservation_id:current.id,p_expected_status:current.status,p_table:tableId(Number(current.tables[0]))});
     return rpc('change_reservation_status_v3',{p_reservation_id:current.id,p_expected:current.status,p_status:'seated'});
    }
    if(current.tables.length!==1||fresh.targetTables.length!==1)throw new RestoEngineError('FUSION_UNSUPPORTED','Fusion : réorganisation automatique non disponible.');
@@ -115,7 +119,11 @@
     throw new RestoEngineError(code,null,{refreshed,cause:error});
    }
    try{await refresh()}catch(_){return {...done(fresh,false),verified:false}}
-   if(!seatedAsRequested(prev.reservationId,prev.targetTables))throw new RestoEngineError('RESULT_UNKNOWN',null,{refreshed:true});
+   if(!seatedAsRequested(prev.reservationId,prev.targetTables)){
+    const now=findRecord(prev.reservationId);
+    if(now?.status==='seated')throw new RestoEngineError('SEATED_ELSEWHERE',null,{refreshed:true,actualTables:now.tables.slice(),requestedTables:prev.targetTables.slice()});
+    throw new RestoEngineError('RESULT_UNKNOWN',null,{refreshed:true});
+   }
    return done(fresh,false);
   }
   function done(p,alreadyApplied){

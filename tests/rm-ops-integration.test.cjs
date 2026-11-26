@@ -20,6 +20,12 @@ function fakeServer(fixture){
  const find=id=>state.reservations.find(r=>r.id===id);
  const seatedOn=(n,except)=>state.reservations.some(r=>r.id!==except&&r.status==='seated'&&r.tables.includes(n));
  const rpc=(name,args)=>serial(async()=>{
+  if(name==='seat_reservation_v1'){ // proposition : la table attendue est vérifiée sous verrou
+   const r=find(args.p_reservation_id);
+   if(r.status!==args.p_expected_status||r.tables.length!==1||r.tables[0]!==Number(args.p_table.slice(1)))throw {code:'40001',message:'L’attribution a changé.'};
+   if(seatedOn(r.tables[0],r.id))throw {code:'23P01',message:'Table occupée par un client installé.'};
+   r.status='seated';r.seatedAt=new Date(state.clock).toISOString();state.writes++;return null;
+  }
   if(name==='change_reservation_status_v3'){
    const r=find(args.p_reservation_id);if(r.status!==args.p_expected)throw {code:'P0001',message:'La réservation a déjà changé.'};
    if(r.tables.some(n=>seatedOn(n,r.id)))throw {code:'P0001',message:'Cette table est encore occupée.'};
@@ -44,11 +50,11 @@ async function setup({online=()=>true}={}){
  const fixture=makeSimulation();
  const server=fakeServer(fixture);
  // Chaque appareil a son propre instantané local, rafraîchi depuis le serveur.
- function device(){
+ function device({features={},rpc}={}){
   let local=JSON.parse(JSON.stringify(server.state.reservations));
   const placement=createPlacementGateway({engine,now:()=>server.state.clock,isOnline:online,getRole:async()=>'fb_admin',tableId:n=>'t'+n,
-   getState:()=>({reservations:local,tablePlan:fixture.tables,holds:[],duration:90}),
-   refresh:async()=>{local=JSON.parse(JSON.stringify(server.state.reservations))},rpc:server.rpc,installWalkin:server.installWalkin});
+   getState:()=>({reservations:local,tablePlan:fixture.tables,holds:[],duration:90}),serverFeatures:()=>features,
+   refresh:async()=>{local=JSON.parse(JSON.stringify(server.state.reservations))},rpc:rpc||((...x)=>server.rpc(...x)),installWalkin:server.installWalkin});
   const read=()=>simulationSnapshot({...fixture,reservations:local});
   return {placement,adapter:createLiveAdapter({read,placement,source:new EventTarget()}),read,refresh:()=>{local=JSON.parse(JSON.stringify(server.state.reservations))}};
  }
@@ -68,30 +74,42 @@ test('Express × moteur : 214/215 — deux propositions, échange visible dans �
  assert.deepEqual(final,{'214':['seated',4],'215':['reserved',21]});
 });
 
-test('Express × moteur : deux pupitres simultanés sur la table 4 — une seule installation, l’autre refusée sans écriture',{skip},async()=>{
+test('Express × moteur : deux pupitres simultanés sur la table 4 — jamais deux clients installés sur T4',{skip},async()=>{
  const {server,device}=await setup();const a=device(),b=device();
  const planA=a.adapter.preview(a.read(),'214',4),planB=b.adapter.preview(b.read(),'215',4);
  assert.equal(planA.ok,true);assert.equal(planB.ok,true);
  const results=await Promise.allSettled([a.adapter.seat(planA),b.adapter.seat(planB)]);
- assert.equal(results.filter(r=>r.status==='fulfilled').length,1,JSON.stringify(results.map(r=>r.reason?.code)));
- assert.ok(['STALE','TARGET_OCCUPIED','CONFLICT'].includes(results.find(r=>r.status==='rejected').reason.code));
- const onFour=server.state.reservations.filter(r=>r.status==='seated'&&r.tables.includes(4));
- assert.equal(onFour.length,1);assert.equal(server.state.writes,1);
+ assert.equal(results[0].status,'fulfilled');
+ assert.equal(server.state.reservations.filter(r=>r.status==='seated'&&r.tables.includes(4)).length,1,'aucune double occupation de T4');
+ // CONSTAT v3 : la RPC de statut installe 215 sur sa table COURANTE (T21, issue de l’échange concurrent).
+ // La façade le détecte et le signale explicitement (SEATED_ELSEWHERE), sans nouvel essai.
+ assert.equal(results[1].status,'rejected');assert.equal(results[1].reason.code,'SEATED_ELSEWHERE');
+ assert.deepEqual(results[1].reason.actualTables,[21]);
 });
 
-test('Express × moteur : installation anticipée sur une table encore promise à un client en retard — refusée',{skip},async()=>{
+test('Express × moteur : avec seat_reservation_v1 (proposé), la même course est refusée avant écriture',{skip},async()=>{
  const {server,device}=await setup();
- // 214 prévu 20:30 ; T4 promise à 215 prévu 19:00, toujours attendu à 19:44.
- server.state.reservations.find(r=>r.id==='214').time='20:30';
+ const a=device(),b=device({features:{seatReservationV1:true}});
+ const planA=a.adapter.preview(a.read(),'214',4),planB=b.adapter.preview(b.read(),'215',4);
+ const results=await Promise.allSettled([a.adapter.seat(planA),b.adapter.seat(planB)]);
+ assert.equal(results[0].status,'fulfilled');assert.equal(results[1].status,'rejected');
+ assert.ok(['STALE','TARGET_OCCUPIED'].includes(results[1].reason.code),results[1].reason.code);
+ assert.equal(server.state.reservations.find(r=>r.id==='215').status,'reserved','215 reste à placer');
+});
+
+test('Express × moteur : installation anticipée — le client en retard prévu sur la table est replacé, jamais écrasé',{skip},async()=>{
+ const {server,device}=await setup();
+ // 214 prévu 20:30, installé à 19:44 ; T4 promise à 215 prévu 19:00 (en retard, toujours attendu).
+ Object.assign(server.state.reservations.find(r=>r.id==='214'),{time:'20:30',tables:[13]});
  Object.assign(server.state.reservations.find(r=>r.id==='215'),{time:'19:00',status:'late'});
  const d=device();
  const plan=d.adapter.preview(d.read(),'214',4);
- assert.equal(plan.ok,true,'l’échange avec 215 reste possible : 215 part sur T21');
+ assert.equal(plan.ok,true);
+ assert.ok(plan.changes.some(c=>c.id==='215'),'215 doit être replacé même si les créneaux prévus ne se chevauchent pas');
  assert.ok(plan.warnings.some(w=>w.code==='EARLY_SEATING'&&w.message));
- // Sans échange possible (T21 occupée), l’installation anticipée sur T4 est refusée.
- server.state.reservations.push({id:'occ',client:'Installé',date:'2032-11-08',time:'19:30',duration:90,guests:2,tables:[21],status:'seated'});
- server.state.reservations.find(r=>r.id==='214').tables=[13];d.refresh();
- assert.notEqual(d.adapter.preview(d.read(),'214',4).ok,true);
+ await d.adapter.seat(plan);
+ const r215=server.state.reservations.find(r=>r.id==='215');
+ assert.notDeepEqual(r215.tables,[4]);assert.equal(r215.status,'late');
 });
 
 test('Express × moteur : passage express — tables conformes au serveur, double appui = un seul passage',{skip},async()=>{
