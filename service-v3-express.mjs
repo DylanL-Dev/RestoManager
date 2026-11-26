@@ -22,7 +22,9 @@ function button(label,action,value){
 
 export function mountExpress(main,readPlan){
  const launch=button('','open');launch.className='rmExpressLaunch';launch.hidden=true;
- launch.innerHTML=`${icon('zap')}<span>Mode Coup de feu</span>`;
+ launch.innerHTML=`${icon('zap')}<span>Coup de feu</span>`;
+ launch.setAttribute('aria-label','Ouvrir le Mode Coup de feu');
+ launch.title='Ouvrir le Mode Coup de feu';
  launch.setAttribute('aria-controls','rmExpress');launch.setAttribute('aria-expanded','false');
  const root=element('section','','rmExpress');root.id='rmExpress';root.hidden=true;
  root.setAttribute('aria-labelledby','rmExpressTitle');
@@ -101,7 +103,15 @@ export function mountExpress(main,readPlan){
  const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-integration1',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
- document.head.append(style);main.prepend(launch);main.append(root);
+ document.head.append(style);
+ // Keep the rush-mode entry alongside the Restaurant identity rather than above the whole dashboard.
+ const role=main.querySelector('.serviceIntro .serviceRole');
+ if(role){
+  const entry=element('div','','rmExpressEntry');
+  role.before(entry);
+  entry.append(role,launch);
+ }else main.prepend(launch);
+ main.append(root);
  $('[data-floor]').open=window.matchMedia('(min-width: 720px)').matches;
  symbols();
 
