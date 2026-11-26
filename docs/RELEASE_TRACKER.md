@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-UX — Reprise pack v11, correctifs 11.1 — CANDIDAT DEV (27/11/2026)
+
+- Reprise propriétaire autorisée de #279 (`57a8034`, 16/18 workflows ; échecs alignement des cartes à 768 px et contraste axe à 390 px). Branche distincte `fix/rm-ux-pack-v11-reprise` ; original conservé. Animation sans déplacement de carte, contraste, compteurs natifs intacts, états réels et isolation de snapshot, cache versionné, quatre tests ciblés. CI et recette visuelle à confirmer. [Rapport](audits/RM-UX_PACK_V11_REPRISE_20261127.md). Aucune fusion ni publication.
+
+
 ### RM-SEC-03 + RM-SEC-04 — SDK local et CSP stricte, livraison unique actualisée — PR DEV BROUILLON (26/11/2026)
 
 - Issues #255 / #256, PR #260 (contient #259). Fusion de DEV `2b0792e` (RM-OPS #270–#275) dans `claude/rm-sec-04-csp`, sans rebase ; conflits `sw.js` / `v3-connected.html` / 2 tests résolus sans perte (version CSP + `?v=` RM-OPS, `SHELL` de DEV + 5 fichiers sécurité, cache `restomanager-shell-20261126-rmsec0304b`). Écritures Express toujours désactivées. **Aucune fusion, migration ni publication.**
