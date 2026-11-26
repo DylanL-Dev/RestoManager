@@ -21,10 +21,15 @@
   const SEATED = new Set(['seated']);
   const EXPECTED = new Set(['reserved', 'confirmed', 'late', 'arrived']);
   const HOTEL = new Set(['hotel', 'chambre', 'interne']);
-  function dataScope() {
+  function contextScope() {
     const c = window.RestoNotificationContext;
-    return window.RestoSharedDataLoaded === true && c?.restaurantId && c?.userId && Array.isArray(window.RestoSharedReservations)
-      ? JSON.stringify([c.restaurantId, c.userId, c.role]) : null;
+    return c?.restaurantId && c?.userId ? JSON.stringify([c.restaurantId, c.userId, c.role]) : null;
+  }
+  // An old snapshot must not be interpreted as the next establishment's data.
+  let snapshotScope = window.RestoSharedDataLoaded === true ? contextScope() : null;
+  function dataScope() {
+    const scope = contextScope();
+    return scope && scope === snapshotScope && window.RestoSharedDataLoaded === true && Array.isArray(window.RestoSharedReservations) ? scope : null;
   }
 
   function stats() {
@@ -81,7 +86,7 @@
       if (s.seatedNow) parts.push(`${plural(s.seatedNow, 'couvert')} déclaré${s.seatedNow > 1 ? 's' : ''} installé${s.seatedNow > 1 ? 's' : ''}`);
       if (s.expectedCovers) parts.push(`${plural(s.expectedCovers, 'couvert')} encore ${s.expectedCovers > 1 ? 'attendus' : 'attendu'}`);
       if (s.nextTime) parts.push(`prochaine arrivée à ${s.nextTime.replace(':', 'h')}`);
-      return { title: 'Service en cours', sub: parts.join(' · '), progress: (s.servedToday + s.seatedNow) / Math.max(1, s.servedToday + s.seatedNow + s.expectedCovers) };
+      return { title: 'Suivi du service', sub: parts.join(' · '), progress: (s.servedToday + s.seatedNow) / Math.max(1, s.servedToday + s.seatedNow + s.expectedCovers) };
     }
     if (s.servedToday) {
       const delta = s.servedToday - s.lastWeek;
@@ -90,9 +95,9 @@
         : 'Merci à toute l’équipe pour ce service.';
       return { title: `Beau travail : ${plural(s.servedToday, 'couvert')} ${s.servedToday > 1 ? 'servis' : 'servi'} aujourd’hui`, sub, progress: 1 };
     }
-    if (h >= 21) return { title: 'Soirée calme, rien en attente', sub: 'Aucune réservation ce soir. Les passages que vous ajoutez apparaissent ici en direct.', progress: 0 };
-    if (h < 11) return { title: 'Bonjour, la salle est prête', sub: 'Aucune réservation pour le moment. Les nouvelles arrivées apparaîtront ici en direct.', progress: 0 };
-    return { title: 'Rien en attente pour l’instant', sub: 'Les réservations et passages du jour apparaîtront ici en direct.', progress: 0 };
+    if (h >= 21) return { title: 'Rien en attente dans les données chargées', sub: 'Les prochaines réservations et passages apparaîtront après synchronisation.', progress: 0 };
+    if (h < 11) return { title: 'Bonjour, suivi du service', sub: 'Aucune réservation en attente dans les données chargées.', progress: 0 };
+    return { title: 'Rien en attente dans les données chargées', sub: 'Les réservations et passages du jour apparaîtront après synchronisation.', progress: 0 };
   }
 
   function buildHero(s) {
@@ -171,7 +176,8 @@
   /* ---------------- Textes explicatifs repliés ---------------- */
   const CLAMP_MIN = 80;
   function clampLongTexts() {
-    document.querySelectorAll('.appScreen p, .appScreen .muted, .appScreen small').forEach(p => {
+    // Only decorative copy may be collapsed; operational warnings and instructions stay intact.
+    document.querySelectorAll('.appScreen [data-rm-ux-clamp="true"]').forEach(p => {
       if (p.dataset.rmClamp || p.closest('form, dialog, [role="dialog"], .rm-hero, .rm-res-empty, .rm-empty-state, .rm-toast')) return;
       if (p.textContent.trim().length < CLAMP_MIN || p.querySelector('input, button, a, select')) return;
       if (!p.offsetParent) return;          // écran caché : on vérifiera quand il sera visible
@@ -265,6 +271,8 @@
     requestAnimationFrame(() => { queued = false; tick(false); });
   }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'], attributeOldValue: true });
 
+  window.addEventListener('restomanager:notification-context', () => { snapshotScope = null; renderHero(false); });
+  window.addEventListener('restomanager:supabase-snapshot', () => { snapshotScope = contextScope(); renderHero(false); });
   setInterval(() => renderHero(false), 15000);   // filet de sécurité si les données changent sans toucher au DOM
 
   tick(true);
@@ -401,6 +409,7 @@
     snap = now;
     // La couverture historique n’est pas garantie par le snapshot : pas de record automatique.
   }
+  window.addEventListener('restomanager:notification-context', () => { wrap.replaceChildren(); snap = null; snapScope = null; });
   setInterval(diff, 3000);
 
   /* =================== 2. Célébration de record =================== */
