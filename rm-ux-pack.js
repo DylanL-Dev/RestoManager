@@ -17,12 +17,19 @@
   const plural = (n, s, p = s + 's') => `${n} ${n > 1 ? p : s}`;
 
   /* ---------------- Statistiques (à partir des réservations déjà chargées) ---------------- */
-  const SERVED = new Set(['completed', 'released', 'seated', 'arrived']);
-  const SEATED = new Set(['seated', 'arrived']);
-  const EXPECTED = new Set(['reserved', 'confirmed', 'late']);
+  const SERVED = new Set(['completed', 'released']);
+  const SEATED = new Set(['seated']);
+  const EXPECTED = new Set(['reserved', 'confirmed', 'late', 'arrived']);
+  const HOTEL = new Set(['hotel', 'chambre', 'interne']);
+  function dataScope() {
+    const c = window.RestoNotificationContext;
+    return window.RestoSharedDataLoaded === true && c?.restaurantId && c?.userId && Array.isArray(window.RestoSharedReservations)
+      ? JSON.stringify([c.restaurantId, c.userId, c.role]) : null;
+  }
 
   function stats() {
-    const list = Array.isArray(window.RestoSharedReservations) ? window.RestoSharedReservations : [];
+    const scope = dataScope();
+    const list = scope ? window.RestoSharedReservations : [];
     const today = isoDay(new Date());
     const g = r => Number(r.guests) || 0;
     const of = day => list.filter(r => r.date === day);
@@ -30,7 +37,8 @@
 
     const t = of(today);
     const expected = t.filter(r => EXPECTED.has(r.status));
-    const nextTime = expected.map(r => r.time).filter(Boolean).sort()[0] || null;
+    const now = new Intl.DateTimeFormat('en-GB', {timeZone: TZ, hour: '2-digit', minute: '2-digit', hourCycle: 'h23'}).format(new Date());
+    const nextTime = expected.filter(r => r.status !== 'arrived').map(r => r.time).filter(t => typeof t === 'string' && t.slice(0, 5) >= now).sort()[0] || null;
     const servedToday = served(today);
 
     const days = [];
@@ -38,13 +46,13 @@
     const best = days.reduce((a, b) => (b.v > a.v ? b : a), days[0]);
 
     const servedRes = t.filter(r => SERVED.has(r.status));
-    const hotel = servedRes.filter(r => r.type === 'hotel').reduce((s, r) => s + g(r), 0);
+    const hotel = servedRes.filter(r => HOTEL.has(r.type)).reduce((s, r) => s + g(r), 0);
     const tomorrow = of(addDays(today, 1)).filter(r => EXPECTED.has(r.status));
 
     return {
-      today, days, best,
+      today, days, best, scope, ready: Boolean(scope),
       servedToday,
-      seatedNow: t.filter(r => SEATED.has(r.status)).reduce((s, r) => s + g(r), 0),
+      seatedNow: list.filter(r => SEATED.has(r.status)).reduce((s, r) => s + g(r), 0),
       expectedCovers: expected.reduce((s, r) => s + g(r), 0),
       expectedCount: expected.length,
       nextTime,
@@ -70,10 +78,10 @@
     const h = hourNow();
     if (s.seatedNow || s.expectedCount) {
       const parts = [];
-      if (s.seatedNow) parts.push(`${plural(s.seatedNow, 'couvert')} en salle`);
+      if (s.seatedNow) parts.push(`${plural(s.seatedNow, 'couvert')} déclaré${s.seatedNow > 1 ? 's' : ''} installé${s.seatedNow > 1 ? 's' : ''}`);
       if (s.expectedCovers) parts.push(`${plural(s.expectedCovers, 'couvert')} encore ${s.expectedCovers > 1 ? 'attendus' : 'attendu'}`);
       if (s.nextTime) parts.push(`prochaine arrivée à ${s.nextTime.replace(':', 'h')}`);
-      return { title: 'Service en cours', sub: parts.join(' · '), progress: s.servedToday / Math.max(1, s.servedToday + s.expectedCovers) };
+      return { title: 'Service en cours', sub: parts.join(' · '), progress: (s.servedToday + s.seatedNow) / Math.max(1, s.servedToday + s.seatedNow + s.expectedCovers) };
     }
     if (s.servedToday) {
       const delta = s.servedToday - s.lastWeek;
@@ -118,9 +126,9 @@
     const chart = el('div', 'rm-hero-chart');
     const head = el('div', 'rm-chart-head');
     const total = s.days.reduce((a, b) => a + b.v, 0);
-    head.append(el('span', null, 'Couverts servis · 14 derniers jours'), el('b', null, String(total)));
+    head.append(el('span', null, 'Couverts terminés · 14 jours (données chargées)'), el('b', null, String(total)));
     const bars = el('div', 'rm-bars'); bars.setAttribute('role', 'img');
-    bars.setAttribute('aria-label', 'Couverts servis par jour sur 14 jours : ' + s.days.map(x => `${fmt(x.d, { day: 'numeric', month: 'short' })} ${x.v}`).join(', '));
+    bars.setAttribute('aria-label', 'Couverts terminés par jour dans les données chargées : ' + s.days.map(x => `${fmt(x.d, { day: 'numeric', month: 'short' })} ${x.v}`).join(', '));
     const labels = el('div', 'rm-days'); labels.setAttribute('aria-hidden', 'true');
     const max = Math.max(1, ...s.days.map(x => x.v));
     s.days.forEach((x, k) => {
@@ -132,7 +140,7 @@
       labels.append(el('span', x.d === s.today ? 'rm-today' : null, fmt(x.d, { weekday: 'narrow' })));
     });
     const foot = el('div', 'rm-chart-foot');
-    if (s.best.v) foot.append(document.createTextNode('Meilleur jour récent : '), el('b', null, `${fmt(s.best.d, { weekday: 'long', day: 'numeric', month: 'long' })} · ${s.best.v} couverts`));
+    if (s.best.v) foot.append(document.createTextNode('Meilleur jour parmi les données chargées : '), el('b', null, `${fmt(s.best.d, { weekday: 'long', day: 'numeric', month: 'long' })} · ${s.best.v} couverts`));
     else foot.textContent = 'Les couverts servis s’afficheront ici jour après jour.';
     chart.append(head, bars, labels, foot);
 
@@ -143,15 +151,14 @@
   }
 
   let heroSig = '';
-  let previewUntil = 0;
   function renderHero(force) {
     const screen = document.querySelector('section.appScreen#tables, section.appScreen.appScreenActive');
     const anchor = document.querySelector('#tables .kpis') || document.querySelector('.appScreen .kpis');
     if (!anchor || !screen) return;
     const s = stats();
-    const sig = JSON.stringify([s.servedToday, s.seatedNow, s.expectedCovers, s.noShows, s.nextTime, s.tomorrowCovers, s.days.map(d => d.v), hourNow() >= 21]);
     const existing = document.querySelector('.rm-hero');
-    if (!force && existing && Date.now() < previewUntil) return;   // un aperçu est affiché
+    if (!s.ready) { existing?.remove(); heroSig = ''; return; }
+    const sig = JSON.stringify([s.scope, s.today, s.servedToday, s.seatedNow, s.expectedCovers, s.expectedCount, s.noShows, s.nextTime, s.hotelShare, s.tomorrowCount, s.tomorrowCovers, s.days.map(d => d.v), hourNow() >= 21]);
     if (!force && existing && sig === heroSig && existing.isConnected) return;
     const first = !existing;
     heroSig = sig;
@@ -204,26 +211,16 @@
   /* ---------------- Compteurs animés ---------------- */
   const NUM_RE = /^\s*(\d+)\s*(%?)\s*$/;
   const lastNum = new WeakMap();
-  const counting = new WeakSet();
-  function countTo(n, from, to, suffix) {
-    if (reduce) return;
-    counting.add(n);
-    const t0 = performance.now(), dur = 650;
-    const step = now => {
-      const t = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - t, 3);
-      n.textContent = Math.round(from + (to - from) * e) + suffix;
-      if (t < 1) requestAnimationFrame(step);
-      else { counting.delete(n); n.classList.remove('rm-bump'); void n.offsetWidth; n.classList.add('rm-bump'); }
-    };
-    requestAnimationFrame(step);
-  }
+  // Never interpolate or overwrite textContent owned by the reservation engine.
   function scanNumbers() {
     document.querySelectorAll('.kpi strong, .currentOccupancy strong, .rmLiveGauge strong').forEach(n => {
-      if (n.children.length || counting.has(n)) return;
+      if (n.children.length) return;
       const m = n.textContent.match(NUM_RE); if (!m) return;
       const v = +m[1], prev = lastNum.get(n);
       lastNum.set(n, v);
-      if (prev !== undefined && prev !== v) countTo(n, prev, v, m[2] ? ' ' + m[2] : '');
+      if (prev !== undefined && prev !== v && !reduce) {
+        n.classList.remove('rm-bump'); void n.offsetWidth; n.classList.add('rm-bump');
+      }
     });
   }
 
@@ -274,14 +271,7 @@
   window.RestoUX = {
     refresh: () => renderHero(true),
     stats,
-    /* Aperçu d'un état fictif, pour tester le design sans toucher aux données :
-       RestoUX.preview({ seatedNow: 12, expectedCovers: 8, expectedCount: 3, nextTime: '21:15', servedToday: 12 }) */
-    preview(over = {}) {
-      const hero = buildHero({ ...stats(), ...over });
-      hero.classList.add('rm-enter');
-      document.querySelector('.rm-hero')?.replaceWith(hero);
-      previewUntil = Date.now() + 30000;   // l'aperçu reste 30 s puis les vraies données reviennent
-    },
+    // Les aperçus fictifs sont réservés aux fixtures isolées, pas au tableau de bord connecté.
   };
 })();
 
@@ -372,7 +362,7 @@
   const covers = r => { const n = Number(r.guests) || 0; return `${n} couvert${n > 1 ? 's' : ''}`; };
   const hhmm = t => (t || '').slice(0, 5).replace(':', 'h');
 
-  let snap = null;
+  let snap = null, snapScope = null;
   function snapshot() {
     const m = new Map();
     (Array.isArray(window.RestoSharedReservations) ? window.RestoSharedReservations : [])
@@ -380,6 +370,10 @@
     return m;
   }
   function diff() {
+    const scope = window.RestoUX.stats().scope;
+    if (!scope || scope !== snapScope) {
+      wrap.replaceChildren(); snapScope = scope; snap = scope ? snapshot() : null; return;
+    }
     const now = snapshot();
     if (!snap) { snap = now; return; }
     const remote = Date.now() - lastLocal > 4000;
@@ -394,8 +388,8 @@
           toast({ title: 'Nouvelle réservation', text: `${covers(r)} · ${dayLabel(r.date)} à ${hhmm(r.time)}`, icon: 'plus', tone: 'info' });
           shown++;
         } else if (prev.s !== cur.s) {
-          if (cur.s === 'arrived' || cur.s === 'seated') toast({ title: 'Clients installés', text: `${tablesLabel(r)} · ${covers(r)}`, icon: 'seat' });
-          else if (cur.s === 'completed' || cur.s === 'released') toast({ title: 'Table libérée', text: `${tablesLabel(r)} est de nouveau disponible`, icon: 'out' });
+          if (cur.s === 'seated') toast({ title: 'Clients installés', text: `${tablesLabel(r)} · ${covers(r)}`, icon: 'seat' });
+          else if (cur.s === 'completed' || cur.s === 'released') toast({ title: 'Départ enregistré', text: `${tablesLabel(r)} · ${covers(r)}`, icon: 'out' });
           else if (cur.s === 'cancelled') toast({ title: 'Réservation annulée', text: `${covers(r)} · ${dayLabel(r.date)} à ${hhmm(r.time)}`, icon: 'x', tone: 'warn' });
           else if (cur.s === 'no_show') toast({ title: 'Absence notée', text: `${tablesLabel(r)} · ${hhmm(r.time)}`, icon: 'alert', tone: 'warn' });
           else if (cur.s === 'late') toast({ title: 'Client en retard', text: `${tablesLabel(r)} · prévu à ${hhmm(r.time)}`, icon: 'clock', tone: 'warn' });
@@ -405,7 +399,7 @@
       }
     }
     snap = now;
-    checkRecord();
+    // La couverture historique n’est pas garantie par le snapshot : pas de record automatique.
   }
   setInterval(diff, 3000);
 
@@ -439,7 +433,7 @@
     const s = window.RestoUX.stats();
     const past = s.days.slice(0, -1).map(d => d.v);
     const prevBest = Math.max(0, ...past);
-    const key = 'rmux-record-' + s.today;
+    const key = 'rmux-record-' + s.scope + '-' + s.today;
     if (s.servedToday > 0 && prevBest > 0 && s.servedToday > prevBest && s.servedToday > Number(store.get(key) || 0)) {
       store.set(key, String(s.servedToday));
       confetti();
@@ -576,7 +570,7 @@
     toast,
     palette: openPalette,
     /* Pour tester l'animation de record sans toucher aux données */
-    celebrate: () => { confetti(); toast({ title: 'Nouveau record sur 14 jours !', text: 'Aperçu de la célébration.', icon: 'party', tone: 'party', ms: 9000 }); },
+    celebrate: () => { confetti(); toast({ title: 'Aperçu de la célébration', text: 'Animation de démonstration — aucun record réel annoncé.', icon: 'party', tone: 'party', ms: 9000 }); },
   });
 })();
 
@@ -648,7 +642,8 @@
   // Pastille : nombre de réservations encore attendues aujourd'hui
   let lastBadge = null;
   function navBadge() {
-    const n = window.RestoUX.stats().expectedCount;
+    const stats = window.RestoUX.stats();
+    const n = stats.ready ? stats.expectedCount : 0;
     const changed = lastBadge !== null && n !== lastBadge;
     [$('nav.sidebar > a[href="#reservations"]'), $('.mobileBottomNav .mobileNavItem[data-nav="reservations"]')].forEach(a => {
       if (a) badgeOn(a, n, changed);
@@ -772,7 +767,7 @@
   /* ---------- 2. Compte à rebours + prochaine arrivée ---------- */
   function eta() {
     const list = $('#reservationList'); if (!list || !list.offsetParent) return;
-    const byId = new Map((window.RestoSharedReservations || []).map(r => [r.id, r]));
+    const byId = new Map((window.RestoUX.stats().ready ? window.RestoSharedReservations : []).map(r => [r.id, r]));
     const t = today(), now = nowMin();
     const narrow = matchMedia('(max-width: 1180px)').matches;
     let next = null, nextDiff = Infinity;
