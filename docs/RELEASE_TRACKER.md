@@ -10,6 +10,13 @@
 - Coordination #247, expérience #266, contrat moteur #265. Base DEV `608fba9`. Tablette au pupitre, mobile et PC dans l’espace Restaurant connecté.
 - Lecture des instantanés du service en mode Express. Placement, échange, reprise et passage sur un adaptateur fictif. [Parcours, contrat et recette](audits/RM-OPS-02_EXPRESS_20261126.md).
 
+### RM-OPS-01 ENGINE — Moteur de placement et sécurité serveur — PR DEV BROUILLON (26/11/2026)
+
+- Mission propriétaire (#265, #266, #268 ; coordination #247). Branche `claude/rm-ops-engine` depuis DEV `608fba9`. **Aucune migration exécutée, aucune fusion, aucun déploiement.**
+- Moteur JS : échange simple prioritaire, même salle par défaut, installés bloquants toutes dates, installation anticipée, codes d'erreur ; façade `RestoPlacement` (contrat #265) ; `simulate` compatible.
+- Constats serveur (export DEV 10/11 rejoué en local) : migration du dépôt plus ancienne que DEV, installation anticipée acceptée par v3, aucun journal auteur. Proposition v4 **non appliquée** dans `supabase/proposals/rm-ops-engine/`. Tests : moteur 19/19, façade 11/11, PostgreSQL isolé 26/26. [Rapport](audits/RM-OPS-ENGINE_MOTEUR_SECURITE_20261126.md).
+- 26/11 — Revue croisée avec Express #271 : adaptateur `placement-express-adapter.mjs`, passage sûr, avertissement d'installation anticipée corrigé, constat de course entre deux pupitres (`seat_reservation_v1` proposé, non appliqué). Fusion locale #270+#271 : `npm test` 472/472, Express navigateur 7/7, moteur réel en page 6/6 ; PostgreSQL isolé 28/28. [Intégration](audits/RM-OPS_INTEGRATION_EXPRESS_MOTEUR_20261126.md).
+
 ### RM-AUDIT-02 — Audit de MAIN phase 1 (lecture/simulation) — RAPPORT (24/11/2026)
 
 - Phase 1 autorisée, issue #144. MAIN figé `d852c19` dans un worktree détaché ; aucun contact Supabase PROD (garde-fou réseau : 0 requête), aucun workflow, aucune fusion.
