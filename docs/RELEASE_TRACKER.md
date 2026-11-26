@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS-02 — Mode Coup de feu, expérience Express — CANDIDAT (26/11/2026)
+
+- Coordination #247, expérience #266, contrat moteur #265. Base DEV `608fba9`. Tablette au pupitre, mobile et PC dans l’espace Restaurant connecté.
+- Lecture des instantanés du service en mode Express. Placement, échange, reprise et passage sur un adaptateur fictif. [Parcours, contrat et recette](audits/RM-OPS-02_EXPRESS_20261126.md).
+
 ### RM-AUDIT-02 — Audit de MAIN phase 1 (lecture/simulation) — RAPPORT (24/11/2026)
 
 - Phase 1 autorisée, issue #144. MAIN figé `d852c19` dans un worktree détaché ; aucun contact Supabase PROD (garde-fou réseau : 0 requête), aucun workflow, aucune fusion.
