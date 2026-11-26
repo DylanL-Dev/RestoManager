@@ -115,7 +115,7 @@ test('RM-015.13: hotel demo requires guest status and fictional room, unlike ind
  assert.match(connected,/radio\('guestType','hotel',icon\('hotel'\)/);
  assert.match(connected,/profile.hotelGuestsEnabled===true/);
  assert.match(connected,/brand-mark \[data-lucide\]/);
- assert.match(liveHtml,/live\.mjs\?v=20261124-rmux033/);
+ assert.match(liveHtml,/live\.mjs\?v=20261126-rmux03-focus/);
  assert.match(staffWeb,/hotel.prepend\(icon\('hotel'\)\)/);
  assert.match(staffWeb,/stay.prepend\(icon\('hotel'\)\)/);
  for(const part of ['name="walkinType" value="hotel" checked','name="bookingTypeVisual" value="hotel" checked','id="bookingHotelRoomField"','id="editHotelRoomField"']){

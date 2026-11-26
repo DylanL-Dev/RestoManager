@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-UX-03 — Recette DEV et continuité clavier du portail — CANDIDAT (26/11/2026)
+
+- Issue #242. Render DEV live sur `608fba9`, qui inclut #244 (`40016d9`). Revue des écrans à 390, 768 et 1440 px, tests dédiés Restaurant, Réception, Créateur, inscription, connexion, réservation et PWA.
+- Sur la branche Codex, la réponse de disponibilité restitue le focus au champ utilisé ou le conserve hors du formulaire. Test navigateur avec réponses différées. [Recette, résultats et prochain lot](audits/RM-UX-03_RECETTE_DEV_20261126.md).
+
 ### RM-AUDIT-02 — Audit de MAIN phase 1 (lecture/simulation) — RAPPORT (24/11/2026)
 
 - Phase 1 autorisée, issue #144. MAIN figé `d852c19` dans un worktree détaché ; aucun contact Supabase PROD (garde-fou réseau : 0 requête), aucun workflow, aucune fusion.

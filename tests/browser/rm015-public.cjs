@@ -3,7 +3,7 @@ const fs = require('node:fs'), path = require('node:path'), http = require('node
 const root = path.resolve(__dirname, '../..'), out = path.resolve(process.env.BROWSER_ARTIFACTS || 'test-results/rm0151-public');
 const widths = process.env.RM015_WIDTHS ? process.env.RM015_WIDTHS.split(',').map(Number).filter(Boolean) : [360, 390, 430, 768, 1024, 1440, 1920], results = [];
 const received = [];
-const mime = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png' };
+const mime = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.json': 'application/json', '.png': 'image/png' };
 const server = http.createServer((req, res) => {
   received.push(req.url);
   let pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
@@ -41,6 +41,53 @@ async function complete(page) {
   await page.getByRole('button', { name: 'Vérifier mon exemple' }).click();
   await page.getByRole('button', { name: 'Terminer la réservation fictive' }).click();
   await page.getByRole('heading', { name: 'Votre exemple est prêt' }).waitFor();
+}
+async function checkConnectedFocus() {
+  const c = await context({ viewport: { width: 390, height: 844 } });
+  const day = '2032-11-08', serverTime = day + 'T09:00:00Z';
+  const dateResponse = Promise.withResolvers(), footerResponse = Promise.withResolvers();
+  try {
+    const page = await c.newPage();
+    await page.route('**/reservation/runtime.json', route => route.fulfill({ json: {
+      schema: 1, channel: 'dev', activated: true, api: '/__focus-booking', allowedApiOrigin: origin,
+    } }));
+    await page.route('**/__focus-booking', async route => {
+      const { action, draft } = route.request().postDataJSON();
+      if (action === 'profile') return route.fulfill({ json: { data: {
+        name: 'Restaurant fictif', today: day, serverTime, maxParty: 8, leadMinutes: 30, horizonDays: 30,
+      } } });
+      assert.equal(action, 'availability');
+      if (draft.party === 3) await dateResponse.promise;
+      if (draft.party === 4) await footerResponse.promise;
+      await route.fulfill({ json: { data: { serverTime, slots: [
+        { available: true, time: draft.service === 'lunch' ? '12:00' : '19:00' },
+      ] } } });
+    });
+    await page.goto(origin + '/reservation/live.html?restaurant=restaurant-fictif');
+    const slots = page.locator('.slots input');
+    await slots.first().waitFor({ state: 'attached' });
+
+    await page.locator('#party-2').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.locator('.rmPortalLoading').waitFor();
+    await page.keyboard.press('Tab');
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'visitDate');
+    dateResponse.resolve();
+    await slots.first().waitFor({ state: 'attached' });
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'visitDate');
+
+    await page.locator('#party-3').focus();
+    await page.keyboard.press('ArrowRight');
+    await page.locator('.rmPortalLoading').waitFor();
+    await page.locator('#privacy').focus();
+    footerResponse.resolve();
+    await slots.first().waitFor({ state: 'attached' });
+    assert.equal(await page.evaluate(() => document.activeElement.id), 'privacy');
+  } finally {
+    dateResponse.resolve();
+    footerResponse.resolve();
+    await c.close();
+  }
 }
 (async () => {
   try {
@@ -209,6 +256,8 @@ async function complete(page) {
       pass('Hotel guest/room, outside guest, recap, refresh and mobile footer '+width);
       await c.close();
     }
-    fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify({ widths, results, privacy: 'Fictitious browser-only records; no credentials, APIs or business writes', limitation: 'Automated accessibility and simulated journeys; no human usability study' }, null, 2));
+    await checkConnectedFocus();
+    pass('Connected booking availability preserves focus in the form and on the footer');
+    fs.writeFileSync(path.join(out, 'results.json'), JSON.stringify({ widths, results, privacy: 'Fictitious browser-only records and an intercepted booking API; no credentials or business writes', limitation: 'Automated accessibility and simulated journeys; no human usability study' }, null, 2));
   } finally { await browser?.close(); server.closeAllConnections(); await new Promise(r => server.close(r)); }
 })().catch(error => { console.error(error); process.exitCode = 1; });
