@@ -23,7 +23,8 @@
     "test:assistance:browser": "node tests/browser/rm013a-assistance.cjs",
     "test:rm013a:browser": "node tests/browser/rm013a-management.cjs",
     "test:syntax": "node tests/check-syntax.cjs",
-    "test:display": "node tests/browser/table-display.cjs",
+    "test:display": "node tests/browser/table-display.cjs && npm run test:express:browser && npm run test:rm-ops:browser",
+    "test:express:browser": "node tests/browser/rm-ops-express.cjs",
     "test:audit:dev:postgres": "node tests/postgres/mission2.cjs --mission3 --dev-snapshot",
     "test:audit:dev:supabase": "node tests/supabase/mission3.cjs --dev-snapshot",
     "test:closeout:postgres": "node tests/postgres/rm012.cjs",
@@ -35,7 +36,9 @@
     "test:public-connected:postgres": "node tests/postgres/rm015.cjs",
     "test:public-connected:browser": "node tests/browser/rm015-connected.cjs",
     "prepare:production": "node scripts/prepare-rm015-production.cjs",
-    "test:public-sync:supabase": "node tests/supabase/mission3.cjs --rm015"
+    "test:public-sync:supabase": "node tests/supabase/mission3.cjs --rm015",
+    "test:rm-ops:postgres": "node tests/postgres/rm-ops-engine.cjs --with-proposals",
+    "test:rm-ops:browser": "node tests/browser/rm-ops-live-placement.cjs"
   },
   "devDependencies": {
     "@supabase/supabase-js": "2.119.0",

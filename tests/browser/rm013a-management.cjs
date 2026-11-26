@@ -63,7 +63,7 @@ const server=http.createServer((req,res)=>{
  const file=decodeURIComponent(new URL(req.url,'http://localhost').pathname).replace(process.argv.includes('--pwa-fixture')?/^\/(?:RestoManager\/)?/:/^\//,'');
  if(file.split('/').some(p=>p==='..'||p.startsWith('.'))){res.writeHead(404).end();return}
  let data;try{data=process.argv.includes('--pwa-fixture')&&file==='supabase-service-bridge.js'?bridge:process.argv.includes('--pwa-fixture')&&file==='sw.js'?fs.readFileSync(path.join(root,file),'utf8').replace(/const CACHE='restomanager-shell-[^']+';/, "const CACHE='restomanager-shell-rm-fixture"+workerRevision+"';"):baselineOnly?execFileSync('git',['show',baseline+':'+file],{cwd:root,maxBuffer:10*1024*1024,stdio:['ignore','pipe','ignore']}):fs.readFileSync(path.join(root,file));}catch{res.writeHead(404).end();return}
- res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(data);
+ res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(data);
 });
 async function open(browser,origin,width,role,options={}){
  reset();
