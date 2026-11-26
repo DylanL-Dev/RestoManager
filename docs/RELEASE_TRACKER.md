@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS — Reprise de l'intégration Express + moteur (consultation) — PR DEV BROUILLON (26/11/2026)
+
+- Reprise par Claude Code après interruption de la session Codex. Branche `claude/rm-ops-integration-reprise` = `codex/rm-ops-integration@d22f274` + fusion de `claude/rm-ops-engine@6e9355a` (SQL corrigé, tests, documents) ; aucun commit de Codex réécrit, #272 intacte. **Écritures Express désactivées ; aucune fusion DEV, migration ni déploiement.**
+- Local : `npm test` 474/474, PostgreSQL 17 Docker (moteur 31/31, Mission 3 62/62, audit DEV 62/62, RM-015/RM-017 réussis), navigateur Express 10/10, moteur 7/7, affichage 17/17, Mission 3 110/110, PWA 12/12 ; avec CSP #260 fusionnée localement : 485/485, CSP 10/10, 0 violation pendant Express. Suites Supabase/Realtime et `pg_cron` bloquées par le réseau de session, confiées à la CI. [Rapport de reprise](audits/RM-OPS_REPRISE_INTEGRATION_20261126.md).
+
 ### RM-OPS — Intégration Express et moteur en consultation — CANDIDAT (26/11/2026)
 
 - Branche `codex/rm-ops-integration`, depuis DEV `608fba9`, avec les têtes #271 `3c6caf7` et #270 `4cdfafa6`.
