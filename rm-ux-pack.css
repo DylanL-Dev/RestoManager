@@ -984,3 +984,6 @@ html[data-theme="dark"] .rm-steps { background: #e7f5ec; }
 html[data-theme="dark"] :is(.rm-res-empty,.rm-empty-state) { color: #c8e0d4; }
 html[data-theme="dark"] :is(.rm-res-empty,.rm-empty-state) b { color: #eaf7f0; }
 html[data-theme="dark"] .rm-clamp::after { background: #183b31; color: #b8e4ca; }
+
+/* Une pastille mobile ne doit jamais traverser le texte avec un fond de contraste opposé. */
+.rm-nav-pill,.rm-tab-slider,.rm-guest-slider,.rm-slider { background: transparent !important; box-shadow: inset 0 0 0 1px rgba(111,211,164,.45); }
