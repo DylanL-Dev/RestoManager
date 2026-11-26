@@ -101,3 +101,39 @@ test('capacités annoncées : opérations futures désactivées', ()=>{
  const c=setup().gw.capabilities();
  assert.deepEqual([c.version,c.seat,c.swapAndSeat,c.swapWithoutSeat,c.releaseThenSeat,c.moveSeated,c.escortHold],[1,true,true,false,false,false,false]);
 });
+
+function walkSetup({impl,onRefresh,online=true}={}){
+ const server={reservations:[r('214',21),r('S',9,{status:'seated'})]};
+ let local=JSON.parse(JSON.stringify(server.reservations));let calls=0;
+ const create=draft=>{server.reservations.push({id:'w'+(++calls),client:draft.client,date:D,time:'20:04',duration:90,guests:draft.guests,status:'seated',walkIn:true,tables:draft.tables.slice(),seatedAt:'2026-11-26T19:04:00Z'})};
+ const gw=createPlacementGateway({engine,now:()=>NOW,isOnline:()=>online,getRole:async()=>'fb_admin',tableId:n=>'t'+n,
+  getState:()=>({reservations:local,tablePlan:plan,holds:[],duration:90}),
+  refresh:async()=>{onRefresh?.(server);local=JSON.parse(JSON.stringify(server.reservations))},
+  rpc:async()=>{throw Error('unexpected')},
+  installWalkin:async draft=>{await new Promise(res=>setTimeout(res,5));return impl?impl(draft,create,server):create(draft)}});
+ return {gw,server,get calls(){return calls}};
+}
+
+test('passage : tables proposées = règle serveur ; installation vérifiée ; double appui = une écriture', async()=>{
+ const s=walkSetup();
+ assert.deepEqual(s.gw.walkInTables(2).map(x=>x.number),[4]);
+ const draft={guests:2,tables:[4],type:'exterieur',name:''};
+ const [a,b]=await Promise.all([s.gw.walkIn(draft),s.gw.walkIn(draft)]);
+ assert.equal(s.calls,1);assert.equal(a.ok,true);assert.equal(a.verified,true);assert.deepEqual(a,b);
+});
+
+test('passage : table prise entre-temps → STALE sans écriture ; réseau coupé → OFFLINE', async()=>{
+ const s=walkSetup({onRefresh:server=>{if(!server.reservations.some(x=>x.id==='X'))server.reservations.push(r('X',4,{status:'seated'}))}});
+ await assert.rejects(s.gw.walkIn({guests:2,tables:[4],type:'exterieur'}),e=>e.code==='STALE');assert.equal(s.calls,0);
+ const off=walkSetup({online:false});
+ await assert.rejects(off.gw.walkIn({guests:2,tables:[4],type:'exterieur'}),e=>e.code==='OFFLINE');
+});
+
+test('passage : résultat incertain mais enregistré → alreadyApplied ; chambre déjà réservée → ROOM_CONFLICT', async()=>{
+ const s=walkSetup({impl:(draft,create)=>{create(draft);throw new TypeError('Failed to fetch')}});
+ const out=await s.gw.walkIn({guests:2,tables:[4],type:'hotel',name:'305'});
+ assert.equal(out.alreadyApplied,true);
+ const c=walkSetup({impl:()=>{throw {code:'23P01',message:'La chambre 214 possède déjà une réservation.'}}});
+ await assert.rejects(c.gw.walkIn({guests:2,tables:[4],type:'hotel',name:'214'}),e=>e.code==='ROOM_CONFLICT');
+ await assert.rejects(c.gw.walkIn({guests:2,tables:[4],type:'autre'}),e=>e.code==='INVALID_INPUT');
+});

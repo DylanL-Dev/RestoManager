@@ -19,6 +19,7 @@
   RPC_MISSING:'Le service doit être mis à jour par le responsable avant cette action.',
   RESULT_UNKNOWN:'Confirmation non reçue. Vérifiez la fiche avant toute nouvelle action.',
   INVALID_INPUT:'Demande invalide. Actualisez puis réessayez.',
+  ROOM_CONFLICT:'Une réservation existe déjà pour cette chambre.',
   CAPABILITY_REQUIRED:'Le service de réservation doit être mis à jour par le responsable.'
  };
  class RestoEngineError extends Error{
@@ -49,7 +50,7 @@
  }
 
  function createPlacementGateway(deps){
-  const {engine,getState,rpc,refresh,requireWrite=()=>{},getRole=async()=>null,isOnline=()=>true,tableId,now=()=>Date.now()}=deps;
+  const {engine,getState,rpc,refresh,requireWrite=()=>{},getRole=async()=>null,isOnline=()=>true,tableId,now=()=>Date.now(),installWalkin}=deps;
   const inflight=new Map();
 
   function input(extra){
@@ -61,7 +62,7 @@
   function seatedAsRequested(id,tables){const r=findRecord(id);return !!r&&r.status==='seated'&&sameTables(r.tables,tables)}
 
   function preview(reservationId,targetTables,opts={}){
-   const data=input({reservationId,targetTables,allowRoomChange:!!opts.allowRoomChange,guests:opts.guests});
+   const data=input({reservationId,targetTables,allowRoomChange:!!opts.allowRoomChange,guests:opts.guests,...(opts.budget?{budget:opts.budget}:{})});
    if(!data)return {ok:false,code:'NOT_SYNCED',message:MESSAGES.NOT_SYNCED,changes:[]};
    const result=engine.preview(data);
    return result.ok?{...result,allowRoomChange:!!opts.allowRoomChange,offline:!isOnline()}:result;
@@ -128,10 +129,46 @@
    inflight.set(key,promise);
    return promise;
   }
-  function capabilities(){
-   return {version:1,seat:true,swapAndSeat:true,swapWithoutSeat:false,releaseThenSeat:false,moveSeated:false,escortHold:false};
+  function walkInTables(guests,opts={}){
+   const data=input({guests,duration:opts.duration??getState()?.duration??90});
+   return data?engine.walkInTables(data):[];
   }
-  return {preview,suggest,seat,tableStates,capabilities,classify};
+  // Passage : même discipline que seat() — vérification sur instantané rafraîchi,
+  // une seule écriture en vol par table, relecture après résultat incertain.
+  async function runWalkIn(draft){
+   const guests=Number(draft?.guests),tables=(draft?.tables||[]).map(Number);
+   if(!Number.isInteger(guests)||guests<1||tables.length!==1||!['hotel','exterieur'].includes(draft?.type))throw new RestoEngineError('INVALID_INPUT');
+   if(typeof installWalkin!=='function')throw new RestoEngineError('RPC_MISSING');
+   if(!isOnline())throw new RestoEngineError('OFFLINE');
+   try{requireWrite()}catch(error){throw new RestoEngineError(classify(error)==='CAPABILITY_REQUIRED'?'CAPABILITY_REQUIRED':'NOT_SYNCED',null,{cause:error})}
+   if(await getRole()!=='fb_admin')throw new RestoEngineError('FORBIDDEN');
+   await refresh();
+   if(!walkInTables(guests).some(t=>t.number===tables[0]))throw new RestoEngineError('STALE','Cette table ne peut plus accueillir le passage. Choisissez de nouveau.',{refreshed:true});
+   const before=new Set((getState()?.reservations||[]).filter(r=>r.walkIn&&r.status==='seated'&&r.tables.map(Number).includes(tables[0])).map(r=>String(r.id)));
+   const created=()=>(getState()?.reservations||[]).find(r=>r.walkIn&&r.status==='seated'&&r.tables.map(Number).includes(tables[0])&&!before.has(String(r.id))&&Number(r.guests)===guests)||null;
+   const name=String(draft.name||'').trim()||'Client de passage';
+   try{
+    await installWalkin({tables,guests,client:name,type:draft.type},{allowSameRoom:false});
+   }catch(error){
+    let refreshed=false;try{await refresh();refreshed=true}catch(_){}
+    const row=refreshed?created():null;
+    if(row)return {ok:true,reservationId:String(row.id),tables,seatedAt:row.seatedAt||null,alreadyApplied:true};
+    const code=/chambre/i.test(String(error?.message||''))&&String(error?.code)==='23P01'?'ROOM_CONFLICT':classify(error);
+    throw new RestoEngineError(code,code==='ROOM_CONFLICT'?'Une réservation existe déjà pour cette chambre : ouvrez son dossier ou utilisez le mode complet.':null,{refreshed,cause:error});
+   }
+   let row=null;try{await refresh();row=created()}catch(_){}
+   return {ok:true,reservationId:row?String(row.id):null,tables,seatedAt:row?.seatedAt||null,alreadyApplied:false,verified:!!row};
+  }
+  function walkIn(draft){
+   const key='walkin:'+String(draft?.tables?.[0]);
+   if(inflight.has(key))return inflight.get(key);
+   const promise=runWalkIn(draft).finally(()=>inflight.delete(key));
+   inflight.set(key,promise);return promise;
+  }
+  function capabilities(){
+   return {version:1,seat:true,swapAndSeat:true,walkIn:typeof installWalkin==='function',swapWithoutSeat:false,releaseThenSeat:false,moveSeated:false,escortHold:false};
+  }
+  return {preview,suggest,seat,tableStates,walkInTables,walkIn,capabilities,classify};
  }
  const api={createPlacementGateway,RestoEngineError,classify,MESSAGES};
  root.RestoPlacementGateway=api;

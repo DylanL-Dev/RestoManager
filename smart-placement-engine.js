@@ -16,6 +16,8 @@
  const MOVABLE=new Set(['reserved','confirmed','late']);
  const SEATABLE=new Set(['reserved','confirmed','late','arrived']);
  const MAX_CHANGES=8; // cible comprise, comme la RPC
+ const SERVICE_WINDOW=360; // minutes : au-delà, la réservation n'appartient pas au service en cours
+ const displayName=r=>r.hotelRoom?'Ch. '+r.hotelRoom:String(r.client||'Client');
  const MESSAGES={
   NOT_FOUND:'Réservation introuvable ou déjà terminée.',
   ALREADY_SEATED:'Client déjà installé : déplacement interdit dans ce parcours.',
@@ -26,7 +28,8 @@
   FUSION_UNSUPPORTED:'Fusion de tables : réorganisation automatique non disponible, utilisez le mode complet.',
   ROOM_CHANGE_REQUIRED:'La seule solution déplace un client dans une autre salle.',
   NO_SAFE_PLAN:'Aucune réorganisation sûre pour les réservations concernées.',
-  PARTY_SIZE_CHANGED:'Le nombre de couverts diffère de la réservation : modifiez-la d’abord.'
+  PARTY_SIZE_CHANGED:'Le nombre de couverts diffère de la réservation : modifiez-la d’abord.',
+  OUT_OF_SERVICE:'Réservation d’un autre service ou d’une autre date : vérifiez le dossier.'
  };
  const fail=(code,detail={})=>({ok:false,code,message:MESSAGES[code]||code,reason:MESSAGES[code]||code,detail,changes:[]});
 
@@ -67,7 +70,7 @@
 
  /* Cœur : calcule la réorganisation nécessaire pour installer `reservationId` sur `targetTables`. */
  function preview(input){
-  const {reservationId,targetTables,holds=[],allowRoomChange=false,guests,now=Date.now(),budget=4000,maxDepth=MAX_CHANGES,explainRoomChange=true}=input||{};
+  const {reservationId,targetTables,holds=[],allowRoomChange=false,guests,now=Date.now(),budget=4000,maxDepth=MAX_CHANGES,explainRoomChange=true,enforceService=true}=input||{};
   const all=normalize(input?.reservations);
   const {plan,byNum}=planIndex(input?.tablePlan);
   const target=all.find(r=>r.id===String(reservationId));
@@ -90,6 +93,8 @@
   // Installer maintenant occupe la table dès maintenant : en cas d'installation anticipée ou
   // tardive, l'intervalle réel part de l'heure actuelle (fenêtre de 12 h autour du créneau).
   const planned=interval(target),nowMin=parisMinutes(now);
+  // Réservation d'un autre service ou d'une autre date (recherche élargie) : jamais installée par erreur.
+  if(enforceService&&Number.isFinite(nowMin)&&Number.isFinite(planned[0])&&Math.abs(nowMin-planned[0])>SERVICE_WINDOW)return fail('OUT_OF_SERVICE',{plannedAt:target.date+' '+target.time});
   const span=Number.isFinite(nowMin)&&Math.abs(nowMin-planned[0])<=720
    ?[Math.min(planned[0],nowMin),Math.max(planned[0],nowMin)+(planned[1]-planned[0])]:planned;
   for(const n of wanted){
@@ -100,12 +105,14 @@
   const seated=all.find(r=>r.id!==target.id&&r.status==='seated'&&r.tables.some(n=>wanted.includes(n)));
   if(seated)return fail('TARGET_OCCUPIED',{table:seated.tables.find(n=>wanted.includes(n)),client:seated.client,seatedAt:seated.seatedAt||null,since:seated.date!==target.date?'previous-date':'same-date'});
   const occupying=(r,num,s)=>r.tables.includes(num)&&(r.status==='seated'||overlaps(interval(r),s));
-  const fp=()=>fingerprint([target.id,target.status,target.tables,target.guests,target.editVersion||null,
-   ...all.filter(r=>r.id!==target.id&&r.tables.some(n=>wanted.includes(n)||target.tables.includes(n))).map(r=>[r.id,r.status,r.tables,r.editVersion||null]).sort()]);
+  // Toute donnée qui peut changer la décision : statut, tables, couverts, horaire, durée, version.
+  const sig=r=>[r.id,r.status,r.tables,r.guests,r.date,r.time,Number(r.duration)||90,r.editVersion||null];
+  const fp=()=>fingerprint([sig(target),
+   ...all.filter(r=>r.id!==target.id&&r.tables.some(n=>wanted.includes(n)||target.tables.includes(n))).map(sig).sort()]);
   const warnings=[];
-  if(Number.isFinite(span[0])&&Number.isFinite(parisMinutes(now))&&span[0]-parisMinutes(now)>30)warnings.push({code:'EARLY_SEATING',minutesEarly:span[0]-parisMinutes(now)});
+  if(Number.isFinite(planned[0])&&Number.isFinite(nowMin)&&planned[0]-nowMin>30)warnings.push({code:'EARLY_SEATING',minutesEarly:planned[0]-nowMin,message:'Installation '+(planned[0]-nowMin)+' min avant l’heure prévue.'});
   const targetRoomChange=target.tables.length===1&&wanted.length===1&&roomOf(byNum,target.tables[0])!==roomOf(byNum,wanted[0]);
-  const base={ok:true,reservationId:target.id,client:target.client,guests:target.guests,targetTables:wanted,from:target.tables.slice(),targetRoomChange,requiresConfirmation:true,
+  const base={ok:true,reservationId:target.id,client:target.client,label:displayName(target),guests:target.guests,targetTables:wanted,from:target.tables.slice(),targetRoomChange,requiresConfirmation:true,
    notice:'Simulation uniquement : les tables réelles peuvent avoir changé depuis la synchronisation.'};
   if(sameSet){
    const blocker=all.find(r=>r.id!==target.id&&wanted.some(n=>occupying(r,n,span)));
@@ -169,7 +176,7 @@
    return [...changed].filter(id=>id!==target.id).map(id=>{
     const r=byId.get(id),to=assignment.get(id);
     const fromRoom=roomOf(byNum,r.tables[0]),toRoom=roomOf(byNum,to[0]);
-    return {id,client:r.client,guests:r.guests,status:r.status,editVersion:r.editVersion||null,from:r.tables.slice(),to:to.slice(),fromRoom,toRoom,roomChange:fromRoom!==toRoom};
+    return {id,client:r.client,label:displayName(r),hotelRoom:r.hotelRoom||'',guests:r.guests,status:r.status,editVersion:r.editVersion||null,from:r.tables.slice(),to:to.slice(),fromRoom,toRoom,roomChange:fromRoom!==toRoom};
    });
   };
   let changes=solve(false);
@@ -180,7 +187,7 @@
    if(!allowRoomChange)return fail('ROOM_CHANGE_REQUIRED',{changes:withRoom});
    changes=withRoom;
   }
-  if(changes.some(c=>c.roomChange))warnings.push({code:'ROOM_CHANGE',ids:changes.filter(c=>c.roomChange).map(c=>c.id)});
+  if(changes.some(c=>c.roomChange))warnings.push({code:'ROOM_CHANGE',ids:changes.filter(c=>c.roomChange).map(c=>c.id),message:'Changement de salle pour '+changes.filter(c=>c.roomChange).map(c=>c.label).join(', ')+'.'});
   const kind=changes.length===1&&changes[0].to[0]===target.tables[0]&&changes[0].from[0]===dest?'swap':'chain';
   return {...base,kind,changes,warnings,fingerprint:fp()};
  }
@@ -193,6 +200,8 @@
   if(!target)return fail(((input?.reservations||[]).find(r=>r&&String(r.id)===String(reservationId))||{}).status==='seated'?'ALREADY_SEATED':'NOT_FOUND');
   const {plan,byNum}=planIndex(input?.tablePlan);
   const home=target.tables.length===1?roomOf(byNum,target.tables[0]):null;
+  const guard=preview({...input,targetTables:target.tables.length?target.tables:[plan[0]?.number]});
+  if(!guard.ok&&['OUT_OF_SERVICE','ALREADY_SEATED','NOT_FOUND','PARTY_SIZE_CHANGED'].includes(guard.code))return guard;
   const rank={planned:0,direct:1,swap:2,chain:3};
   const choices=[];
   if(target.tables.length){
@@ -239,9 +248,27 @@
   });
  }
 
+ /* Tables proposables pour un passage maintenant : même règle que la RPC install_walkin_group_v3
+  * (aucun installé, aucune réservation sur [maintenant, maintenant + durée], aucun maintien actif). */
+ function walkInTables(input){
+  const {guests,duration=90,holds=[],now=Date.now()}=input||{};
+  const n=Number(guests);
+  if(!Number.isInteger(n)||n<1)return [];
+  const all=normalize(input?.reservations);
+  const {plan}=planIndex(input?.tablePlan);
+  const start=parisMinutes(now);
+  if(!Number.isFinite(start))return [];
+  const span=[start,start+Math.max(1,Number(duration)||90)];
+  return plan.filter(t=>fits(t,n))
+   .filter(t=>!all.some(r=>r.tables.includes(t.number)&&(r.status==='seated'||overlaps(interval(r),span))))
+   .filter(t=>!holdOn(holds,t.number,span,now))
+   .sort((a,b)=>a.capacity-b.capacity||a.number-b.number)
+   .map(t=>({number:t.number,capacity:t.capacity,roomId:t.roomId}));
+ }
+
  /* Ancienne API conservée (même forme de retour), désormais alignée sur preview(). */
  function simulate(input){
-  const p=preview({...input,targetTables:[Number(input?.targetTable)]});
+  const p=preview({...input,targetTables:[Number(input?.targetTable)],enforceService:false});
   if(!p.ok)return {ok:false,reason:p.reason,code:p.code,detail:p.detail,changes:[]};
   const target=normalize(input.reservations).find(r=>r.id===String(input.reservationId));
   // Historique : la réservation cible figure dans `changes` dès que sa table change.
@@ -250,7 +277,7 @@
   return {ok:true,changes:changes.filter(x=>x.from.join()!==x.to.join()),kind:p.kind,requiresConfirmation:true,notice:p.notice,fingerprint:p.fingerprint};
  }
 
- const api={simulate,preview,suggest,tableStates,fingerprint,MAX_CHANGES,MESSAGES};
+ const api={simulate,preview,suggest,tableStates,walkInTables,fingerprint,MAX_CHANGES,MESSAGES};
  root.RestoSmartPlacement=api;
  if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

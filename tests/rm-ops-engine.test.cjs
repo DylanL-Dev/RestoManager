@@ -198,3 +198,26 @@ test('charge : 200 couverts (~85 réservations, 40 tables), suggest < 250 ms', (
  const ms=Number(process.hrtime.bigint()-t0)/1e6;
  assert.equal(s.ok,true);assert.ok(ms<250,'suggest '+ms.toFixed(1)+' ms');
 });
+
+test('intégration UI : messages d’avertissement, libellés d’affichage, installation anticipée signalée', ()=>{
+ const p=E.preview(base([r('214',21,{time:'20:45',hotelRoom:'214'}),r('215',4,{time:'20:45',hotelRoom:'215'})],[t(4),t(21)],{reservationId:'214',targetTables:[4]}));
+ assert.equal(p.ok,true);assert.equal(p.label,'Ch. 214');assert.equal(p.changes[0].label,'Ch. 215');
+ const early=p.warnings.find(w=>w.code==='EARLY_SEATING');
+ assert.ok(early&&early.minutesEarly===41&&/41 min/.test(early.message),JSON.stringify(p.warnings));
+ assert.ok(p.warnings.every(w=>typeof w.message==='string'&&w.message.length));
+});
+
+test('réservation d’un autre service ou d’une autre date : OUT_OF_SERVICE (preview et suggest), ancienne API inchangée', ()=>{
+ const res=[r('214',21,{date:'2026-11-27'})];
+ assert.equal(E.preview(base(res,[t(4),t(21)],{reservationId:'214',targetTables:[4]})).code,'OUT_OF_SERVICE');
+ assert.equal(E.suggest(base(res,[t(4),t(21)],{reservationId:'214'})).code,'OUT_OF_SERVICE');
+ assert.equal(E.simulate({reservations:res,tablePlan:[t(4),t(21)],reservationId:'214',targetTable:4,now:NOW}).ok,true);
+});
+
+test('passage : mêmes règles que la RPC (installé, réservation dans la durée, maintien)', ()=>{
+ const res=[r('S',1,{status:'seated'}),r('P',2,{time:'20:30'}),r('L',3,{time:'22:00'}),r('Y',5,{date:'2026-11-25',status:'seated'})];
+ const holds=[{number:6,start:NOW,end:NOW+3600e3,expiry:NOW+60e3}];
+ const tables=E.walkInTables(base(res,[t(1),t(2),t(3),t(4,{capacity:4}),t(5),t(6),t(7,{capacity:1})],{guests:2,duration:90,holds}));
+ assert.deepEqual(tables.map(x=>x.number),[3,4]);
+ assert.deepEqual(E.walkInTables(base(res,[t(3)],{guests:0})),[]);
+});

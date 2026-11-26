@@ -229,10 +229,13 @@ if(window.RestoPlacementGateway&&window.RestoSmartPlacement){
   getState:()=>Array.isArray(window.RestoSharedReservations)&&window.RestoSupabaseReady?{
    reservations:window.ReservationEngine?.normalizeReservations?.(window.RestoSharedReservations)||window.RestoSharedReservations,
    // TableStore est une constante globale (script classique) : pas une propriété de window.
-   tablePlan:typeof TableStore!=='undefined'?TableStore.get().tables:[],holds:window.RestoDraftHolds||[]
+   tablePlan:typeof TableStore!=='undefined'?TableStore.get().tables:[],holds:window.RestoDraftHolds||[],
+   duration:Number(window.RestoSharedHours?.duration)||90
   }:null,
   tableId:number=>window.RestoSmartPlacementTableIds instanceof Map?window.RestoSmartPlacementTableIds.get(number):null,
   isOnline:()=>navigator.onLine!==false,
+  // Passage : RPC existante (install_walkin_group_v3) via la fonction déjà utilisée par le mode complet.
+  installWalkin:(draft,options)=>{if(typeof window.RestoInstallWalkin!=='function')throw Object.assign(Error('Passage indisponible.'),{code:'PGRST202'});return window.RestoInstallWalkin(draft,options)},
   requireWrite,
   getRole:async()=>{
    if(window.RestoReception)return 'reception';
