@@ -92,3 +92,45 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
  .rmExpressTiles{grid-template-columns:repeat(2,minmax(0,1fr))}
  .rmExpressHead{padding:10px}
 }
+
+/* RM-OPS compact entry: an operational shortcut, not a full-width banner. */
+.rmExpressEntry{display:inline-flex;align-items:center;flex-wrap:wrap;gap:7px;max-width:100%}
+.rmExpressEntry .serviceRole{margin:0}
+.rmExpressEntry .rmExpressLaunch{
+ display:inline-flex;flex:0 0 auto;gap:6px;min-height:44px;width:auto;max-width:100%;margin:0;
+ padding:8px 12px;border:1px solid #a7cfb6;border-radius:999px;
+ background:#e9f5ed;color:#14583f;font-size:12px;font-weight:800;
+ box-shadow:none;line-height:1.2;
+}
+.rmExpressEntry .rmExpressLaunch svg{width:16px;height:16px}
+.rmExpressEntry .rmExpressLaunch:hover{background:#d8eddf;border-color:#76b493}
+.rmExpressEntry .rmExpressLaunch:active{transform:translateY(1px)}
+html[data-theme="dark"] .rmExpressEntry .rmExpressLaunch{
+ background:#254d3b;color:#e3fae9;border-color:#53856c;
+}
+html[data-theme="dark"] .rmExpressEntry .rmExpressLaunch:hover{background:#34624c}
+@media(max-width:700px){
+ .serviceIntro .serviceContext:has(.rmExpressEntry){align-items:flex-start}
+ .serviceIntro .rmExpressEntry{width:100%;flex-wrap:wrap;gap:8px}
+ .serviceIntro .rmExpressEntry .rmExpressLaunch{align-self:center}
+}
+/* Compact session menu on phone/tablet; all account and sync actions remain available. */
+@media(max-width:900px){
+ .mobileAccountMenu:not([hidden]){
+  width:min(312px,calc(100vw - 24px));padding:10px 12px 7px;
+  max-height:calc(100dvh - 90px);border-radius:16px;
+ }
+ .mobileAccountIdentity{gap:9px;padding:2px 0 10px}
+ .mobileAccountAvatar{width:36px;height:36px;border-radius:11px}
+ .mobileAccountAvatar svg{width:19px;height:19px}
+ .mobileAccountIdentity strong{font-size:13px}
+ .mobileAccountIdentity small{font-size:11px}
+ .mobileAccountSession{font-size:10px;padding:2px 7px}
+ .mobileAccountSync{gap:8px;padding:10px 1px}
+ .mobileAccountSync>svg{width:17px;height:17px}
+ .mobileAccountSync>div{gap:1px}
+ .mobileAccountSync strong{font-size:12px}
+ .mobileAccountSync small{font-size:11px}
+ .mobileAccountRefresh,.mobileAccountLogout{min-height:44px;padding:7px 4px;gap:9px;font-size:12px}
+ .mobileAccountRefresh svg,.mobileAccountLogout svg{width:17px;height:17px}
+}
