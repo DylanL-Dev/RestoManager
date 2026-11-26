@@ -1,5 +1,11 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-RELEASE-02 — Livraison groupée sécurité et ergonomie V3 puis MAIN — CANDIDATES (26/11/2026)
+
+- Issue #276. Bases V3 `e4de2c7` / MAIN `a4d88d9` (arbres identiques), source DEV `a8d7c2e`. Sauvegardes `backup/rm-release-02-v3-before-20261126` et `backup/rm-release-02-main-before-20261126`. Report ciblé, **aucune fusion globale de DEV**, aucune migration ni action Supabase PROD.
+- Inclus : RM-SEC-03/04 (SDK et jsPDF locaux, CSP stricte origine PROD), connexion L1-B compatible CSP, arrivée en haut du tableau de bord (#275) et menu de session compact (#274) **sans Mode Coup de feu ni moteur**. HOLD : Créateur DEV (RM-017/019/020), #269. Version `2026.11.26-rmrelease02-main`, manifeste RMRELEASE02.
+- Tests candidate : `npm test` 243/243, `release-guard` local, navigateur 0 violation CSP (Mission 3 110/110, PWA 12/12, Créateur…), PostgreSQL 17 (Mission 2 25/25, Mission 3 62/62, RM-012 29). Realtime réel et `rm016-learning` confiés à la CI. [Fiche de livraison](releases/RMRELEASE02_RELEASE_20261126.md).
+
 
 ### RM-016.1 — Recette Render validée, correction du bouton Nouveautés et promotion V3/MAIN autorisée (17/11/2026)
 
