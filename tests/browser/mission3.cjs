@@ -890,6 +890,36 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
    await view.page.clock.fastForward(120000);const text=await view.page.locator('#rushDashboard').innerText();assert.match(text,/12:00.*13:00/s);assert.match(text,/Retards à traiter · 22 couverts/);assert.match(text,/0 \/ /);
    assert.equal(await view.page.locator('#currentOccupancy').innerText().then(text=>/22/.test(text)),false);pass(role+' clock-controlled 11:59→12:01 keeps 22 overdue visible with zero current arrivals');await clean(view);
   }
+  for(const role of ['fb_admin','reception']){
+   reset();
+   const view=await open(browser,origin,role),page=view.page;
+   await page.evaluate(()=>window.RestoScreens.request('reservationForm'));
+   const notes=page.locator('#bookingNotes');
+   await notes.fill('Brouillon fictif à conserver');
+   await page.keyboard.press('Control+k');
+   const palette=page.getByRole('dialog',{name:'Palette de commandes'});
+   await palette.waitFor();
+   assert.equal(await palette.getByRole('option',{name:'Mode Coup de feu'}).count(),role==='fb_admin'?1:0);
+   await page.keyboard.press('Escape');
+   assert.equal(await notes.evaluate(node=>node===document.activeElement),true);
+   const query=page.locator('#reservationQuery'),previousQuery=await query.inputValue();
+   await page.keyboard.press('Control+k');
+   await palette.getByRole('combobox',{name:'Chercher une commande ou un client'}).fill('Client fictif');
+   await page.keyboard.press('Enter');
+   const guard=page.getByRole('alertdialog',{name:'Modifications non enregistrées'});
+   await guard.getByRole('button',{name:'Annuler'}).click();
+   assert.equal(await notes.inputValue(),'Brouillon fictif à conserver');
+   assert.equal(await query.inputValue(),previousQuery);
+   await page.keyboard.press('Control+k');
+   await palette.getByRole('combobox').fill('Client fictif');
+   await page.keyboard.press('Enter');
+   await guard.getByRole('button',{name:'Quitter sans enregistrer'}).click();
+   await query.waitFor();
+   assert.equal(await query.inputValue(),'Client fictif');
+   assert.equal(await query.evaluate(node=>node===document.activeElement),true);
+   pass(role+' palette respects role access, returns focus and waits for draft navigation approval');
+   await clean(view);
+  }
   reset({overdue:true});const foreignClock=await open(browser,origin,'fb_admin',{width:390,height:844},'America/New_York');
   await foreignClock.page.clock.fastForward(120000);await foreignClock.page.locator('.serviceBell').click();
   assert.match(await foreignClock.page.locator('#serviceReminderPanel').innerText(),/Arrivée à vérifier/);pass('Paris overdue notifications remain correct in a browser configured for New York');await clean(foreignClock);
