@@ -195,10 +195,10 @@
 
   /* Changement d'écran */
   .appScreen.appScreenActive { animation: rm-screen-in var(--rm-slow) var(--rm-ease-out) both; }
-  @keyframes rm-screen-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes rm-screen-in { from { opacity: 0; } to { opacity: 1; } }
 
   /* Entrée en cascade */
-  .rm-reveal { opacity: 0; transform: translateY(16px) scale(.985); }
+  .rm-reveal { opacity: 0; transform: translateY(16px); }
   .rm-reveal.rm-in {
     opacity: 1; transform: none;
     transition: opacity var(--rm-slow) var(--rm-ease-out), transform var(--rm-slow) var(--rm-ease-out);
@@ -391,6 +391,27 @@ nav.sidebar > a.selected { background: transparent !important; }
   content: ""; position: absolute; left: 4px; top: 24%; bottom: 24%; width: 4px; border-radius: 4px;
   background: var(--rm-green-600);
 }
+/* Pastille et raccourci dessinés en ::after / ::before : ils ne changent pas le texte des liens */
+nav.sidebar > a[data-rm-badge]::after,
+.mobileNavItem[data-rm-badge]::after {
+  content: attr(data-rm-badge); content: attr(data-rm-badge) / "";
+  margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px; box-sizing: border-box;
+  display: inline-grid; place-items: center;
+  background: var(--rm-green-300); color: var(--rm-green-900);
+  font: 800 11.5px/1 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums;
+}
+nav.sidebar > a.selected[data-rm-badge]::after { background: var(--rm-green-600); color: #fff; }
+nav.sidebar > a[data-rm-keys]::before {
+  content: attr(data-rm-keys); content: attr(data-rm-keys) / "";
+  position: absolute; right: 10px; top: 50%; translate: 0 -50%; opacity: 0; pointer-events: none;
+  font: 700 10px/1 Inter, system-ui, sans-serif; letter-spacing: .06em;
+  padding: 3px 5px; border-radius: 5px;
+  color: rgba(234, 247, 240, .75); border: 1px solid rgba(255, 255, 255, .18);
+}
+nav.sidebar > a.selected[data-rm-keys]::before { color: var(--rm-green-800); border-color: rgba(16, 63, 53, .25); }
+nav.sidebar > a[data-rm-badge]:hover::after { opacity: 0; }
+@media (hover: hover) and (min-width: 821px) { nav.sidebar > a[data-rm-keys]:hover::before { opacity: 1; } }
+@media (max-width: 820px) { nav.sidebar > a[data-rm-keys]::before { display: none; } }
 .rm-nav-badge {
   margin-left: auto; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 99px;
   display: inline-grid; place-items: center;
@@ -485,6 +506,8 @@ dialog.rmNotificationCenter::backdrop {
   @media (hover: hover) { nav.sidebar > a:hover .navSvgIcon { transform: scale(1.12) rotate(-4deg); } }
   .rm-nav-keys { transition: opacity 200ms; }
   .rm-nav-badge.rm-pop { animation: rm-bump 520ms var(--rm-ease-spring); }
+  [data-rm-badge].rm-badge-pop::after { animation: rm-bump 520ms var(--rm-ease-spring); }
+  nav.sidebar > a[data-rm-keys]::before, nav.sidebar > a[data-rm-badge]::after { transition: opacity 200ms; }
   .rmExpressLaunch::after {
     content: ""; position: absolute; inset: 0; pointer-events: none;
     background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .18) 50%, transparent 70%);
@@ -499,11 +522,11 @@ dialog.rmNotificationCenter::backdrop {
 
   /* Notifications */
   dialog.rmNotificationCenter[open] { animation: rm-drawer-in 460ms var(--rm-ease-out) both; }
-  @keyframes rm-drawer-in { from { transform: translateX(40px); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes rm-drawer-in { from { opacity: 0; } to { opacity: 1; } }   /* fondu seul : le panneau ne sort jamais de l'écran */
   dialog.rmNotificationCenter[open]::backdrop { animation: rm-fade 260ms ease-out both; }
   dialog.rmNotificationCenter[open] .rmNcSection,
   dialog.rmNotificationCenter[open] .rmNcHeader > * {
-    animation: rm-pop 460ms var(--rm-ease-out) both;
+    animation: rm-fade 360ms var(--rm-ease-out) both;
   }
   dialog.rmNotificationCenter[open] .rmNcHeader > *:nth-child(2) { animation-delay: 60ms; }
   dialog.rmNotificationCenter[open] .rmNcHeader > *:nth-child(3) { animation-delay: 110ms; }
@@ -670,6 +693,11 @@ dialog.rmNotificationCenter::backdrop {
 
 /* ---------- Barre de navigation mobile ---------- */
 .mobileNavItem { position: relative; -webkit-tap-highlight-color: transparent; }
+.mobileNavItem[data-rm-badge]::after {
+  position: absolute; top: 2px; left: calc(50% + 6px); margin: 0;
+  min-width: 18px; height: 18px; padding: 0 5px; font-size: 10.5px;
+  box-shadow: 0 0 0 2px #fff;
+}
 .mobileNavItem .rm-nav-badge {
   position: absolute; top: 2px; left: calc(50% + 6px); margin: 0;
   min-width: 18px; height: 18px; padding: 0 5px; font-size: 10.5px;
@@ -713,6 +741,7 @@ dialog.rmNotificationCenter::backdrop {
   @media (max-width: 640px) {
     dialog.rmNotificationCenter[open] { animation-name: rm-sheet-in; }
     @keyframes rm-sheet-in { from { transform: translateY(32px); opacity: 0; } to { transform: none; opacity: 1; } }
+    dialog.rmNotificationCenter[open] { animation-name: rm-drawer-in; }
     .rm-palette { animation-name: rm-sheet-in; }
     .rm-toast { animation-name: rm-toast-up; }
     @keyframes rm-toast-up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
@@ -957,3 +986,8 @@ html body #walkinForm .walkinDeckTabs.rm-has-slider>button.isActive{background:t
   .walkinInstall.rm-ready::after{animation:rm-sheen 3.2s ease-in-out 600ms infinite;}
 }
 .rm-step[hidden]{display:none !important;}
+
+/* ---------- Garde-fous de largeur (tablette / mobile) ---------- */
+.rm-hero, .rm-steps, .rm-res-empty, .rm-empty-state { max-width: 100%; min-width: 0; box-sizing: border-box; }
+.rm-eta { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 820px) { .rm-hclock { display: none; } }

@@ -639,10 +639,10 @@
   addEventListener('resize', movePill);
 
   const KEYS = { '#tables': 'G T', '#reservations': 'G R', '#reservationForm': 'G N', '#passages': 'G P', '#administration': 'G G' };
+  // Raccourci affiché au survol : attribut + ::before, pour ne pas changer le texte du lien
   $$('nav.sidebar > a').forEach(a => {
-    const k = KEYS[a.getAttribute('href')]; if (!k || $('.rm-nav-keys', a)) return;
-    const s = document.createElement('span'); s.className = 'rm-nav-keys'; s.textContent = k; s.setAttribute('aria-hidden', 'true');
-    a.append(s);
+    const k = KEYS[a.getAttribute('href')];
+    if (k && a.dataset.rmKeys !== k) a.dataset.rmKeys = k;
   });
 
   // Pastille : nombre de réservations encore attendues aujourd'hui
@@ -656,15 +656,11 @@
     lastBadge = n;
   }
   function badgeOn(a, n, changed) {
-    let b = $('.rm-nav-badge', a);
-    if (!n) { b?.remove(); return; }
-    if (!b) { b = document.createElement('span'); b.className = 'rm-nav-badge'; a.insertBefore(b, $('.rm-nav-keys', a)); }
-    // On n'écrit que si la valeur change : sinon l'observateur se relance en boucle
-    if (b.textContent !== String(n)) {
-      b.textContent = String(n);
-      b.setAttribute('aria-label', `${n} réservation${n > 1 ? 's' : ''} attendue${n > 1 ? 's' : ''} aujourd’hui`);
-    }
-    if (changed) pop(b);
+    // Attribut + ::after : la pastille ne s'ajoute pas au texte du lien (les tests lisent textContent)
+    const v = n ? String(n) : null;
+    if (v === null) { if (a.hasAttribute('data-rm-badge')) a.removeAttribute('data-rm-badge'); return; }
+    if (a.dataset.rmBadge !== v) a.dataset.rmBadge = v;
+    if (changed) pop(a, 'rm-badge-pop');
   }
 
   /* ---------- 3. Sections ---------- */
