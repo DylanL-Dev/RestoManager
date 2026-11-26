@@ -1,0 +1,98 @@
+{
+ "version": "2026.11.26-rmrelease02-main",
+ "channel": "main",
+ "sourceDEV": "a8d7c2e7641654800445c621d3bee60801ca8ea5",
+ "baseV3": "e4de2c7d5b2c20a87cecdd5a5069d969abdbce26",
+ "baseMAIN": "a4d88d989ef8ea74b2d849cf6c0fc528793618e6",
+ "protected_production_files": {
+  "supabase-service-bridge.js": "fc56070230a9a1e30f3e6ea14af84fda77e28fbfdc393f3925ee4548451801d7",
+  "supabase-login.js": "cf4446e131d037c9dabb996745f0897300d89ac32aeb033cccd11df4dca358c8",
+  "creator-auth.js": "88e7757b1423805d584a31b286283441cae8ff6808aa8f4d1a8c1212b1ebaf4e",
+  "login.html": "4208f8c8e8f10ec354e90417f87ab30028affb2b0775314b6ad23563afb2dafd",
+  "package-lock.json": "d49f1a2d1c6759c0509cf82b80a1632be2a54d890df13901afcd3bf6d549dd14",
+  "service-v3-screens.js": "8e45f4626a2c5cac206245710d489889509c1e056e8fa883633489d4c555d58d",
+  "restomanager-env.js": "2e6607423e773e31cea3a77d5b045f24d1de724ccfc063dcf4faba21c72964c3"
+ },
+ "protected_unchanged_since_RMUXL1": [
+  "package-lock.json",
+  "restomanager-env.js"
+ ],
+ "protected_changed_by_this_release": {
+  "supabase-service-bridge.js": {
+   "before": "458801cfc47b0998862c78d198fb704ac106261b4593056dafcb5ef45cf87cb7",
+   "after": "fc56070230a9a1e30f3e6ea14af84fda77e28fbfdc393f3925ee4548451801d7"
+  },
+  "supabase-login.js": {
+   "before": "02203e32a99e5a9e3713bb8544f44b3709a476a4061b11fea43c7daade7f4682",
+   "after": "cf4446e131d037c9dabb996745f0897300d89ac32aeb033cccd11df4dca358c8"
+  },
+  "creator-auth.js": {
+   "before": "ff227bdc7baeab334bad7ccc8a24a5d80bd5d4471ed14d3a727003e3a33fa594",
+   "after": "88e7757b1423805d584a31b286283441cae8ff6808aa8f4d1a8c1212b1ebaf4e"
+  },
+  "login.html": {
+   "before": "cd0a1060556b4ba9ffe741fc3d63b006680412303b88b058a3ed20a41c8be35a",
+   "after": "4208f8c8e8f10ec354e90417f87ab30028affb2b0775314b6ad23563afb2dafd"
+  },
+  "service-v3-screens.js": {
+   "before": "e9097214804ab7340800c8b3ff8e073a436001219c62fb12660606849d852a44",
+   "after": "8e45f4626a2c5cac206245710d489889509c1e056e8fa883633489d4c555d58d"
+  }
+ },
+ "runtime": {
+  "app-release.json": "fc064ba98f268101d96b1003d5560ca36a0cf262cef370535cb515d57b271e1d",
+  "booking-draft.js": "c2c15ad0502aa4135b0fb978a5163e8246df5c76ed9b38a9412cfa5dde892b43",
+  "service-v3-app-release.js": "195a36f157239e082c9518180eabfc6d01744b4f2e0b792a8d185500b6b68b34",
+  "service-v3-tutorial-model.js": "e1fdc9f631045fa8bba380bd18cf1e946a86e5d9a3ede413ed7b0db79aa4a382",
+  "service-v3-tutorial-training.js": "50f5028d8dc2561c1ab5b0fc6020ede0241051f259e2db600f047fe6c4fac0e5",
+  "service-v3-tutorial.css": "97812fa2451fc132e88846721129f5a53909f1c77bb6ac64079d7a6407f90a98",
+  "service-v3-tutorial.js": "786b35bbd011cfe25a85d542017882aae695caf6f75cde08c0f6ba18eb5f9e09",
+  "service-v3-notifications.css": "4193f23a6545479f913dbcd477f4c2e30bc90c2c2b710cafe5657bf89cddc3f3",
+  "sw.js": "39ca2515639cad8afc60d6a4f8c25a47b0e610f739c036b8c90d483527282430",
+  "v3-connected-auth.js": "08bf7b79351e4eeb9aa3f7557e34a434fd9eab668a046d7a12d3eb72bf68bd46",
+  "v3-connected.html": "1064d3d7413eef4325282a5f09347a8ceaed837e60d77c42d5a4d128aa3ff59f",
+  "v3-supabase-booking.js": "774d1a9bbe36ab07f46068ce02f00d5bfcb1f65fe9855f3a5237e07613139e50",
+  "reservation/runtime.json": "a66d8c9aba3711e7017e3d2425e0a59c347f65e8e18065da094c750f212aa26d",
+  "reservation/live.html": "7bbae5cbaa9af4bcb2cc10db0e5faf7bb6a7751ded4542689a8ab677a71f920c",
+  "login-ui.js": "4d58e67bffae0a9a8c1fa029d63dd687ae4fa0f31f1b21ace1bfdb3a8047308b",
+  "login-environment.js": "333152c52a762adc324dcb1dcb712931117c3540ebfd6f902167731ddc9d4a70",
+  "redirect-v3-connected.js": "1f3bb2a90003482b1f70e88e2daa551c99c70533cec0db6b308df71c4ae72406",
+  "v3-quick-actions.js": "5d9d5c81bde99486b7e4d15e2e5ac2fb0a354b0b8e0ab9c317a27cf85c62b8cb",
+  "v3-booking-type-visual.js": "1dfe98d3b98233917a8070325d2a96ba00e8bc3e8d05cdeb9e319eee02163787",
+  "index.html": "32013fab1ba97cd29247973bac66e9d5c5c8198412866df27431ad11f0fadf1a",
+  "service-v3.html": "32013fab1ba97cd29247973bac66e9d5c5c8198412866df27431ad11f0fadf1a",
+  "service-connected.html": "e255fa1fbaf3b933a2dd000c278e757135885665089f5325b82a8fde5637ae5e",
+  "creator.html": "673ba14c1b9ede073299648330f78707b8753af8fbf78c64b6b8dbefc20dc61c",
+  "service-v3-report-download.js": "90bbfe1ec03c841fa02ed2fbad7ab30ba917e9e55635abad28ac8c9b35e9d505",
+  "vendor/supabase-js.mjs": "6af7e6d2b542d217b4b3950cc42615db581adf77aaddb896a7b6fa14baf86275",
+  "vendor/supabase-js-2.119.0.umd.js": "a867edbcfb029370aeec7223dd6180b560b621fbe3bc64c6584fb0369d1b7bce",
+  "vendor/jspdf-2.5.2.umd.min.js": "85ba2cc3ff858a20fa49fe6e457bec863ea40b55a9f3725e58a940e62f6f61a4"
+ },
+ "supabaseMigrationRequired": false,
+ "portalActivated": true,
+ "emailDeliveryEnabled": false,
+ "publicPortalUrl": "https://dylanl-dev.github.io/RestoManager/reservation/live.html?restaurant=a-lepicerie-rouen",
+ "antiAbuseSiteKey": "0x4AAAAAAGLm9RaVvyWg-GtY",
+ "cspSupabaseOrigin": "https://tnsrkargogckgtsxipwd.supabase.co",
+ "scope": "RM-RELEASE-02 — RM-SEC-03/04 (SDK Supabase et jsPDF locaux, CSP stricte PROD), connexion premium L1-B rendue compatible CSP, défilement initial et menu de session compact (#274/#275) sans Mode Coup de feu ni moteur RM-OPS. Créateur RM-017/019/020, inscription, portail, SQL, Edge et workflows exclus.",
+ "promoted_assets": {
+  "service-v3-public-booking.js": "79bc9c6e6f79230ddf6344b8b0d382dcb0f134dcf591bcf8b47b3bf5e37b55be",
+  "service-v3-publication-model.js": "c030966658ec672527ab9d1c3061667bb96f8c51ceec84b2f10d7603a0b541d9",
+  "reservation/index.html": "a8c6dbacc76cf41e5e8bf108660eed742758b83f0a3264944dc8bbfc04b56ff2",
+  "reservation/live.mjs": "7954661e468398f804c8843b2d5c7ffb72521a6efaeb12a55ace792821bf5b45",
+  "reservation/model.js": "7ceff5a7008a4f2108bc18617e2f6a61753c251a287588d093105170e73dc092",
+  "reservation/portal.js": "ae3cf538907ec2ff8047285c75de720d2d71be03d9553c4de0faaa9e065498d4",
+  "reservation/demo.js": "9ceafad70033ae75c50fa1b62b6337924d2dd6fe81fb09240d0c9e77c8acf5d4",
+  "reservation/portal.css": "cb3bd55993a7de8031a4036b76f2f8764e0b288123b718e0c63931a05565a50e",
+  "reservation/tenant-links.mjs": "77796919810265758e868ed2f3e2380233662c67075efd08320b641944db7348",
+  "service-v3-motion.js": "b74cb90ecfd90733eb9d483ccc0c597116ad3884d110f85c845ecb678033044b",
+  "service-v3.css": "0c7308af948d1df3f9a3159331ccf0077ef59f647d2dfa5aa25177263704e5ac",
+  "service-v3-reservations.js": "83f67bbc5b6b689515d5dae8b87af87dd20bd9daf5f838fcf3813bfa7e93efdb",
+  "reception-service-overview.js": "35b203e138d56845dac1ac5d1ae14b16c62f11bfbdbcb6e2f60a60663aa9f1f6",
+  "service-v3-notifications.css": "4193f23a6545479f913dbcd477f4c2e30bc90c2c2b710cafe5657bf89cddc3f3",
+  "service-v3-reminders.js": "2516f7c3d45f07f1399177052299697bd15a640857806b5f241b7e3fb850feb6",
+  "service-v3.js": "7af39744f459bae71a036702c103d9aa316ef404ad84b9d83361bd9668d1dcca",
+  "service-v3-management-categories.css": "64559d8880879cc99fb37eaa32e10fce31cbcd51244db66d4090ae533d8a58f1"
+ },
+ "activationSettingsUnchanged": true
+}

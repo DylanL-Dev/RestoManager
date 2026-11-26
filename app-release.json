@@ -1,8 +1,21 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.25-rmuxl1-main",
+  "currentVersion": "2026.11.26-rmrelease02-main",
   "releases": [
+    {
+      "version": "2026.11.26-rmrelease02-main",
+      "date": "2026-11-26",
+      "title": "Une application plus sûre et une connexion plus claire",
+      "changes": [
+        "La page de connexion adopte une présentation plus lisible sur ordinateur, tablette et téléphone, avec l’affichage du mot de passe à la demande.",
+        "Les bibliothèques de connexion et d’export PDF sont désormais fournies par RestoManager lui-même, dans une version unique, sans dépendre d’un service extérieur.",
+        "Une politique de sécurité du navigateur bloque tout script non prévu sur les pages de l’équipe et de l’administration.",
+        "Le tableau de bord s’ouvre en haut de page et le menu du profil est plus compact sur téléphone et tablette, sans retirer aucune action."
+      ],
+      "impact": "Mise à jour de l’interface et de la sécurité du navigateur uniquement. Aucune migration Supabase, aucun changement de droits, de données ou de paramètres, aucune nouvelle ouverture des réservations en ligne.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.25-rmuxl1-main",
       "date": "2026-11-25",

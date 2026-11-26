@@ -27,11 +27,10 @@ async function runCase(browser,width,height){
   const address=server.address();
   await page.goto('http://127.0.0.1:'+address.port+'/creator.html');
   await page.evaluate(async()=>{
-   const source=async file=>{const r=await fetch(file);if(!r.ok)throw Error(file+' not found');return r.text()};
-   const [consoleJs,inboxJs]=await Promise.all([source('creator-console.js'),source('creator-admin.js')]);
-   const expose=(code,name)=>new Function(code.replace('export function '+name,'function '+name)+'\nreturn '+name+';')();
-   const installCreatorConsole=expose(consoleJs,'installCreatorConsole');
-   const installOwnerInbox=expose(inboxJs,'installOwnerInbox');
+   // RM-SEC-04: the page enforces script-src 'self' (no eval). The modules have no imports, so the
+   // audit loads them as same-origin ES modules instead of re-evaluating their source text.
+   const {installCreatorConsole}=await import('./creator-console.js?audit=rm006');
+   const {installOwnerInbox}=await import('./creator-admin.js?audit=rm006');
    document.getElementById('loginPanel').hidden=true;
    document.getElementById('ownerPanel').hidden=false;
    const sample={
