@@ -107,15 +107,16 @@ test('the mock adapter rejects duplicate and offline confirmation without a part
  assert.equal(adapter.read().revision,1);adapter.close();
 });
 
-test('Express shortcut is compact beside Restaurant identity and account actions remain available',()=>{
+test('Express shortcut stays compact across screens and account actions remain available',()=>{
  const fs=require('node:fs');
  const path=require('node:path');
  const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
  const js=read('service-v3-express.mjs');
  const css=read('service-v3-express.css');
  const html=read('v3-connected.html');
- assert.match(js,/role\.before\(entry\);/);
- assert.match(js,/entry\.append\(role,launch\);/);
+ assert.match(js,/entry\.append\(launch\);/);
+ assert.match(js,/main\.prepend\(entry\);/);
+ assert.doesNotMatch(js,/role\.before\(entry\)/,'entry must remain available outside the tables screen');
  assert.match(js,/launch\.setAttribute\('aria-label','Mode Coup de feu'\)/);
  assert.match(css,/\.rmExpressEntry\s+\.rmExpressLaunch\s*\{/);
  assert.match(css,/\.mobileAccountMenu:not\(\[hidden\]\)/);
