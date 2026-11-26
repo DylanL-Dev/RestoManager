@@ -22,8 +22,7 @@ function button(label,action,value){
 
 export function mountExpress(main,readPlan){
  const launch=button('','open');launch.className='rmExpressLaunch';launch.hidden=true;
- launch.innerHTML=`${icon('zap')}<span>Coup de feu</span>`;
- launch.setAttribute('aria-label','Mode Coup de feu');
+ launch.innerHTML=`${icon('zap')}<span>Mode Coup de feu</span>`;
  launch.title='Ouvrir le Mode Coup de feu';
  launch.setAttribute('aria-controls','rmExpress');launch.setAttribute('aria-expanded','false');
  const root=element('section','','rmExpress');root.id='rmExpress';root.hidden=true;
@@ -100,30 +99,32 @@ export function mountExpress(main,readPlan){
  const canPreviewPassage=state=>canPreview(state)&&Boolean(demo||state.service&&state.now.time>=state.service.start);
  const canAct=()=>Boolean(demo)&&scope===currentScope()&&navigator.onLine!==false&&!busy;
 
- const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-compact1',import.meta.url);
+ const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-navigation1',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
  document.head.append(style);
- // Keep the shortcut outside individual screens so staff can enter Express from any task.
- // A compact wrapper prevents the original full-width banner layout.
- const entry=element('div','','rmExpressEntry');
- entry.append(launch);
- main.prepend(entry);
+ const mobileLaunch=launch.cloneNode(true);
+ const accountToggle=document.getElementById('mobileAccountToggle');
+ const desktop=window.matchMedia('(min-width: 901px)');
+ document.getElementById('mobileAccountRefresh')?.before(mobileLaunch);
+ document.querySelector('.sidebarSession')?.before(launch);
  main.append(root);
  $('[data-floor]').open=window.matchMedia('(min-width: 720px)').matches;
  symbols();
 
  function message(value){if(value!==lastNotice){lastNotice=value;feedback.textContent=value;}}
- function setOpen(value){
+ function setOpen(value,returnFocus=document.activeElement){
   if(value&&(!canOpen()||!styled))return;
   if(value===open)return;
   open=value;
-  if(open){previousFocus=document.activeElement;previousScroll=window.scrollY;}
+  if(open){previousFocus=returnFocus;previousScroll=window.scrollY;}
   root.hidden=!open;document.documentElement.classList.toggle('rmExpressActive',open);
   launch.setAttribute('aria-expanded',String(open));
+  mobileLaunch.setAttribute('aria-expanded',String(open));
   if(open){update();$('#rmExpressTitle').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   else{
-   if(previousFocus?.isConnected)previousFocus.focus({preventScroll:true});
+   const target=previousFocus?.getClientRects().length?previousFocus:desktop.matches?launch:accountToggle;
+   target?.focus({preventScroll:true});
    window.scrollTo({top:previousScroll,behavior:'instant'});
   }
  }
@@ -140,6 +141,7 @@ export function mountExpress(main,readPlan){
    live=createLiveAdapter({read:readLive});live.subscribe(update);
   }
   launch.hidden=!canOpen()||!styled;
+  mobileLaunch.hidden=launch.hidden;
   if(!canOpen()&&open)setOpen(false);
   if(open||changed)draw(snapshot());
  }
@@ -404,6 +406,11 @@ export function mountExpress(main,readPlan){
  }
 
  launch.addEventListener('click',()=>setOpen(true));
+ mobileLaunch.addEventListener('click',()=>{
+  if(!canOpen()||!styled)return;
+  accountToggle?.click();
+  setOpen(true,accountToggle);
+ });
  search.addEventListener('input',()=>{if(!search.value.trim())otherDates=false;update();});
  $('[data-guests]').addEventListener('input',()=>{passageTable=null;update();});
  $('[data-guest-type]').addEventListener('change',()=>update());

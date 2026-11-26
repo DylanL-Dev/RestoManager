@@ -241,14 +241,17 @@ window.addEventListener('restomanager:editor-open',updateBack);
 window.addEventListener('restomanager:editor-close',updateBack);
 window.RestoScreens={show:id=>commit(id),current:()=>current,back:goBack,request,
  markBookingSaved:resetBookingBaseline,hasUnsavedChanges,confirmLeaveForRefresh:mayLeave};
-const initial=screens.has(location.hash.slice(1))?location.hash.slice(1):'tables';
-if(history.state?.[navKey]&&screens.has(history.state.screen))depth=Math.max(0,Number(history.state.depth)||0);
-history.replaceState(stateFor(initial,depth),'','#'+initial);
-show(initial,{keepScroll:true,force:true});
+const initialHash=location.hash;
+const initial=screens.has(initialHash.slice(1))?initialHash.slice(1):'tables';
+const restoring=history.state?.[navKey]&&screens.has(history.state.screen);
+if(restoring)depth=Math.max(0,Number(history.state.depth)||0);
+// A fresh dashboard has no anchor. Keep explicit anchors and browser restores intact.
+history.replaceState(stateFor(initial,depth),'',location.href);
+show(initial,{keepScroll:Boolean(initialHash||restoring),force:true});
 
 // Express is an optional DEV presentation over the existing screen tree.
 if(document.currentScript?.src&&/^(localhost|127\.0\.0\.1)$|\.onrender\.com$/i.test(location.hostname)){
- import(new URL('./service-v3-express.mjs?v=20261126-rmops-compact1',document.currentScript.src))
+ import(new URL('./service-v3-express.mjs?v=20261126-rmops-navigation1',document.currentScript.src))
   .then(({mountExpress})=>mountExpress(main,()=>TableStore.get()))
   .catch(error=>window.RestoErrors?.diagnostic('express-interface',error));
 }

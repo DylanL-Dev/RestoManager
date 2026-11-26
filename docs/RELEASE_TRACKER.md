@@ -2,8 +2,12 @@
 
 ### RM-SEC-03 + RM-SEC-04 — SDK local et CSP stricte, livraison unique actualisée — PR DEV BROUILLON (26/11/2026)
 
-- Issues #255 / #256, PR #260 (contient #259). Fusion de DEV `c19e4f0` (RM-OPS #270–#274) dans `claude/rm-sec-04-csp`, sans rebase ; conflits `sw.js` / `v3-connected.html` / 2 tests résolus sans perte (version CSP + `?v=` RM-OPS, `SHELL` de DEV + 5 fichiers sécurité, cache `restomanager-shell-20261126-rmsec0304`). Écritures Express toujours désactivées. **Aucune fusion, migration ni publication.**
+- Issues #255 / #256, PR #260 (contient #259). Fusion de DEV `2b0792e` (RM-OPS #270–#275) dans `claude/rm-sec-04-csp`, sans rebase ; conflits `sw.js` / `v3-connected.html` / 2 tests résolus sans perte (version CSP + `?v=` RM-OPS, `SHELL` de DEV + 5 fichiers sécurité, cache `restomanager-shell-20261126-rmsec0304b`). Écritures Express toujours désactivées. **Aucune fusion, migration ni publication.**
 - Local : `npm test` 486/486, CSP 10/10, 0 violation dans 30 suites navigateur (Express, moteur, PWA, Mission 3, Créateur, Root, portail public…), PostgreSQL 17 (moteur 31/31, Mission 3 62/62, audit DEV 62/62, RM-012/015/017). `rm015-connected` et `rm016-learning` échouent à l'identique sur DEV en local (environnement) ; Realtime réel et `pg_cron` confiés à la CI. [Rapport](audits/RM-SEC-04_CSP_20261125.md#8-actualisation-sur-dev-c19e4f0-26112026--livraison-unique-rm-sec-03--rm-sec-04).
+### RM-OPS UX — Accès Coup de feu et arrivée au tableau de bord — CANDIDAT DEV (26/11/2026)
+
+- Suite de #266 et #274 depuis DEV `c19e4f0`. Accès Restaurant dans le profil mobile et tablette et dans le menu latéral sur ordinateur. Le tableau de bord s’ouvre en haut depuis une URL sans ancre.
+- Cache PWA `restomanager-shell-20261126-rmops-navigation1`. Coordination avec #259/#260 dans la [fiche de recette](audits/RM-OPS_UX_NAVIGATION_20261126.md).
 
 ### RM-OPS — Reprise de l'intégration Express + moteur (consultation) — PR DEV BROUILLON (26/11/2026)
 
