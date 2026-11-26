@@ -106,6 +106,7 @@ async function validateAxe(page){
     await option(page,16);
     await view.getByRole('button',{name:'Installer 214 en T16'}).waitFor();
     await view.getByText(/Salle principale → Salon/).waitFor();
+    assert.ok(await view.locator('[data-room-change] .lucide-icon').isVisible());
     assert.equal(await view.locator('[data-floor]').getByRole('heading',{name:'Salle principale'}).count(),0);
     await validateAxe(page);
     if(width===834){

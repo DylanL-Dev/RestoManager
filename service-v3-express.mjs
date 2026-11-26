@@ -57,7 +57,7 @@ export function mountExpress(main,readPlan){
      <details data-other-tables hidden><summary>Autre table</summary><div class="rmExpressTiles" data-all-tables></div></details>
      <div class="rmExpressConfirm" data-install hidden>
       <p data-placement-summary></p>
-      <p class="rmExpressRoomChange" data-room-change hidden>${icon('arrow-right-left')}<strong></strong></p>
+      <p class="rmExpressRoomChange" data-room-change hidden>${icon('arrow-left-right')}<strong></strong></p>
       <button type="button" class="rmExpressPrimary" data-action="install"></button>
      </div>
     </section>
