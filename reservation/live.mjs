@@ -58,7 +58,15 @@ function validateContact(){const e=guestErrors(contact);if(!contact.firstName)e.
 async function times(focusId){
  const request=++seq;loading=true;slots=[];notice='';render(false);if(focusId)goFocus(focusId);
  try{const result=await api.availability(draft,editing?token:undefined);if(request!==seq||step!==1)return;profile.serverTime=result.serverTime;profile.today=serverDay(result.serverTime).date;slots=currentSlots(draft.date,result.serverTime,result.slots);if(!slots.some(s=>s.time===draft.time&&s.available))draft.time='';}
- catch(e){if(request===seq)notice=e.message;}finally{if(request===seq){loading=false;render(false);if(focusId)goFocus(focusId);}}
+ catch(e){if(request===seq)notice=e.message;}
+ finally{
+  if(request===seq){
+   const active=document.activeElement;
+   const currentFocusId=card.contains(active)?active.id:'';
+   loading=false;render(false);
+   if(currentFocusId)goFocus(currentFocusId);
+  }
+ }
 }
 async function chooseInitialVisit(){
  const previousBusy=busy;busy=true;loading=true;render(false);
