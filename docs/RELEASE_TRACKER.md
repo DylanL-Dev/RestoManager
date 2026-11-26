@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS — Intégration Express et moteur en consultation — CANDIDAT (26/11/2026)
+
+- Branche `codex/rm-ops-integration`, depuis DEV `608fba9`, avec les têtes #271 `3c6caf7` et #270 `4cdfafa6`.
+- Aperçus du moteur dans Express, simulation conservée et écritures Express bloquées par la façade connectée. Chargement et cache PWA versionnés. [Recette combinée et verrou de mise en service](audits/RM-OPS_INTEGRATION_DEV_20261126.md).
+
 ### RM-OPS-02 — Navigation inter-salles et isolation par établissement — CANDIDAT (26/11/2026)
 
 - Suite du brouillon #271. Recherche et dossier conservés pendant la navigation. Vue globale, salles actives, états enregistrés, salle vide et avertissement avant un changement de salle simulé.

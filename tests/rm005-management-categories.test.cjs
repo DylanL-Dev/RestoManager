@@ -24,7 +24,7 @@ test('Authorized fusions are categorized and distinguished from underlying pair 
 });
 test('Layout offers desktop navigation and table, tablet/mobile navigation and cards',()=>{
  assert.match(html,/service-v3-management-categories\.css\?v=20261124-rmux034b/);
- assert.match(html,/service-v3-screens\.js\?v=20261118-rm0152/);
+ assert.match(html,/service-v3-screens\.js\?v=20261126-rmops-integration1/);
  assert.match(html,/service-v3-fusions\.js\?v=20261112-management-layout1/);
  assert.match(styles,/\.rmManagementWorkspace\{width:100%;min-width:0/);
  assert.match(styles,/\.rmManagementCategoryContent\{display:grid/);

@@ -3,7 +3,8 @@ import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {setupBookingDraft} from './booking-draft.js?v=20261117-rm016-readonly';
 import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
-import './placement-gateway.js?v=20261126-rm-ops-engine1';
+import './placement-gateway.js?v=20261126-rmops-integration1';
+import {guardConnectedPlacement} from './placement-express-adapter.mjs?v=20261126-rmops-integration1';
 
 function requireWrite(){
  if(navigator.onLine===false||!window.RestoSupabaseReady)throw window.RestoErrors?.business('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.')||Error('Connexion interrompue.');
@@ -224,14 +225,16 @@ window.RestoApplySmartPlacement=async function(reservationId,plan){
 // RM-OPS ENGINE — façade de placement (contrat v1, GitHub #265). Les anciennes
 // fonctions RestoApplySmartPlacement / RestoChangeSharedStatus restent inchangées.
 if(window.RestoPlacementGateway&&window.RestoSmartPlacement){
- window.RestoPlacement=window.RestoPlacementGateway.createPlacementGateway({
+ const placement=window.RestoPlacementGateway.createPlacementGateway({
   engine:window.RestoSmartPlacement,
-  getState:()=>Array.isArray(window.RestoSharedReservations)&&window.RestoSupabaseReady?{
-   reservations:window.ReservationEngine?.normalizeReservations?.(window.RestoSharedReservations)||window.RestoSharedReservations,
-   // TableStore est une constante globale (script classique) : pas une propriété de window.
-   tablePlan:typeof TableStore!=='undefined'?TableStore.get().tables:[],holds:window.RestoDraftHolds||[],
-   duration:Number(window.RestoSharedHours?.duration)||90
-  }:null,
+  getState:()=>{
+   const context=window.RestoNotificationContext;
+   if(context?.role!=='fb_admin'||window.RestoReception||!context.restaurantId||
+    context.restaurantId!==window.RestoExpressSnapshotRestaurantId||!window.RestoSharedDataLoaded||
+    !['ok','readonly'].includes(window.RestoSyncState))return null;
+   return {reservations:window.RestoSharedReservations,tablePlan:TableStore.get().tables,
+    holds:window.RestoDraftHolds||[],duration:Number(window.RestoSharedHours?.duration)||90};
+  },
   tableId:number=>window.RestoSmartPlacementTableIds instanceof Map?window.RestoSmartPlacementTableIds.get(number):null,
   isOnline:()=>navigator.onLine!==false,
   // Activé seulement si le serveur annonce la proposition v4 appliquée (capacité « placement » ≥ 4).
@@ -252,6 +255,8 @@ if(window.RestoPlacementGateway&&window.RestoSmartPlacement){
    return data;
   }
  });
+ window.RestoPlacement=guardConnectedPlacement(placement);
+ window.dispatchEvent(new Event('restomanager:placement-ready'));
 }
 window.RestoChangeSharedStatus=async function(reservation,status){
  requireWrite();

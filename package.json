@@ -23,7 +23,7 @@
     "test:assistance:browser": "node tests/browser/rm013a-assistance.cjs",
     "test:rm013a:browser": "node tests/browser/rm013a-management.cjs",
     "test:syntax": "node tests/check-syntax.cjs",
-    "test:display": "node tests/browser/table-display.cjs && npm run test:express:browser",
+    "test:display": "node tests/browser/table-display.cjs && npm run test:express:browser && npm run test:rm-ops:browser",
     "test:express:browser": "node tests/browser/rm-ops-express.cjs",
     "test:audit:dev:postgres": "node tests/postgres/mission2.cjs --mission3 --dev-snapshot",
     "test:audit:dev:supabase": "node tests/supabase/mission3.cjs --dev-snapshot",

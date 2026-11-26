@@ -17,6 +17,8 @@ async function reset(page){await page.evaluate(()=>{window.RestoPrepareNewReserv
   await waitAsync(page,async()=>{const r=await navigator.serviceWorker.getRegistration('./');return Boolean(r?.active)});
   const cache=await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration('./');const names=await caches.keys();const name=names.find(n=>n.includes('-rm-fixture'));const urls=(await (await caches.open(name)).keys()).map(req=>new URL(req.url).pathname);return {scope:new URL(r.scope).pathname,urls}});
   assert.equal(cache.scope,basePath+'/');assert.ok(cache.urls.includes(basePath+'/v3-connected.html'));assert.ok(cache.urls.includes(basePath+'/service-v3-notification-model.js'));assert.ok(!cache.urls.includes(basePath+'/app-release.json'));pass('PWA shell + safe manifest bypass, scope '+(basePath||'/'));
+  const expressAssets=['placement-gateway.js','placement-express-adapter.mjs','service-v3-express.mjs','service-v3-express-data.mjs','service-v3-express-simulation.mjs','service-v3-express.css'];
+  for(const file of expressAssets)assert.ok(cache.urls.includes(basePath+'/'+file),file);
   const second=await context.newPage();await second.goto(origin+basePath+'/v3-connected.html');await second.waitForFunction(()=>window.RestoSupabaseReady===true);
   const welcome=second.locator('#restoTourWelcome');if(await welcome.isVisible())await second.getByRole('button',{name:'Plus tard',exact:true}).click();
   await second.evaluate(()=>window.RestoScreens.show('reservationForm'));await second.locator('#bookingNotes').fill('Autre onglet : notes à préserver');await second.locator('#bookingAllergies').fill('Autre onglet : allergies à préserver');
@@ -33,6 +35,9 @@ async function reset(page){await page.evaluate(()=>{window.RestoPrepareNewReserv
   assert.equal(await page.evaluate(()=>window.__noReload),undefined);assert.equal(await second.evaluate(()=>window.RestoScreens.current()),'tables');assert.equal(await second.evaluate(()=>location.search),'');pass('Clean explicit update reloads requesting tab only '+(basePath||'/'));
   // A controlled page can reload its shell offline; latest publication cannot be asserted offline.
   await context.setOffline(true);await page.reload({waitUntil:'domcontentloaded'});await page.waitForFunction(()=>Boolean(window.RestoNotifications));
+  await page.waitForFunction(()=>window.RestoPlacement?.capabilities().seat===false);
+  const offlineAssets=await page.evaluate(async files=>Promise.all(files.map(async file=>(await fetch('./'+file+'?v=20261126-rmops-integration1')).ok)),expressAssets);
+  assert.ok(offlineAssets.every(Boolean));
   await page.locator('.serviceBell').click();assert.match(await page.locator('[data-notification-id="important:sync"]').innerText(),/hors ligne/);assert.equal(await page.locator('[data-notification-id^="release:"]').count(),0);pass('Controlled PWA offline shell: explicit stale status, no fake update '+(basePath||'/'));
   await context.setOffline(false);assert.deepEqual(v.errors,[]);assert.ok(!getCalls().some(c=>c.name&&c.name!=='booking_draft_v3'));await context.close();
  }

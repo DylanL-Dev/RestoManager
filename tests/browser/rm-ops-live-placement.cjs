@@ -10,6 +10,7 @@ const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'../..');
 const iso='2032-11-08',clock=new Date(iso+'T18:44:00Z');
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
+const owned=row=>({...row,restaurant_id:'fixture-ops'});
 let rows,assignments,revision,writes;
 function reset(){
  const row=(room,table)=>({id:id(room),guest_name:room===214?'Dupont fictif':'Martin fictif',hotel_room:String(room),party_size:2,
@@ -19,8 +20,8 @@ function reset(){
 const tables=[4,9,21].map(n=>({id:id(n),label:'Table '+n,seats:2,active:true,room_id:id(1)}));
 function snapshot(){
  return {revision:String(++revision),syncSequence:revision,capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
-  hours:{lunch_enabled:true,lunch_start:'12:00:00',lunch_end:'14:00:00',dinner_enabled:true,dinner_start:'19:00:00',dinner_end:'23:00:00',duration:90,arrival_limit_percent:70},
-  rooms:[{id:id(1),name:'Salle principale',active:true}],tables,reservations:rows,assignments,holds:[],serviceClosures:[],fusionLinks:[]};
+  hours:owned({lunch_enabled:true,lunch_start:'12:00:00',lunch_end:'14:00:00',dinner_enabled:true,dinner_start:'19:00:00',dinner_end:'23:00:00',duration:90,arrival_limit_percent:70}),
+  rooms:[owned({id:id(1),name:'Salle principale',active:true})],tables:tables.map(owned),reservations:rows.map(owned),assignments:assignments.map(owned),holds:[],serviceClosures:[],fusionLinks:[]};
 }
 const tableOf=rid=>assignments.filter(a=>a.reservation_id===rid).map(a=>a.table_id);
 const seatedOn=(table,except)=>rows.some(r=>r.id!==except&&r.status==='seated'&&tableOf(r.id).includes(table));
@@ -62,9 +63,19 @@ const server=http.createServer((req,res)=>{
  fs.readFile(path.join(root,file),(error,value)=>error?res.writeHead(404).end():res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'}).end(value));
 });
 let origin,browser;const external=[],errors=[];
-async function open(role='fb_admin'){
+async function open(role='fb_admin',{exerciseGateway=false}={}){
  const context=await browser.newContext({viewport:{width:834,height:950},serviceWorkers:'block',timezoneId:'Europe/Paris'});
- await context.route('**/*',route=>{if(new URL(route.request().url()).origin===origin&&route.request().method()==='GET')return route.continue();external.push(route.request().url());return route.abort()});
+ await context.route('**/*',async route=>{
+  const url=new URL(route.request().url());
+  if(url.origin!==origin||route.request().method()!=='GET'){external.push(url.href);return route.abort();}
+  if(exerciseGateway&&url.pathname==='/placement-express-adapter.mjs'){
+   // Exercise the gateway's legacy RPC contract only with the loopback RPC fixture.
+   const response=await route.fetch(),body=await response.text();
+   assert.ok(body.includes('const EXPRESS_WRITES_ENABLED=false;'));
+   return route.fulfill({response,body:body.replace('const EXPRESS_WRITES_ENABLED=false;','const EXPRESS_WRITES_ENABLED=true;')});
+  }
+  return route.continue();
+ });
  await context.routeWebSocket('**/*',ws=>ws.close());
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
  await page.addInitScript(r=>{window.__opsRole=r},role);
@@ -75,6 +86,7 @@ async function open(role='fb_admin'){
  return {context,page};
 }
 const R214=id(214),R215=id(215);
+const openWritable=(role='fb_admin')=>open(role,{exerciseGateway:true});
 const state=()=>Object.fromEntries(rows.filter(r=>r.hotel_room).map(r=>[r.hotel_room,[r.status,tableOf(r.id).map(t=>Number(t.slice(-2)))[0]]]));
 async function test(name,fn){reset();await fn();console.log('PASS '+name)}
 
@@ -82,14 +94,33 @@ async function test(name,fn){reset();await fn();console.log('PASS '+name)}
  try{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;
   browser=await chromium.launch();
-  await test('RestoPlacement chargé dans la vraie page ; capacités v1 annoncées',async()=>{
+  await test('façade connectée en consultation : aperçus actifs, écritures bloquées malgré la capacité serveur',async()=>{
    const {context,page}=await open();
+   const checks=await page.evaluate(async id=>{
+    window.RestoServiceCapabilities={...window.RestoServiceCapabilities,placement:4};
+    const placement=window.RestoPlacement,plan=placement.preview(id,[4]);
+    const {createLiveAdapter}=await import('./placement-express-adapter.mjs');
+    const adapter=createLiveAdapter({read:()=>({tables:TableStore.get().tables})});
+    const error=async operation=>{try{await operation();return null}catch(err){return err.code}};
+    const codes=await Promise.all([error(()=>placement.seat(plan)),error(()=>placement.walkIn({})),
+     error(()=>adapter.seat(plan)),error(()=>adapter.walkIn({guests:2,table:9,type:'external'}))]);
+    adapter.close();
+    return {plan:plan.kind,caps:placement.capabilities(),codes};
+   },R214);
+   assert.equal(checks.plan,'swap');
+   assert.deepEqual([checks.caps.seat,checks.caps.swapAndSeat,checks.caps.walkIn],[false,false,false]);
+   assert.deepEqual(checks.codes,Array(4).fill('EXPRESS_WRITE_DISABLED'));
+   assert.deepEqual(writes,[]);
+   await context.close();
+  });
+  await test('capacités v1 du moteur sur le transport fictif explicite',async()=>{
+   const {context,page}=await openWritable();
    const caps=await page.evaluate(()=>window.RestoPlacement.capabilities());
    assert.deepEqual([caps.version,caps.seat,caps.swapAndSeat,caps.walkIn,caps.releaseThenSeat],[1,true,true,true,false]);
    await context.close();
   });
   await test('échange 214 → T4 bout en bout : aperçu, écriture unique, instantané rafraîchi',async()=>{
-   const {context,page}=await open();
+   const {context,page}=await openWritable();
    const preview=await page.evaluate(id=>window.RestoPlacement.preview(id,[4]),R214);
    assert.equal(preview.kind,'swap');assert.deepEqual(preview.changes.map(c=>[c.label,c.from[0],c.to[0]]),[['Ch. 215',4,21]]);
    const [a,b]=await page.evaluate(p=>Promise.all([window.RestoPlacement.seat(p),window.RestoPlacement.seat(p)]),preview);
@@ -100,13 +131,14 @@ async function test(name,fn){reset();await fn();console.log('PASS '+name)}
    await context.close();
   });
   await test('Réception : FORBIDDEN, aucune écriture',async()=>{
-   const {context,page}=await open('reception');
-   const code=await page.evaluate(async id=>{const p=window.RestoPlacement.preview(id,[4]);try{await window.RestoPlacement.seat(p)}catch(e){return e.code}},R214);
+   const {context,page}=await openWritable('reception');
+   assert.equal(await page.evaluate(id=>window.RestoPlacement.preview(id,[4]).code,R214),'NOT_SYNCED');
+   const code=await page.evaluate(async id=>{try{await window.RestoPlacement.seat({ok:true,reservationId:id,targetTables:[4]})}catch(e){return e.code}},R214);
    assert.equal(code,'FORBIDDEN');assert.deepEqual(writes,[]);
    await context.close();
   });
   await test('coupure réseau : OFFLINE ; données modifiées par un collègue : STALE ; aucune écriture',async()=>{
-   const {context,page}=await open();
+   const {context,page}=await openWritable();
    const preview=await page.evaluate(id=>window.RestoPlacement.preview(id,[4]),R214);
    await context.setOffline(true);
    assert.equal(await page.evaluate(async p=>{try{await window.RestoPlacement.seat(p)}catch(e){return e.code}},preview),'OFFLINE');
@@ -119,7 +151,7 @@ async function test(name,fn){reset();await fn();console.log('PASS '+name)}
    await context.close();
   });
   await test('deux pupitres : 215 installé « sur T4 » pendant l’échange → constat SEATED_ELSEWHERE, jamais deux clients sur T4',async()=>{
-   const A=await open(),B=await open();
+   const A=await openWritable(),B=await openWritable();
    const pa=await A.page.evaluate(id=>window.RestoPlacement.preview(id,[4]),R214);
    const pb=await B.page.evaluate(id=>window.RestoPlacement.preview(id,[4]),R215);
    await A.page.evaluate(p=>window.RestoPlacement.seat(p),pa);
@@ -129,7 +161,7 @@ async function test(name,fn){reset();await fn();console.log('PASS '+name)}
    await A.context.close();await B.context.close();
   });
   await test('passage via l’adaptateur Express (interface de la simulation) : table conforme, une écriture',async()=>{
-   const {context,page}=await open();
+   const {context,page}=await openWritable();
    const result=await page.evaluate(async()=>{
     const {createLiveAdapter}=await import('./placement-express-adapter.mjs');
     const adapter=createLiveAdapter({read:()=>({tables:TableStore.get().tables})});

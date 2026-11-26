@@ -1,4 +1,4 @@
-import {assignedRoom,isWaiting,minute,normalize,parisTime} from './service-v3-express-data.mjs';
+import {assignedRoom,belongsToService,isWaiting,minute,normalize,parisTime} from './service-v3-express-data.mjs?v=20261126-rmops-integration1';
 
 const date='2032-11-08';
 const initialClock=Date.parse(`${date}T18:44:00Z`);
@@ -40,7 +40,7 @@ const versionOf=row=>[row.id,row.status,row.guests,row.date,row.time,row.duratio
 export function previewPlacement(snapshot,reservationId,number){
  const row=snapshot.reservations.find(item=>item.id===reservationId);
  const table=snapshot.tables.find(item=>item.number===number);
- if(!row||!isWaiting(row)||row.date!==snapshot.now.date||!snapshot.service||row.time<snapshot.service.start||row.time>snapshot.service.end)
+ if(!row||!isWaiting(row)||!belongsToService(snapshot,row))
   return refusal('NOT_FOUND','Ce dossier ne peut pas être installé dans le service en cours.');
  if(!table)return refusal('CAPACITY','Capacité insuffisante');
  if(!activeTable(snapshot,table))return refusal('INACTIVE','Table hors du plan actif');
@@ -139,7 +139,7 @@ export function createSimulation(source=window,scope='demo'){
  }
  return {read,subscribe(listener){listeners.add(listener);return ()=>listeners.delete(listener);},
   close(){closed=true;listeners.clear();source.removeEventListener('storage',sync);},
-  preview:previewPlacement,
+  preview:previewPlacement,suggestions,suggestWalkIn,
   seat(plan){return update(snapshot=>{
    const row=snapshot.reservations.find(item=>item.id===plan.reservationId);
    if(row?.status==='seated'&&row.tables.length===1&&row.tables[0]===plan.targetTables[0]){

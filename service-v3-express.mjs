@@ -1,4 +1,5 @@
-import {assignedRoom,elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,roomViews,serviceIndicators,tableStatus} from './service-v3-express-data.mjs';
+import {assignedRoom,belongsToService,elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,roomViews,serviceIndicators,tableStatus} from './service-v3-express-data.mjs?v=20261126-rmops-integration1';
+import {createLiveAdapter} from './placement-express-adapter.mjs?v=20261126-rmops-integration1';
 
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const symbols=()=>window.lucide?.createIcons();
@@ -35,7 +36,7 @@ export function mountExpress(main,readPlan){
   </div>
   <div class="rmExpressSearch">
    <label>${icon('search')}<span class="rmExpressVisuallyHidden">Chambre ou nom</span><input type="search" placeholder="Chambre ou nom" autocomplete="off"></label>
-   <button type="button" class="rmExpressPrimary" data-action="passage">${icon('plus')} Passage</button>
+   <button type="button" class="rmExpressPrimary" data-action="passage">${icon('plus')}<span>Passage</span></button>
   </div>
   <div class="rmExpressMetrics" aria-label="Affluence du service">
    <span>${icon('calendar-clock')}<span data-arrival-metric></span></span>
@@ -63,6 +64,7 @@ export function mountExpress(main,readPlan){
     </section>
     <section class="rmExpressPanel" data-passage hidden aria-label="Passage express">
      <div class="rmExpressHeading"><h2 tabindex="-1">Passage express</h2><button type="button" data-action="cancel-passage">Retour aux arrivées</button></div>
+     <p class="rmExpressMuted" data-passage-readonly hidden>Aperçu du passage. Utilisez le mode complet pour l’enregistrer.</p>
      <div class="rmExpressFields">
       <label>Couverts<input type="number" min="1" max="40" value="2" data-guests></label>
       <label>Type de client<select data-guest-type><option value="external">Extérieur</option><option value="hotel">Hôtel</option></select></label>
@@ -80,7 +82,7 @@ export function mountExpress(main,readPlan){
  const booking=$('[data-booking]');
  const feedback=$('[data-feedback]');
 
- let open=false,demo=null,simulation=null,selectedId=null,selectedTable=null,selectedPlan=null,otherDates=false;
+ let open=false,demo=null,live=null,simulation=null,selectedId=null,selectedTable=null,selectedPlan=null,otherDates=false;
  let passage=false,passageTable=null,busy=false,previousFocus=null,previousScroll=0,lastNotice='';
  let scope=null,roomId=null,roomTabSignature='';
  const handoffs=new Set();
@@ -89,10 +91,14 @@ export function mountExpress(main,readPlan){
   return Boolean(context?.role==='fb_admin'&&context.restaurantId&&context.userId&&!window.RestoReception);
  };
  const currentScope=()=>canOpen()?JSON.stringify([window.RestoNotificationContext.userId,window.RestoNotificationContext.restaurantId]):null;
- const snapshot=()=>demo?demo.read():liveSnapshot(window,readPlan);
+ const readLive=()=>liveSnapshot(window,readPlan);
+ const adapter=()=>demo??live;
+ const snapshot=()=>adapter()?.read()??readLive();
+ const canPreview=state=>Boolean(adapter()&&scope===currentScope()&&navigator.onLine!==false&&(demo||state.fresh));
+ const canPreviewPassage=state=>canPreview(state)&&Boolean(demo||state.service&&state.now.time>=state.service.start);
  const canAct=()=>Boolean(demo)&&scope===currentScope()&&navigator.onLine!==false&&!busy;
 
- const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops2',import.meta.url);
+ const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-integration1',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
  document.head.append(style);main.prepend(launch);main.append(root);
@@ -119,7 +125,11 @@ export function mountExpress(main,readPlan){
   const changed=scope!==nextScope;
   if(changed){
    scope=nextScope;demo?.close();demo=null;busy=false;
+   live?.close();live=null;
    resetView();
+  }
+  if(open&&scope&&!live&&window.RestoPlacement){
+   live=createLiveAdapter({read:readLive});live.subscribe(update);
   }
   launch.hidden=!canOpen()||!styled;
   if(!canOpen()&&open)setOpen(false);
@@ -157,7 +167,9 @@ export function mountExpress(main,readPlan){
   $('[data-charge-metric]').textContent=freshness&&snapshot.charge?`Charge du service · ${snapshot.charge.current} / ${snapshot.charge.limit} couverts`:'Charge du service à vérifier';
   $('[data-check-metric]').textContent=snapshot.loaded?`${indicators.toCheck} à vérifier`:'Vérifications en attente';
   const passageButton=$('[data-action=passage]');
-  passageButton.disabled=!canAct();passageButton.title=demo?'':'Disponible dans la simulation Express et le mode complet';
+  passageButton.disabled=demo?!canAct():!canPreviewPassage(snapshot);
+  passageButton.title=demo?'':'Consulter un aperçu du passage';
+  passageButton.querySelector('span').textContent=demo?'Passage':'Aperçu passage';
   showFixtureLabel();
   const rooms=roomViews(snapshot);
   const room=rooms.find(item=>item.id===roomId);
@@ -216,6 +228,17 @@ export function mountExpress(main,readPlan){
 
  function roomName(snapshot,id){return snapshot.rooms.find(room=>room.id===id)?.name??'';}
 
+ function placementPreview(snapshot,reservationId,number){
+  const plan=adapter().preview(snapshot,reservationId,number);
+  if(!plan.ok)return plan;
+  const row=snapshot.reservations.find(item=>item.id===reservationId);
+  const affected=new Set([...row.tables,...plan.targetTables,...plan.changes.flatMap(move=>[...move.from,...move.to])]);
+  const tables=snapshot.tables.filter(item=>affected.has(item.number))
+   .map(({id,number,roomId,capacity})=>[id,number,roomId,capacity]);
+  const viewVersion=JSON.stringify([plan.fingerprint,plan.kind,plan.changes,plan.warnings,tables]);
+  return {...plan,viewVersion};
+ }
+
  function tableButton(snapshot,table,detail,kind='choose',otherRoom=false){
   const tile=button('',kind,table.number);tile.className='rmExpressTile';
   tile.append(element('strong',`T${table.number}`),element('small',detail));
@@ -241,32 +264,41 @@ export function mountExpress(main,readPlan){
   }
   if(!demo){
    if(row.tables.length)booking.append(element('p',`Affectation prévue · ${row.tables.map(number=>'T'+number).join(' + ')}`));
-   booking.append(element('p','Les actions Express sont disponibles sur données fictives.','rmExpressMuted'));
-   return;
+   booking.append(element('p','Aperçu uniquement. Utilisez le mode complet pour enregistrer une installation.','rmExpressMuted'));
+   if(!canPreview(snapshot)){
+    selectedTable=selectedPlan=null;
+    return;
+   }
+   if(!belongsToService(snapshot,row)){
+    notes.append(element('p','Cette réservation est hors du service affiché.','rmExpressMuted'));
+    return;
+   }
+  }else{
+   const handoff=button(handoffs.has(row.id)?'Retirer de « À reprendre »':'Je l’accompagne','handoff',row.id);
+   handoff.disabled=!canAct();booking.append(handoff);
   }
-  const handoff=button(handoffs.has(row.id)?'Retirer de « À reprendre »':'Je l’accompagne','handoff',row.id);
-  handoff.disabled=!canAct();booking.append(handoff);
-  const {primary,entries}=simulation.suggestions(snapshot,row,roomId);
+  const {primary,entries,message:reason}=adapter().suggestions(snapshot,row,roomId);
   const fromRoom=assignedRoom(snapshot,row);
   function option({table,plan}){
    let detail=plan.message;
    if(plan.ok){
     detail=tableStatus(snapshot,table.number).label;
     if(row.tables.includes(table.number))detail='Prévue pour ce client';
-    if(plan.changes.length)detail=`Échange avec ${plan.changes[0].client}`;
+    if(plan.kind==='swap')detail=`Échange avec ${plan.changes[0].client}`;
+    if(plan.kind==='chain')detail=`${plan.changes.length} déplacements à vérifier`;
    }
    const tile=tableButton(snapshot,table,detail,'choose',Boolean(fromRoom&&fromRoom!==table.roomId));
-   tile.disabled=!plan.ok||!canAct();tile.setAttribute('aria-pressed',String(selectedTable===table.number));
+   tile.disabled=!plan.ok||!canPreview(snapshot)||busy;tile.setAttribute('aria-pressed',String(selectedTable===table.number));
    return tile;
   }
   if(primary.length)notes.append(...primary.map(option));
-  else notes.append(element('p',room?`Aucune proposition compatible dans ${room.name}.`:'Aucune table compatible dans cette simulation.','rmExpressMuted'));
+  else notes.append(element('p',reason??(room?`Aucune proposition compatible dans ${room.name}.`:'Aucune proposition compatible.'),'rmExpressMuted'));
   appendOtherRooms(notes,snapshot,room);
   const remaining=entries.filter(entry=>!primary.includes(entry));
   allTables.hidden=!remaining.length;$('[data-all-tables]').replaceChildren(...remaining.map(option));
   if(selectedTable===null)return;
-  const plan=demo.preview(snapshot,row.id,selectedTable);
-  if(!plan.ok||plan.fingerprint!==selectedPlan?.fingerprint){
+  const plan=placementPreview(snapshot,row.id,selectedTable);
+  if(!plan.ok||plan.viewVersion!==selectedPlan?.viewVersion){
    selectedTable=null;selectedPlan=null;
    message('Le placement a changé. Vérifiez la situation en salle et choisissez de nouveau.');
    return;
@@ -274,16 +306,17 @@ export function mountExpress(main,readPlan){
   selectedPlan=plan;install.hidden=false;
   const recap=plan.changes.length
    ?plan.changes.map(move=>`${move.client} passera de T${move.from[0]} à T${move.to[0]}.`)
-   :['Confirmez la table réellement choisie en salle.'];
-  const roomChange=plan.warnings.find(warning=>warning.code==='ROOM_CHANGE');
+   :[demo?'Confirmez la table réellement choisie en salle.':`Table proposée · T${plan.targetTables[0]}`];
+  const destination=snapshot.tables.find(table=>table.number===plan.targetTables[0]);
+  const roomChange=fromRoom&&destination&&destination.roomId!==fromRoom;
   const change=$('[data-room-change]');change.hidden=!roomChange;
   if(roomChange){
-   const destination=snapshot.tables.find(table=>table.number===plan.targetTables[0]);
    change.querySelector('strong').textContent=`Changement de salle · ${roomName(snapshot,fromRoom)} → ${roomName(snapshot,destination.roomId)}`;
   }
-  const warnings=plan.warnings.filter(warning=>warning!==roomChange).map(warning=>warning.message);
+  const warnings=plan.warnings.filter(warning=>!demo||warning.code!=='ROOM_CHANGE').map(warning=>warning.message);
   $('[data-placement-summary]').textContent=[...recap,...warnings].join(' ');
-  const confirm=$('[data-action=install]');confirm.textContent=`Installer ${row.hotelRoom||row.client} en T${plan.targetTables[0]}`;confirm.disabled=!canAct();
+  const confirm=$('[data-action=install]');confirm.hidden=!demo;
+  confirm.textContent=`Installer ${row.hotelRoom||row.client} en T${plan.targetTables[0]}`;confirm.disabled=!canAct();
  }
 
  function appendOtherRooms(container,snapshot,room){
@@ -318,18 +351,22 @@ export function mountExpress(main,readPlan){
 
  function drawPassage(snapshot,room){
   const guests=$('[data-guests]').valueAsNumber;
-  const choices=demo?simulation.suggestWalkIn(snapshot,guests).filter(table=>!roomId||table.roomId===roomId):[];
+  const choices=canPreviewPassage(snapshot)?adapter().suggestWalkIn(snapshot,guests).filter(table=>!roomId||table.roomId===roomId):[];
   if(!choices.some(table=>table.number===passageTable))passageTable=null;
   const options=$('[data-passage-tables]');
   options.replaceChildren(...choices.map(table=>{
    const tile=tableButton(snapshot,table,'Aucun client enregistré','walk-table');
-   tile.disabled=!canAct();tile.setAttribute('aria-pressed',String(passageTable===table.number));return tile;
+   tile.disabled=busy;tile.setAttribute('aria-pressed',String(passageTable===table.number));return tile;
   }));
-  if(!choices.length)options.append(element('p',room?`Aucune table compatible avec ce passage dans ${room.name}.`:'Aucune table compatible avec ce passage.','rmExpressMuted'));
+  if(!choices.length){
+   const empty=room?`Aucune table compatible avec ce passage dans ${room.name}.`:'Aucune table compatible avec ce passage.';
+   options.append(element('p',canPreviewPassage(snapshot)?empty:'Aperçu en pause pendant la synchronisation ou hors service.','rmExpressMuted'));
+  }
   appendOtherRooms(options,snapshot,room);
   $('[data-room-field]').hidden=$('[data-guest-type]').value!=='hotel';
   const confirm=$('[data-action=install-passage]');
-  confirm.hidden=!choices.length;
+  $('[data-passage-readonly]').hidden=Boolean(demo);
+  confirm.hidden=!demo||!choices.length;
   confirm.disabled=passageTable===null||!canAct();
   confirm.textContent=passageTable===null?'Installer le passage':`Installer ${covers(guests)} en T${passageTable}`;
  }
@@ -349,7 +386,7 @@ export function mountExpress(main,readPlan){
    const requestedScope=scope;
    const toggle=$('[data-action=simulation]');toggle.disabled=true;
    try{
-    simulation??=await import('./service-v3-express-simulation.mjs');
+    simulation??=await import('./service-v3-express-simulation.mjs?v=20261126-rmops-integration1');
     if(requestedScope!==currentScope()||!open)return;
     demo=simulation.createSimulation(window,window.RestoNotificationContext.restaurantId);demo.subscribe(update);
    }catch{if(requestedScope===currentScope())message('Impossible de charger la simulation Express. Réessayez.');return;}
@@ -388,9 +425,11 @@ export function mountExpress(main,readPlan){
    if(handoffs.has(selectedId))handoffs.delete(selectedId);else handoffs.add(selectedId);
    message('Dossiers « À reprendre » mis à jour sur cet appareil.');
   }
-  if(action==='choose'&&canAct()){
-   const plan=demo.preview(snapshot(),selectedId,Number(value));
+  if(action==='choose'){
+   const state=snapshot();if(!canPreview(state)||busy)return;
+   const plan=placementPreview(state,selectedId,Number(value));
    if(plan.ok){selectedTable=Number(value);selectedPlan=plan;message('');}
+   else message(plan.message);
   }
   if(action==='install'&&selectedPlan){
    const plan=selectedPlan;
@@ -400,11 +439,11 @@ export function mountExpress(main,readPlan){
     message(`Simulation · installation enregistrée en T${result.targetTables[0]}.`);
    });return;
   }
-  if(action==='passage'&&canAct()){
+  if(action==='passage'&&canPreviewPassage(snapshot())&&!busy){
    passage=true;passageTable=null;message('');update();$('[data-passage] h2').focus();return;
   }
   if(action==='cancel-passage'){passage=false;message('');$('[data-action=passage]').focus();}
-  if(action==='walk-table'&&canAct())passageTable=Number(value);
+  if(action==='walk-table'&&canPreviewPassage(snapshot())&&!busy)passageTable=Number(value);
   if(action==='install-passage'&&passageTable!==null){
    const draft={revision:snapshot().revision,guests:$('[data-guests]').valueAsNumber,table:passageTable,
     type:$('[data-guest-type]').value,room:$('[data-guest-room]').value};
@@ -417,7 +456,8 @@ export function mountExpress(main,readPlan){
   update();
  });
 
- for(const event of ['restomanager:notification-context','restomanager:supabase-snapshot','restomanager:connection-state','online','offline'])window.addEventListener(event,update);
+ for(const event of ['restomanager:notification-context','restomanager:placement-ready'])window.addEventListener(event,update);
+ for(const event of ['restomanager:supabase-snapshot','restomanager:connection-state','online','offline'])window.addEventListener(event,()=>{if(!live)update();});
  window.addEventListener('restomanager:screen',()=>{if(open)setOpen(false);});
  window.setInterval(()=>{if(open&&!demo)update();},30000);
  update();

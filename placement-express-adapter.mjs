@@ -6,6 +6,18 @@
 
 const EVENTS=['restomanager:supabase-snapshot','restomanager:connection-state','online','offline'];
 
+// Switch for the connected entry point. Keep off until the server verifies the chosen table under lock.
+const EXPRESS_WRITES_ENABLED=false;
+
+export function guardConnectedPlacement(placement){
+ if(EXPRESS_WRITES_ENABLED)return placement;
+ const blocked=async()=>{
+  throw Object.assign(Error('Écritures Express désactivées. Utilisez le mode complet.'),{code:'EXPRESS_WRITE_DISABLED'});
+ };
+ return Object.freeze({...placement,seat:blocked,walkIn:blocked,
+  capabilities:()=>({...placement.capabilities(),seat:false,swapAndSeat:false,walkIn:false})});
+}
+
 // Les déplacements affichés par l'interface utilisent `client` comme libellé (« Ch. 215 »).
 function forDisplay(plan){
  if(!plan?.ok)return plan;
@@ -29,11 +41,19 @@ export function createLiveAdapter({read,placement=globalThis.RestoPlacement,sour
    return forDisplay(placement.preview(String(reservationId),[Number(number)],options));
   },
   // Même forme que suggestions(snapshot,row) : {primary:[{table,plan}], entries:[{table,plan}]}.
-  suggestions(snapshot,row){
-   const entries=(snapshot.tables||[]).map(table=>({table,plan:forDisplay(placement.preview(String(row.id),[table.number],{budget:200}))}));
-   const ranked=placement.suggest(String(row.id),{limit:2});
-   const primary=ranked?.ok?ranked.choices.map(choice=>entries.find(entry=>entry.table.number===choice.targetTables[0])).filter(entry=>entry?.plan?.ok):[];
-   return {primary,entries};
+  suggestions(snapshot,row,roomId=null){
+   const tables=snapshot.tables||[];
+   const entries=tables.filter(table=>roomId===null||table.roomId===roomId)
+    .map(table=>({table,plan:forDisplay(placement.preview(String(row.id),[table.number],{budget:200}))}));
+   if(!entries.length)return {primary:[],entries};
+   const ranked=placement.suggest(String(row.id),{limit:Math.max(2,tables.length)});
+   if(!ranked?.ok)return {primary:[],entries,message:ranked?.message};
+   const byNumber=new Map(entries.map(entry=>[entry.table.number,entry]));
+   const choices=ranked.choices.filter(choice=>choice.targetTables.length===1)
+    .map(choice=>byNumber.get(choice.targetTables[0])).filter(entry=>entry?.plan?.ok);
+   const home=tables.find(table=>row.tables?.length===1&&row.tables[0]===table.number)?.roomId;
+   if(home&&roomId===null)choices.sort((a,b)=>Number(b.table.roomId===home)-Number(a.table.roomId===home));
+   return {primary:choices.slice(0,2),entries};
   },
   seat(plan){return placement.seat(plan)},
   // Même forme que suggestWalkIn(snapshot,guests) : les objets table de l'instantané affiché.

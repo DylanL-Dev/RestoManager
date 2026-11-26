@@ -6,7 +6,7 @@ const out=process.env.BROWSER_ARTIFACTS||path.join(root,'test-results/rm-ops-exp
 const iso='2032-11-08',time=new Date(iso+'T18:44:00Z');
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const tenantA='fixture-ops-a',tenantB='fixture-ops-b';
-let refreshed=false,revision=0;
+let refreshed=false,revision=0,rushFixture,rushVersion=0,rushTableMoved=false;
 function makeSnapshot(tenant,change){
  const offset=tenant===tenantB?1000:0;
  const owned=row=>({...row,restaurant_id:tenant});
@@ -25,16 +25,31 @@ function makeSnapshot(tenant,change){
  const reservations=tenant===tenantB?[makeRow(214,'Leroy DEV fictif','18:51'),makeRow(215,'Bernard DEV fictif','18:33')]
   :[makeRow(214,refreshed?'Dupont après synchronisation':'Dupont DEV fictif','18:48'),makeRow(215,'Martin DEV fictif','18:49')];
  if(tenant===tenantB)Object.assign(reservations[1],{status:'seated',seated_at:iso+'T18:33:00Z'});
- return {revision:String(++revision),syncSequence:revision,capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
+ const snapshot={revision:String(++revision),syncSequence:revision,capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
   hours:owned({lunch_enabled:true,lunch_start:'12:00:00',lunch_end:'14:00:00',dinner_enabled:true,dinner_start:'19:00:00',dinner_end:'23:00:00',duration:90,arrival_limit_percent:tenant===tenantB?40:70}),
   rooms,tables,reservations,assignments:reservations.map(row=>owned({reservation_id:row.id,table_id:id(offset+100+(row.hotel_room==='215'?4:21))})),
   holds:[],serviceClosures:[],fusionLinks:[]};
+ if(change!=='rush')return snapshot;
+ const roomIds=new Map(rushFixture.rooms.map((room,index)=>[room.id,id(index+1)]));
+ const reservationId=row=>id(Number(row.id)+2000);
+ return {...snapshot,capabilities:{...snapshot.capabilities,placement:4},
+  rooms:rushFixture.rooms.map(room=>owned({id:roomIds.get(room.id),name:room.id==='verriere'?'Prestige':room.name,active:true})),
+  tables:rushFixture.tables.map(table=>owned({id:id(table.number+100),label:`Table ${table.number}`,seats:table.capacity,active:true,
+   room_id:roomIds.get(rushTableMoved&&table.number===16?'main':table.roomId)})),
+  reservations:rushFixture.reservations.map(row=>{
+   const start=Date.parse(`${row.date}T${row.time}:00+01:00`);
+   return owned({id:reservationId(row),guest_name:row.client,hotel_room:row.hotelRoom,status:row.status,
+    party_size:row.id==='215'&&rushVersion?1:row.guests,notes:'',seated_at:row.seatedAt,
+    starts_at:new Date(start).toISOString(),ends_at:new Date(start+row.duration*60000).toISOString(),
+    edit_version:id(Number(row.id)+3000+(row.id==='215'?rushVersion:0))});
+  }),
+  assignments:rushFixture.reservations.flatMap(row=>row.tables.map(n=>owned({reservation_id:reservationId(row),table_id:id(n+100)})))};
 }
 
 const bridge=`
 export async function requireStaff(){return {user:{id:window.__opsTenant+'-user'},profile:{role:window.__opsRole,active:true,display_name:'Équipe fictive',restaurant_id:window.__opsTenant}}}
 export async function loadSharedService(){return window.__opsSnapshot(window.__opsSnapshotTenant||window.__opsTenant,window.__opsChange)}
-export async function subscribeSharedService(onSnapshot,onError,onConnection){const apply=async()=>{onConnection(true);onSnapshot(await loadSharedService());};window.addEventListener('fixture:push',apply);window.addEventListener('online',apply);await apply();return ()=>{}}
+export async function subscribeSharedService(onSnapshot,onError,onConnection){const apply=async()=>onSnapshot(await loadSharedService());const reconnect=()=>{onConnection(true);return apply()};window.addEventListener('fixture:push',apply);window.addEventListener('online',reconnect);await reconnect();return ()=>{}}
 function query(){const q={then:(yes,no)=>Promise.resolve({data:[],error:null}).then(yes,no)};for(const name of ['select','eq','order','limit','range','in','is','single','maybeSingle','gte','lte'])q[name]=()=>q;return q}
 export const supabase={from:query,rpc:async(name)=>{if(name==='booking_draft_v3')return {data:{tables:[],holds:[],seconds:180},error:null};await window.__opsWrite(name);throw Error('Unexpected write');},auth:{getUser:async()=>({data:{user:{id:window.__opsTenant+'-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
 const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.json':'application/json'};
@@ -57,12 +72,12 @@ async function newContext(width){
  await context.routeWebSocket('**/*',websocket=>websocket.close());
  return context;
 }
-async function newPage(context,role='fb_admin',tenant=tenantA){
+async function newPage(context,role='fb_admin',tenant=tenantA,change=null){
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
- await page.addInitScript(({role,tenant})=>{window.__opsRole=role;window.__opsTenant=tenant;},{role,tenant});
+ await page.addInitScript(({role,tenant,change})=>{window.__opsRole=role;window.__opsTenant=tenant;window.__opsChange=change;},{role,tenant,change});
  await page.exposeFunction('__opsSnapshot',makeSnapshot);await page.exposeFunction('__opsWrite',name=>writes.push(name));
  await page.clock.install({time});await page.goto(origin+'/v3-connected.html');
- await page.waitForFunction(()=>window.RestoSharedDataLoaded===true);
+ await page.waitForFunction(()=>window.RestoSharedDataLoaded===true&&!!window.RestoPlacement);
  const welcome=page.locator('#restoTourWelcome');if(await welcome.isVisible())await page.getByRole('button',{name:'Plus tard',exact:true}).click();
  return page;
 }
@@ -81,6 +96,8 @@ async function validateAxe(page){
 (async()=>{
  try{
   fs.mkdirSync(out,{recursive:true});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;
+  const {makeSimulation}=await import('../../service-v3-express-simulation.mjs');rushFixture=makeSimulation();
+  assert.equal(rushFixture.fixture.covers,200);
   browser=await chromium.launch();
   for(const width of [360,390,768,834,1440]){
    const context=await newContext(width),page=await newPage(context),view=express(page);
@@ -167,7 +184,7 @@ async function validateAxe(page){
   assert.equal(await reception.getByRole('button',{name:'Mode Coup de feu',exact:true}).count(),0);
   await enter(restaurant);await select(restaurant,'214');
   const view=express(restaurant);await view.getByRole('heading',{name:/Dupont DEV fictif/}).waitFor();
-  assert.ok(await view.getByRole('button',{name:'Passage',exact:true}).isDisabled());
+  assert.ok(await view.getByRole('button',{name:'Aperçu passage',exact:true}).isEnabled());
   refreshed=true;
   await restaurant.evaluate(()=>dispatchEvent(new Event('fixture:push')));
   await view.getByRole('heading',{name:/Dupont après synchronisation/}).waitFor();
@@ -236,6 +253,7 @@ async function validateAxe(page){
   await updatePlan(restaurant,null);
   await restaurant.waitForFunction(({tenant,revision})=>window.RestoExpressSnapshotRestaurantId===tenant&&window.RestoServiceRevision!==revision,{tenant:tenantA,revision:oldRevision});
   assert.ok(await view.getByText('En attente des données').isVisible());
+  assert.equal(await restaurant.evaluate(reservation=>window.RestoPlacement.preview(reservation,[4]).code,id(214)),'NOT_SYNCED');
   await restaurant.evaluate(()=>{window.__opsSnapshotTenant=null;});
   await updatePlan(restaurant,'mixed');
   await restaurant.waitForFunction(()=>window.RestoExpressSnapshotRestaurantId===null);
@@ -247,6 +265,48 @@ async function validateAxe(page){
   assert.match(await tableFour(restaurant).innerText(),/Installé déclaré/);
   assert.equal(await view.getByRole('button',{name:/Installer/}).count(),0);
   await staffContext.close();console.log('PASS Express deux établissements, mêmes salles et numéros, simulations isolées et changement de contexte');
+
+  const tablet=await newContext(834),phone=await newContext(390);
+  const [pupil,mobile]=await Promise.all([newPage(tablet,'fb_admin',tenantA,'rush'),newPage(phone,'fb_admin',tenantA,'rush')]);
+  await pupil.evaluate(()=>window.RestoScreens.show('reservationForm'));
+  const completeDraft=pupil.locator('#bookingClient');await completeDraft.fill('Brouillon de l’équipe');
+  await Promise.all([enter(pupil),enter(mobile)]);
+  await Promise.all([select(pupil,'214'),select(mobile,'215')]);
+  const [shared,peer]=[express(pupil),express(mobile)];
+  const t4=shared.locator('[data-suggestions]').getByRole('button',{name:/^T4 /});
+  if(await t4.count())await t4.click();
+  else{
+   await shared.getByText('Autre table',{exact:true}).click();
+   await shared.locator('[data-all-tables]').getByRole('button',{name:/^T4 /}).click();
+  }
+  await shared.getByText('Ch. 215 passera de T4 à T21.').waitFor();
+  await option(mobile,4);
+  await peer.getByText('Table proposée · T4').waitFor();
+  for(const screen of [shared,peer])assert.equal(await screen.getByRole('button',{name:/Installer/}).count(),0);
+  // An intervening change from a colleague invalidates both previews; the draft stays open.
+  rushVersion++;
+  await Promise.all([updatePlan(pupil,'rush'),updatePlan(mobile,'rush')]);
+  for(const screen of [shared,peer])await screen.getByText(/Le placement a changé/).waitFor();
+  await tabs(pupil).getByRole('button',{name:'Prestige',exact:true}).click();
+  await shared.getByText('Aucune table configurée',{exact:true}).waitFor();
+  await shared.getByRole('button',{name:'Voir les autres salles'}).click();
+  await tabs(pupil).getByRole('button',{name:'Salon',exact:true}).click();
+  await option(pupil,16);await shared.getByText(/Salle principale → Salon/).waitFor();
+  await validateAxe(pupil);
+  await pupil.screenshot({path:path.join(out,'express-integration-834-consultation.png'),fullPage:true,animations:'disabled'});
+  rushTableMoved=true;await updatePlan(pupil,'rush');
+  await shared.getByText(/Le placement a changé/).waitFor();
+  assert.equal(await shared.getByText(/Salle principale → Salon/).isVisible(),false);
+  await phone.setOffline(true);await peer.getByText(/Dernière vue en consultation/).waitFor();
+  assert.ok(await peer.getByRole('button',{name:'Aperçu passage',exact:true}).isDisabled());
+  await phone.setOffline(false);await peer.getByRole('button',{name:'Aperçu passage',exact:true}).click();
+  const passagePreview=peer.getByRole('region',{name:'Passage express'});
+  await passagePreview.getByRole('button',{name:/^T16 /}).click();
+  assert.equal(await passagePreview.getByRole('button',{name:/Installer/}).count(),0);
+  await shared.getByRole('button',{name:'Mode complet',exact:true}).click();
+  assert.equal(await completeDraft.inputValue(),'Brouillon de l’équipe');
+  await tablet.close();await phone.close();
+  console.log('PASS Express + moteur : 200 couverts, téléphone et tablette, concurrence, panne, passage en aperçu et zéro écriture');
   assert.deepEqual(writes,[]);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  }finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

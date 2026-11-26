@@ -15,12 +15,15 @@ export function currentService(shifts,now){
  return enabled[0]??null;
 }
 
+export function belongsToService(snapshot,row){
+ return Boolean(row.date===snapshot.now.date&&snapshot.service&&row.time>=snapshot.service.start&&row.time<=snapshot.service.end);
+}
+
 export function findArrivals(snapshot,query='',otherDates=false){
  const words=normalize(query).split(/\s+/).filter(Boolean);
  return snapshot.reservations.filter(row=>{
   if(!isWaiting(row))return false;
-  const inService=row.date===snapshot.now.date&&snapshot.service&&row.time>=snapshot.service.start&&row.time<=snapshot.service.end;
-  if(!inService&&(!otherDates||!words.length))return false;
+  if(!belongsToService(snapshot,row)&&(!otherDates||!words.length))return false;
   const label=normalize(`${row.hotelRoom??''} ${row.client??''} ${row.time}`);
   return words.every(word=>label.includes(word));
  }).sort((a,b)=>a.date.localeCompare(b.date)||a.time.localeCompare(b.time));
