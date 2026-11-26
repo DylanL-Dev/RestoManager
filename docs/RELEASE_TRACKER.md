@@ -3,6 +3,8 @@
 ### RM-UX — Reprise pack v11, correctifs 11.1 — CANDIDAT DEV (27/11/2026)
 
 - Reprise propriétaire autorisée de #279 (`57a8034`, 16/18 workflows ; échecs alignement des cartes à 768 px et contraste axe à 390 px). Branche distincte `fix/rm-ux-pack-v11-reprise` ; original conservé. Animation sans déplacement de carte, contraste, compteurs natifs intacts, états réels et isolation de snapshot, cache versionné, quatre tests ciblés. CI et recette visuelle à confirmer. [Rapport](audits/RM-UX_PACK_V11_REPRISE_20261127.md). Aucune fusion ni publication.
+- Finalisation dans [#280](https://github.com/DylanL-Dev/RestoManager/pull/280), suivie dans [#242](https://github.com/DylanL-Dev/RestoManager/issues/242). À partir de `653db4a`, correction du contraste des réservations au changement de thème et des icônes Lucide après clôture automatique. Résumé et graphique adaptés aux petits écrans, animation décorative ponctuelle, navigation de la palette soumise à la protection des brouillons et aux droits du rôle. Cache PWA `restomanager-shell-20261126-rmsec0304b-rmuxpack11fix2`. Le suivi de livraison consigne le statut Render après vérification.
+- Validation locale des correctifs ciblés. 490 tests unitaires, 23 scénarios RM‑012 sur PostgreSQL jetable et 112 scénarios Mission 3 dans Chromium. Les contrôles GitHub de la tête de PR sont accessibles depuis [les vérifications de #280](https://github.com/DylanL-Dev/RestoManager/pull/280/checks).
 
 
 ### RM-SEC-03 + RM-SEC-04 — SDK local et CSP stricte, livraison unique actualisée — PR DEV BROUILLON (26/11/2026)

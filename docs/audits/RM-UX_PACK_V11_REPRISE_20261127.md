@@ -21,3 +21,11 @@
 
 ## Validation
 Compilation JavaScript du pack et du test via le moteur JS réussie. Les tests Node et navigateur n'ont pas été exécutés localement dans cette session. CI GitHub à exécuter sur le candidat, puis revue visuelle smartphone/tablette/PC, clair/sombre et deux rôles. Le diagnostic contraste reste une hypothèse tant que la suite axe ne passe pas. Aucun déploiement ni fusion.
+
+## Finalisation de la PR #280
+
+La CI de `653db4a4fe0a83f41cef66a9d2dbb39e2356c730` a terminé à 16/18. Le contrôle des icônes a trouvé deux éléments Lucide non rendus au moment de la vérification après clôture automatique dans [RM‑012](https://github.com/DylanL-Dev/RestoManager/actions/runs/45910768427). L’insertion du panneau résout désormais ses icônes immédiatement. L’audit [RM‑015.2](https://github.com/DylanL-Dev/RestoManager/actions/runs/45910768185) a relevé des rapports de contraste de 1,01 à 1,55 sur trois textes de réservation après le passage au thème sombre à 768 px. Les cartes gardent le fond du thème et le retour visuel de survol conserve son ombre. Les deux assertions de CI sont conservées.
+
+La carte du tableau de bord adapte son graphique de quatorze jours et ses compteurs à sa propre largeur. Les sous-titres de Passages et les horaires du suivi Réception ont un contraste renforcé dans les deux thèmes. Les filtres natifs masqués gardent une largeur de 1 px dans la barre des tables pour éviter le débordement à 768 px. Les effets du pack restent ponctuels et respectent la préférence de mouvement réduit. La palette utilise Lucide local, retrouve le focus à la fermeture et attend une décision sur le brouillon avant de lancer une recherche. Réception accède au suivi du service en consultation. Le Mode Coup de feu connecté conserve son verrou d’écriture.
+
+Les tests utilisent Chromium, des comptes et établissements de recette, et des bases jetables. Deux tentatives locales de la suite Realtime ont échoué au téléchargement de l’image Docker épinglée faute d’espace disque. Les workflows GitHub isolés couvrent Auth, RLS, Realtime et la synchronisation des réservations Web. Les résultats du candidat et le déploiement Render DEV sont rattachés au [suivi #242](https://github.com/DylanL-Dev/RestoManager/issues/242).

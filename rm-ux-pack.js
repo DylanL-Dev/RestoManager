@@ -118,7 +118,7 @@
     const chips = el('div', 'rm-chips');
     let i = 0;
     chips.append(chip(String(s.servedToday), 'couverts servis', null, i++));
-    if (s.lastWeek || s.servedToday) {
+    if (s.lastWeek) {
       const d = s.servedToday - s.lastWeek;
       chips.append(chip((d > 0 ? '+' : '') + d, `vs ${fmt(s.today, { weekday: 'long' })} dernier`, d > 0 ? 'rm-up' : d < 0 ? 'rm-down' : null, i++));
     }
@@ -271,7 +271,11 @@
     requestAnimationFrame(() => { queued = false; tick(false); });
   }).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['class'], attributeOldValue: true });
 
-  window.addEventListener('restomanager:notification-context', () => { snapshotScope = null; renderHero(false); });
+  window.addEventListener('restomanager:notification-context', () => {
+    snapshotScope = null;
+    lastState.clear();
+    renderHero(false);
+  });
   window.addEventListener('restomanager:supabase-snapshot', () => { snapshotScope = contextScope(); renderHero(false); });
   setInterval(() => renderHero(false), 15000);   // filet de sécurité si les données changent sans toucher au DOM
 
@@ -296,24 +300,15 @@
     set: (k, v) => { try { localStorage.setItem(k, v); } catch {} },
   };
   const ICONS = {
-    plus: '<path d="M12 5v14M5 12h14"/>',
-    seat: '<path d="M7 18v-6a5 5 0 0 1 10 0v6"/><path d="M5 18h14"/>',
-    out: '<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/>',
-    x: '<circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/>',
-    alert: '<circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/>',
-    party: '<path d="M5.8 11.3 2 22l10.7-3.8"/><path d="M4 3h.01M22 8h.01M15 2h.01M22 20h.01"/><path d="m22 2-2.2.7a2.9 2.9 0 0 0-1.8 3.5v0a2.9 2.9 0 0 1-1.9 3.5L14 10"/><path d="M8.6 9.4a4 4 0 0 1 6 6"/>',
-    search: '<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
-    grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
-    cal: '<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
-    user: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
-    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
-    gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>',
-    zap: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
-    help: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',
-    bell: '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/>',
-    sync: '<path d="M21 12a9 9 0 0 1-15 6.7L3 16M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M21 3v5h-5M3 21v-5h5"/>',
+    plus: 'plus', seat: 'armchair', out: 'log-out', x: 'circle-x', alert: 'circle-exclamation-point',
+    party: 'sparkles', search: 'search', grid: 'layout-grid', cal: 'calendar-days',
+    user: 'user-plus', clock: 'clock-3', gear: 'settings', zap: 'zap', help: 'circle-help',
+    bell: 'bell', sync: 'refresh-cw',
   };
-  const svg = name => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ''}</svg>`;
+  function appendIcon(target, name) {
+    const icon = window.lucide?.createIcon(ICONS[name] || 'bell');
+    if (icon) target.append(icon);
+  }
   const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 
   /* =================== 1. Notifications =================== */
@@ -326,7 +321,7 @@
     const t = el('div', 'rm-toast');
     t.dataset.tone = tone;
     t.style.setProperty('--rm-toast-ms', ms + 'ms');
-    const ic = el('div', 'rm-toast-icon'); ic.innerHTML = svg(icon);
+    const ic = el('div', 'rm-toast-icon'); appendIcon(ic, icon);
     const body = el('div'); body.append(el('b', null, title), el('span', null, text || ''));
     const close = el('button', 'rm-toast-close', '×'); close.type = 'button'; close.setAttribute('aria-label', 'Fermer');
     const timer = el('i', 'rm-toast-timer');
@@ -461,59 +456,70 @@
     { group: 'Aller à', label: 'Ajouter un client', icon: 'user', keys: 'G N', words: 'nouveau client reservation ajouter creer', run: click('nav.sidebar a[href="#reservationForm"]') },
     { group: 'Aller à', label: 'Passages', icon: 'clock', keys: 'G P', words: 'passage walk-in sans reservation', run: click('nav.sidebar a[href="#passages"]') },
     { group: 'Aller à', label: 'Gestion', icon: 'gear', keys: 'G G', words: 'gestion administration parametres reglages', run: click('nav.sidebar a[href="#administration"]') },
-    { group: 'Actions', label: 'Mode Coup de feu', icon: 'zap', words: 'coup de feu rush express rapide', run: click('.rmExpressLaunch') },
+    { group: 'Actions', label: 'Mode Coup de feu', icon: 'zap', words: 'coup de feu rush express rapide', available: () => Boolean(document.querySelector('.rmExpressLaunch:not([hidden])')), run: click('.rmExpressLaunch:not([hidden])') },
     { group: 'Actions', label: 'Notifications', icon: 'bell', words: 'notifications alertes cloche', run: click(byLabel(/^Notifications/)) },
     { group: 'Actions', label: 'Actualiser les données', icon: 'sync', words: 'actualiser rafraichir sync recharger', run: click(byLabel(/Actualiser les données/)) },
     { group: 'Actions', label: 'Aide et entraînement', icon: 'help', words: 'aide guide formation faq', run: click(byLabel(/Aide et entraînement/)) },
   ];
   const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
-  function searchClient(q) {
-    document.querySelector('nav.sidebar a[href="#reservations"]')?.click();
-    setTimeout(() => {
-      const input = document.getElementById('reservationQuery');
-      if (!input) return;
-      input.value = q;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      input.focus();
-    }, 350);
+  async function searchClient(q) {
+    if (await window.RestoScreens?.request('reservations') !== true) return;
+    const input = document.getElementById('reservationQuery');
+    if (!input) return;
+    input.value = q;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
   }
 
   let open = null;
   function openPalette() {
-    if (open) return;
+    if (open || appDialogOpen()) return;
     store.set('rmux-palette-used', '1');
     hint?.remove();
     const back = el('div', 'rm-palette-backdrop');
     const box = el('div', 'rm-palette');
     box.setAttribute('role', 'dialog'); box.setAttribute('aria-modal', 'true'); box.setAttribute('aria-label', 'Palette de commandes');
-    const bar = el('label', 'rm-palette-input'); bar.innerHTML = svg('search');
+    const bar = el('label', 'rm-palette-input'); appendIcon(bar, 'search');
     const input = el('input'); input.placeholder = 'Aller à, lancer une action, chercher un client…';
     input.setAttribute('role', 'combobox'); input.setAttribute('aria-expanded', 'true'); input.setAttribute('aria-controls', 'rm-palette-list');
-    bar.append(input, el('span', 'rm-kbd', 'Échap'));
+    input.setAttribute('aria-label', 'Chercher une commande ou un client');
+    const escapeHint = el('span', 'rm-kbd', 'Échap'); escapeHint.setAttribute('aria-hidden', 'true');
+    bar.append(input, escapeHint);
     const list = el('ul', 'rm-palette-list'); list.id = 'rm-palette-list'; list.setAttribute('role', 'listbox');
+    list.setAttribute('aria-label', 'Commandes disponibles');
+    const empty = el('p', 'rm-palette-empty', 'Aucun résultat');
+    empty.setAttribute('role', 'status');
     const foot = el('div', 'rm-palette-foot');
     foot.append(el('span', null, '↑ ↓ pour naviguer'), el('span', null, 'Entrée pour valider'), el('span', null, `${MOD} K pour ouvrir`));
-    box.append(bar, list, foot); back.append(box); document.body.append(back);
+    box.append(bar, list, empty, foot); back.append(box); document.body.append(back);
 
     let items = [], sel = 0;
     const render = () => {
       const q = norm(input.value.trim());
       // Les correspondances dans le titre passent avant celles dans les mots-clés
       const score = c => { const l = norm(c.label); return l.startsWith(q) ? 0 : l.includes(q) ? 1 : norm(c.words).includes(q) ? 2 : 9; };
-      items = q ? COMMANDS.filter(c => score(c) < 9).sort((a, b) => score(a) - score(b) || COMMANDS.indexOf(a) - COMMANDS.indexOf(b)) : COMMANDS.slice();
+      items = COMMANDS.filter(c => (!c.available || c.available()) && score(c) < 9);
+      if (q) items.sort((a, b) => score(a) - score(b));
       if (q.length >= 2) items.push({ group: 'Rechercher', label: `Chercher « ${input.value.trim()} » dans les réservations`, icon: 'search', run: () => searchClient(input.value.trim()) });
       sel = Math.min(sel, Math.max(0, items.length - 1));
       list.replaceChildren();
-      if (!items.length) { list.append(el('li', 'rm-palette-empty', 'Aucun résultat')); return; }
+      list.hidden = !items.length;
+      empty.hidden = Boolean(items.length);
+      input.setAttribute('aria-expanded', String(Boolean(items.length)));
+      if (!items.length) { input.removeAttribute('aria-activedescendant'); return; }
       let g = null;
       items.forEach((c, i) => {
         // Sans recherche : titres de groupes. Avec recherche : liste triée par pertinence.
         const header = q ? (c.group === 'Rechercher' ? 'Rechercher' : 'Résultats') : c.group;
-        if (header !== g) { g = header; list.append(el('li', 'rm-palette-group', g)); }
+        if (header !== g) {
+          g = header;
+          const group = el('li', 'rm-palette-group', g); group.setAttribute('role', 'presentation');
+          list.append(group);
+        }
         const li = el('li', 'rm-palette-item'); li.setAttribute('role', 'option'); li.id = 'rm-opt-' + i;
         li.setAttribute('aria-selected', String(i === sel));
-        li.innerHTML = svg(c.icon);
+        appendIcon(li, c.icon);
         li.append(el('span', null, c.label));
         if (c.keys) li.append(el('span', 'rm-kbd', c.keys));
         li.addEventListener('mousemove', () => { if (sel !== i) { sel = i; mark(); } });
@@ -524,8 +530,10 @@
     };
     const mark = () => {
       list.querySelectorAll('.rm-palette-item').forEach(li => li.setAttribute('aria-selected', String(li.id === 'rm-opt-' + sel)));
-      input.setAttribute('aria-activedescendant', 'rm-opt-' + sel);
-      list.querySelector('#rm-opt-' + sel)?.scrollIntoView({ block: 'nearest' });
+      if (items.length) {
+        input.setAttribute('aria-activedescendant', 'rm-opt-' + sel);
+        list.querySelector('#rm-opt-' + sel)?.scrollIntoView({ block: 'nearest' });
+      }
     };
     const run = i => { const c = items[i]; close(); c?.run(); };
     const close = () => { back.remove(); open = null; prevFocus?.focus?.(); };
@@ -546,13 +554,13 @@
 
   /* Raccourcis clavier : Ctrl/⌘+K ou « / » ouvrent la palette ; G puis T/R/N/P/G pour naviguer */
   const typing = t => t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+  const appDialogOpen = () => [...document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"]')]
+    .some(d => !d.classList.contains('rm-palette') && d.getClientRects().length);
   let gPending = 0;
   document.addEventListener('keydown', e => {
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); open ? open.close() : openPalette(); return; }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && !appDialogOpen()) { e.preventDefault(); open ? open.close() : openPalette(); return; }
     if (open || typing(e.target) || e.ctrlKey || e.metaKey || e.altKey) return;
-    const appDialog = [...document.querySelectorAll('dialog[open], [role="dialog"], [aria-modal="true"]')]
-      .some(d => !d.classList.contains('rm-palette') && d.getClientRects().length);
-    if (appDialog) return;                                       // une fenêtre de l'app est ouverte
+    if (appDialogOpen()) return;
     if (e.key === '/') { e.preventDefault(); openPalette(); return; }
     const k = e.key.toLowerCase();
     if (k === 'g' && !gPending) { gPending = Date.now(); return; }

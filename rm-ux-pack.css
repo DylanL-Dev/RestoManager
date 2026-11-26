@@ -35,7 +35,8 @@
   grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
   gap: 28px;
 }
-.rm-hero::before {               /* halo lumineux qui dérive lentement */
+.rm-hero-main { min-width: 0; }
+.rm-hero::before {
   content: "";
   position: absolute;
   inset: -40%;
@@ -83,7 +84,7 @@
 
 .rm-hero-chart { display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
 .rm-chart-head {
-  display: flex; justify-content: space-between; align-items: baseline;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
   font-size: 12px; color: rgba(234, 247, 240, .7); margin-bottom: 10px;
 }
 .rm-chart-head b { color: #fff; font-size: 13px; }
@@ -170,14 +171,9 @@
    ========================================================= */
 @media (prefers-reduced-motion: no-preference) {
 
-  .rm-hero::before { animation: rm-drift 18s ease-in-out infinite alternate; }
-  @keyframes rm-drift {
-    from { transform: translate(-4%, -3%) rotate(0deg); }
-    to   { transform: translate(4%, 3%) rotate(8deg); }
-  }
-  .rm-dot::after {
+  .rm-hero.rm-enter .rm-dot::after {
     content: ""; position: absolute; inset: 0; border-radius: 50%;
-    background: inherit; animation: rm-breathe 2.2s ease-out infinite;
+    background: inherit; animation: rm-breathe 700ms ease-out both;
   }
   @keyframes rm-breathe { from { transform: scale(1); opacity: .6; } to { transform: scale(3); opacity: 0; } }
 
@@ -296,8 +292,9 @@
 }
 .rm-palette-input svg { width: 18px; height: 18px; color: var(--rm-green-600); flex: none; }
 .rm-palette-input input {
-  flex: 1; border: 0; outline: 0; font: inherit; font-size: 16px; background: transparent; color: #10231d;
+  flex: 1; min-width: 0; border: 0; outline: 0; font: inherit; font-size: 16px; background: transparent; color: #10231d;
 }
+.rm-palette-input:focus-within { box-shadow: inset 0 0 0 2px #278d68; }
 .rm-kbd {
   font: 600 11px/1 Inter, system-ui, sans-serif; color: #5e7369;
   padding: 4px 6px; border-radius: 6px; border: 1px solid #dbe5df; background: #f6f9f7;
@@ -501,16 +498,16 @@ dialog.rmNotificationCenter::backdrop {
   .rm-nav-badge.rm-pop { animation: rm-bump 520ms var(--rm-ease-spring); }
   [data-rm-badge].rm-badge-pop::after { animation: rm-bump 520ms var(--rm-ease-spring); }
   nav.sidebar > a[data-rm-keys]::before, nav.sidebar > a[data-rm-badge]::after { transition: opacity 200ms; }
-  .rmExpressLaunch::after {
+  .rmExpressLaunch:hover::after {
     content: ""; position: absolute; inset: 0; pointer-events: none;
     background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .18) 50%, transparent 70%);
-    transform: translateX(-120%); animation: rm-sheen 5s ease-in-out 2s infinite;
+    transform: translateX(-120%); animation: rm-sheen 800ms ease-in-out;
   }
-  @keyframes rm-sheen { 0%, 70% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
+  @keyframes rm-sheen { from { transform: translateX(-120%); } to { transform: translateX(120%); } }
   @media (hover: hover) { .rmExpressLaunch:hover svg { animation: rm-wiggle 700ms var(--rm-ease-spring); } }
   .sidebarConnection[data-state="ok"] .sidebarConnectionDot::after {
     content: ""; position: absolute; inset: 0; border-radius: 50%; background: inherit;
-    animation: rm-breathe 2.4s ease-out infinite;
+    animation: rm-breathe 700ms ease-out both;
   }
 
   /* Notifications */
@@ -526,25 +523,17 @@ dialog.rmNotificationCenter::backdrop {
   dialog.rmNotificationCenter[open] .rmNcSection { animation-delay: 160ms; }
   dialog.rmNotificationCenter[open] .rmNcSection + .rmNcSection { animation-delay: 220ms; }
   @media (hover: hover) { .rmNcCard:hover { transform: translateY(-2px); box-shadow: 0 12px 24px -16px rgba(12, 50, 41, .45); } }
-  .rmNcCard.is-unread::after { animation: rm-glow 2.4s ease-in-out infinite; }
+  .rmNcCard.is-unread::after { animation: rm-glow 700ms ease-in-out; }
   @keyframes rm-glow { 50% { box-shadow: 0 0 0 6px rgba(111, 211, 164, 0); } }
 
   /* Sections */
-  .rm-live-eyebrow::before { animation: rm-live 2s ease-out infinite; }
+  .rm-live-eyebrow::before { animation: rm-live 700ms ease-out; }
   @keyframes rm-live { 0% { box-shadow: 0 0 0 0 rgba(31, 157, 107, .55); } 80%, 100% { box-shadow: 0 0 0 7px rgba(31, 157, 107, 0); } }
   .rmLiveGauge { transition: --rm-gauge-value 1100ms var(--rm-ease-out); }
   .occupancyProgressBar, .rushProgressFill { transition: width 1000ms var(--rm-ease-out), background-color 400ms; }
-  .occupancyProgressBar::after, .rushProgressFill::after {
-    content: ""; position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .45), transparent);
-    transform: translateX(-100%); animation: rm-bar-sheen 2.8s ease-in-out infinite;
-  }
-  @keyframes rm-bar-sheen { to { transform: translateX(100%); } }
   @media (hover: hover) { .rmOccupancyMetric:hover { transform: translateY(-2px); box-shadow: var(--rm-shadow-lift); } }
   .tableFiltersToolbar button:active { transform: scale(.94); }
   .tableFiltersToolbar button.active { animation: rm-bump 420ms var(--rm-ease-spring); }
-  .rm-empty-state svg .rm-hand { transform-origin: 32px 32px; animation: rm-clock 6s linear infinite; }
-  @keyframes rm-clock { to { transform: rotate(360deg); } }
   .rm-empty-state { animation: rm-pop 500ms var(--rm-ease-out) both; }
   .rm-scroll-reveal.rm-in { animation: rm-card-outline 420ms var(--rm-ease-out); }
 }
@@ -626,23 +615,19 @@ dialog.rmNotificationCenter::backdrop {
   .reservationViewTab:active { transform: scale(.96); }
   .rmViewCount.rm-pop { animation: rm-bump 520ms var(--rm-ease-spring); }
 
-  .rmBookingCard { transition: box-shadow var(--rm-base) var(--rm-ease-out), background-color var(--rm-base); }
+  .rmBookingCard { transition: box-shadow var(--rm-base) var(--rm-ease-out); }
   @media (hover: hover) {
-    .rmBookingCard:hover { box-shadow: 0 14px 30px -20px rgba(12, 50, 41, .5); background-color: #fbfdfc; }
+    .rmBookingCard:hover { box-shadow: 0 14px 30px -20px rgba(12, 50, 41, .5); }
     .rmBookingCard:hover::before { width: 6px; }
   }
   .rmBookingCard::before { transition: width 200ms var(--rm-ease-out), background-color 400ms; }
-  .rmBookingCard.rm-next { animation: rm-next 2.8s ease-in-out infinite; }
+  .rmBookingCard.rm-next { animation: rm-next 700ms ease-in-out; }
   @keyframes rm-next {
     50% { box-shadow: 0 0 0 4px rgba(111, 211, 164, .25), 0 14px 28px -18px rgba(20, 108, 85, .55); }
   }
   .rm-eta { animation: rm-pop 420ms var(--rm-ease-out) both; }
-  .rm-eta[data-tone="soon"]::before, .rm-eta[data-tone="late"]::before { animation: rm-blink 1.4s ease-in-out infinite; }
-  @keyframes rm-blink { 50% { opacity: .25; } }
-  .rmBookingStatus[data-status="reserved"] svg { animation: rm-tick 3s ease-in-out infinite; transform-origin: 50% 50%; }
-  @keyframes rm-tick { 0%, 80%, 100% { transform: rotate(0); } 88% { transform: rotate(-12deg); } 94% { transform: rotate(10deg); } }
   .rm-res-empty { animation: rm-pop 500ms var(--rm-ease-out) both; }
-  .rm-res-empty .rm-mag { animation: rm-search 3.2s ease-in-out infinite; transform-origin: 50% 50%; }
+  .rm-res-empty .rm-mag { animation: rm-search 800ms ease-in-out; transform-origin: 50% 50%; }
   @keyframes rm-search { 0%, 100% { transform: translate(0, 0); } 30% { transform: translate(6px, -3px); } 60% { transform: translate(-4px, 3px); } }
 }
 
@@ -652,18 +637,14 @@ dialog.rmNotificationCenter::backdrop {
 
 /* ---------- Carte « Ce soir » : suit sa propre largeur ---------- */
 @container (max-width: 700px) {
-  .rm-hero-grid { grid-template-columns: 1fr; gap: 20px; }
+  .rm-hero-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; }
   .rm-bars { height: 84px; }
 }
 @container (max-width: 460px) {
   .rm-hero-title { font-size: 21px; }
   .rm-hero-sub { font-size: 13px; }
-  .rm-chips {                       /* puces en ligne, défilement horizontal au doigt */
-    flex-wrap: nowrap; overflow-x: auto; scroll-snap-type: x mandatory;
-    margin-inline: -4px; padding: 2px 4px 6px; scrollbar-width: none;
-  }
-  .rm-chips::-webkit-scrollbar { display: none; }
-  .rm-chip { flex: none; scroll-snap-align: start; }
+  .rm-chips { gap: 6px; }
+  .rm-chip { padding: 6px 9px; }
   .rm-bars { height: 64px; gap: 3px; }
   .rm-days { gap: 3px; font-size: 9px; }
   .rm-chart-foot { font-size: 11.5px; }
@@ -899,7 +880,6 @@ dialog.rmNotificationCenter::backdrop {
   .reservationField.rm-allergy-on .reservationFieldCaption svg { animation: rm-wiggle 700ms var(--rm-ease-spring); }
 
   .rm-hold > i { transition: transform 1000ms linear, background-color 400ms; }
-  #bookingDraft[data-rm-hold="critical"] .rm-hold { animation: rm-blink 1.2s ease-in-out infinite; }
 
   .bookingSubmitPrimary { transition: transform 160ms var(--rm-ease-out), box-shadow 300ms; }
   .bookingSubmitPrimary:active { transform: scale(.97); }
@@ -908,7 +888,7 @@ dialog.rmNotificationCenter::backdrop {
     background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, .22) 50%, transparent 70%);
     transform: translateX(-120%);
   }
-  .bookingSubmitPrimary.rm-ready::after { animation: rm-sheen 3.2s ease-in-out 600ms infinite; }
+  .bookingSubmitPrimary.rm-ready::after { animation: rm-sheen 800ms ease-in-out; }
   .bookingSubmitPrimary.rm-ready { box-shadow: 0 0 0 4px rgba(111, 211, 164, .3), 0 14px 30px -14px rgba(16, 63, 53, .6); }
 
   .restoAddChoiceDialog[open] { animation: rm-palette-in 360ms var(--rm-ease-spring) both; }
@@ -967,7 +947,7 @@ dialog.rmNotificationCenter::backdrop {
   .walkinInstall{transition:transform 160ms var(--rm-ease-out),box-shadow 300ms;}
   .walkinInstall:active{transform:scale(.97);}
   .walkinInstall::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.22) 50%,transparent 70%);transform:translateX(-120%);}
-  .walkinInstall.rm-ready::after{animation:rm-sheen 3.2s ease-in-out 600ms infinite;}
+  .walkinInstall.rm-ready::after{animation:rm-sheen 800ms ease-in-out;}
 }
 .rm-step[hidden]{display:none !important;}
 
@@ -975,11 +955,28 @@ dialog.rmNotificationCenter::backdrop {
 .rm-hero, .rm-steps, .rm-res-empty, .rm-empty-state { max-width: 100%; min-width: 0; box-sizing: border-box; }
 .rm-eta { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 820px) { .rm-hclock { display: none; } }
-/* Listes cachées de l'app (visuallyHiddenSelect) : jamais plus larges que 1 px, pour ne pas élargir la page */
-select.visuallyHiddenSelect { max-width: 1px; }
+/* Le sélecteur natif masqué doit rester au format 1 px même dans la barre des tables. */
+select.visuallyHiddenSelect,
+#tables .tableToolbar :is(#roomFilter,#tableSort).visuallyHiddenSelect {
+  width: 1px !important; min-width: 0 !important; max-width: 1px !important;
+  height: 1px !important; min-height: 0 !important; max-height: 1px !important;
+  padding: 0 !important; border: 0 !important;
+}
 
 /* RM-UX v11 : les contrastes ne dépendent pas de la position d’une pastille animée. */
 .rm-steps { background: #fff; }
+#passages > summary > span { color: #4f6a5e !important; }
+html[data-theme="dark"] #passages > summary > span { color: #b8d1c5 !important; }
+#receptionServiceOverview :is(.receptionServiceDetails small,.receptionServiceFoot) { color: #536d61; }
+html[data-theme="dark"] #receptionServiceOverview :is(.receptionServiceDetails small,.receptionServiceFoot,.receptionServiceTime) { color: #bad1c1; }
+html[data-theme="dark"] :is(.rm-palette,.rm-toast) { background: #18332a; color: #eaf7f0; }
+html[data-theme="dark"] :is(.rm-palette-item,.rm-palette-input input) { color: #eaf7f0; }
+html[data-theme="dark"] :is(.rm-palette-group,.rm-palette-empty,.rm-palette-foot,.rm-toast span,.rm-toast-close),
+html[data-theme="dark"] .rm-palette-input input::placeholder { color: #c2d8cc; }
+html[data-theme="dark"] :is(.rm-palette-input,.rm-palette-foot,.rm-toast) { border-color: #46695a; }
+html[data-theme="dark"] :is(.rm-palette-item[aria-selected="true"],.rm-toast-close:hover) { background: #2c5141; color: #fff; }
+html[data-theme="dark"] :is(.rm-palette-input,.rm-palette-item) svg { color: #a4dcbc; }
+html[data-theme="dark"] .rm-palette .rm-kbd { background: #254236; border-color: #507763; color: #d9ede2; }
 html[data-theme="dark"] .rm-steps { background: #e7f5ec; }
 html[data-theme="dark"] :is(.rm-res-empty,.rm-empty-state) { color: #c8e0d4; }
 html[data-theme="dark"] :is(.rm-res-empty,.rm-empty-state) b { color: #eaf7f0; }
