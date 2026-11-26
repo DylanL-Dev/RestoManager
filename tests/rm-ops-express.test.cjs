@@ -107,18 +107,18 @@ test('the mock adapter rejects duplicate and offline confirmation without a part
  assert.equal(adapter.read().revision,1);adapter.close();
 });
 
-test('Express shortcut stays compact across screens and account actions remain available',()=>{
+test('Express shortcuts live in the account and sidebar across screens',()=>{
  const fs=require('node:fs');
  const path=require('node:path');
  const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
  const js=read('service-v3-express.mjs');
  const css=read('service-v3-express.css');
  const html=read('v3-connected.html');
- assert.match(js,/entry\.append\(launch\);/);
- assert.match(js,/main\.prepend\(entry\);/);
- assert.doesNotMatch(js,/role\.before\(entry\)/,'entry must remain available outside the tables screen');
- assert.match(js,/launch\.setAttribute\('aria-label','Mode Coup de feu'\)/);
- assert.match(css,/\.rmExpressEntry\s+\.rmExpressLaunch\s*\{/);
+ assert.match(js,/getElementById\('mobileAccountRefresh'\)\?\.before\(mobileLaunch\)/);
+ assert.match(js,/querySelector\('\.sidebarSession'\)\?\.before\(launch\)/);
+ assert.doesNotMatch(js,/main\.prepend/);
+ assert.match(js,/icon\('zap'\).*Mode Coup de feu/);
+ assert.match(css,/\.sidebar \.rmExpressLaunch\{display:none!important\}/);
  assert.match(css,/\.mobileAccountMenu:not\(\[hidden\]\)/);
  for(const id of ['mobileAccountSync','mobileAccountRefresh','mobileAccountLogout'])assert.ok(html.includes('id="'+id+'"'));
  assert.match(js,/launch\.hidden=!canOpen\(\)\|\|!styled;/,'role-gated entry remains hidden until ready');
