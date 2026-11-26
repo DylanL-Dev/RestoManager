@@ -1,5 +1,33 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS — Reprise de l'intégration Express + moteur (consultation) — PR DEV BROUILLON (26/11/2026)
+
+- Reprise par Claude Code après interruption de la session Codex. Branche `claude/rm-ops-integration-reprise` = `codex/rm-ops-integration@d22f274` + fusion de `claude/rm-ops-engine@6e9355a` (SQL corrigé, tests, documents) ; aucun commit de Codex réécrit, #272 intacte. **Écritures Express désactivées ; aucune fusion DEV, migration ni déploiement.**
+- Local : `npm test` 474/474, PostgreSQL 17 Docker (moteur 31/31, Mission 3 62/62, audit DEV 62/62, RM-015/RM-017 réussis), navigateur Express 10/10, moteur 7/7, affichage 17/17, Mission 3 110/110, PWA 12/12 ; avec CSP #260 fusionnée localement : 485/485, CSP 10/10, 0 violation pendant Express. Suites Supabase/Realtime et `pg_cron` bloquées par le réseau de session, confiées à la CI. [Rapport de reprise](audits/RM-OPS_REPRISE_INTEGRATION_20261126.md).
+
+### RM-OPS — Intégration Express et moteur en consultation — CANDIDAT (26/11/2026)
+
+- Branche `codex/rm-ops-integration`, depuis DEV `608fba9`, avec les têtes #271 `3c6caf7` et #270 `4cdfafa6`.
+- Aperçus du moteur dans Express, simulation conservée et écritures Express bloquées par la façade connectée. Chargement et cache PWA versionnés. [Recette combinée et verrou de mise en service](audits/RM-OPS_INTEGRATION_DEV_20261126.md).
+
+### RM-OPS-02 — Navigation inter-salles et isolation par établissement — CANDIDAT (26/11/2026)
+
+- Suite du brouillon #271. Recherche et dossier conservés pendant la navigation. Vue globale, salles actives, états enregistrés, salle vide et avertissement avant un changement de salle simulé.
+- Express attend un instantané correspondant à l’établissement de la session. La recette fictive utilise deux établissements aux noms de salles et numéros de table identiques. [Navigation, périmètre et recette](audits/RM-OPS-02_EXPRESS_20261126.md#navigation-entre-les-salles).
+
+### RM-OPS-02 — Mode Coup de feu, expérience Express — CANDIDAT (26/11/2026)
+
+- Coordination #247, expérience #266, contrat moteur #265. Base DEV `608fba9`. Tablette au pupitre, mobile et PC dans l’espace Restaurant connecté.
+- Lecture des instantanés du service en mode Express. Placement, échange, reprise et passage sur un adaptateur fictif. [Parcours, contrat et recette](audits/RM-OPS-02_EXPRESS_20261126.md).
+
+### RM-OPS-01 ENGINE — Moteur de placement et sécurité serveur — PR DEV BROUILLON (26/11/2026)
+
+- Mission propriétaire (#265, #266, #268 ; coordination #247). Branche `claude/rm-ops-engine` depuis DEV `608fba9`. **Aucune migration exécutée, aucune fusion, aucun déploiement.**
+- Moteur JS : échange simple prioritaire, même salle par défaut, installés bloquants toutes dates, installation anticipée, codes d'erreur ; façade `RestoPlacement` (contrat #265) ; `simulate` compatible.
+- Constats serveur (export DEV 10/11 rejoué en local) : migration du dépôt plus ancienne que DEV, installation anticipée acceptée par v3, aucun journal auteur. Proposition v4 **non appliquée** dans `supabase/proposals/rm-ops-engine/`. Tests : moteur 19/19, façade 11/11, PostgreSQL isolé 26/26. [Rapport](audits/RM-OPS-ENGINE_MOTEUR_SECURITE_20261126.md).
+- 26/11 — Revue croisée avec Express #271 : adaptateur `placement-express-adapter.mjs`, passage sûr, avertissement d'installation anticipée corrigé, constat de course entre deux pupitres (`seat_reservation_v1` proposé, non appliqué). Fusion locale #270+#271 : `npm test` 472/472, Express navigateur 7/7, moteur réel en page 6/6 ; PostgreSQL isolé 28/28. [Intégration](audits/RM-OPS_INTEGRATION_EXPRESS_MOTEUR_20261126.md).
+- 26/11 — Revue finale du candidat #272 : écritures Express bloquées (3 couches, PASS) ; CSP #260 compatible (fusion locale : 485/485, CSP 10/10, 0 violation pendant Express ; 4 conflits textuels à résoudre) ; proposition SQL corrigée (journal en RLS forcée sous `resto_service_writer` + ajout seul), PostgreSQL isolé 31/31, non appliquée. [Revue finale](audits/RM-OPS_REVUE_FINALE_272_20261126.md).
+
 ### RM-AUDIT-02 — Audit de MAIN phase 1 (lecture/simulation) — RAPPORT (24/11/2026)
 
 - Phase 1 autorisée, issue #144. MAIN figé `d852c19` dans un worktree détaché ; aucun contact Supabase PROD (garde-fou réseau : 0 requête), aucun workflow, aucune fusion.

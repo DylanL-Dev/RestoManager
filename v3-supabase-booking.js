@@ -3,6 +3,8 @@ import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {setupBookingDraft} from './booking-draft.js?v=20261117-rm016-readonly';
 import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
+import './placement-gateway.js?v=20261126-rmops-integration1';
+import {guardConnectedPlacement} from './placement-express-adapter.mjs?v=20261126-rmops-integration1';
 
 function requireWrite(){
  if(navigator.onLine===false||!window.RestoSupabaseReady)throw window.RestoErrors?.business('Connexion interrompue. Votre saisie est conservée ; attendez la synchronisation avant d’enregistrer.')||Error('Connexion interrompue.');
@@ -220,6 +222,42 @@ window.RestoApplySmartPlacement=async function(reservationId,plan){
  await window.RestoRefreshSharedService?.();
  return data;
 };
+// RM-OPS ENGINE — façade de placement (contrat v1, GitHub #265). Les anciennes
+// fonctions RestoApplySmartPlacement / RestoChangeSharedStatus restent inchangées.
+if(window.RestoPlacementGateway&&window.RestoSmartPlacement){
+ const placement=window.RestoPlacementGateway.createPlacementGateway({
+  engine:window.RestoSmartPlacement,
+  getState:()=>{
+   const context=window.RestoNotificationContext;
+   if(context?.role!=='fb_admin'||window.RestoReception||!context.restaurantId||
+    context.restaurantId!==window.RestoExpressSnapshotRestaurantId||!window.RestoSharedDataLoaded||
+    !['ok','readonly'].includes(window.RestoSyncState))return null;
+   return {reservations:window.RestoSharedReservations,tablePlan:TableStore.get().tables,
+    holds:window.RestoDraftHolds||[],duration:Number(window.RestoSharedHours?.duration)||90};
+  },
+  tableId:number=>window.RestoSmartPlacementTableIds instanceof Map?window.RestoSmartPlacementTableIds.get(number):null,
+  isOnline:()=>navigator.onLine!==false,
+  // Activé seulement si le serveur annonce la proposition v4 appliquée (capacité « placement » ≥ 4).
+  serverFeatures:()=>({seatReservationV1:Number(window.RestoServiceCapabilities?.placement)>=4}),
+  // Passage : RPC existante (install_walkin_group_v3) via la fonction déjà utilisée par le mode complet.
+  installWalkin:(draft,options)=>{if(typeof window.RestoInstallWalkin!=='function')throw Object.assign(Error('Passage indisponible.'),{code:'PGRST202'});return window.RestoInstallWalkin(draft,options)},
+  requireWrite,
+  getRole:async()=>{
+   if(window.RestoReception)return 'reception';
+   const {requireStaff}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
+   return (await requireStaff())?.profile?.role||null;
+  },
+  refresh:async()=>{if(typeof window.RestoRefreshSharedService!=='function')throw Error('refresh unavailable');await window.RestoRefreshSharedService()},
+  rpc:async(name,args)=>{
+   const {supabase}=await import('./supabase-service-bridge.js?v=20261109-supabase119');
+   const {data,error}=await supabase.rpc(name,args);
+   if(error)throw error;
+   return data;
+  }
+ });
+ window.RestoPlacement=guardConnectedPlacement(placement);
+ window.dispatchEvent(new Event('restomanager:placement-ready'));
+}
 window.RestoChangeSharedStatus=async function(reservation,status){
  requireWrite();
  if(!window.RestoSupabaseReady)throw Error('Connexion en cours. Réessayez dans un instant.');
