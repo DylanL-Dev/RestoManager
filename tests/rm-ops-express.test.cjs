@@ -116,7 +116,7 @@ test('Express shortcut is compact beside Restaurant identity and account actions
  const html=read('v3-connected.html');
  assert.match(js,/role\.before\(entry\);/);
  assert.match(js,/entry\.append\(role,launch\);/);
- assert.match(js,/launch\.setAttribute\('aria-label','Ouvrir le Mode Coup de feu'\)/);
+ assert.match(js,/launch\.setAttribute\('aria-label','Mode Coup de feu'\)/);
  assert.match(css,/\.rmExpressEntry\s+\.rmExpressLaunch\s*\{/);
  assert.match(css,/\.mobileAccountMenu:not\(\[hidden\]\)/);
  for(const id of ['mobileAccountSync','mobileAccountRefresh','mobileAccountLogout'])assert.ok(html.includes('id="'+id+'"'));
