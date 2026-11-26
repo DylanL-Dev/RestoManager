@@ -48,7 +48,7 @@ test('RM-RELEASE-01A: production Root login, environment and booking config rema
  assert.match(html,/creator-auth\.js\?v=20261114-rm006-root1/);
  assert.match(html,/creator-console\.css\?v=20261123-rmrelease01a/);
  const crypto=require('node:crypto');
- const manifest=JSON.parse(read('docs/releases/RM015132_RELEASE_MANIFEST_20261122.json'));
+ const manifest=JSON.parse(read('docs/releases/RMRELEASE02_RELEASE_MANIFEST_20261126.json'));
  assert.equal(crypto.createHash('sha256').update(auth).digest('hex'),manifest.protected_production_files['creator-auth.js']);
  assert.equal(read('creator-admin.js').includes('from(\'platform_reports\')'),true);
 });
