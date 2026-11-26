@@ -104,13 +104,11 @@ export function mountExpress(main,readPlan){
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
  document.head.append(style);
- // Keep the rush-mode entry alongside the Restaurant identity rather than above the whole dashboard.
- const role=main.querySelector('.serviceIntro .serviceRole');
- if(role){
-  const entry=element('div','','rmExpressEntry');
-  role.before(entry);
-  entry.append(role,launch);
- }else main.prepend(launch);
+ // Keep the shortcut outside individual screens so staff can enter Express from any task.
+ // A compact wrapper prevents the original full-width banner layout.
+ const entry=element('div','','rmExpressEntry');
+ entry.append(launch);
+ main.prepend(entry);
  main.append(root);
  $('[data-floor]').open=window.matchMedia('(min-width: 720px)').matches;
  symbols();
