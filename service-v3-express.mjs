@@ -100,7 +100,7 @@ export function mountExpress(main,readPlan){
  const canPreviewPassage=state=>canPreview(state)&&Boolean(demo||state.service&&state.now.time>=state.service.start);
  const canAct=()=>Boolean(demo)&&scope===currentScope()&&navigator.onLine!==false&&!busy;
 
- const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-integration1',import.meta.url);
+ const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-compact1',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
  document.head.append(style);
