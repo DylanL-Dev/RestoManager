@@ -288,6 +288,30 @@ async function startDocker(){
     await ok(`update public.reservation_tables set table_id=${lit(table(8))} where reservation_id=${lit(res(1))};`);
     const stderr=await fails(1,`select public.seat_reservation_v1(${lit(res(1))},'reserved',${lit(table(8))})`,'23P01');assert.match(stderr,/TABLE_CONFLICT|TARGET_OCCUPIED/);
    });
+   await test('V4-12 multi-établissements : table, client ou libération d’un autre établissement toujours refusés',async()=>{
+    const B9=table(9); // table de l'établissement B
+    await fails(1,v4(1,[[1,1,9]]).replace(lit(table(9)),lit(B9)),'22023');
+    await fails(1,`select public.seat_reservation_v1(${lit(res(9))},'reserved',${lit(B9)})`,'42501');
+    await fails(4,`select public.seat_reservation_v1(${lit(res(1))},'reserved',${lit(table(1))})`,'42501');
+    await fails(1,`select public.seat_with_release_v1(${lit(res(1))},'reserved',${lit(table(1))},array[${lit(res(9))}]::uuid[])`,'40001');
+    await fails(1,`select public.move_seated_party_v1(${lit(res(9))},${lit(B9)},${lit(table(5))})`,'42501');
+    assert.equal((await record(9)).status,'reserved');assert.equal((await record(1)).status,'reserved');
+   });
+   await test('V4-13 Réception, anonyme et journal infalsifiable',async()=>{
+    await fails(3,`select public.seat_reservation_v1(${lit(res(1))},'reserved',${lit(table(1))})`,'42501');
+    const anon=await sql(`begin;set local role anon;select public.seat_reservation_v1(${lit(res(1))},'reserved',${lit(table(1))});commit;`);
+    assert.notEqual(anon.code,0);assert.match(anon.stderr,/42501|permission denied/);
+    await ok(ctx(1,`select public.seat_reservation_v1(${lit(res(1))},'reserved',${lit(table(1))})`));
+    for(const q of [`update public.placement_events set action='seat'`,`delete from public.placement_events`])
+     await fails(1,q,'42501');
+    assert.equal(await ok('select count(*) from public.placement_events'),'1');
+   });
+   await test('V4-14 double envoi simultané de la même installation (deux pupitres) : une seule réussit',async()=>{
+    const q=`select public.seat_reservation_v1(${lit(res(1))},'reserved',${lit(table(1))})`;
+    const [a,b]=await concurrent(1,q,2,q);
+    assert.equal(a.code,0,a.stderr);assert.notEqual(b.code,0);assert.match(b.stderr,/40001/);
+    assert.equal(await ok(`select count(*) from public.placement_events where reservation_id=${lit(res(1))}`),'1');
+   });
   }
   console.log('\n'+count+' cas PostgreSQL réussis.');
   if(findings.length)console.log('CONSTATS\n- '+findings.join('\n- '));

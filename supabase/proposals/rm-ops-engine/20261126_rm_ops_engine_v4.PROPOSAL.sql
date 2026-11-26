@@ -36,11 +36,17 @@ create index if not exists placement_events_restaurant_time on public.placement_
 create index if not exists placement_events_reservation on public.placement_events(reservation_id);
 alter table public.placement_events enable row level security;
 alter table public.placement_events force row level security;
-revoke all on public.placement_events from public,anon,authenticated;
-grant select on public.placement_events to authenticated;
+-- Convention RM-012 : les RPC d'écriture s'exécutent sous resto_service_writer (ni superutilisateur,
+-- ni BYPASSRLS) ; le journal est en RLS forcée avec une politique d'ajout explicite pour ce rôle.
+revoke all on public.placement_events from public,anon,authenticated,resto_service_writer;
+grant select on public.placement_events to authenticated,resto_service_writer;
+grant insert on public.placement_events to resto_service_writer;
 drop policy if exists placement_events_read on public.placement_events;
-create policy placement_events_read on public.placement_events for select to authenticated
+create policy placement_events_read on public.placement_events for select to authenticated,resto_service_writer
  using(restaurant_id=(select private.staff_restaurant()) and (select private.current_staff_role())='fb_admin');
+drop policy if exists placement_events_append on public.placement_events;
+create policy placement_events_append on public.placement_events for insert to resto_service_writer
+ with check(restaurant_id=(select private.staff_restaurant()) and actor_id=(select auth.uid()) and (select private.current_staff_role())='fb_admin');
 
 -- Intervalle d'occupation réel d'une réservation installée maintenant.
 create or replace function private.rm_ops_seat_span(p_starts timestamptz,p_ends timestamptz,p_now timestamptz)
@@ -247,8 +253,9 @@ begin
   perform public.apply_smart_placement_v4(p_reservation_id,
    jsonb_build_array(jsonb_build_object('id',p_reservation_id,'from_table',v_current,'to_table',p_table,'expected_status',v_target.status)),
    true,p_allow_room_change);
-  update public.placement_events set action='release_then_seat',details=details||jsonb_build_object('released',p_release_ids)
-   where id=(select max(id) from public.placement_events where reservation_id=p_reservation_id and restaurant_id=v_restaurant);
+  -- Journal en ajout seul : un événement supplémentaire, jamais de modification d'une ligne existante.
+  insert into public.placement_events(restaurant_id,reservation_id,actor_id,action,from_tables,to_tables,details)
+  values(v_restaurant,p_reservation_id,auth.uid(),'release_then_seat',array[v_current],array[p_table],jsonb_build_object('released',p_release_ids));
  else
   raise exception 'Fusion : utilisez le mode complet.' using errcode='22023',detail='INVALID_INPUT';
  end if;
@@ -363,6 +370,16 @@ end
 $function$;
 revoke all on function public.seat_reservation_v1(uuid,text,uuid) from public,anon;
 grant execute on function public.seat_reservation_v1(uuid,text,uuid) to authenticated;
+
+-- Propriétaire des fonctions : resto_service_writer (comme install_walkin_group_v3 et RM-012) ;
+-- l'appel imbriqué seat_with_release_v1 → apply_smart_placement_v4 s'exécute donc sous ce rôle.
+alter function private.rm_ops_seat_span(timestamptz,timestamptz,timestamptz) owner to resto_service_writer;
+grant execute on function private.rm_ops_seat_span(timestamptz,timestamptz,timestamptz) to resto_service_writer;
+alter function public.apply_smart_placement_v4(uuid,jsonb,boolean,boolean) owner to resto_service_writer;
+alter function public.seat_with_release_v1(uuid,text,uuid,uuid[],boolean) owner to resto_service_writer;
+alter function public.move_seated_party_v1(uuid,uuid,uuid) owner to resto_service_writer;
+alter function public.seat_reservation_v1(uuid,text,uuid) owner to resto_service_writer;
+grant execute on function public.apply_smart_placement_v4(uuid,jsonb,boolean,boolean) to resto_service_writer;
 
 notify pgrst,'reload schema';
 commit;
