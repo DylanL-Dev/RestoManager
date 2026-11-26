@@ -7,7 +7,7 @@ const feedback=document.getElementById('historyFeedback');
 try{
 button.disabled=true;button.textContent='Préparation du PDF…';feedback.textContent='Génération du rapport en cours…';
 if(!window.jspdf?.jsPDF){
- const sources=['https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js','https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'];
+ const sources=['vendor/jspdf-2.5.2.umd.min.js'];
  for(const src of sources){try{await new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=src;script.onload=resolve;script.onerror=()=>reject(Error('Chargement impossible'));document.head.append(script)});if(window.jspdf?.jsPDF)break}catch(error){console.warn('Module PDF :',error)}}
 }
 if(!window.jspdf?.jsPDF)throw Error('Le générateur PDF ne se charge pas. Vérifiez la connexion Internet.');

@@ -1,5 +1,7 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="fr"><head><meta charset="utf-8">
+<!-- RM-SEC-04: DEV policy. A V3/MAIN promotion must replace the Supabase origin with the PROD one (see docs/audits/RM-SEC-04_CSP_20261125.md). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://lykoybacslvmhtzftqsf.supabase.co wss://lykoybacslvmhtzftqsf.supabase.co; worker-src 'self'; manifest-src 'self'; media-src 'self' blob:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Connexion · RestoManager</title>
 <meta name="theme-color" content="#102f29">
 <link rel="icon" href="pwa-icon.svg" type="image/svg+xml">
@@ -45,17 +47,6 @@ button:focus-visible,a:focus-visible{outline:3px solid #087f5b;outline-offset:3p
 <p id="message" role="status" aria-live="polite"></p><div class="platformAccess"><a class="signupPreviewLink" href="inscription.html">Découvrir la création d’établissement · Aperçu DEV</a><a href="creator.html" target="_blank" rel="noopener noreferrer" aria-label="Ouvrir l’administration de la plateforme dans une nouvelle fenêtre">Administration de la plateforme <i data-lucide="external-link" aria-hidden="true"></i></a></div><nav class="legal-links" aria-label="Informations légales"><a href="mentions-legales.html">Mentions légales</a><a href="cgu.html">CGU</a><a href="cgv.html">CGV</a><a href="confidentialite.html">Confidentialité</a><a href="cookies.html">Cookies</a></nav>
 
 </main></div>
-<script>
-document.getElementById("forgot").addEventListener("click",function(){const panel=document.getElementById("recovery");panel.hidden=!panel.hidden;this.setAttribute("aria-expanded",String(!panel.hidden));});
-const toggle=document.getElementById('togglePassword'),password=document.getElementById('password');
-toggle.addEventListener('click',()=>{const revealed=password.type==='password';password.type=revealed?'text':'password';toggle.textContent=revealed?'Masquer':'Afficher';toggle.setAttribute('aria-pressed',String(revealed));});
-const loginMessage=document.getElementById('message');
-new MutationObserver(()=>{const content=loginMessage.textContent;loginMessage.dataset.kind=/^(Connexion impossible|Connexion interrompue|Identifiant non reconnu|Compte non autorisé)/.test(content)?'error':'info';}).observe(loginMessage,{childList:true,characterData:true,subtree:true});
-document.addEventListener('DOMContentLoaded',()=>window.lucide?.createIcons?.());
-</script>
-<script type="module">
-import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
-const label=document.getElementById('environmentLabel');label.dataset.env=supabaseEnvironment.name;
-label.textContent=supabaseEnvironment.name==='DEV'?'DEV · Environnement de test':'PRODUCTION · Espace professionnel';label.hidden=false;
-</script>
+<script src="login-ui.js?v=20261125-rmsec04"></script>
+<script type="module" src="login-environment.js?v=20261125-rmsec04"></script>
 <script type="module" src="supabase-login.js?v=20261109-twins1"></script></body></html>

@@ -17,7 +17,7 @@ const hasLinkProof=!query.has('error')&&!fragment.has('error')&&(
 );
 
 import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
-import {createClient} from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.2/+esm';
+import {createClient} from './vendor/supabase-js.mjs?v=20261125-rmsec03';
 if(supabaseEnvironment.name!=='DEV')throw new Error('Récupération réservée à DEV.');
 const client=createClient(supabaseEnvironment.url,supabaseEnvironment.publishableKey,
  // Same Root-only key as creator-auth.js, including PKCE recovery verifier.

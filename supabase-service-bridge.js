@@ -3,7 +3,7 @@ import {supabaseEnvironment} from './restomanager-env.js?v=20261109-twins1';
 // Import only on the authenticated development preview; never on published V3.
 // No localStorage fallback and no direct reservation writes.
 import {readRevisionSnapshot} from './service-sync.js?v=20261108-tables-display';
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0/+esm';
+import { createClient } from './vendor/supabase-js.mjs?v=20261125-rmsec03';
 export const supabase=createClient(
  supabaseEnvironment.url,
  supabaseEnvironment.publishableKey,
