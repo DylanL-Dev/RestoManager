@@ -1,5 +1,10 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS UX — Accès Coup de feu et arrivée au tableau de bord — CANDIDAT DEV (26/11/2026)
+
+- Suite de #266 et #274 depuis DEV `c19e4f0`. Accès Restaurant dans le profil mobile et tablette et dans le menu latéral sur ordinateur. Le tableau de bord s’ouvre en haut depuis une URL sans ancre.
+- Cache PWA `restomanager-shell-20261126-rmops-navigation1`. Coordination avec #259/#260 dans la [fiche de recette](audits/RM-OPS_UX_NAVIGATION_20261126.md).
+
 ### RM-OPS — Reprise de l'intégration Express + moteur (consultation) — PR DEV BROUILLON (26/11/2026)
 
 - Reprise par Claude Code après interruption de la session Codex. Branche `claude/rm-ops-integration-reprise` = `codex/rm-ops-integration@d22f274` + fusion de `claude/rm-ops-engine@6e9355a` (SQL corrigé, tests, documents) ; aucun commit de Codex réécrit, #272 intacte. **Écritures Express désactivées ; aucune fusion DEV, migration ni déploiement.**

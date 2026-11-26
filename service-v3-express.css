@@ -6,7 +6,6 @@ html.rmExpressActive :is(.sidebar,.mobileBottomNav),html.rmExpressActive .shell 
  border:1px solid var(--express-border,#c9ddd2);border-radius:11px;background:var(--express-surface,#fff);
  color:var(--express-text,#173b31);font:inherit;font-weight:650;text-align:start;
 }
-.rmExpressLaunch{margin:0 0 12px;background:var(--express-action,#086747);color:#fff;border-color:transparent}
 .rmExpressLaunch svg,.rmExpress svg{width:17px;height:17px;flex:none;vertical-align:middle}
 .rmExpress{
  --express-surface:#fff;--express-text:#173b31;--express-muted:#4e675e;--express-border:#c9ddd2;
@@ -93,24 +92,14 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
  .rmExpressHead{padding:10px}
 }
 
-/* RM-OPS compact entry: an operational shortcut, not a full-width banner. */
-.rmExpressEntry{display:flex;align-items:center;justify-content:flex-start;max-width:100%;margin:0 0 8px;padding:0}
-.rmExpressEntry:has(.rmExpressLaunch[hidden]){display:none!important}
-.rmExpressEntry .rmExpressLaunch{
- display:inline-flex!important;flex:0 0 auto;gap:6px;min-height:44px;width:max-content!important;max-width:100%;margin:0!important;
- padding:8px 12px;border:1px solid #a7cfb6;border-radius:999px;
- background:#e9f5ed;color:#14583f;font-size:12px;font-weight:800;
- box-shadow:none;line-height:1.2;
+.sidebar .rmExpressLaunch,.mobileAccountMenu .rmExpressLaunch{
+ justify-content:flex-start;width:100%;gap:9px;box-shadow:none;
+ color:inherit;background:transparent;border:1px solid transparent;font-size:13px;
 }
-.rmExpressEntry .rmExpressLaunch svg{width:16px;height:16px}
-.rmExpressEntry .rmExpressLaunch:hover{background:#d8eddf;border-color:#76b493}
-.rmExpressEntry .rmExpressLaunch:active{transform:translateY(1px)}
-html[data-theme="dark"] .rmExpressEntry .rmExpressLaunch{
- background:#254d3b;color:#e3fae9;border-color:#53856c;
-}
-html[data-theme="dark"] .rmExpressEntry .rmExpressLaunch:hover{background:#34624c}
-@media(max-width:700px){
- .rmExpressEntry{margin-bottom:8px}
+.sidebar .rmExpressLaunch:hover,.mobileAccountMenu .rmExpressLaunch:hover{background:rgba(98,159,125,.2)}
+@media(max-width:900px){
+ .sidebar .rmExpressLaunch{display:none!important}
+ .mobileAccountMenu .rmExpressLaunch{padding:7px 4px;font-size:12px}
 }
 /* Compact session menu on phone/tablet; all account and sync actions remain available. */
 @media(max-width:900px){

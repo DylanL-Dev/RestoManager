@@ -72,18 +72,31 @@ async function newContext(width){
  await context.routeWebSocket('**/*',websocket=>websocket.close());
  return context;
 }
-async function newPage(context,role='fb_admin',tenant=tenantA,change=null){
+async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash=''){
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
  await page.addInitScript(({role,tenant,change})=>{window.__opsRole=role;window.__opsTenant=tenant;window.__opsChange=change;},{role,tenant,change});
  await page.exposeFunction('__opsSnapshot',makeSnapshot);await page.exposeFunction('__opsWrite',name=>writes.push(name));
- await page.clock.install({time});await page.goto(origin+'/v3-connected.html');
+ await page.clock.install({time});await page.goto(origin+'/v3-connected.html'+hash);
  await page.waitForFunction(()=>window.RestoSharedDataLoaded===true&&!!window.RestoPlacement);
  const welcome=page.locator('#restoTourWelcome');if(await welcome.isVisible())await page.getByRole('button',{name:'Plus tard',exact:true}).click();
  return page;
 }
 const express=page=>page.locator('#rmExpress');
 const tabs=page=>express(page).getByRole('group',{name:'Filtrer les tables par salle'});
-async function enter(page){await page.getByRole('button',{name:'Mode Coup de feu',exact:true}).click();await express(page).waitFor();}
+async function enter(page){
+ const account=page.locator('#mobileAccountToggle');
+ const touch=await account.isVisible();
+ if(touch)await account.click();
+ const scope=page.locator(touch?'#mobileAccountMenu':'.sidebar');
+ const launch=scope.getByRole('button',{name:'Mode Coup de feu',exact:true});
+ await launch.waitFor();
+ assert.ok(await launch.evaluate((button,touch)=>button.getBoundingClientRect().height>=44&&
+  button.querySelector('svg.lucide-icon')&&(!touch||button.nextElementSibling.id==='mobileAccountRefresh'),touch));
+ await launch.press('Enter');
+ await express(page).waitFor();
+ assert.ok(await page.locator('#mobileAccountMenu').isHidden());
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'rmExpressTitle');
+}
 async function simulation(page){await enter(page);await express(page).getByRole('button',{name:'Simuler un service'}).click();await express(page).getByText('Simulation · données fictives').waitFor();}
 async function select(page,room){const view=express(page);await view.getByRole('searchbox').fill(room);await view.locator('[data-arrivals]').getByRole('button',{name:new RegExp(`Ch. ${room}`)}).click();}
 async function option(page,number){await express(page).locator('[data-suggestions]').getByRole('button',{name:new RegExp(`^T${number} `)}).click();}
@@ -101,6 +114,10 @@ async function validateAxe(page){
   browser=await chromium.launch();
   for(const width of [360,390,768,834,1440]){
    const context=await newContext(width),page=await newPage(context),view=express(page);
+   assert.deepEqual(await page.evaluate(()=>[window.scrollY,location.hash]),[0,'']);
+   assert.equal(await page.locator('main .rmExpressLaunch').count(),0);
+   await page.getByRole('link',{name:'Voir les tables',exact:true}).click();
+   await page.waitForFunction(()=>scrollY>0);
    await page.evaluate(()=>window.RestoScreens.show('reservationForm'));
    const draft=page.locator('#bookingClient');await draft.fill('Brouillon fictif');
    await simulation(page);await select(page,'214');
@@ -144,6 +161,7 @@ async function validateAxe(page){
     await page.evaluate(()=>document.documentElement.dataset.theme='light');
    }
    await view.getByRole('button',{name:'Mode complet',exact:true}).click();assert.equal(await draft.inputValue(),'Brouillon fictif');
+   assert.ok(await page.locator(width<=900?'#mobileAccountToggle':'.sidebar .rmExpressLaunch').evaluate(button=>button===document.activeElement));
    await enter(page);
    await view.getByRole('button',{name:'Installer 214 en T4'}).click();
    await view.getByText('Simulation · installation enregistrée en T4.').waitFor();
@@ -181,7 +199,11 @@ async function validateAxe(page){
   await context.close();console.log('PASS Express deux onglets : conflit, sélection préservée, coupure et retour');
 
   const staffContext=await newContext(834),restaurant=await newPage(staffContext),reception=await newPage(staffContext,'reception');
+  await reception.locator('#mobileAccountToggle').click();
   assert.equal(await reception.getByRole('button',{name:'Mode Coup de feu',exact:true}).count(),0);
+  const linked=await newPage(staffContext,'reception',tenantA,null,'#reservations');
+  assert.deepEqual(await linked.evaluate(()=>[window.RestoScreens.current(),location.hash]),['reservations','#reservations']);
+  await linked.close();
   await enter(restaurant);await select(restaurant,'214');
   const view=express(restaurant);await view.getByRole('heading',{name:/Dupont DEV fictif/}).waitFor();
   assert.ok(await view.getByRole('button',{name:'Aperçu passage',exact:true}).isEnabled());
