@@ -106,3 +106,20 @@ test('the mock adapter rejects duplicate and offline confirmation without a part
  await assert.rejects(adapter.walkIn({revision:1,guests:2,table:16,type:'external',room:''}),/connexion interrompue/);
  assert.equal(adapter.read().revision,1);adapter.close();
 });
+
+test('Express shortcut stays compact across screens and account actions remain available',()=>{
+ const fs=require('node:fs');
+ const path=require('node:path');
+ const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
+ const js=read('service-v3-express.mjs');
+ const css=read('service-v3-express.css');
+ const html=read('v3-connected.html');
+ assert.match(js,/entry\.append\(launch\);/);
+ assert.match(js,/main\.prepend\(entry\);/);
+ assert.doesNotMatch(js,/role\.before\(entry\)/,'entry must remain available outside the tables screen');
+ assert.match(js,/launch\.setAttribute\('aria-label','Mode Coup de feu'\)/);
+ assert.match(css,/\.rmExpressEntry\s+\.rmExpressLaunch\s*\{/);
+ assert.match(css,/\.mobileAccountMenu:not\(\[hidden\]\)/);
+ for(const id of ['mobileAccountSync','mobileAccountRefresh','mobileAccountLogout'])assert.ok(html.includes('id="'+id+'"'));
+ assert.match(js,/launch\.hidden=!canOpen\(\)\|\|!styled;/,'role-gated entry remains hidden until ready');
+});

@@ -28,11 +28,11 @@ test('RM-011-A : refresh protection precedes hold release and page replace witho
 });
 test('RM-011-A : connected PWA references versioned scripts after change',()=>{
  const html=source('v3-connected.html');
- for(const key of ['service-v3-screens.js?v=20261126-rmops-integration1',
+ for(const key of ['service-v3-screens.js?v=20261126-rmops-compact1',
   'service-v3-refresh.js?v=20261118-rm0152',
   'service-v3.js?v=20261116-rm013a1',
   'v3-supabase-booking.js?v=20261126-rmops-integration1'])
   assert.ok(html.includes(key),key);
  assert.match(source('v3-supabase-booking.js'),/booking-draft.js\?v=20261117-rm016-readonly/);
- assert.match(source('sw.js'),/restomanager-shell-20261126-rmops-integration1/);
+ assert.match(source('sw.js'),/restomanager-shell-20261126-rmops-compact1/);
 });

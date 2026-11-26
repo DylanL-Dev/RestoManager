@@ -22,7 +22,9 @@ function button(label,action,value){
 
 export function mountExpress(main,readPlan){
  const launch=button('','open');launch.className='rmExpressLaunch';launch.hidden=true;
- launch.innerHTML=`${icon('zap')}<span>Mode Coup de feu</span>`;
+ launch.innerHTML=`${icon('zap')}<span>Coup de feu</span>`;
+ launch.setAttribute('aria-label','Mode Coup de feu');
+ launch.title='Ouvrir le Mode Coup de feu';
  launch.setAttribute('aria-controls','rmExpress');launch.setAttribute('aria-expanded','false');
  const root=element('section','','rmExpress');root.id='rmExpress';root.hidden=true;
  root.setAttribute('aria-labelledby','rmExpressTitle');
@@ -98,10 +100,16 @@ export function mountExpress(main,readPlan){
  const canPreviewPassage=state=>canPreview(state)&&Boolean(demo||state.service&&state.now.time>=state.service.start);
  const canAct=()=>Boolean(demo)&&scope===currentScope()&&navigator.onLine!==false&&!busy;
 
- const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-integration1',import.meta.url);
+ const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-compact1',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
- document.head.append(style);main.prepend(launch);main.append(root);
+ document.head.append(style);
+ // Keep the shortcut outside individual screens so staff can enter Express from any task.
+ // A compact wrapper prevents the original full-width banner layout.
+ const entry=element('div','','rmExpressEntry');
+ entry.append(launch);
+ main.prepend(entry);
+ main.append(root);
  $('[data-floor]').open=window.matchMedia('(min-width: 720px)').matches;
  symbols();
 
