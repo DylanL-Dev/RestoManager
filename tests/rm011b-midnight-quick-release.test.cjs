@@ -58,6 +58,7 @@ function setup(){
  };
  const context={window,document,ReservationEngine:engine,TableStore:{get:()=>({tables:[]})},
   localStorage:{getItem:()=>null,setItem(){}},
+  navigator:{onLine:true},
   Intl,Date:FakeDate,console,
   setInterval(fn,ms){timers.push({fn,ms})}};
  vm.runInNewContext(source,context,{filename:'service-v3-quick-release.js'});

@@ -107,6 +107,32 @@ test('the mock adapter rejects duplicate and offline confirmation without a part
  assert.equal(adapter.read().revision,1);adapter.close();
 });
 
+test('simulated releases recheck the installed tables and undo cannot displace an installed guest',async()=>{
+ const [,fixture]=await modules;
+ const source=new EventTarget();source.navigator={onLine:true,locks:{request:async(key,action)=>action()}};
+ const saved=fixture.makeSimulation();
+ const initial=saved.reservations.find(row=>row.status==='seated');
+ initial.tables=[16];
+ let stored=JSON.stringify(saved);
+ source.localStorage={getItem:()=>stored,setItem:(key,value)=>{stored=value;}};
+ const adapter=fixture.createSimulation(source);
+ const selection={reservationId:initial.id,tables:initial.tables};
+ assert.equal((await adapter.release({...selection,tables:[99]})).code,'STALE');
+ const [first,duplicate]=await Promise.all([adapter.release(selection),adapter.release(selection)]);
+ assert.deepEqual(first,{ok:true});
+ assert.equal(duplicate.code,'STALE');
+ assert.equal(adapter.read().revision,1);
+ assert.equal(adapter.read().reservations.find(row=>row.id===initial.id).status,'released');
+ assert.deepEqual(await adapter.undo(selection),{ok:true});
+ assert.deepEqual(adapter.read().reservations.find(row=>row.id===initial.id),initial);
+ assert.equal((await adapter.undo(selection)).code,'STALE');
+ await adapter.release(selection);
+ await adapter.walkIn({revision:3,guests:2,table:initial.tables[0],type:'external',room:''});
+ assert.equal((await adapter.undo(selection)).code,'TARGET_OCCUPIED');
+ assert.equal(adapter.read().revision,4);
+ adapter.close();
+});
+
 test('Express shortcuts live in the account and sidebar across screens',()=>{
  const fs=require('node:fs');
  const path=require('node:path');

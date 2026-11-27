@@ -37,7 +37,7 @@ export function mountExpress(main,readPlan){
   </div>
   <div class="rmExpressSearch">
    <label>${icon('search')}<span class="rmExpressVisuallyHidden">Chambre ou nom</span><input type="search" placeholder="Chambre ou nom" autocomplete="off"></label>
-   <button type="button" class="rmExpressPrimary" data-action="passage">${icon('plus')}<span>Passage</span></button>
+   <button type="button" class="rmExpressPrimary" data-action="passage" aria-label="Passage">${icon('plus')}<span>Passage</span></button>
   </div>
   <div class="rmExpressMetrics" aria-label="Affluence du service">
    <span>${icon('calendar-clock')}<span data-arrival-metric></span></span>
@@ -50,7 +50,7 @@ export function mountExpress(main,readPlan){
   <div class="rmExpressColumns">
    <div class="rmExpressStack">
     <section class="rmExpressPanel" data-handoffs hidden><h2>${icon('users')} À reprendre</h2><div data-handoff-list></div></section>
-    <section class="rmExpressPanel"><h2 data-list-title>Arrivées</h2><button type="button" data-action="other-dates" aria-pressed="false" hidden>Inclure les autres services et dates</button><div data-arrivals></div></section>
+    <section class="rmExpressPanel"><h2 data-list-title>Arrivées</h2><p class="rmExpressLiveArrivals" data-live-arrivals></p><button type="button" data-action="other-dates" aria-pressed="false" hidden>Inclure les autres services et dates</button><div data-arrivals></div></section>
    </div>
    <div class="rmExpressStack" data-workspace>
     <section class="rmExpressPanel" data-reservation aria-label="Réservation sélectionnée">
@@ -85,7 +85,7 @@ export function mountExpress(main,readPlan){
 
  let open=false,demo=null,live=null,simulation=null,selectedId=null,selectedTable=null,selectedPlan=null,otherDates=false;
  let passage=false,passageTable=null,busy=false,previousFocus=null,previousScroll=0,lastNotice='';
- let scope=null,roomId=null,roomTabSignature='';
+ let scope=null,roomId=null,roomTabSignature='',demoRelease=null;
  const handoffs=new Set();
  const canOpen=()=>{
   const context=window.RestoNotificationContext;
@@ -99,7 +99,57 @@ export function mountExpress(main,readPlan){
  const canPreviewPassage=state=>canPreview(state)&&Boolean(demo||state.service&&state.now.time>=state.service.start);
  const canAct=()=>Boolean(demo)&&scope===currentScope()&&navigator.onLine!==false&&!busy;
 
- const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=20261126-rmops-navigation1',import.meta.url);
+ function matchingSimulationStorage(){
+  try{
+   const key=Object.keys(localStorage).find(key=>/^restomanager-express-fiction-v1:[^:]+$/.test(key));
+   return key===`restomanager-express-fiction-v1:${window.RestoNotificationContext.restaurantId}`;
+  }catch{return false;}
+ }
+ function releaseHook(source){
+  async function run(action,details){
+   if(!open||demo!==source||!canAct())return {ok:false,message:'Le service a changé. Vérifiez le plan.'};
+   if(!matchingSimulationStorage())return {ok:false,message:'Cette fiche ne correspond pas à la simulation active.'};
+   let result;
+   try{result=await source[action](details);}
+   catch(error){result={ok:false,message:error.message||'Libération impossible.'};}
+   if(!open||demo!==source||scope!==currentScope())return {ok:false,message:'Le contexte du service a changé.'};
+   if(action==='undo')message(result.ok?'Libération annulée.':result.message);
+   return result.ok?{ok:true}:{ok:false,message:result.message};
+  }
+  return Object.freeze({release:details=>run('release',details),undo:details=>run('undo',details)});
+ }
+ let lastSharedRelease=null;
+ const liveRelease=Object.freeze({
+  async release(details){
+   if(!open||demo||scope!==currentScope()||!window.RestoQuickRelease?.supportsUndo())
+    return {ok:false,message:'Le contexte du service a changé.'};
+   const requestedScope=scope;
+   try{
+    const undo=await window.RestoQuickRelease.releaseShared(details);
+    if(!open||demo||scope!==requestedScope||scope!==currentScope())return {ok:false,message:'Le contexte du service a changé.'};
+    lastSharedRelease={...details,undo,scope:requestedScope};
+    return {ok:true};
+   }catch(error){return {ok:false,message:error.message||'Libération impossible.'};}
+  },
+  async undo({reservationId,tables}){
+   const last=lastSharedRelease;
+   if(!open||demo||!last?.undo||last.scope!==scope||scope!==currentScope()||
+      last.reservationId!==reservationId||last.tables.length!==tables.length||!last.tables.every(n=>tables.includes(n)))
+    return {ok:false,message:'Le contexte du service a changé.'};
+   lastSharedRelease=null;
+   try{await last.undo();if(scope===last.scope&&scope===currentScope())message('Libération annulée.');return {ok:true};}
+   catch(error){if(scope===last.scope&&scope===currentScope())message(error.message);return {ok:false,message:error.message};}
+  }
+ });
+ Object.defineProperty(window,'RestoExpressRelease',{
+  configurable:true,
+  get(){
+   if(!open||!scope||scope!==currentScope())return undefined;
+   return demo?demoRelease:window.RestoQuickRelease?.supportsUndo()?liveRelease:undefined;
+  }
+ });
+
+ const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=2027.4',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
  document.head.append(style);
@@ -123,6 +173,7 @@ export function mountExpress(main,readPlan){
   mobileLaunch.setAttribute('aria-expanded',String(open));
   if(open){update();$('#rmExpressTitle').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   else{
+   window.RestoCF27Departs?.close();lastSharedRelease=null;
    const target=previousFocus?.getClientRects().length?previousFocus:desktop.matches?launch:accountToggle;
    target?.focus({preventScroll:true});
    window.scrollTo({top:previousScroll,behavior:'instant'});
@@ -133,7 +184,8 @@ export function mountExpress(main,readPlan){
   const nextScope=currentScope();
   const changed=scope!==nextScope;
   if(changed){
-   scope=nextScope;demo?.close();demo=null;busy=false;
+   window.RestoCF27Departs?.close();lastSharedRelease=null;
+   scope=nextScope;demo?.close();demo=demoRelease=null;busy=false;
    live?.close();live=null;
    resetView();
   }
@@ -151,6 +203,7 @@ export function mountExpress(main,readPlan){
   passage=otherDates=false;handoffs.clear();search.value='';message('');
   $('[data-guests]').value='2';$('[data-guest-type]').value='external';$('[data-guest-room]').value='';
   $('[data-other-tables]').open=false;
+  $('.cf-swap')?.remove();
   $('[data-all-tables]').replaceChildren();$('[data-passage-tables]').replaceChildren();
   $('[data-placement-summary]').textContent='';$('[data-action=install]').textContent='';
   $('[data-room-change] strong').textContent='';
@@ -158,7 +211,9 @@ export function mountExpress(main,readPlan){
  }
 
  function showFixtureLabel(){
-  $('[data-access]').textContent=demo?'Simulation · données fictives':'Service partagé · consultation Express';
+  root.toggleAttribute('data-rm-live',!demo);
+  $('[data-access]').textContent=demo?'Simulation · données fictives':
+   window.RestoQuickRelease?.supportsUndo()?'Service partagé':'Service partagé · consultation Express';
   $('[data-action=simulation]').textContent=demo?'Retour au service partagé':'Simuler un service';
  }
 
@@ -174,12 +229,16 @@ export function mountExpress(main,readPlan){
    :'Charge au-dessus du seuil partagé. Consultez l’affluence avant de proposer un horaire.';
   const indicators=serviceIndicators(snapshot);
   $('[data-arrival-metric]').textContent=snapshot.loaded?`${covers(indicators.covers)} prévus · 15 min`:'Arrivées en attente';
+  $('[data-live-arrivals]').textContent=$('[data-arrival-metric]').textContent;
   $('[data-charge-metric]').textContent=freshness&&snapshot.charge?`Charge du service · ${snapshot.charge.current} / ${snapshot.charge.limit} couverts`:'Charge du service à vérifier';
   $('[data-check-metric]').textContent=snapshot.loaded?`${indicators.toCheck} à vérifier`:'Vérifications en attente';
+  const checks=$('.cf-flag[data-k=verif]');
+  if(checks&&indicators.toCheck)checks.setAttribute('aria-label',`${indicators.toCheck} à vérifier · voir les tables`);
   const passageButton=$('[data-action=passage]');
   passageButton.disabled=demo?!canAct():!canPreviewPassage(snapshot);
   passageButton.title=demo?'':'Consulter un aperçu du passage';
   passageButton.querySelector('span').textContent=demo?'Passage':'Aperçu passage';
+  passageButton.setAttribute('aria-label',passageButton.querySelector('span').textContent);
   showFixtureLabel();
   const rooms=roomViews(snapshot);
   const room=rooms.find(item=>item.id===roomId);
@@ -212,7 +271,12 @@ export function mountExpress(main,readPlan){
    tabs.replaceChildren(all,...rooms.map(room=>button(room.name,'room',room.id)));
    symbols();
   }
-  for(const tab of tabs.children)tab.setAttribute('aria-pressed',String(tab.dataset.value===(roomId??'')));
+  for(const tab of tabs.children){
+   const id=tab.dataset.value;
+   tab.setAttribute('aria-pressed',String(id===(roomId??'')));
+   const free=rooms.filter(room=>!id||room.id===id).reduce((sum,room)=>sum+room.tables.filter(tile=>tile.state.kind==='unknown').length,0);
+   tab.dataset.expressFree=`${free} libre${free>1?'s':''}`;
+  }
  }
 
  function arrivalCard(row,today){
@@ -391,14 +455,15 @@ export function mountExpress(main,readPlan){
 
  async function switchSource(){
   if(busy)return;
-  if(demo){demo.close();demo=null;}
+  window.RestoCF27Departs?.close();lastSharedRelease=null;
+  if(demo){demo.close();demo=demoRelease=null;}
   else{
    const requestedScope=scope;
    const toggle=$('[data-action=simulation]');toggle.disabled=true;
    try{
-    simulation??=await import('./service-v3-express-simulation.mjs?v=20261126-rmops-integration1');
+    simulation??=await import('./service-v3-express-simulation.mjs?v=2027.4');
     if(requestedScope!==currentScope()||!open)return;
-    demo=simulation.createSimulation(window,window.RestoNotificationContext.restaurantId);demo.subscribe(update);
+    demo=simulation.createSimulation(window,window.RestoNotificationContext.restaurantId);demoRelease=releaseHook(demo);demo.subscribe(update);
    }catch{if(requestedScope===currentScope())message('Impossible de charger la simulation Express. Réessayez.');return;}
    finally{toggle.disabled=false;}
   }
@@ -406,6 +471,13 @@ export function mountExpress(main,readPlan){
  }
 
  launch.addEventListener('click',()=>setOpen(true));
+ // The supplied panel takes the first simulation key. Keep a different venue's
+ // fictional departure details out of the active simulation.
+ window.addEventListener('click',event=>{
+  if(!open||!demo||!event.target.closest?.('#rmExpress .rmExpressTile[data-cf-arm]')||matchingSimulationStorage())return;
+  event.preventDefault();event.stopPropagation();
+  message('La fiche de cette table est indisponible pour la simulation active.');
+ },true);
  mobileLaunch.addEventListener('click',()=>{
   if(!canOpen()||!styled)return;
   accountToggle?.click();

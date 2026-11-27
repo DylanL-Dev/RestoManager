@@ -92,5 +92,5 @@ test('front-end offers inline rename with cancel, scoped room table list and emp
  assert.match(admin,/RestoDeactivateRestaurantRoom/);
  assert.match(actions,/if\(profile\.role!=='fb_admin'\)/);
  assert.match(html,/service-v3-table-admin\.js\?v=20261116-rm013a1/);
- assert.match(html,/v3-supabase-booking\.js\?v=20261126-rmops-integration1/);
+ assert.match(html,/v3-supabase-booking\.js\?v=2027\.4/);
 });

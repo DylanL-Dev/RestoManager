@@ -62,6 +62,36 @@ html[data-theme="dark"] :is(.rmExpress,.rmExpressLaunch){
 .rmExpress [data-booking]{display:grid;justify-items:start;gap:5px;overflow-wrap:anywhere}
 .rmExpressOptions,.rmExpressTiles,.rmExpressFields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .rmExpressOptions:empty{display:none}
+/* The informational swap preview must let the touch or mouse reach the proposed table. */
+#rmExpress[data-cf27] .cf-swap{pointer-events:none}
+html:not(.rmExpressActive)>body>:is(.cf-dep,.cf-rel){display:none}
+html.rmExpressActive:not([data-theme="dark"]) .cf-dep{--d-accent:#08734f}
+html:not([data-theme="dark"]) #rmExpress[data-cf27]{--cf-muted:#4f675c}
+html:not([data-theme="dark"]) #rmExpress[data-cf27] :is(.cf-slot[data-late] span,.cf-pulse[data-level="over"] .cf-load-txt b){
+ color:var(--cf-danger-ink);
+}
+html:not([data-theme="dark"]) #rmExpress[data-cf27] .cf-swap-table{background:var(--cf-info-ink)}
+html[data-theme="dark"] #rmExpress[data-cf27] .cf-swap-table{color:var(--cf-bg)}
+.rmExpressLiveArrivals{display:none}
+/* Use the application arrival count in live service: the supplied preview only times simulations correctly. */
+#rmExpress[data-cf27][data-rm-live] .rmExpressLiveArrivals{display:block;color:var(--cf-ink-2);font-weight:700}
+html body #rmExpress[data-cf27][data-rm-live] .cf-flow,
+html body #rmExpress[data-cf27][data-rm-live] .cf-time[data-eta]::after,
+html body #rmExpress[data-cf27][data-rm-live] .rmExpressArrival[data-rm-group]::before{display:none}
+html body #rmExpress[data-cf27][data-rm-live] .rmExpressArrival[data-rm-group],
+html body #rmExpress[data-cf27][data-rm-live] [data-arrivals]>.rmExpressArrival[data-rm-group]:first-child{margin-top:0}
+html body #rmExpress[data-cf27][data-rm-live] .rmExpressArrival[data-rm-tone] .cf-time{background:var(--cf-sunk)}
+html body #rmExpress[data-cf27][data-rm-live] .rmExpressArrival.rm-next:not([aria-pressed="true"]){border-color:var(--cf-line)}
+html body #rmExpress[data-cf27] .rmExpressRoomTabs>button[data-express-free]::after{content:attr(data-express-free) / ""}
+@media(prefers-reduced-motion:no-preference){
+ html body #rmExpress[data-cf27] :is(.rmExpressArrival,.rmExpressTile,.rmExpressPrimary,.rmExpressRoomTabs>button,.cf-pax button){
+  transition-property:transform,box-shadow,border-color;
+ }
+}
+@media(max-width:760px){
+ html body #rmExpress[data-cf27] .rmExpressAccess{flex-wrap:wrap}
+ html body #rmExpress[data-cf27] .rmExpressAccess :is(p,button){white-space:normal}
+}
 .rmExpressTiles{grid-template-columns:repeat(3,minmax(0,1fr))}
 .rmExpress .rmExpressTile{
  display:grid;justify-content:stretch;align-content:start;gap:2px;min-height:57px;padding:7px 8px;

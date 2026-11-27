@@ -7,6 +7,7 @@ const iso='2032-11-08',time=new Date(iso+'T18:44:00Z');
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const tenantA='fixture-ops-a',tenantB='fixture-ops-b';
 let refreshed=false,revision=0,rushFixture,rushVersion=0,rushTableMoved=false;
+let releaseStatus='seated',releaseVersion=id(4215),releaseOwner=null,releaseWrites=0,releaseAttempts=0;
 function makeSnapshot(tenant,change){
  const offset=tenant===tenantB?1000:0;
  const owned=row=>({...row,restaurant_id:tenant});
@@ -29,6 +30,10 @@ function makeSnapshot(tenant,change){
   hours:owned({lunch_enabled:true,lunch_start:'12:00:00',lunch_end:'14:00:00',dinner_enabled:true,dinner_start:'19:00:00',dinner_end:'23:00:00',duration:90,arrival_limit_percent:tenant===tenantB?40:70}),
   rooms,tables,reservations,assignments:reservations.map(row=>owned({reservation_id:row.id,table_id:id(offset+100+(row.hotel_room==='215'?4:21))})),
   holds:[],serviceClosures:[],fusionLinks:[]};
+ if(change==='quick-release'||change==='departure'){
+  if(change==='quick-release')snapshot.capabilities.quick_release=1;
+  Object.assign(reservations[1],{status:releaseStatus,edit_version:releaseVersion,seated_at:iso+'T17:05:00Z',ends_at:iso+'T20:19:00Z'});
+ }
  if(change!=='rush')return snapshot;
  const roomIds=new Map(rushFixture.rooms.map((room,index)=>[room.id,id(index+1)]));
  const reservationId=row=>id(Number(row.id)+2000);
@@ -51,7 +56,7 @@ export async function requireStaff(){return {user:{id:window.__opsTenant+'-user'
 export async function loadSharedService(){return window.__opsSnapshot(window.__opsSnapshotTenant||window.__opsTenant,window.__opsChange)}
 export async function subscribeSharedService(onSnapshot,onError,onConnection){const apply=async()=>onSnapshot(await loadSharedService());const reconnect=()=>{onConnection(true);return apply()};window.addEventListener('fixture:push',apply);window.addEventListener('online',reconnect);await reconnect();return ()=>{}}
 function query(){const q={then:(yes,no)=>Promise.resolve({data:[],error:null}).then(yes,no)};for(const name of ['select','eq','order','limit','range','in','is','single','maybeSingle','gte','lte'])q[name]=()=>q;return q}
-export const supabase={from:query,rpc:async(name)=>{if(name==='booking_draft_v3')return {data:{tables:[],holds:[],seconds:180},error:null};await window.__opsWrite(name);throw Error('Unexpected write');},auth:{getUser:async()=>({data:{user:{id:window.__opsTenant+'-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
+export const supabase={from:query,rpc:async(name,args)=>{if(name==='booking_draft_v3')return {data:{tables:[],holds:[],seconds:180},error:null};if(name==='quick_release_v1'&&window.__opsChange==='quick-release')return window.__opsRelease(args);await window.__opsWrite(name);throw Error('Unexpected write');},auth:{getUser:async()=>({data:{user:{id:window.__opsTenant+'-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
 const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.json':'application/json'};
 const server=http.createServer((req,res)=>{
  const file=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1);
@@ -74,8 +79,24 @@ async function newContext(width){
 }
 async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash=''){
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
- await page.addInitScript(({role,tenant,change})=>{window.__opsRole=role;window.__opsTenant=tenant;window.__opsChange=change;},{role,tenant,change});
+ await page.addInitScript(({role,tenant,change})=>{
+  window.__opsRole=role;window.__opsTenant=tenant;window.__opsChange=change;
+  window.__opsCsp=[];
+  addEventListener('securitypolicyviolation',event=>window.__opsCsp.push(event.violatedDirective));
+ },{role,tenant,change});
  await page.exposeFunction('__opsSnapshot',makeSnapshot);await page.exposeFunction('__opsWrite',name=>writes.push(name));
+ if(change==='quick-release')await page.exposeFunction('__opsRelease',args=>{
+  releaseAttempts++;
+  assert.equal(args.p_reservation_id,id(215));
+  assert.deepEqual(args.p_table_ids,[id(104)]);
+  const expected=args.p_undo?'released':'seated';
+  if(args.p_expected_version!==releaseVersion||releaseStatus!==expected||args.p_undo&&releaseOwner!==page)
+   return {data:null,error:{code:'40001',message:'Ce client n’est plus installé sur ces tables. Vérifiez le plan.'}};
+  releaseStatus=args.p_undo?'seated':'released';
+  releaseVersion=id(4400+ ++releaseWrites);
+  releaseOwner=args.p_undo?null:page;
+  return {data:releaseVersion,error:null};
+ });
  await page.clock.install({time});await page.goto(origin+'/v3-connected.html'+hash);
  await page.waitForFunction(()=>window.RestoSharedDataLoaded===true&&!!window.RestoPlacement);
  const welcome=page.locator('#restoTourWelcome');if(await welcome.isVisible())await page.getByRole('button',{name:'Plus tard',exact:true}).click();
@@ -104,6 +125,139 @@ async function validateAxe(page){
  await page.addScriptTag({url:origin+'/__axe.js'});
  const violations=await page.evaluate(async()=> (await window.axe.run('#rmExpress',{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(v=>[v.id,v.nodes.map(n=>n.target)]));
  assert.deepEqual(violations,[]);
+}
+
+const floor=page=>express(page).locator('details[data-floor]');
+const floorTable=(page,number)=>floor(page).locator('.rmExpressTile').filter({has:page.getByText('T'+number,{exact:true})});
+const departure=page=>page.locator('.cf-dep.cf-show');
+async function openFloor(page){
+ await express(page).locator('.cf-pulse').waitFor();
+ if(!await floor(page).evaluate(details=>details.open))await floor(page).locator('summary').click();
+}
+async function openDeparture(page,number){
+ const tile=floorTable(page,number).and(page.locator('[data-cf-arm]'));
+ await tile.waitFor();
+ await tile.evaluate(node=>node.scrollIntoView({block:'center',behavior:'instant'}));
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ await tile.click();
+ await departure(page).waitFor();
+}
+async function testCoupDeFeu(){
+ for(const width of [320,375,768,1024,1440,1920]){
+  const context=await newContext(width);
+  const page=await newPage(context),view=express(page);
+  await simulation(page);
+  await page.locator('#rmExpress[data-rm-sim]').waitFor();
+  await view.locator('.cf-pulse').waitFor();
+  assert.deepEqual(await page.evaluate(()=>[window.RestoCF27.version,window.RestoCF27Departs.version]),['2027.4','2027.4']);
+  assert.match(await view.getByText('Simulation · données fictives').evaluate(node=>getComputedStyle(node).backgroundImage),/repeating-linear-gradient/);
+  await view.locator('[data-arrivals] [data-cf-split]').first().waitFor();
+  await view.locator('[data-arrivals] [data-rm-group]').first().waitFor();
+  await tabs(page).locator('button[data-express-free]').first().waitFor();
+  for(const theme of ['light','dark']){
+   await page.evaluate(theme=>document.documentElement.dataset.theme=theme,theme);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1),`${width} px / ${theme}`);
+  }
+  if(width===320){
+   await select(page,'214');
+   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#rmExpress [data-reservation]')).position==='fixed');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
+  }
+  if(width===375){
+   await view.locator('#rmExpressTitle').focus();
+   await page.keyboard.press('/');
+   await page.keyboard.type('214');
+   await page.keyboard.press('Enter');
+   const panel=view.locator('[data-reservation]');
+   await view.getByRole('heading',{name:/Dupont/}).waitFor();
+   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#rmExpress [data-reservation]')).position==='fixed');
+   assert.ok(await panel.locator('.cf-handle').isVisible());
+   await view.locator('[data-suggestions] button').first().focus();
+   await page.keyboard.press('1');
+   await page.waitForFunction(()=>document.activeElement?.dataset.action==='install');
+   await page.keyboard.press('Enter');
+   await view.getByText(/installation enregistrée/).waitFor();
+   await view.getByRole('button',{name:'Passage',exact:true}).click();
+   const passage=view.getByRole('region',{name:'Passage express'});
+   const counts=passage.getByRole('group',{name:'Nombre de couverts'});
+   assert.equal(await counts.getByRole('button').count(),8);
+   await counts.getByRole('button',{name:'8 couverts'}).click();
+   assert.equal(await passage.getByLabel('Couverts',{exact:true}).inputValue(),'8');
+   await passage.getByRole('radio',{name:'Hôtel'}).click();
+   await passage.getByLabel('Chambre (facultatif)').waitFor();
+   await passage.getByRole('radio',{name:'Extérieur'}).click();
+   assert.ok(await passage.getByLabel('Chambre (facultatif)').isHidden());
+  }
+  await page.screenshot({path:path.join(out,`coup-de-feu-2027-4-${width}.png`),animations:'disabled'});
+  assert.deepEqual(await page.evaluate(()=>window.__opsCsp),[]);
+  await context.close();
+ }
+ console.log('PASS Coup de feu v2027.4 : les six largeurs du guide, clair et sombre, clavier et passage');
+
+ const context=await newContext(390);
+ const first=await newPage(context),second=await newPage(context);
+ await simulation(first);
+ const storageKey='restomanager-express-fiction-v1:'+tenantA;
+ await first.waitForFunction(key=>!!localStorage.getItem(key),storageKey);
+ await first.evaluate(({key,date})=>{
+  const saved=JSON.parse(localStorage.getItem(key));
+  const party=(n,client,hotelRoom)=>({id:'depart-'+n,date,status:'seated',client,hotelRoom,duration:90,
+   seatedAt:date+'T17:05:00Z',time:'18:05',tables:[n],guests:2});
+  saved.reservations=[party(1,'Martin','237'),party(2,'Dubois','274')];
+  localStorage.setItem(key,JSON.stringify(saved));
+ },{key:storageKey,date:iso});
+ await express(first).getByRole('button',{name:'Retour au service partagé'}).click();
+ await express(first).getByRole('button',{name:'Simuler un service'}).click();
+ await simulation(second);
+ await express(first).getByRole('button',{name:/2 à vérifier.*voir les tables/i}).click();
+ await first.waitForFunction(()=>document.activeElement?.querySelector('strong')?.textContent==='T1');
+ for(const number of [1,2])assert.match(await floorTable(first,number).getAttribute('class'),/cf-attn/);
+ await openFloor(second);
+ await floorTable(first,1).click();
+ await floorTable(second,1).click();
+ await departure(first).getByText(/Martin · Ch. 237/).waitFor();
+ await departure(first).getByText('+9 min',{exact:true}).waitFor();
+ await first.keyboard.press('Enter');
+ await first.locator('.cf-rel').getByText('T1 libérée',{exact:true}).waitFor();
+ for(const page of [first,second]){
+  await floorTable(page,1).getByText('Aucun client enregistré').waitFor({state:'attached'});
+  await express(page).getByRole('button',{name:/1 à vérifier.*voir les tables/i}).waitFor();
+ }
+ await departure(second).getByRole('button',{name:'Libérer T1'}).press('Enter');
+ await second.locator('.cf-rel[data-tone="err"]').getByText(/plus installé sur ces tables/).waitFor();
+ assert.equal(await second.evaluate(key=>JSON.parse(localStorage.getItem(key)).revision,storageKey),1);
+ await first.locator('.cf-rel').getByRole('button',{name:'Annuler'}).click();
+ for(const page of [first,second])await floorTable(page,1).getByText('Départ à vérifier').waitFor();
+ assert.equal(await second.evaluate(key=>JSON.parse(localStorage.getItem(key)).revision,storageKey),2);
+ await context.close();
+ console.log('PASS simulation : T1/T2, +9 min, libération et annulation persistantes, conflit dans un second onglet');
+
+ const [tablet,phone]=await Promise.all([newContext(1024),newContext(390)]);
+ const legacy=await newPage(tablet,'fb_admin',tenantA,'departure');
+ await enter(legacy);await openFloor(legacy);await openDeparture(legacy,4);
+ await departure(legacy).getByRole('button',{name:'Libérer en mode complet'}).click();
+ await express(legacy).waitFor({state:'hidden'});
+ assert.equal(releaseWrites,0);
+ await legacy.close();
+ const [deviceA,deviceB]=await Promise.all([newPage(tablet,'fb_admin',tenantA,'quick-release'),newPage(phone,'fb_admin',tenantA,'quick-release')]);
+ for(const page of [deviceA,deviceB]){
+  await enter(page);await openFloor(page);await openDeparture(page,4);
+  await departure(page).getByRole('button',{name:'Libérer T4'}).waitFor();
+ }
+ await departure(deviceA).getByRole('button',{name:'Libérer T4'}).press('Enter');
+ await deviceA.locator('.cf-rel').getByText('T4 libérée',{exact:true}).waitFor();
+ await departure(deviceB).getByRole('button',{name:'Libérer T4'}).press('Enter');
+ await deviceB.locator('.cf-rel[data-tone="err"]').getByText(/plus installé sur ces tables/).waitFor();
+ assert.equal(releaseAttempts,2);
+ assert.equal(releaseWrites,1);
+ for(const page of [deviceA,deviceB])await floorTable(page,4).getByText('Aucun client enregistré').waitFor();
+ await deviceA.locator('.cf-rel').getByRole('button',{name:'Annuler'}).click();
+ await floorTable(deviceA,4).getByText('Départ à vérifier').waitFor();
+ await deviceB.evaluate(()=>dispatchEvent(new Event('fixture:push')));
+ await floorTable(deviceB,4).getByText('Départ à vérifier').waitFor();
+ assert.equal(releaseWrites,2);
+ await tablet.close();await phone.close();
+ console.log('PASS parcours connecté isolé : deux contextes navigateur, rejet rouge et annulation avec RPC simulée');
 }
 
 (async()=>{
@@ -169,13 +323,14 @@ async function validateAxe(page){
    await view.getByRole('button',{name:'Passage',exact:true}).click();
    if(width===834){
     const passage=view.getByRole('region',{name:'Passage express'});
-    await passage.getByLabel('Couverts').fill('3');
+    const guests=passage.getByRole('spinbutton',{name:'Couverts',exact:true});
+    await guests.fill('3');
     await tabs(page).getByRole('button',{name:'Verrière',exact:true}).click();
     await passage.getByText('Aucune table compatible avec ce passage dans Verrière.').waitFor();
     assert.equal(await passage.getByRole('button',{name:/Installer/}).count(),0);
     await passage.getByRole('button',{name:'Voir les autres salles'}).click();
-    assert.equal(await passage.getByLabel('Couverts').inputValue(),'3');
-    await passage.getByLabel('Couverts').fill('2');
+    assert.equal(await guests.inputValue(),'3');
+    await guests.fill('2');
    }
    await view.locator('[data-passage-tables]').getByRole('button',{name:/^T16 /}).click();
    await view.getByRole('button',{name:'Installer 2 couverts en T16'}).click();
@@ -250,6 +405,8 @@ async function validateAxe(page){
   await otherView.getByText('Charge du service · 4 / 3 couverts',{exact:true}).waitFor();
   await view.getByText('Charge du service · 4 / 5 couverts',{exact:true}).waitFor();
   const tableFour=page=>express(page).locator('[data-floor] .rmExpressTile').filter({has:page.getByText('T4',{exact:true})});
+  await openFloor(restaurant);
+  await openFloor(separate);
   assert.match(await tableFour(restaurant).innerText(),/Prévue/);
   assert.match(await tableFour(separate).innerText(),/Installé déclaré/);
 
@@ -329,6 +486,7 @@ async function validateAxe(page){
   assert.equal(await completeDraft.inputValue(),'Brouillon de l’équipe');
   await tablet.close();await phone.close();
   console.log('PASS Express + moteur : 200 couverts, téléphone et tablette, concurrence, panne, passage en aperçu et zéro écriture');
+  await testCoupDeFeu();
   assert.deepEqual(writes,[]);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  }finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});
