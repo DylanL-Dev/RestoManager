@@ -91,10 +91,15 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
   reset();
   const startup=await open(browser,origin,'reception',{width:390,height:844},'Europe/Paris',async page=>{
    await page.getByRole('status').filter({hasText:'Vérification de la session'}).waitFor();
+   await page.locator('#integrationLoading[data-rm-boot="1"] .rm-boot-mark svg').waitFor({state:'attached'});
+   assert.equal(await page.locator('#integrationLoading .rm-boot-bar').count(),1);
+   assert.equal(await page.locator('#integrationLoading .rm-boot-slow').textContent(),'La connexion prend plus de temps que prévu…');
+   assert.equal(await page.locator('.rm-boot-exit').count(),0);
    assert.equal(await page.locator('header.top').isVisible(),false);
    assert.equal(await page.locator('#bookingForm').isVisible(),false);
   });
   assert.equal(await startup.page.locator('#integrationLoading').count(),0);
+  await startup.page.locator('.rm-boot-exit').waitFor({state:'detached',timeout:5000});
   assert.equal(await startup.page.locator('header.top').isVisible(),true);
   pass('Startup reports session verification and keeps the service hidden until authorization');
   await clean(startup);
