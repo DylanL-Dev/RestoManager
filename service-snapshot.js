@@ -19,14 +19,16 @@ export function prepareServiceSnapshot(snapshot,decodeBookingDetails){
  const assigned=new Map();
  for(const a of snapshot.assignments){
   if(!assigned.has(a.reservation_id))assigned.set(a.reservation_id,[]);
-  if(Number.isInteger(number(a.table_id))&&number(a.table_id)>0)assigned.get(a.reservation_id).push(number(a.table_id));
+  assigned.get(a.reservation_id).push(a.table_id);
  }
  const reservations=snapshot.reservations.map(r=>{
   const dt=new Date(r.starts_at);
   const parts=Object.fromEntries(new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(dt).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
   const time=new Intl.DateTimeFormat('fr-FR',{timeZone:'Europe/Paris',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(dt);
   const details=decodeBookingDetails(r.notes,r.hotel_room);
-  return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts.year+'-'+parts.month+'-'+parts.day,time,guests:r.party_size,tables:assigned.get(r.id)||[],status:r.status==='departed'?'released':r.status,
+  const tableIds=assigned.get(r.id)||[];
+  return {id:r.id,client:r.guest_name||r.hotel_room||'Client',date:parts.year+'-'+parts.month+'-'+parts.day,time,guests:r.party_size,
+   tableIds,tables:tableIds.map(number).filter(n=>Number.isInteger(n)&&n>0),status:r.status==='departed'?'released':r.status,
    channel:r.source_channel==='web'?'web':null,guestRequestNotes:r.source_channel==='web'?String(r.guest_request_notes||''):'',walkIn:!!r.walkin_type,type:r.walkin_type||details.type,confirmedAt:r.confirmed_at,arrivedAt:r.arrived_at,seatedAt:r.seated_at,releasedAt:r.released_at,
    duration:Math.round((new Date(r.ends_at)-dt)/60000),notes:details.notes,allergies:details.allergies,hotelRoom:r.hotel_room||'',editVersion:r.edit_version||null};
  });

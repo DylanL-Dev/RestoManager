@@ -28,7 +28,7 @@ test('RM-010 Recéption receives missed updates via visible-tab reconciliation',
 });
 test('RM-010 JS asset refresh invalidates old code across browser and PWA',()=>{
  assert.match(html,/service-v3\.js\?v=20261116-rm013a1/);
- assert.match(html,/<script type="module" src="v3-connected-auth\.js\?v=20261127-rmux-startup1"><\/script>/);
- assert.match(html,/<link rel="modulepreload" href="v3-connected-auth\.js\?v=20261127-rmux-startup1">/);
+ assert.match(html,/<script type="module" src="v3-connected-auth\.js\?v=2027\.4"><\/script>/);
+ assert.match(html,/<link rel="modulepreload" href="v3-connected-auth\.js\?v=2027\.4">/);
  assert.match(auth,/supabase-service-bridge\.js\?v=20261117-rm012/);
 });

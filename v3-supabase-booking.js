@@ -268,3 +268,19 @@ window.RestoChangeSharedStatus=async function(reservation,status){
  if(error)throw error;
  await window.RestoRefreshSharedService();
 };
+
+window.RestoCommitSharedQuickRelease=async({reservationId,version,tableIds,undo=false})=>{
+ requireWrite();
+ if(window.RestoServiceCapabilities?.quick_release!==1)throw Error('Libération sur place indisponible.');
+ const {data,error}=await supabase.rpc('quick_release_v1',{
+  p_reservation_id:reservationId,p_expected_version:version,p_table_ids:tableIds,p_undo:undo
+ });
+ if(error){
+  void window.RestoRefreshSharedService().catch(()=>{});
+  throw error;
+ }
+ // The RPC has committed. A connection failure during refresh must not turn
+ // the committed release into a failed release or prevent its cancellation.
+ void window.RestoRefreshSharedService().catch(()=>{});
+ return data;
+};

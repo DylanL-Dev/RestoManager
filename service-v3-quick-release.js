@@ -18,6 +18,34 @@ let lastUndo=null;
 const pendingReleases=new Set();
 const connectedService=()=>Boolean(document.getElementById('integrationGate'));
 const canRelease=()=>!connectedService()||window.RestoSupabaseReady===true;
+const matchesTables=(actual,expected)=>Array.isArray(expected)&&actual.length===expected.length&&
+ actual.every(number=>expected.includes(number));
+function sharedContext(){
+ const {restaurantId,userId}=window.RestoNotificationContext||{};
+ if(!restaurantId||!userId||window.RestoExpressSnapshotRestaurantId!==restaurantId)return null;
+ return JSON.stringify([restaurantId,userId]);
+}
+const supportsUndo=()=>window.RestoServiceCapabilities?.quick_release===1&&typeof window.RestoCommitSharedQuickRelease==='function';
+async function releaseShared({reservationId,tables}){
+ if(!canRelease()||navigator.onLine===false)throw Error('Synchronisation indisponible. Attendez la reconnexion avant de libérer cette table.');
+ const all=read(),previous=all.find(row=>row.id===reservationId&&row.status==='seated');
+ if(!previous||!matchesTables(previous.tables,tables))throw Error('Ce client n’est plus installé sur ces tables. Vérifiez le plan.');
+ const transition=ReservationEngine.transition(previous,'released',new Date().toISOString(),all);
+ if(!transition.valid)throw Error(transition.error);
+ if(!supportsUndo()){
+  await window.RestoChangeSharedStatus(previous,'released');
+  return null;
+ }
+ const context=sharedContext();
+ if(!context)throw Error('Le contexte du service a changé.');
+ const args={reservationId,tableIds:previous.tableIds,version:previous.editVersion};
+ const version=await window.RestoCommitSharedQuickRelease(args);
+ return async()=>{
+  if(context!==sharedContext()||!canRelease())throw Error('Le contexte du service a changé.');
+  await window.RestoCommitSharedQuickRelease({...args,version,undo:true});
+ };
+}
+window.RestoQuickRelease=Object.freeze({supportsUndo,releaseShared});
 function room(r){return String(r.hotelRoom||r.room||r.roomNumber||r.chambre||r.chambreNumber||'').trim()}
 function el(tag,cls,content){const e=document.createElement(tag);if(cls)e.className=cls;if(content!=null)e.textContent=content;return e}
 function render(){
@@ -96,15 +124,27 @@ async function release(id){
  pendingReleases.add(id);render();
  try{
  const all=read(),index=all.findIndex(r=>r.id===id&&r.status==='seated');if(index<0){render();return}
- const previous=all[index],transition=ReservationEngine.transition(previous,'released',new Date().toISOString(),all);
- if(!transition.valid){$('quickReleaseFeedback').textContent=transition.error;return}
+ const previous=all[index];
  if(window.RestoSharedReservations){
   try{
-   await window.RestoChangeSharedStatus(previous,'released');
+   const undo=await releaseShared({reservationId:id,tables:previous.tables});
    $('quickReleaseFeedback').textContent='Table '+previous.tables.join(' + ')+' libérée.';
+   if(undo){
+    const status=$('quickReleaseUndo'),button=el('button','quickReleaseUndoButton','Annuler');
+    button.type='button';
+    button.addEventListener('click',async()=>{
+     button.disabled=true;
+     try{await undo();status.textContent='Libération annulée.';}
+     catch(error){status.textContent=error.message;}
+    });
+    status.replaceChildren(button);
+    setTimeout(()=>button.remove(),8000);
+   }
   }catch(error){$('quickReleaseFeedback').textContent=error.message}
   return;
  }
+ const transition=ReservationEngine.transition(previous,'released',new Date().toISOString(),all);
+ if(!transition.valid){$('quickReleaseFeedback').textContent=transition.error;return}
  all[index]=transition.reservation;
  try{localStorage.setItem(KEY,JSON.stringify(all))}catch(e){$('quickReleaseFeedback').textContent='Enregistrement impossible : '+e.message;return}
  lastUndo={id,previous,releasedAt:transition.reservation.updatedAt};

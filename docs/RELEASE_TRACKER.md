@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS — Coup de feu v2027.4 et libération d’une table — CANDIDAT DEV (27/11/2026)
+
+- Suite de [#266](https://github.com/DylanL-Dev/RestoManager/issues/266) sur DEV `09ec277`. Les deux fichiers livrés sont chargés après le pack UX. La simulation applique et annule les libérations dans son propre état. Le correctif SQL de libération réelle est proposé séparément et a été exécuté sur PostgreSQL jetable. L’activation nécessite la validation du serveur DEV. [Recette et conditions d’activation](audits/RM-OPS_COUP_DE_FEU_2027_4_20261127.md).
+
 ### RM-UX — Indicateur de démarrage avant authentification — CANDIDAT DEV (27/11/2026)
 
 - Suite de #280 sur DEV `125658d`, suivie dans [#242](https://github.com/DylanL-Dev/RestoManager/issues/242). L’accueil affiche un fond vert et l’espace connecté annonce la vérification de session dès le premier affichage. Le module d’authentification commence à se charger depuis l’en-tête. L’espace de travail reste masqué jusqu’à l’autorisation et la redirection de refus vers la connexion est vérifiée. Le cache PWA est versionné. [Mesures et recette](audits/RM-UX_DEMARRAGE_20261127.md).

@@ -35,6 +35,8 @@ function activeTable(snapshot,table){return table?.active!==false&&snapshot.room
 const refusal=(code,message)=>({ok:false,code,message});
 const failure=(code,message)=>Object.assign(Error(message),{code});
 const versionOf=row=>[row.id,row.status,row.guests,row.date,row.time,row.duration,row.tables];
+const sameTables=(actual,expected)=>Array.isArray(expected)&&actual.length>0&&
+ actual.length===expected.length&&actual.every(number=>expected.includes(number));
 
 // This fixture only models direct moves and two-party swaps. The production solver belongs to #265.
 export function previewPlacement(snapshot,reservationId,number){
@@ -110,6 +112,7 @@ export function createSimulation(source=window,scope='demo'){
  let state=fallback;
  let shared=false;
  let closed=false;
+ let lastRelease=null;
  try{shared=typeof source.navigator.locks?.request==='function'&&!!source.localStorage;}catch{}
  const listeners=new Set();
  function read(){
@@ -127,6 +130,15 @@ export function createSimulation(source=window,scope='demo'){
    catch{shared=false;}}
   state=next;notify();
  }
+ if(shared){
+  // The presentation layer reads the fictional snapshot as soon as the plan opens.
+  // Seed it under the same lock as writes so a late tab cannot replace live simulation state.
+  void source.navigator.locks.request(key,()=>{
+   if(closed||!shared)return;
+   try{if(source.localStorage.getItem(key)===null)write(state);}
+   catch{shared=false;}
+  }).catch(()=>{shared=false;});
+ }
  function update(apply){
   function perform(){
    if(closed)throw failure('CONTEXT_CHANGED','La simulation appartient à un autre contexte de service.');
@@ -140,6 +152,36 @@ export function createSimulation(source=window,scope='demo'){
  return {read,subscribe(listener){listeners.add(listener);return ()=>listeners.delete(listener);},
   close(){closed=true;listeners.clear();source.removeEventListener('storage',sync);},
   preview:previewPlacement,suggestions,suggestWalkIn,
+  release({reservationId,tables}){
+   return update(snapshot=>{
+    const previous=snapshot.reservations.find(row=>row.id===reservationId);
+    if(previous?.status!=='seated'||!sameTables(previous.tables,tables)){
+     return {value:refusal('STALE','Ce client n’est plus installé sur ces tables. Vérifiez le plan.')};
+    }
+    const releaseRevision=snapshot.revision+1;
+    lastRelease={previous,releaseRevision,expiresAt:Date.now()+8000};
+    return {
+     reservations:snapshot.reservations.map(row=>row===previous?{...row,status:'released',releaseRevision}:row),
+     value:{ok:true}
+    };
+   });
+  },
+  undo({reservationId,tables}){
+   return update(snapshot=>{
+    const original=lastRelease?.previous;
+    const current=snapshot.reservations.find(row=>row.id===reservationId);
+    if(!original||original.id!==reservationId||Date.now()>=lastRelease.expiresAt||
+       !sameTables(original.tables,tables)||current?.status!=='released'||
+       current.releaseRevision!==lastRelease.releaseRevision||!sameTables(current.tables,tables)){
+     return {value:refusal('STALE','Annulation impossible : cette libération a expiré ou le service a changé.')};
+    }
+    if(snapshot.reservations.some(row=>row.id!==reservationId&&row.status==='seated'&&row.tables.some(number=>tables.includes(number)))){
+     return {value:refusal('TARGET_OCCUPIED','Annulation impossible : cette table a été réoccupée.')};
+    }
+    lastRelease=null;
+    return {reservations:snapshot.reservations.map(row=>row===current?original:row),value:{ok:true}};
+   });
+  },
   seat(plan){return update(snapshot=>{
    const row=snapshot.reservations.find(item=>item.id===plan.reservationId);
    if(row?.status==='seated'&&row.tables.length===1&&row.tables[0]===plan.targetTables[0]){

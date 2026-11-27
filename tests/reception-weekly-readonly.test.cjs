@@ -15,5 +15,5 @@ test('Reception can see weekly hours without editing the restaurant schedule',()
  assert.doesNotMatch(auth.slice(auth.indexOf('const receptionManagement='),auth.indexOf(" window.RestoSharedReservations=[]")),/RestoSaveSharedHours|supabase\.from\('restaurant_hours'\)\.update/);
  assert.match(css,/\.rmReceptionWeeklyReadonly/);
  assert.match(css,/@media\(max-width:700px\)/);
- assert.match(html,/<script type="module" src="v3-connected-auth\.js\?v=20261127-rmux-startup1"><\/script>/);
+ assert.match(html,/<script type="module" src="v3-connected-auth\.js\?v=2027\.4"><\/script>/);
 });
