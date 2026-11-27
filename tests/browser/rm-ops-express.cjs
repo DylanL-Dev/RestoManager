@@ -268,6 +268,7 @@ async function testCoupDeFeu(){
 }
 
 async function testPublishedSimulation(){
+ refreshed=false;
  for(const {site,published,expressAvailable} of [
   {site:'https://restaurant-publication.github.io',published:true,expressAvailable:false},
   {site:'https://restaurant-publication.onrender.com',published:false,expressAvailable:true},
