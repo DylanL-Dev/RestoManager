@@ -203,6 +203,7 @@ export function mountExpress(main,readPlan){
   passage=otherDates=false;handoffs.clear();search.value='';message('');
   $('[data-guests]').value='2';$('[data-guest-type]').value='external';$('[data-guest-room]').value='';
   $('[data-other-tables]').open=false;
+  $('.cf-swap')?.remove();
   $('[data-all-tables]').replaceChildren();$('[data-passage-tables]').replaceChildren();
   $('[data-placement-summary]').textContent='';$('[data-action=install]').textContent='';
   $('[data-room-change] strong').textContent='';
