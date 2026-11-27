@@ -26,3 +26,9 @@ Les ajustements de contraste, d’accessibilité et de largeur sont dans la feui
 - Le parcours connecté est exercé dans deux contextes Chromium indépendants sur une RPC fictive. Les deux appels atteignent la RPC, un seul est accepté et le second ouvre le bandeau d’erreur. Le parcours sans la capacité serveur vérifie le retour en mode complet.
 - Le test `node tests/postgres/rm-ops-quick-release.cjs` rejoue le schéma de référence DEV sur PostgreSQL 17 jetable. Il vérifie deux transactions concurrentes et l’incrément de révision de l’action existante, ainsi que l’interdiction d’annuler pour un autre compte, après réoccupation ou après expiration.
 - La proposition SQL se trouve dans `supabase/proposals/rm-ops-quick-release/`. Sa validation sur le schéma hébergé et l’essai final sur deux appareils avec Realtime DEV demandent une autorisation distincte. Aucune migration n’est appliquée sur un service hébergé.
+
+## Simulation réservée à DEV
+
+La version v2027.4 a été publiée sur Render DEV avec la fusion `9798357`. Pour les futures promotions, le bouton « Simuler un service » et la création d’un service fictif exigent le canal DEV sur le domaine Render de DEV ou une adresse locale de recette. Les pages de V3 et MAIN portent le canal `main`. Un autre hôte reste bloqué même si sa page annonce le canal DEV. [Déploiement v2027.4](https://dashboard.render.com/static/srv-dbm8o15g1s2s73cemju0/deploys/dep-dc50jeui0phs73bu5fn0).
+
+Les tests couvrent GitHub Pages, un autre hôte Render et une copie de la page publiée sur localhost. L’accès actuel à Coup de feu reste limité à ses hôtes existants. Là où il est accessible, le service partagé continue de fonctionner quand la simulation est bloquée. Le paquet de publication exclut le module de simulation. Le cache PWA versionné conserve le module uniquement dans le cache de développement.

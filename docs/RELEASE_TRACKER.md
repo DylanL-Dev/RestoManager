@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-OPS — Simulation Coup de feu réservée à DEV — CANDIDAT DEV (28/11/2026)
+
+- Suite de [#266](https://github.com/DylanL-Dev/RestoManager/issues/266), depuis `9798357`. Le bouton et le démarrage de la simulation exigent le canal DEV et un hôte de développement autorisé. Le paquet de publication et son cache excluent le module fictif. Ce contrôle fait partie de la recette des futures promotions V3 et MAIN. [Détail et recette](audits/RM-OPS_COUP_DE_FEU_2027_4_20261127.md#simulation-réservée-à-dev).
+
 ### RM-OPS — Coup de feu v2027.4 et libération d’une table — CANDIDAT DEV (27/11/2026)
 
 - Suite de [#266](https://github.com/DylanL-Dev/RestoManager/issues/266) sur DEV `09ec277`. Les deux fichiers livrés sont chargés après le pack UX. La simulation applique et annule les libérations dans son propre état. Le correctif SQL de libération réelle est proposé séparément et a été exécuté sur PostgreSQL jetable. L’activation nécessite la validation du serveur DEV. [Recette et conditions d’activation](audits/RM-OPS_COUP_DE_FEU_2027_4_20261127.md).

@@ -68,16 +68,23 @@ const server=http.createServer((req,res)=>{
 
 let origin,browser;
 const writes=[],external=[],errors=[];
-async function newContext(width){
+async function newContext(width,{site=origin,published=false}={}){
  const context=await browser.newContext({viewport:{width,height:width<700?844:950},serviceWorkers:'block',hasTouch:width<1100,isMobile:width<700,timezoneId:'Europe/Paris'});
- await context.route('**/*',route=>{
-  if(new URL(route.request().url()).origin===origin&&route.request().method()==='GET')return route.continue();
-  external.push(new URL(route.request().url()).pathname);return route.abort();
+ await context.route('**/*',async route=>{
+  const url=new URL(route.request().url());
+  if(url.origin!==site||route.request().method()!=='GET'){
+   external.push(url.pathname);return route.abort();
+  }
+  if(site===origin&&!published)return route.continue();
+  const response=await route.fetch({url:origin+url.pathname+url.search});
+  if(!published||url.pathname!=='/v3-connected.html')return route.fulfill({response});
+  const html=(await response.text()).replace('name="restomanager-channel" content="dev"','name="restomanager-channel" content="main"');
+  return route.fulfill({response,body:html});
  });
  await context.routeWebSocket('**/*',websocket=>websocket.close());
  return context;
 }
-async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash=''){
+async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash='',site=origin){
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
  await page.addInitScript(({role,tenant,change})=>{
   window.__opsRole=role;window.__opsTenant=tenant;window.__opsChange=change;
@@ -97,7 +104,7 @@ async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash='
   releaseOwner=args.p_undo?null:page;
   return {data:releaseVersion,error:null};
  });
- await page.clock.install({time});await page.goto(origin+'/v3-connected.html'+hash);
+ await page.clock.install({time});await page.goto(site+'/v3-connected.html'+hash);
  await page.waitForFunction(()=>window.RestoSharedDataLoaded===true&&!!window.RestoPlacement);
  const welcome=page.locator('#restoTourWelcome');if(await welcome.isVisible())await page.getByRole('button',{name:'Plus tard',exact:true}).click();
  return page;
@@ -258,6 +265,47 @@ async function testCoupDeFeu(){
  assert.equal(releaseWrites,2);
  await tablet.close();await phone.close();
  console.log('PASS parcours connecté isolé : deux contextes navigateur, rejet rouge et annulation avec RPC simulée');
+}
+
+async function testPublishedSimulation(){
+ for(const {site,published,expressAvailable} of [
+  {site:'https://restaurant-publication.github.io',published:true,expressAvailable:false},
+  {site:'https://restaurant-publication.onrender.com',published:false,expressAvailable:true},
+  {site:origin,published:true,expressAvailable:true}
+ ]){
+  const context=await newContext(1440,{site,published});
+  const page=await newPage(context,'fb_admin',tenantA,null,'',site);
+  const requests=[];
+  page.on('request',request=>{if(request.url().includes('service-v3-express-simulation.mjs'))requests.push(request.url());});
+  if(expressAvailable){
+   await enter(page);
+   await express(page).getByText('Service partagé · consultation Express').waitFor();
+  }else{
+   assert.equal(await page.getByRole('button',{name:'Mode Coup de feu',exact:true}).count(),0);
+  }
+  assert.equal(await express(page).locator('[data-action="simulation"]').count(),0);
+  if(expressAvailable){
+   await express(page).evaluate(root=>{
+    const trigger=document.createElement('button');
+    trigger.dataset.action='simulation';
+    root.append(trigger);trigger.click();trigger.remove();
+   });
+  }
+  await page.clock.runFor(50);
+  assert.deepEqual(requests,[]);
+  const denial=await page.evaluate(async()=>{
+   const fixture=await import('./service-v3-express-simulation.mjs?v=2027.4-devonly1');
+   try{fixture.createSimulation();return '';}catch(error){return error.message;}
+  });
+  assert.match(denial,/réservée à DEV/);
+  assert.deepEqual(await page.evaluate(()=>Object.keys(localStorage).filter(key=>key.startsWith('restomanager-express-fiction-'))),[]);
+  if(expressAvailable){
+   await select(page,'214');
+   await express(page).getByRole('heading',{name:/Dupont DEV fictif/}).waitFor();
+  }
+  await context.close();
+ }
+ console.log('PASS simulation Coup de feu réservée à DEV : bouton absent, déclenchement et import directs bloqués, service partagé disponible');
 }
 
 (async()=>{
@@ -487,6 +535,7 @@ async function testCoupDeFeu(){
   await tablet.close();await phone.close();
   console.log('PASS Express + moteur : 200 couverts, téléphone et tablette, concurrence, panne, passage en aperçu et zéro écriture');
   await testCoupDeFeu();
+  await testPublishedSimulation();
   assert.deepEqual(writes,[]);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  }finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

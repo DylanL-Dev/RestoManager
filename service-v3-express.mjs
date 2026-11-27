@@ -1,4 +1,4 @@
-import {assignedRoom,belongsToService,elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,roomViews,serviceIndicators,tableStatus} from './service-v3-express-data.mjs?v=20261126-rmops-integration1';
+import {allowsExpressSimulation,assignedRoom,belongsToService,elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,roomViews,serviceIndicators,tableStatus} from './service-v3-express-data.mjs?v=2027.4-devonly1';
 import {createLiveAdapter} from './placement-express-adapter.mjs?v=20261126-rmops-integration1';
 
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
@@ -21,6 +21,7 @@ function button(label,action,value){
 }
 
 export function mountExpress(main,readPlan){
+ const simulationAllowed=allowsExpressSimulation(window);
  const launch=button('','open');launch.className='rmExpressLaunch';launch.hidden=true;
  launch.innerHTML=`${icon('zap')}<span>Mode Coup de feu</span>`;
  launch.title='Ouvrir le Mode Coup de feu';
@@ -33,7 +34,7 @@ export function mountExpress(main,readPlan){
    <div class="rmExpressActions"><span data-sync></span><button type="button" data-action="close">Mode complet</button></div>
   </header>
   <div class="rmExpressAccess">
-   <p data-access></p><button type="button" data-action="simulation">Simuler un service</button>
+   <p data-access></p>${simulationAllowed?'<button type="button" data-action="simulation">Simuler un service</button>':''}
   </div>
   <div class="rmExpressSearch">
    <label>${icon('search')}<span class="rmExpressVisuallyHidden">Chambre ou nom</span><input type="search" placeholder="Chambre ou nom" autocomplete="off"></label>
@@ -78,6 +79,7 @@ export function mountExpress(main,readPlan){
    </div>
   </div>`;
  const $=selector=>root.querySelector(selector);
+ const simulationToggle=$('[data-action=simulation]');
  const search=$('input[type=search]');
  const groups=$('[data-arrivals]');
  const booking=$('[data-booking]');
@@ -214,7 +216,7 @@ export function mountExpress(main,readPlan){
   root.toggleAttribute('data-rm-live',!demo);
   $('[data-access]').textContent=demo?'Simulation · données fictives':
    window.RestoQuickRelease?.supportsUndo()?'Service partagé':'Service partagé · consultation Express';
-  $('[data-action=simulation]').textContent=demo?'Retour au service partagé':'Simuler un service';
+  if(simulationToggle)simulationToggle.textContent=demo?'Retour au service partagé':'Simuler un service';
  }
 
  function draw(snapshot){
@@ -454,18 +456,18 @@ export function mountExpress(main,readPlan){
  }
 
  async function switchSource(){
-  if(busy)return;
+  if(!simulationToggle||busy)return;
   window.RestoCF27Departs?.close();lastSharedRelease=null;
   if(demo){demo.close();demo=demoRelease=null;}
   else{
    const requestedScope=scope;
-   const toggle=$('[data-action=simulation]');toggle.disabled=true;
+   simulationToggle.disabled=true;
    try{
-    simulation??=await import('./service-v3-express-simulation.mjs?v=2027.4');
+    simulation??=await import('./service-v3-express-simulation.mjs?v=2027.4-devonly1');
     if(requestedScope!==currentScope()||!open)return;
     demo=simulation.createSimulation(window,window.RestoNotificationContext.restaurantId);demoRelease=releaseHook(demo);demo.subscribe(update);
    }catch{if(requestedScope===currentScope())message('Impossible de charger la simulation Express. Réessayez.');return;}
-   finally{toggle.disabled=false;}
+   finally{simulationToggle.disabled=false;}
   }
   resetView();update();search.focus({preventScroll:true});
  }

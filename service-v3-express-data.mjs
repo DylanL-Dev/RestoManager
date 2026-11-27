@@ -1,5 +1,11 @@
 const parisClock=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 const waitingStatuses=new Set(['reserved','confirmed','late','arrived']);
+const simulationHosts=new Set(['restomanager-v3-supabase-integration.onrender.com','localhost','127.0.0.1']);
+
+export function allowsExpressSimulation(source){
+ const channel=source.document?.querySelector('meta[name="restomanager-channel"]')?.content;
+ return channel==='dev'&&simulationHosts.has(source.location?.hostname);
+}
 
 export function parisTime(stamp){
  const parts=Object.fromEntries(parisClock.formatToParts(stamp).map(({type,value})=>[type,value]));

@@ -64,7 +64,6 @@
   "service-v3-confirm.js",
   "service-v3-dialogs.js",
   "service-v3-express-data.mjs",
-  "service-v3-express-simulation.mjs",
   "service-v3-express.css",
   "service-v3-express.mjs",
   "service-v3-fb-alerts.js",
