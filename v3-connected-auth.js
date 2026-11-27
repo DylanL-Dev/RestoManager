@@ -319,6 +319,7 @@ try{
  });
  if(window.lucide?.createIcons)window.lucide.createIcons();
  style.textContent=style.textContent.replace('body{visibility:hidden}','');
+ document.getElementById('integrationLoading')?.remove();
  label.textContent='Compte connecté · '+(profile.display_name||profile.role)+' · Lecture seule des données partagées';
  // Preserve all original navigation and view rendering. Prevent mutations on the
  // legacy localStorage-backed UI until they are replaced by server-side RPC calls.
