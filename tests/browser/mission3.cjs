@@ -46,10 +46,15 @@ const server=http.createServer((req,res)=>{
  if(!file.startsWith(root+path.sep)||file.includes(path.sep+'.git'+path.sep)){res.writeHead(404);res.end();return}
  fs.readFile(file,(error,data)=>{if(error){res.writeHead(404);res.end();return}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png'})[path.extname(file)]||'application/octet-stream');res.end(data)});
 });
-async function open(browser,origin,role,viewport={width:390,height:844},timezoneId='Europe/Paris'){
+async function open(browser,origin,role,viewport={width:390,height:844},timezoneId='Europe/Paris',checkPendingAuth){
  const context=await browser.newContext({viewport,isMobile:viewport.width<768,hasTouch:viewport.width<=768,serviceWorkers:'block',timezoneId});
  await context.addInitScript(role=>{window.__mission3Role=role},role);
  await context.exposeFunction('__mission3Snapshot',snapshot);await context.exposeFunction('__mission3Rpc',(name,args)=>rpc(role,name,args));
+ let releaseAuth;
+ if(checkPendingAuth){
+  const pendingAuth=new Promise(resolve=>{releaseAuth=resolve});
+  await context.exposeFunction('__mission3WaitForAuth',()=>pendingAuth);
+ }
  await context.route('**/*',route=>{
   const url=new URL(route.request().url());if(url.origin!==origin)return route.abort();
   if(url.pathname==='/supabase-service-bridge.js')return route.fulfill({contentType:'text/javascript',body:fs.readFileSync(path.join(__dirname,'mission3-bridge.mjs'),'utf8')});
@@ -57,7 +62,9 @@ async function open(browser,origin,role,viewport={width:390,height:844},timezone
  });
  const page=await context.newPage(),errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.clock.install({time:new Date(clock)});
- await page.goto(origin+'/v3-connected.html');await page.waitForFunction(()=>window.RestoSupabaseReady===true);
+ await page.goto(origin+'/v3-connected.html',checkPendingAuth?{waitUntil:'commit'}:undefined);
+ if(checkPendingAuth){try{await checkPendingAuth(page)}finally{releaseAuth()}}
+ await page.waitForFunction(()=>window.RestoSupabaseReady===true);
  // The tutorial is part of the real first-visit UI. Close it through its
  // accessible action before checking the underlying service controls.
  const welcome=page.locator('#restoTourWelcome');
@@ -81,6 +88,16 @@ function pass(name){passed++;console.log('PASS mock UI '+name)}
  try{
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin='http://127.0.0.1:'+server.address().port;
   browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
+  reset();
+  const startup=await open(browser,origin,'reception',{width:390,height:844},'Europe/Paris',async page=>{
+   await page.getByRole('status').filter({hasText:'Vérification de la session'}).waitFor();
+   assert.equal(await page.locator('header.top').isVisible(),false);
+   assert.equal(await page.locator('#bookingForm').isVisible(),false);
+  });
+  assert.equal(await startup.page.locator('#integrationLoading').count(),0);
+  assert.equal(await startup.page.locator('header.top').isVisible(),true);
+  pass('Startup reports session verification and keeps the service hidden until authorization');
+  await clean(startup);
   for(const role of ['fb_admin','reception']){
    reset({historical:true});const view=await open(browser,origin,role);await edit(view.page);
    const before=records[0].notes;assert.ok((await view.page.locator('#editNotes').inputValue()).length>1000);assert.ok((await view.page.locator('#editAllergies').inputValue()).length>500);

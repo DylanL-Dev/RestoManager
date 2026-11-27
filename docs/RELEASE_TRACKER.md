@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-UX — Indicateur de démarrage avant authentification — CANDIDAT DEV (27/11/2026)
+
+- Suite de #280 sur DEV `125658d`, suivie dans [#242](https://github.com/DylanL-Dev/RestoManager/issues/242). L’accueil affiche un fond vert et l’espace connecté annonce la vérification de session dès le premier affichage. Le module d’authentification commence à se charger depuis l’en-tête. L’espace de travail reste masqué jusqu’à l’autorisation et la redirection de refus vers la connexion est vérifiée. Le cache PWA est versionné. [Mesures et recette](audits/RM-UX_DEMARRAGE_20261127.md).
+
 ### RM-UX — Reprise pack v11, correctifs 11.1 — CANDIDAT DEV (27/11/2026)
 
 - Reprise propriétaire autorisée de #279 (`57a8034`, 16/18 workflows ; échecs alignement des cartes à 768 px et contraste axe à 390 px). Branche distincte `fix/rm-ux-pack-v11-reprise` ; original conservé. Animation sans déplacement de carte, contraste, compteurs natifs intacts, états réels et isolation de snapshot, cache versionné, quatre tests ciblés. CI et recette visuelle à confirmer. [Rapport](audits/RM-UX_PACK_V11_REPRISE_20261127.md). Aucune fusion ni publication.
