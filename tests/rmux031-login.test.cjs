@@ -5,7 +5,7 @@ test('RM-UX-03.1 keeps staff auth entry points and accessible controls',()=>{
  for(const id of ['login','username','password','submit','forgot','recovery','message'])assert.match(html,new RegExp('id="'+id+'"'));
  assert.match(html,/type="password" autocomplete="current-password"/);
  assert.match(html,/autocomplete="username"/);
- assert.match(html,/type="module" src="supabase-login.js\?v=20261109-twins1"/);
+ assert.match(html,/type="module" src="supabase-login.js\?v=20261128-rmb4-staff-email"/);
  assert.match(html,/aria-live="polite"/);
  assert.match(html,/aria-controls="password" aria-pressed="false"/);
  // RM-SEC-04: the environment label script is external (script-src 'self'); same import, same page.
