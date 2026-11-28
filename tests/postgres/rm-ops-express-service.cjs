@@ -4,22 +4,30 @@ const fs=require('node:fs');
 const path=require('node:path');
 const {booking,rid,uid,lit}=require('./rm012-support.cjs');
 const table=n=>'40000000-0000-4000-8000-'+String(n).padStart(12,'0');
-const last=output=>output.trim().split('\n').at(-1);
 
-module.exports=async function expressService(db){
+module.exports=async function expressService(db,initialSync){
  const directory=path.resolve(__dirname,'../../supabase/proposals/rm-ops-engine');
  const draft=fs.readFileSync(path.join(directory,'express-service-v1.PROPOSAL.sql'),'utf8');
  assert.match((await db.sql(draft)).stderr,/propositions placement v4 et libération/);
  const migrations=path.resolve(__dirname,'../../supabase/migrations');
  for(const name of ['20261113153000_rm005_walkin_weekly_server_dev.sql','20261113164500_rm005_weekly_helper_writer_grant_dev.sql'])
   await db.ok(fs.readFileSync(path.join(migrations,name),'utf8'));
- const {buildExpressReleaseSql}=require('../../scripts/prepare-rm-release-03b.cjs');
+ const {buildExpressReleaseSql,buildExpressRollbackSql}=require('../../scripts/prepare-rm-release-03b.cjs');
+ const definition=signature=>db.ok(`select pg_get_functiondef(${lit(signature)}::regprocedure)`);
+ const legacySignature='public.apply_smart_placement_v3(uuid,jsonb)';
+ const syncSignature='public.service_sync_state_v1()';
+ const initialLegacy=await definition(legacySignature);
+ const catalog=fs.readFileSync(path.resolve(directory,'../../release-prep/rm-release-03b2_dev_readonly.sql'),'utf8');
+ await db.ok(catalog);
+ await db.ok("alter default privileges for role rm_quick_hosted_admin in schema public grant delete, truncate, trigger, maintain on tables to service_role");
  const release=buildExpressReleaseSql();
  const rollback=release.replace(/commit;\s*$/i,"do $begin raise exception 'EXPRESS_RELEASE_ROLLBACK';end$;commit;");
  assert.match((await db.sql('set role rm_quick_hosted_admin;'+rollback)).stderr,/EXPRESS_RELEASE_ROLLBACK/);
  assert.equal(await db.ok("select to_regprocedure('public.express_seat_v1(text,uuid,text,uuid,jsonb)') is null"),'t');
+ assert.equal(await definition(legacySignature),initialLegacy);
  for(let attempt=0;attempt<2;attempt++)await db.ok('set role rm_quick_hosted_admin;'+release+'reset role;');
  assert.equal(await db.ok("select has_schema_privilege('resto_service_writer','public','CREATE') or has_schema_privilege('resto_service_writer','private','CREATE')"),'f');
+ assert.equal(await db.ok("select has_table_privilege('service_role','public.placement_events','DELETE,TRUNCATE,TRIGGER,MAINTAIN')"),'f');
  await db.reset();
  const revision=async(user=1)=>(await db.snapshot(user)).revision;
  const capabilities=(await db.snapshot(1)).capabilities;
@@ -81,6 +89,23 @@ module.exports=async function expressService(db){
  await db.reset();
  await db.ok(`update public.reservations set status='reserved' where id=${lit(booking(1))};`);
  await today();
+ const legacy=`select public.apply_smart_placement_v3(${lit(booking(1))},${lit(JSON.stringify(moves))}::jsonb)`;
+ const express=seat(await revision(),moves,1,2);
+ let signal;
+ const started=new Promise(resolve=>{signal=resolve;});
+ const first=db.sql(db.ctx(1,"select private.lock_restaurant_mutation_v1();select 'express-venue-locked';select pg_sleep(.8);"+express),
+  output=>{if(output.includes('express-venue-locked'))signal();});
+ await Promise.race([started,first.then(result=>{assert.equal(result.code,0,result.stderr);})]);
+ const [expressResult,legacyResult]=await Promise.all([first,db.sql(db.ctx(2,legacy))]);
+ assert.equal(expressResult.code,0,expressResult.stderr);
+ assert.match(legacyResult.stderr,/40001:.*réservation a changé/);
+ assert.deepEqual(await record(1,2),['seated',table(2)]);
+ assert.deepEqual(await record(2,2),['confirmed',table(1)]);
+ console.log('PASS Express et mode complet : ordre des verrous commun, une seule confirmation');
+
+ await db.reset();
+ await db.ok(`update public.reservations set status='reserved' where id=${lit(booking(1))};`);
+ await today();
  await db.ok(db.ctx(1,seat(await revision())));
  assert.deepEqual(await record(1,2),['seated',table(1)]);
  console.log('PASS Express : installation directe avec révision et table choisie');
@@ -99,4 +124,26 @@ module.exports=async function expressService(db){
  await reject(2,walk(await revision(),7,'hotel','237'),'23P01|chambre');
  assert.equal((await db.snapshot(1)).reservations.filter(row=>row.hotel_room==='237').length,1);
  console.log('PASS Express : passages hôtel et extérieur, refus concurrent, identifiant serveur et chambre unique');
+
+ const beforeRollback=await db.snapshot(1);
+ const auditCounts=()=>db.ok("select (select count(*) from public.placement_events), (select count(*) from private.quick_release_audit)");
+ const beforeLogs=await auditCounts();
+ const back=buildExpressRollbackSql();
+ for(let attempt=0;attempt<2;attempt++)await db.ok('set role rm_quick_hosted_admin;'+back+'reset role;');
+ assert.equal(await definition(legacySignature),initialLegacy);
+ assert.equal(await definition(syncSignature),initialSync);
+ const afterRollback=await db.snapshot(1);
+ assert.equal(afterRollback.capabilities.quick_release,undefined);
+ assert.equal(afterRollback.capabilities.express_service,undefined);
+ assert.deepEqual(afterRollback.reservations,beforeRollback.reservations);
+ assert.deepEqual(afterRollback.assignments,beforeRollback.assignments);
+ assert.equal(afterRollback.revision,beforeRollback.revision);
+ assert.equal(await auditCounts(),beforeLogs);
+ for(const schema of ['public','private']){
+  await reject(1,seat(await revision()).replace('public.',schema+'.'),'42501');
+  await reject(1,walk(await revision(),5).replace('public.',schema+'.'),'42501');
+  await reject(1,`select ${schema}.quick_release_v1(null,null,null,false)`,'42501');
+ }
+ assert.equal(await db.ok("select has_function_privilege('authenticated','public.apply_smart_placement_v3(uuid,jsonb)','execute')"),'t');
+ console.log('PASS Retour arrière : capacités et RPC retirées, écritures et journaux conservés');
 };

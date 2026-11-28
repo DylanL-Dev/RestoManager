@@ -16,6 +16,7 @@ const last=output=>output.trim().split('\n').at(-1);
  const db=await start();
  try{
   const source=fs.readFileSync(proposal,'utf8');
+  const syncBaseline=await db.ok("select pg_get_functiondef('public.service_sync_state_v1()'::regprocedure)");
   // Match the existing RM-012 hosted-style migration test: an administrator
   // with inherited object ownership, but without the superuser attribute.
   await db.ok('create role rm_quick_hosted_admin login nosuperuser createrole createdb bypassrls;grant postgres to rm_quick_hosted_admin;');
@@ -117,6 +118,6 @@ const last=output=>output.trim().split('\n').at(-1);
    assert.deepEqual(audit,[{actor:uid(1),venue:rid(1),action:'release',tables:numbers.map(table)},{actor:uid(1),venue:rid(1),action:'undo',tables:numbers.map(table)}]);
   }
   console.log('PASS fusions 2 et 4 tables, réservations inchangées, audit du service ouvert');
-  await require('./rm-ops-express-service.cjs')(db);
+  await require('./rm-ops-express-service.cjs')(db,syncBaseline);
  }finally{await db.stop();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
