@@ -103,8 +103,8 @@ export function mountExpress(main,readPlan){
 
  function matchingSimulationStorage(){
   try{
-   const key=Object.keys(localStorage).find(key=>/^restomanager-express-fiction-v1:[^:]+$/.test(key));
-   return key===`restomanager-express-fiction-v1:${window.RestoNotificationContext.restaurantId}`;
+   const key=`restomanager-express-fiction-v1:${window.RestoNotificationContext.restaurantId}`;
+   return localStorage.getItem(key)!==null;
   }catch{return false;}
  }
  function releaseHook(source){
@@ -277,7 +277,7 @@ export function mountExpress(main,readPlan){
    const id=tab.dataset.value;
    tab.setAttribute('aria-pressed',String(id===(roomId??'')));
    const free=rooms.filter(room=>!id||room.id===id).reduce((sum,room)=>sum+room.tables.filter(tile=>tile.state.kind==='unknown').length,0);
-   tab.dataset.expressFree=`${free} libre${free>1?'s':''}`;
+   tab.dataset.expressFree=`${free} à contrôler`;
   }
  }
 
