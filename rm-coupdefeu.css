@@ -240,7 +240,7 @@ html body #rmExpress[data-cf27] .rmExpressSearch .rmExpressPrimary {
 #rmExpress[data-cf27] .cf-flag[data-tone="danger"] { background: var(--cf-danger-soft); color: var(--cf-danger-ink); max-width: 320px; white-space: normal; line-height: 1.3; }
 #rmExpress[data-cf27] .cf-flag .cf-i { width: 15px; height: 15px; }
 
-/* ---------- Salles : contrôle segmenté avec places libres ---------- */
+/* ---------- Salles : contrôle segmenté et état non confirmé ---------- */
 html body #rmExpress[data-cf27] .rmExpressRoomTabs {
   position: relative; display: flex; gap: 4px; padding: 5px; margin: 0; overflow-x: auto; scrollbar-width: none;
   border-radius: 16px; background: var(--cf-sunk); border: 1px solid var(--cf-line);
@@ -812,7 +812,6 @@ html body #rmExpress[data-cf27] .rmExpressTile.cf-attn { outline: 3px solid var(
 .cf-dep .cf-dep-free { background: var(--d-accent); color: var(--d-accent-ink); }
 .cf-dep .cf-dep-free:hover { background: var(--d-accent); filter: brightness(1.08); }
 @media (prefers-reduced-motion: no-preference) {
-  @keyframes cf-freed { 0% { transform: scale(.94); } 60% { transform: scale(1.04); } 100% { transform: none; } }
 }
 html.rmExpressActive .cf-rel {
   position: fixed; z-index: 2147483001; left: 50%; bottom: max(20px, env(safe-area-inset-bottom));
