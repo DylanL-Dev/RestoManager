@@ -138,4 +138,10 @@ const out=process.env.BROWSER_ARTIFACTS||path.resolve('test-results/rm012-postgr
   }finally{await fresh.stop()}
  });
  fs.mkdirSync(out,{recursive:true});fs.writeFileSync(path.join(out,'results.json'),JSON.stringify({passed:results.length,failed:0,image:'PostgreSQL 17 pinned digest',network:'none',remoteDatabaseWrites:0,results},null,2));
-}finally{await db?.stop()}})().catch(error=>{console.error(error);process.exitCode=1});
+}finally{await db?.stop()}
+ // Run the pending quick-release proposal against a separate disposable database
+ // in the existing standard CI job. Do not apply it to any hosted database.
+ if(process.env.RM012_POLICY!=='1'&&process.env.RM015_SCHEMA!=='1'){
+  require('node:child_process').execFileSync(process.execPath,[path.join(__dirname,'rm-ops-quick-release.cjs')],{stdio:'inherit',timeout:180000});
+ }
+})().catch(error=>{console.error(error);process.exitCode=1});
