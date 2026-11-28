@@ -28,7 +28,7 @@ test('RM-011-A : refresh protection precedes hold release and page replace witho
 });
 test('RM-011-A : connected PWA references versioned scripts after change',()=>{
  const html=source('v3-connected.html');
- for(const key of ['service-v3-screens.js?v=2027.4-devonly1',
+ for(const key of ['service-v3-screens.js?v=2027.4-safety1',
   'service-v3-refresh.js?v=20261118-rm0152',
   'service-v3.js?v=20261116-rm013a1',
   'v3-supabase-booking.js?v=2027.4'])
