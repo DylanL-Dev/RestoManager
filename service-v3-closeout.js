@@ -111,6 +111,7 @@
   for(const entry of day.audit){const row=node('article','rm012AuditRow');row.append(node('strong','',entry.action==='close_service'?(entry.actor_kind==='system'?'Clôture automatique':'Clôture confirmée'):(m.labels[entry.old_status]||entry.old_status)+' → '+(m.labels[entry.new_status]||entry.new_status)),node('p','',m.formatTime(entry.performed_at)+' · '+entry.actor_label),node('small','','Service du '+m.formatDate(entry.service_date)));if(entry.reason)row.append(node('p','',entry.reason));audit.append(row)}
   if(day.audit.length===100)audit.append(node('p','rm012Help','Les 100 dernières traces de cette journée sont affichées. Les traces antérieures sont conservées sur le serveur.'));
   detail.append(audit);layout.append(aside,detail);body.append(layout);
+  window.lucide?.createIcons();
   for(const d of body.querySelectorAll('details'))if(details.includes(d.dataset.detail))d.open=true;
   if(focus){const target=[...body.querySelectorAll('[data-focus]')].find(n=>n.dataset.focus===focus);(target||document.getElementById('rm012DayTitle'))?.focus({preventScroll:true})}
  }
