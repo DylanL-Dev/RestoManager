@@ -10,6 +10,7 @@ const accounts=Object.freeze({
  'reception':{email:'reception@accounts.restomanager.example.com',role:'reception'},
  'admin-fb':{email:'admin-fb@accounts.restomanager.example.com',role:'fb_admin'}
 });
+const staffRoles=Object.freeze(['reception','fb_admin']);
 const form=document.getElementById('login');
 const button=document.getElementById('submit');
 const message=document.getElementById('message');
@@ -44,22 +45,21 @@ form.addEventListener('submit',async event=>{
  setStage('authentification','Étape 1/2 · Vérification des identifiants…');
  const input=usernameInput.value.trim().toLowerCase();
   const registered=Object.hasOwn(accounts,input)?accounts[input]:null;
-  // RM-017.2: DEV self-service administrators may sign in by verified email;
-  // the existing shared reception/admin aliases remain untouched.
+  // Use the authenticated staff profile's role for DEV email sign-in.
   const isDev=supabaseEnvironment.name==='DEV';
-  const signupEmail=isDev && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
-  const account=registered||(signupEmail?{email:input,role:'fb_admin'}:null);
+  const staffEmail=isDev && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(input);
+  const email=registered?.email||(staffEmail?input:null);
  try{
-  if(!account)throw new Error('Unknown username');
+  if(!email)throw new Error('Unknown username');
   // signInWithPassword already returns the authenticated user.
   // Avoid a second /user request that can stall on browser session locks.
-  const {data:authData,error}=await withTimeout(client.auth.signInWithPassword({email:account.email,password:passwordInput.value}));
+  const {data:authData,error}=await withTimeout(client.auth.signInWithPassword({email,password:passwordInput.value}));
   if(error)throw error;
   const user=authData?.user;
   if(!user||!authData?.session)throw new Error('Invalid session');
   setStage('autorisation','Étape 2/2 · Vérification des droits d’accès…');
   const {data,error:profileError}=await withTimeout(client.from('staff_profiles').select('role,display_name,active').eq('user_id',user.id).single());
-  if(profileError||!data?.active||data.role!==account.role){
+  if(profileError||!data?.active||!staffRoles.includes(data.role)||(registered&&data.role!==registered.role)){
    message.textContent='Compte non autorisé. Contactez votre administrateur.';
    // Only revoke a validated but unauthorized account, without hanging the UI.
    void withTimeout(client.auth.signOut(),5000).catch(()=>{});
@@ -80,7 +80,7 @@ async function resumeExistingSession(){
   if(submitting||sessionError||!session?.user)return;
   const {data:profile,error:profileError}=await withTimeout(client.from('staff_profiles').select('role,active').eq('user_id',session.user.id).single(),7000);
   if(submitting)return;
-  if(!profileError&&profile?.active&&['reception','fb_admin'].includes(profile.role)){
+  if(!profileError&&profile?.active&&staffRoles.includes(profile.role)){
    window.location.replace('v3-connected.html');
   }
  }catch{
