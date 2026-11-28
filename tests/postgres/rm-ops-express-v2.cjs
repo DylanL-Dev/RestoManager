@@ -67,6 +67,9 @@ module.exports=async function verifyExpressV2(db){
  assert.equal(other.status,'seated');
  assert.equal((await snapshot(4)).reservations.some(row=>row.id===first.reservation_id),false);
  const confirm=walk(rev,[6],2,'hotel','237a',challenge.token);
+ await db.ok(`update private.express_occupant_confirmation set service_date=service_date-1 where actor_id=${lit(uid(1))};`);
+ await reject(1,confirm,/40001/);
+ await db.ok(`update private.express_occupant_confirmation set service_date=service_date+1 where actor_id=${lit(uid(1))};`);
  const sameTap=await Promise.all([db.sql(db.ctx(1,confirm)),db.sql(db.ctx(1,confirm))]);
  assert.equal(sameTap.filter(item=>item.code===0).length,1);
  assert.match(sameTap.find(item=>item.code!==0).stderr,/40001/);

@@ -29,6 +29,7 @@ create table if not exists private.express_occupant_confirmation (
  actor_id uuid not null,
  token uuid not null default gen_random_uuid(),
  revision text not null,
+ service_date date not null,
  room text not null,
  guests integer not null,
  tables uuid[] not null,
@@ -156,6 +157,7 @@ create or replace function private.express_walkin_v2(
 declare
  venue uuid:=private.lock_express_service_v1(p_revision);
  stamp timestamptz:=statement_timestamp();
+ local_service_date date:=(stamp at time zone 'Europe/Paris')::date;
  finish timestamptz;
  booking uuid;
  room_key text:=nullif(lower(btrim(p_room)),'');
@@ -177,6 +179,7 @@ begin
  if p_confirmation is not null then
   select c.conflicting_reservation into conflict_id from private.express_occupant_confirmation c
   where c.restaurant_id=venue and c.actor_id=auth.uid() and c.token=p_confirmation and c.revision=p_revision
+   and c.service_date=local_service_date
    and c.room=room_key and c.guests=p_guests and c.tables=chosen_tables and c.expires_at>clock_timestamp();
   if not found then
    raise exception 'Confirmation expirée ou contexte modifié.' using errcode='40001',detail='STALE_VERSION';
@@ -201,9 +204,9 @@ begin
    raise exception 'Le deuxième occupant ne peut plus être confirmé.' using errcode='23P01',detail='ROOM_LIMIT';
   end if;
   if p_confirmation is null then
-   insert into private.express_occupant_confirmation as c(restaurant_id,actor_id,revision,room,guests,tables,conflicting_reservation,expires_at)
-    values(venue,auth.uid(),p_revision,room_key,p_guests,chosen_tables,receipt,clock_timestamp()+interval '60 seconds')
-    on conflict(restaurant_id,actor_id) do update set token=gen_random_uuid(),revision=excluded.revision,room=excluded.room,
+   insert into private.express_occupant_confirmation as c(restaurant_id,actor_id,revision,service_date,room,guests,tables,conflicting_reservation,expires_at)
+    values(venue,auth.uid(),p_revision,local_service_date,room_key,p_guests,chosen_tables,receipt,clock_timestamp()+interval '60 seconds')
+    on conflict(restaurant_id,actor_id) do update set token=gen_random_uuid(),revision=excluded.revision,service_date=excluded.service_date,room=excluded.room,
      guests=excluded.guests,tables=excluded.tables,conflicting_reservation=excluded.conflicting_reservation,expires_at=excluded.expires_at
     returning c.token into p_confirmation;
    return jsonb_build_object('status','room_conflict','token',p_confirmation,'reservation_id',receipt,'revision',p_revision);

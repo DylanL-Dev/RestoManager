@@ -98,7 +98,8 @@ export function mountExpress(main,readPlan){
  let open=false,demo=null,live=null,simulation=null,selectedId=null,selectedTable=null,selectedPlan=null,otherDates=false;
  let passage=false,passageTable=null,busy=false,previousFocus=null,previousScroll=0,lastNotice='';
  let scope=null,roomId=null,roomTabSignature='',demoRelease=null;
- let occupant=null;
+ let occupant=null,passageGeneration=0,lastPassageStamp=null;
+ function invalidateOccupant(){occupant=null;passageGeneration++;}
  const handoffs=new Set();
  const canOpen=()=>{
   const context=window.RestoNotificationContext;
@@ -188,7 +189,7 @@ export function mountExpress(main,readPlan){
   mobileLaunch.setAttribute('aria-expanded',String(open));
   if(open){update();$('#rmExpressTitle').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   else{
-   window.RestoCF27Departs?.close();lastSharedRelease=null;occupant=null;
+   window.RestoCF27Departs?.close();lastSharedRelease=null;invalidateOccupant();
    const target=previousFocus?.getClientRects().length?previousFocus:desktop.matches?launch:accountToggle;
    target?.focus({preventScroll:true});
    window.scrollTo({top:previousScroll,behavior:'instant'});
@@ -215,7 +216,7 @@ export function mountExpress(main,readPlan){
 
  function resetView(){
   selectedId=selectedTable=selectedPlan=passageTable=roomId=null;
-  occupant=null;
+  invalidateOccupant();lastPassageStamp=null;
   passage=otherDates=false;handoffs.clear();search.value='';message('');
   $('[data-guests]').value='2';$('[data-guest-type]').value='external';$('[data-guest-room]').value='';
   $('[data-other-tables]').open=false;
@@ -449,8 +450,10 @@ export function mountExpress(main,readPlan){
   const guests=$('[data-guests]').valueAsNumber;
   const choices=canPreviewPassage(snapshot)?adapter().suggestWalkIn(snapshot,guests).filter(table=>!roomId||table.roomId===roomId):[];
   if(!choices.some(table=>groupKey(table)===passageTable))passageTable=null;
-  if(occupant&&(!canPreviewPassage(snapshot)||!writesAvailable('walkIn')||
-    live?.capabilities()?.version!==2||occupant.stamp!==passageStamp(snapshot)))occupant=null;
+  const stamp=passageStamp(snapshot);
+  if(lastPassageStamp!==stamp||!canPreviewPassage(snapshot)||!writesAvailable('walkIn')||
+    live?.capabilities()?.version!==2)invalidateOccupant();
+  lastPassageStamp=stamp;
   const options=$('[data-passage-tables]');
   options.replaceChildren(...choices.map(table=>{
    const tile=tableButton(snapshot,table,numbersOf(table).length>1?`Fusion autorisée · ${covers(table.capacity)}`:'Aucun client enregistré','walk-table');
@@ -482,6 +485,7 @@ export function mountExpress(main,readPlan){
   const state=snapshot();
   if(!passageTable||!canPreviewPassage(state)||challenge&&challenge.stamp!==passageStamp(state))return;
   const tables=parseTables(passageTable),stamp=passageStamp(state);
+  const generation=passageGeneration;
   const draft={contract:!demo&&live.capabilities().version===2?2:undefined,revision:state.revision,scope:state.scope,
    guests:$('[data-guests]').valueAsNumber,table:tables[0],tables,type:$('[data-guest-type]').value,room:$('[data-guest-room]').value,
    confirmation:challenge?.token};
@@ -490,7 +494,7 @@ export function mountExpress(main,readPlan){
    const result=await adapter.walkIn(draft);if(!sameContext()||!open||!passage)return;
    if(result?.roomConflict){
     const current=snapshot();
-    if(stamp!==passageStamp(current)||!canPreviewPassage(current))return;
+    if(generation!==passageGeneration||stamp!==passageStamp(current)||!canPreviewPassage(current))return;
     occupant={token:result.token,reservationId:result.reservationId,stamp};
     update();$('#rmExpressOccupantTitle').focus();
     return;
@@ -541,16 +545,17 @@ export function mountExpress(main,readPlan){
   setOpen(true,accountToggle);
  });
  search.addEventListener('input',()=>{if(!search.value.trim())otherDates=false;update();});
- $('[data-guests]').addEventListener('input',()=>{passageTable=occupant=null;update();});
- $('[data-guest-type]').addEventListener('change',()=>{occupant=null;update();});
- $('[data-guest-room]').addEventListener('input',()=>{occupant=null;update();});
+ $('[data-guests]').addEventListener('input',()=>{passageTable=null;invalidateOccupant();update();});
+ $('[data-guest-type]').addEventListener('change',()=>{invalidateOccupant();update();});
+ $('[data-guest-room]').addEventListener('input',()=>{invalidateOccupant();update();});
+ window.addEventListener('offline',invalidateOccupant);
  root.addEventListener('click',event=>{
   const target=event.target.closest('button[data-action]');if(!target||target.disabled)return;
   const {action,value}=target.dataset;
   if(action==='close'){setOpen(false);return;}
   if(action==='simulation'){void switchSource();return;}
   if(action==='room'||action==='all-rooms'){
-   occupant=null;
+   invalidateOccupant();
    roomId=value||null;
    const tables=snapshot().tables;
    if(roomId&&tables.find(table=>table.number===Number(selectedTable?.split(',')[0]))?.roomId!==roomId)selectedTable=selectedPlan=null;
@@ -562,7 +567,7 @@ export function mountExpress(main,readPlan){
   }
   if(action==='other-dates')otherDates=!otherDates;
   if(action==='select'){
-   selectedId=value;selectedTable=selectedPlan=occupant=null;passage=false;$('[data-other-tables]').open=false;message('');
+   selectedId=value;selectedTable=selectedPlan=null;invalidateOccupant();passage=false;$('[data-other-tables]').open=false;message('');
    update();
    if(window.matchMedia('(max-width: 719px)').matches)$('[data-booking] h2')?.focus();
    return;
@@ -587,10 +592,10 @@ export function mountExpress(main,readPlan){
    });return;
   }
   if(action==='passage'&&canPreviewPassage(snapshot())&&!busy){
-   passage=true;passageTable=occupant=null;message('');update();$('[data-passage] h2').focus();return;
+   passage=true;passageTable=null;invalidateOccupant();message('');update();$('[data-passage] h2').focus();return;
   }
-  if(action==='cancel-passage'){passage=false;occupant=null;message('');$('[data-action=passage]').focus();}
-  if(action==='walk-table'&&canPreviewPassage(snapshot())&&!busy){passageTable=value;occupant=null;}
+  if(action==='cancel-passage'){passage=false;invalidateOccupant();message('');$('[data-action=passage]').focus();}
+  if(action==='walk-table'&&canPreviewPassage(snapshot())&&!busy){passageTable=value;invalidateOccupant();}
   if(action==='install-passage'){submitPassage(null);return;}
   if(action==='confirm-occupant'&&occupant){submitPassage(occupant);return;}
   if(action==='cancel-occupant'){occupant=null;update();$('[data-action=install-passage]').focus();return;}

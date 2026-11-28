@@ -146,12 +146,14 @@ async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash='
   releaseOwner=args.p_undo?null:page;
   return {data:releaseVersion,error:null};
  });
- if(['express-live','express-v2','express-v2-chain'].includes(change))await page.exposeFunction('__opsPlacement',(name,args)=>{
+ if(['express-live','express-v2','express-v2-chain'].includes(change))await page.exposeFunction('__opsPlacement',async(name,args)=>{
   connectedService.calls.push([name,args]);
   if(args.p_revision!==String(connectedService.revision))return {data:null,error:{code:'40001',message:'Service modifié'}};
   if(name==='express_walkin_v2'){
-   if(args.p_room==='214'&&!args.p_confirmation)
+   if(args.p_room==='214'&&!args.p_confirmation){
+    if(connectedService.deferredConflict)await connectedService.deferredConflict();
     return {data:{status:'room_conflict',token:id(9001),reservation_id:id(214),revision:args.p_revision},error:null};
+   }
    if(connectedService.loss)return {data:null,error:{message:'Failed to fetch'}};
    const reservationId=id(8902);
    connectedService.revision++;
@@ -467,6 +469,14 @@ async function testVersionedOccupantsAndFusions(){
  await walk.getByRole('button',{name:/^T16 /}).click();
  await send();await panel.waitFor();
  await panel.getByRole('button',{name:'Annuler'}).click();await panel.waitFor({state:'hidden'});
+ let started,release;
+ const requested=new Promise(resolve=>{started=resolve;});
+ connectedService.deferredConflict=()=>{started();return new Promise(resolve=>{release=resolve;});};
+ await send();await requested;
+ await view.getByRole('button',{name:'Mode complet',exact:true}).click();
+ await enter(page);release();connectedService.deferredConflict=null;
+ await walk.getByRole('button',{name:'Installer 2 couverts en T16'}).waitFor();
+ assert.equal(await panel.isVisible(),false);
  await send();await panel.waitFor();
  const beforeConfirm=connectedService.calls.length;
  await panel.getByRole('button',{name:'Installer un occupant distinct'}).evaluate(button=>{button.click();button.click()});
