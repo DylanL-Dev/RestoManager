@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),crypto=require('node:crypto');
-const manifest=JSON.parse(fs.readFileSync('docs/releases/RMRELEASE02_RELEASE_MANIFEST_20261126.json'));
+const manifest=JSON.parse(fs.readFileSync('docs/releases/RMRELEASE03A_RELEASE_MANIFEST_20261128.json'));
 test('RM-015.11 production: reviewed connection files and dependency lock stay immutable',()=>{
  for(const [file,expected] of Object.entries(manifest.protected_production_files))assert.equal(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),expected,file);
  const environment=fs.readFileSync('restomanager-env.js','utf8');
