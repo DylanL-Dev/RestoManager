@@ -1,5 +1,13 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-RELEASE-03 A — Démarrage animé 2027 et simulation DEV uniquement — CANDIDAT DEV (28/11/2026)
+
+- Suivi [#284](https://github.com/DylanL-Dev/RestoManager/issues/284), #242 et #266. Candidat groupé fondé sur la PR #283 (`5691f38`, 18/18 sur son propre SHA), elle-même issue de DEV `9798357`. Intégration des fichiers fournis [DEMARRAGE-2027](audits/DEMARRAGE-2027.md), après les styles existants et immédiatement après le statut de session, sans toucher à l’authentification. Cache et manifeste versionnés, assertions navigateur ajoutées. Aucun test du nouveau candidat encore exécuté à cette entrée ; aucune fusion, publication ou migration. La libération réelle reste conditionnée à la validation serveur séparée.
+
+### RM-OPS — Simulation Coup de feu réservée à DEV — CANDIDAT DEV (28/11/2026)
+
+- Suite de [#266](https://github.com/DylanL-Dev/RestoManager/issues/266), depuis `9798357`. Le bouton et le démarrage de la simulation exigent le canal DEV et un hôte de développement autorisé. Le paquet de publication et son cache excluent le module fictif. Ce contrôle fait partie de la recette des futures promotions V3 et MAIN. [Détail et recette](audits/RM-OPS_COUP_DE_FEU_2027_4_20261127.md#simulation-réservée-à-dev).
+
 ### RM-OPS — Coup de feu v2027.4 et libération d’une table — CANDIDAT DEV (27/11/2026)
 
 - Suite de [#266](https://github.com/DylanL-Dev/RestoManager/issues/266) sur DEV `09ec277`. Les deux fichiers livrés sont chargés après le pack UX. La simulation applique et annule les libérations dans son propre état. Le correctif SQL de libération réelle est proposé séparément et a été exécuté sur PostgreSQL jetable. L’activation nécessite la validation du serveur DEV. [Recette et conditions d’activation](audits/RM-OPS_COUP_DE_FEU_2027_4_20261127.md).

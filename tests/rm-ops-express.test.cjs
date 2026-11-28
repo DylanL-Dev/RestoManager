@@ -2,6 +2,53 @@
 const assert=require('node:assert/strict');
 const test=require('node:test');
 const modules=Promise.all([import('../service-v3-express-data.mjs'),import('../service-v3-express-simulation.mjs')]);
+const simulationEnvironment=(hostname='127.0.0.1',channel='dev')=>({
+ location:{hostname},
+ document:{querySelector:()=>channel?{content:channel}:null}
+});
+
+test('Coup de feu simulation requires the DEV channel and a trusted development host',async()=>{
+ const [data,fixture]=await modules;
+ assert.equal(data.allowsExpressSimulation(simulationEnvironment('restomanager-v3-supabase-integration.onrender.com')),true);
+ assert.equal(data.allowsExpressSimulation(simulationEnvironment('localhost')),true);
+ assert.equal(data.allowsExpressSimulation(simulationEnvironment()),true);
+ for(const source of [
+  simulationEnvironment('dylanl-dev.github.io','main'),
+  simulationEnvironment('dylanl-dev.github.io','dev'),
+  simulationEnvironment('restomanager-v3.onrender.com','dev'),
+  simulationEnvironment('localhost','main'),
+  simulationEnvironment('localhost','')
+ ]){
+  assert.equal(data.allowsExpressSimulation(source),false);
+  assert.throws(()=>fixture.createSimulation(source),/réservée à DEV/);
+ }
+});
+
+test('only the development PWA precaches the simulation module',async()=>{
+ const fs=require('node:fs');
+ const path=require('node:path');
+ const vm=require('node:vm');
+ const worker=fs.readFileSync(path.join(__dirname,'../sw.js'),'utf8');
+ const cachedPaths=async(hostname,script)=>{
+  const paths=[];
+  let installed;
+  vm.runInNewContext(script,{
+   URL,self:{location:{hostname},registration:{scope:`https://${hostname}/`},addEventListener(type,listener){
+    if(type==='install')listener({waitUntil:result=>{installed=result;}});
+   }},
+   fetch:async()=>({ok:true}),
+   caches:{open:async()=>({put:async url=>{paths.push(url);}})}
+  });
+  await installed;
+  assert.ok(paths.includes('/v3-connected.html'));
+  return paths;
+ };
+ const module='/service-v3-express-simulation.mjs';
+ assert.ok((await cachedPaths('restomanager-v3-supabase-integration.onrender.com',worker)).includes(module));
+ assert.ok(!(await cachedPaths('dylanl-dev.github.io',worker)).includes(module));
+ const packagedWorker=worker.replace(/restomanager-shell-[^'\s]+/,'restomanager-shell-2026.11.28-main');
+ assert.ok(!(await cachedPaths('localhost',packagedWorker)).includes(module));
+});
 
 test('Express simulates a 200-cover service and keeps unrecorded walk-ins visible as uncertainty',async()=>{
  const [data,fixture]=await modules;
@@ -91,7 +138,7 @@ test('a live snapshot requires the authorized establishment before reading any p
 
 test('the mock adapter rejects duplicate and offline confirmation without a partial transfer',async()=>{
  const [,fixture]=await modules;
- const source=new EventTarget();source.navigator={onLine:true};
+ const source=Object.assign(new EventTarget(),simulationEnvironment(),{navigator:{onLine:true}});
  const adapter=fixture.createSimulation(source);
  const plan=adapter.preview(adapter.read(),'214',4);
  let updates=0;adapter.subscribe(()=>updates++);
@@ -109,7 +156,7 @@ test('the mock adapter rejects duplicate and offline confirmation without a part
 
 test('simulated releases recheck the installed tables and undo cannot displace an installed guest',async()=>{
  const [,fixture]=await modules;
- const source=new EventTarget();source.navigator={onLine:true,locks:{request:async(key,action)=>action()}};
+ const source=Object.assign(new EventTarget(),simulationEnvironment(),{navigator:{onLine:true,locks:{request:async(key,action)=>action()}}});
  const saved=fixture.makeSimulation();
  const initial=saved.reservations.find(row=>row.status==='seated');
  initial.tables=[16];

@@ -1,0 +1,141 @@
+/* RestoManager · écran de démarrage 2027 (v1)
+   Habille #integrationLoading (déjà présent dans v3-connected.html).
+   Présentation uniquement : ne change ni le texte, ni le moment où l'écran disparaît. */
+
+html body :is(#integrationLoading, .rm-boot-exit) {
+  --b-bg: #0c2c24;
+  --b-bg-2: #0a221c;
+  --b-ink: #effbf5;
+  --b-ink-2: rgba(239, 251, 245, .66);
+  --b-accent: #34d399;
+  --b-accent-2: #a7f3d0;
+  --b-glass: rgba(255, 255, 255, .06);
+  --b-line: rgba(255, 255, 255, .12);
+  gap: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 90% at 50% 120%, rgba(52, 211, 153, .16), transparent 60%),
+    linear-gradient(180deg, var(--b-bg), var(--b-bg-2));
+  color: var(--b-ink);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+html[data-theme="dark"] body :is(#integrationLoading, .rm-boot-exit) { --b-bg: #0b1f19; --b-bg-2: #07150f; }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) body :is(#integrationLoading, .rm-boot-exit) { --b-bg: #0b1f19; --b-bg-2: #07150f; } }
+
+/* Halos lumineux qui dérivent lentement */
+html body :is(#integrationLoading, .rm-boot-exit)::before,
+html body :is(#integrationLoading, .rm-boot-exit)::after {
+  content: ""; position: absolute; z-index: -1; pointer-events: none;
+  width: 70vmax; height: 70vmax; border-radius: 50%;
+  filter: blur(60px); opacity: .55;
+}
+html body :is(#integrationLoading, .rm-boot-exit)::before { left: -20vmax; top: -30vmax; background: radial-gradient(circle, rgba(16, 185, 129, .35), transparent 65%); }
+html body :is(#integrationLoading, .rm-boot-exit)::after  { right: -25vmax; bottom: -35vmax; background: radial-gradient(circle, rgba(45, 212, 191, .22), transparent 65%); }
+
+/* Pastille du logo */
+html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark {
+  justify-self: center;
+  position: relative;
+  width: 76px; height: 76px; margin-bottom: 22px;
+  display: grid; place-items: center;
+  border-radius: 24px;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .03));
+  border: 1px solid var(--b-line);
+  box-shadow: 0 20px 40px -18px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .12);
+}
+html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark svg { width: 40px; height: 40px; overflow: visible; }
+html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark path { fill: none; stroke: var(--b-ink); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark::after {
+  content: ""; position: absolute; inset: -1px; border-radius: inherit; pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, .0);
+}
+
+/* Titre et état */
+html body :is(#integrationLoading, .rm-boot-exit) strong {
+  font-size: clamp(26px, 5.5vw, 34px); font-weight: 750; letter-spacing: -.02em; line-height: 1.15;
+}
+html body :is(#integrationLoading, .rm-boot-exit) p {
+  margin: 8px 0 0; font-size: 15px; color: var(--b-ink-2);
+}
+
+/* Barre de progression indéterminée */
+html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-bar {
+  justify-self: center;
+  position: relative; overflow: hidden;
+  width: 168px; height: 3px; margin-top: 22px; border-radius: 999px;
+  background: rgba(255, 255, 255, .1);
+}
+html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-bar::before {
+  content: ""; position: absolute; inset: 0; width: 40%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, var(--b-accent), var(--b-accent-2), transparent);
+}
+
+/* Message si l'attente se prolonge (affiché par CSS seul, après 8 s) */
+html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-slow {
+  margin-top: 16px; font-size: 13px; color: var(--b-ink-2); opacity: 0;
+}
+
+/* ---------- Mouvement ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  html body :is(#integrationLoading, .rm-boot-exit)::before { animation: rm-boot-drift-a 14s ease-in-out infinite alternate; }
+  html body :is(#integrationLoading, .rm-boot-exit)::after  { animation: rm-boot-drift-b 18s ease-in-out infinite alternate; }
+
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark { animation: rm-boot-pop 700ms cubic-bezier(.2, .9, .25, 1.15) both; }
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark path {
+    stroke-dasharray: var(--len, 60); stroke-dashoffset: var(--len, 60);
+    animation: rm-boot-draw 1100ms cubic-bezier(.65, 0, .35, 1) 180ms forwards;
+  }
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark path + path { animation-delay: 820ms; animation-duration: 420ms; }
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-mark::after { animation: rm-boot-glow 2.6s ease-in-out 1.4s infinite; }
+
+  html body :is(#integrationLoading, .rm-boot-exit) strong { animation: rm-boot-up 600ms cubic-bezier(.2, .8, .2, 1) 260ms both; }
+  html body :is(#integrationLoading, .rm-boot-exit) p { animation: rm-boot-up 600ms cubic-bezier(.2, .8, .2, 1) 380ms both; }
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-bar { animation: rm-boot-up 600ms cubic-bezier(.2, .8, .2, 1) 500ms both; }
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-bar::before { animation: rm-boot-slide 1.3s cubic-bezier(.45, 0, .2, 1) infinite; }
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-slow { animation: rm-boot-up 500ms ease 8s forwards; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-bar::before { left: 30%; }
+  html body :is(#integrationLoading, .rm-boot-exit) .rm-boot-slow { animation: rm-boot-show 1ms linear 8s forwards; }
+}
+
+@keyframes rm-boot-drift-a { to { transform: translate(12vmax, 8vmax) scale(1.1); } }
+@keyframes rm-boot-drift-b { to { transform: translate(-10vmax, -6vmax) scale(1.15); } }
+@keyframes rm-boot-pop { from { opacity: 0; transform: scale(.82) translateY(8px); } }
+@keyframes rm-boot-draw { to { stroke-dashoffset: 0; } }
+@keyframes rm-boot-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); } 50% { box-shadow: 0 0 0 6px rgba(52, 211, 153, .12), 0 0 28px 2px rgba(52, 211, 153, .18); } }
+@keyframes rm-boot-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes rm-boot-slide { from { transform: translateX(-110%); } to { transform: translateX(260%); } }
+@keyframes rm-boot-show { to { opacity: 1; } }
+
+/* ---------- Sortie : copie animée de l'écran, posée par rm-boot.js au moment où l'app le retire ---------- */
+html body .rm-boot-exit {
+  visibility: visible !important; pointer-events: none;
+  position: fixed; inset: 0; z-index: 2147483647;
+  display: grid; place-content: center; padding: 24px; text-align: center;
+}
+html body .rm-boot-exit :is(strong, p, .rm-boot-bar) { animation: none !important; }
+html body .rm-boot-exit .rm-boot-mark path { stroke-dashoffset: 0 !important; }
+@media (prefers-reduced-motion: no-preference) {
+  html body .rm-boot-exit { animation: rm-boot-out 680ms cubic-bezier(.4, 0, .2, 1) forwards !important; }
+  html body .rm-boot-exit .rm-boot-mark { animation: rm-boot-mark-out 680ms cubic-bezier(.4, 0, .2, 1) forwards !important; }
+  html body .rm-boot-exit .rm-boot-bar::before { animation: none !important; left: 0; width: 100%; transition: width .2s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html body .rm-boot-exit { animation: rm-boot-fade 200ms linear forwards !important; }
+}
+@property --rm-hole { syntax: "<length>"; inherits: false; initial-value: 0px; }
+html body .rm-boot-exit {
+  -webkit-mask: radial-gradient(circle at 50% 46%, transparent var(--rm-hole), #000 calc(var(--rm-hole) + 40px));
+          mask: radial-gradient(circle at 50% 46%, transparent var(--rm-hole), #000 calc(var(--rm-hole) + 40px));
+}
+@keyframes rm-boot-out {
+  0% { --rm-hole: 0px; opacity: 1; }
+  70% { opacity: 1; }
+  100% { --rm-hole: 110vmax; opacity: 0; }
+}
+@keyframes rm-boot-mark-out { to { transform: scale(1.25); opacity: 0; } }
+@keyframes rm-boot-fade { to { opacity: 0; } }

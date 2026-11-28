@@ -1,4 +1,4 @@
-import {assignedRoom,belongsToService,isWaiting,minute,normalize,parisTime} from './service-v3-express-data.mjs?v=20261126-rmops-integration1';
+import {allowsExpressSimulation,assignedRoom,belongsToService,isWaiting,minute,normalize,parisTime} from './service-v3-express-data.mjs?v=2027.4-devonly1';
 
 const date='2032-11-08';
 const initialClock=Date.parse(`${date}T18:44:00Z`);
@@ -107,6 +107,7 @@ export function simulationSnapshot(state){
 }
 
 export function createSimulation(source=window,scope='demo'){
+ if(!allowsExpressSimulation(typeof window==='undefined'?source:window))throw Error('La simulation Coup de feu est réservée à DEV.');
  const key=`restomanager-express-fiction-v1:${scope}`;
  const fallback=makeSimulation();
  let state=fallback;
