@@ -458,7 +458,7 @@ html body #rmExpress[data-cf27] [data-passage] [data-passage-tables] > :not(.rmE
 }
 html body #rmExpress[data-cf27] [data-passage] [data-passage-tables] > :not(.rmExpressTile)::before { content: ""; flex: none; width: 18px; height: 18px; background: currentColor; -webkit-mask: var(--cf-i-alert) center / contain no-repeat; mask: var(--cf-i-alert) center / contain no-repeat; }
 html body #rmExpress[data-cf27] .rmExpressTile .cf-free-note { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-html body #rmExpress[data-cf27] .rmExpressTile[data-cf-free]::after { content: "Libre"; content: "Libre" / ""; justify-self: start; margin-top: 2px; padding: 3px 8px; border-radius: 99px; background: var(--cf-accent-soft); color: var(--cf-accent-ink); font: 800 11px/1 Inter, system-ui, sans-serif; }
+html body #rmExpress[data-cf27] .rmExpressTile[data-cf-free]::after { content: "À contrôler"; content: "À contrôler" / ""; justify-self: start; margin-top: 2px; padding: 3px 8px; border-radius: 99px; background: var(--cf-sunk); color: var(--cf-ink); font: 800 11px/1 Inter, system-ui, sans-serif; }
 
 html body #rmExpress[data-cf27] .rmExpressTiles .rmExpressTile {
   position: relative; display: grid; align-content: start; gap: 3px; min-height: 66px; padding: 12px; text-align: left;
@@ -469,7 +469,7 @@ html body #rmExpress[data-cf27] .rmExpressTiles .rmExpressTile small { font: 600
 html body #rmExpress[data-cf27] button.rmExpressTile { cursor: pointer; }
 html body #rmExpress[data-cf27] .rmExpressTiles button.rmExpressTile[aria-pressed="true"] { background: var(--cf-accent-soft); border-color: var(--cf-accent); box-shadow: 0 0 0 3px var(--cf-accent-glow); }
 html body #rmExpress[data-cf27] .rmExpressTile[data-state]::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--cf-line-2); }
-html body #rmExpress[data-cf27] .rmExpressTile[data-state="unknown"]::before { background: var(--cf-accent); }
+html body #rmExpress[data-cf27] .rmExpressTile[data-state="unknown"]::before { background: var(--cf-muted); }
 html body #rmExpress[data-cf27] .rmExpressTile[data-state="planned"]::before { background: var(--cf-info); }
 html body #rmExpress[data-cf27] .rmExpressTile[data-state="seated"]::before { background: var(--cf-muted); }
 html body #rmExpress[data-cf27] .rmExpressTile[data-state="seated"] { background: var(--cf-sunk); }
@@ -811,12 +811,7 @@ html body #rmExpress[data-cf27] .rmExpressTile.cf-attn { outline: 3px solid var(
 /* Libération : bouton, aperçu, toast avec annulation */
 .cf-dep .cf-dep-free { background: var(--d-accent); color: var(--d-accent-ink); }
 .cf-dep .cf-dep-free:hover { background: var(--d-accent); filter: brightness(1.08); }
-html body #rmExpress[data-cf27] .rmExpressTile.cf-freed { background: var(--cf-accent-soft, #e3f6ee); border-color: rgba(11, 154, 107, .45); }
-html body #rmExpress[data-cf27] .rmExpressTile.cf-freed::before { background: var(--cf-accent, #0b9a6b); }
-html body #rmExpress[data-cf27] .rmExpressTile.cf-freed small { font-size: 0; }
-html body #rmExpress[data-cf27] .rmExpressTile.cf-freed small::after { content: "Libre"; font-size: 12px; font-weight: 650; color: var(--cf-accent-ink, #064e38); }
 @media (prefers-reduced-motion: no-preference) {
-  html body #rmExpress[data-cf27] .rmExpressTile.cf-freed { animation: cf-freed 520ms cubic-bezier(.2, .9, .3, 1.2) both; }
   @keyframes cf-freed { 0% { transform: scale(.94); } 60% { transform: scale(1.04); } 100% { transform: none; } }
 }
 html.rmExpressActive .cf-rel {
@@ -836,3 +831,9 @@ html.rmExpressActive .cf-rel i { position: absolute; left: 0; bottom: 0; height:
 @media (prefers-reduced-motion: no-preference) { html.rmExpressActive .cf-rel.cf-show i { animation: cf-rel-t 8s linear both; } @keyframes cf-rel-t { to { transform: scaleX(0); } } }
 html[data-theme="dark"].rmExpressActive .cf-rel { background: #e4f1eb; color: #06251b; }
 html[data-theme="dark"].rmExpressActive .cf-rel button { background: rgba(6, 37, 27, .08); color: #064e38; }
+
+/* RM-OPS : un état non confirmé et une connexion interrompue ne sont pas des succès. */
+html body #rmExpress[data-cf27] .rmExpressRoomTabs > button[data-cf-tone="neutral"]::after { background: var(--cf-sunk); color: var(--cf-ink); }
+html body #rmExpress[data-cf27][data-cf-sync="pending"] .rmExpressActions > span::before { background: #d97706; box-shadow: none; animation: none; }
+html body #rmExpress[data-cf27] .rmExpressFeedback.cf-show::before { background: #94a3b8; }
+html.rmExpressActive .cf-rel button:disabled { opacity: .6; cursor: wait; }
