@@ -20,6 +20,7 @@
   RESULT_UNKNOWN:'Confirmation non reçue. Vérifiez la fiche avant toute nouvelle action.',
   INVALID_INPUT:'Demande invalide. Actualisez puis réessayez.',
   ROOM_CONFLICT:'Une réservation existe déjà pour cette chambre.',
+  ROOM_LIMIT:'Deux occupants sont déjà enregistrés pour cette chambre sur ce créneau.',
   CAPABILITY_REQUIRED:'Le service de réservation doit être mis à jour par le responsable.',
   SEATED_ELSEWHERE:'Un collègue venait de changer la table de ce client : il est enregistré sur une autre table. Vérifiez en salle et corrigez si besoin.'
  };
@@ -42,6 +43,7 @@
   if(code==='PGRST202'||code==='42883')return 'RPC_MISSING';
   if(code==='40001'||code==='RM001'||detail==='STALE_VERSION')return 'STALE';
   if(detail==='ROOM_CONFLICT')return 'ROOM_CONFLICT';
+  if(detail==='ROOM_LIMIT')return 'ROOM_LIMIT';
   if(code==='23P01'||detail==='TABLE_CONFLICT')return /maintenue/i.test(msg)?'TARGET_HELD':'CONFLICT';
   if(detail==='HOLD_CONFLICT')return 'TARGET_HELD';
   if(/encore occupée/i.test(msg))return 'TARGET_OCCUPIED';
@@ -54,11 +56,13 @@
  function createPlacementGateway(deps){
   const {engine,getState,rpc,refresh,requireWrite=()=>{},getRole=async()=>null,isOnline=()=>true,tableId,now=()=>Date.now(),installWalkin,serverFeatures=()=>({}),expressOnly=false}=deps;
   const inflight=new Map();
+  const v2=()=>expressOnly&&serverFeatures().expressServiceV2===true;
 
   function input(extra){
    const state=getState();
    if(!state||!Array.isArray(state.reservations))return null;
-   return {reservations:state.reservations,tablePlan:state.tablePlan||[],holds:state.holds||[],now:now(),...extra};
+   return {reservations:state.reservations,tablePlan:state.tablePlan||[],holds:state.holds||[],now:now(),
+    ...(v2()?{fusionLinks:state.fusionLinks||[]}:{}),...extra};
   }
   function findRecord(id){return (getState()?.reservations||[]).find(r=>String(r.id)===String(id))||null}
   function seatedAsRequested(id,tables){const r=findRecord(id);return !!r&&r.status==='seated'&&sameTables(r.tables,tables)}
@@ -71,10 +75,11 @@
    const data=input({reservationId,targetTables,allowRoomChange:!!opts.allowRoomChange,guests:opts.guests,...(opts.budget?{budget:opts.budget}:{})});
    if(!data)return {ok:false,code:'NOT_SYNCED',message:MESSAGES.NOT_SYNCED,changes:[]};
    const result=engine.preview(data);
-   return result.ok?{...result,allowRoomChange:!!opts.allowRoomChange,offline:!isOnline()}:result;
+   return result.ok?{...result,allowRoomChange:!!opts.allowRoomChange,offline:!isOnline(),
+    ...(v2()?{contract:2,scope:getState().scope,revision:getState().revision}:{})}:result;
   }
   function suggest(reservationId,opts={}){
-   const data=input({reservationId,limit:opts.limit||2});
+   const data=input({reservationId,limit:opts.limit||2,roomId:opts.roomId??null});
    if(!data)return {ok:false,code:'NOT_SYNCED',message:MESSAGES.NOT_SYNCED,choices:[]};
    return engine.suggest(data);
   }
@@ -93,6 +98,13 @@
   }
   async function write(fresh,current,state){
    if(expressOnly){
+    if(fresh.contract===2){
+     const moves=sameTables(current.tables,fresh.targetTables)?[]:[
+      {id:current.id,from_table:uuid(current.tables[0]),to_table:uuid(fresh.targetTables[0]),expected_status:current.status,expected_version:current.editVersion},
+      ...fresh.changes.map(c=>({id:c.id,from_table:uuid(c.from[0]),to_table:uuid(c.to[0]),expected_status:c.status,expected_version:c.editVersion}))];
+     return rpc('express_seat_v2',{p_revision:state.revision,p_reservation_id:current.id,p_expected_status:current.status,
+      p_version:current.editVersion,p_tables:fresh.targetTables.map(uuid),p_changes:moves});
+    }
     if(current.tables.length!==1||fresh.targetTables.length!==1||fresh.changes.length>1)
      throw new RestoEngineError('INVALID_INPUT','Seuls le placement sur une table et la permutation simple sont disponibles.');
     const moves=sameTables(current.tables,fresh.targetTables)&&!fresh.changes.length?[]:[
@@ -125,6 +137,9 @@
    await refresh();
    const state=expressOnly?requireExpressScope(scope):null;
    if(expressOnly)requireWrite();
+   if(prev.contract===2&&(!v2()||prev.revision!==state.revision||prev.scope!==state.scope))
+    throw new RestoEngineError('STALE',null,{refreshed:true});
+   if(v2()&&prev.contract!==2)throw new RestoEngineError('STALE',null,{refreshed:true});
    const fresh=preview(prev.reservationId,prev.targetTables,{allowRoomChange:prev.allowRoomChange});
    if(!fresh.ok){
     if(applied(prev))return done(prev,true);
@@ -137,7 +152,7 @@
     const receipt=await write(fresh,current,state);
     if(expressOnly&&typeof receipt?.seated_at!=='string')throw new RestoEngineError('RESULT_UNKNOWN');
    }catch(error){
-    if(error instanceof RestoEngineError)throw error;
+    if(error instanceof RestoEngineError&&error.code!=='RESULT_UNKNOWN')throw error;
     let refreshed=false;
     try{await refresh();refreshed=true}catch(_){}
     if(refreshed&&(!expressOnly||getState()?.scope===scope)&&applied(fresh))return done(fresh,true);
@@ -146,9 +161,9 @@
    }
    try{await refresh()}catch(_){return {...done(fresh,false),verified:false}}
    if(expressOnly&&getState()?.scope!==scope)throw new RestoEngineError('RESULT_UNKNOWN');
-   if(!seatedAsRequested(prev.reservationId,prev.targetTables)){
+   if(!applied(fresh)){
     const now=findRecord(prev.reservationId);
-    if(now?.status==='seated')throw new RestoEngineError('SEATED_ELSEWHERE',null,{refreshed:true,actualTables:now.tables.slice(),requestedTables:prev.targetTables.slice()});
+    if(now?.status==='seated'&&!sameTables(now.tables,prev.targetTables))throw new RestoEngineError('SEATED_ELSEWHERE',null,{refreshed:true,actualTables:now.tables.slice(),requestedTables:prev.targetTables.slice()});
     throw new RestoEngineError('RESULT_UNKNOWN',null,{refreshed:true});
    }
    return done(fresh,false);
@@ -168,11 +183,19 @@
    const data=input({guests,duration:opts.duration??getState()?.duration??90});
    return data?engine.walkInTables(data):[];
   }
+  function walkInGroups(guests){
+   const data=input({guests,duration:getState()?.duration??90});
+   return v2()&&data?engine.walkInGroups(data):[];
+  }
   // Passage : même discipline que seat() — vérification sur instantané rafraîchi,
   // une seule écriture en vol par table, relecture après résultat incertain.
   async function runWalkIn(draft){
    const guests=Number(draft?.guests),tables=(draft?.tables||[]).map(Number);
-   if(!Number.isInteger(guests)||guests<1||tables.length!==1||!['hotel','exterieur'].includes(draft?.type))throw new RestoEngineError('INVALID_INPUT');
+   const versioned=draft?.contract===2;
+   if(!Number.isInteger(guests)||guests<1||tables.length<1||tables.length>(versioned?4:1)||
+    !tables.every(Number.isInteger)||new Set(tables).size!==tables.length||!['hotel','exterieur'].includes(draft?.type))
+    throw new RestoEngineError('INVALID_INPUT');
+   if(versioned!==v2()||draft?.confirmation&&!versioned)throw new RestoEngineError('CAPABILITY_REQUIRED');
    if(!expressOnly&&typeof installWalkin!=='function')throw new RestoEngineError('RPC_MISSING');
    if(!isOnline())throw new RestoEngineError('OFFLINE');
    const scope=getState()?.scope;
@@ -182,6 +205,32 @@
    await refresh();
    const state=expressOnly?requireExpressScope(scope):null;
    if(expressOnly)requireWrite();
+   if(versioned){
+    if(!v2()||draft.revision!==state.revision||draft.scope!==state.scope||!isOnline())
+     throw new RestoEngineError('STALE',null,{refreshed:true});
+    const data=input({guests,duration:state.duration??90});
+    if(!engine.canWalkInGroup(data,tables))throw new RestoEngineError('STALE','Le groupe de tables a changé. Choisissez de nouveau.');
+    let receipt;
+    try{
+     receipt=await rpc('express_walkin_v2',{p_revision:state.revision,p_tables:tables.map(uuid),p_guests:guests,
+      p_type:draft.type,p_room:draft.type==='hotel'?String(draft.name||'').trim().toLowerCase()||null:null,
+      p_confirmation:draft.confirmation??null});
+    }catch(error){
+     try{await refresh()}catch(_){}
+     throw new RestoEngineError(classify(error),null,{cause:error});
+    }
+    if(receipt?.status==='room_conflict'&&typeof receipt.token==='string'&&typeof receipt.reservation_id==='string'&&
+     receipt.revision===state.revision&&!draft.confirmation){
+     return {roomConflict:true,token:receipt.token,reservationId:receipt.reservation_id,revision:receipt.revision};
+    }
+    if(receipt?.status!=='seated'||typeof receipt.reservation_id!=='string'){
+     try{await refresh()}catch(_){}
+     throw new RestoEngineError('RESULT_UNKNOWN');
+    }
+    let verified=false;
+    try{await refresh();verified=getState()?.scope===scope&&seatedAsRequested(receipt.reservation_id,tables);}catch(_){}
+    return {ok:true,reservationId:receipt.reservation_id,tables,verified,alreadyApplied:false};
+   }
    if(!walkInTables(guests).some(t=>t.number===tables[0]))throw new RestoEngineError('STALE','Cette table ne peut plus accueillir le passage. Choisissez de nouveau.',{refreshed:true});
    if(expressOnly){
     let reservationId;
@@ -214,15 +263,15 @@
    return {ok:true,reservationId:row?String(row.id):null,tables,seatedAt:row?.seatedAt||null,alreadyApplied:false,verified:!!row};
   }
   function walkIn(draft){
-   const key='walkin:'+String(draft?.tables?.[0]);
+   const key=draft?.contract===2?'walkin':'walkin:'+String(draft?.tables?.[0]);
    if(inflight.has(key))return inflight.get(key);
    const promise=runWalkIn(draft).finally(()=>inflight.delete(key));
    inflight.set(key,promise);return promise;
   }
   function capabilities(){
-   return {version:1,seat:true,swapAndSeat:true,walkIn:expressOnly||typeof installWalkin==='function',swapWithoutSeat:false,releaseThenSeat:false,moveSeated:false,escortHold:false};
+   return {version:v2()?2:1,seat:true,swapAndSeat:true,walkIn:expressOnly||typeof installWalkin==='function',swapWithoutSeat:false,releaseThenSeat:false,moveSeated:false,escortHold:false};
   }
-  return {preview,suggest,seat,tableStates,walkInTables,walkIn,capabilities,classify};
+  return {preview,suggest,seat,tableStates,walkInTables,walkInGroups,walkIn,capabilities,classify};
  }
  const api={createPlacementGateway,RestoEngineError,classify,MESSAGES};
  root.RestoPlacementGateway=api;

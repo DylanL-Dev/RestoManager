@@ -1,10 +1,14 @@
-import {allowsExpressSimulation,assignedRoom,belongsToService,elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,roomViews,serviceIndicators,tableStatus} from './service-v3-express-data.mjs?v=2027.4-devonly1';
-import {createLiveAdapter} from './placement-express-adapter.mjs?v=2027.4-service1';
+import {allowsExpressSimulation,assignedRoom,belongsToService,elapsedMinutes,findArrivals,isWaiting,liveSnapshot,parisTime,roomViews,serviceIndicators,tableStatus} from './service-v3-express-data.mjs?v=2027.4-b3';
+import {createLiveAdapter} from './placement-express-adapter.mjs?v=2027.4-b3';
 
 const icon=name=>`<i data-lucide="${name}" aria-hidden="true"></i>`;
 const symbols=()=>window.lucide?.createIcons();
 const labelFor=row=>row.hotelRoom?`Ch. ${row.hotelRoom} · ${row.client}`:row.client;
 const covers=count=>`${count} couvert${count===1?'':'s'}`;
+const numbersOf=table=>table.numbers??[table.number];
+const groupKey=table=>numbersOf(table).join(',');
+const tableLabel=numbers=>numbers.map(number=>'T'+number).join(' + ');
+const parseTables=key=>key.split(',').map(Number);
 
 function element(tag,text='',className=''){
  const node=document.createElement(tag);
@@ -73,6 +77,12 @@ export function mountExpress(main,readPlan){
       <label data-room-field hidden>Chambre (facultatif)<input type="text" maxlength="12" data-guest-room></label>
      </div>
      <p>Choisissez la table constatée sur place.</p><div class="rmExpressTiles" data-passage-tables></div>
+     <div class="rmExpressConfirm rmExpressOccupant" data-occupant role="group" aria-labelledby="rmExpressOccupantTitle" hidden>
+      <p id="rmExpressOccupantTitle" tabindex="-1">Une réservation existe déjà pour cette chambre.</p>
+      <button type="button" data-action="view-occupant">Voir la réservation</button>
+      <button type="button" class="rmExpressPrimary" data-action="confirm-occupant">Installer un occupant distinct</button>
+      <button type="button" data-action="cancel-occupant">Annuler</button>
+     </div>
      <button type="button" class="rmExpressPrimary" data-action="install-passage" disabled>Installer le passage</button>
     </section>
      <details class="rmExpressPanel" id="rmExpressFloor" data-floor open><summary>Tables du service</summary><div class="rmExpressRooms" data-floor-tiles></div></details>
@@ -88,6 +98,7 @@ export function mountExpress(main,readPlan){
  let open=false,demo=null,live=null,simulation=null,selectedId=null,selectedTable=null,selectedPlan=null,otherDates=false;
  let passage=false,passageTable=null,busy=false,previousFocus=null,previousScroll=0,lastNotice='';
  let scope=null,roomId=null,roomTabSignature='',demoRelease=null;
+ let occupant=null;
  const handoffs=new Set();
  const canOpen=()=>{
   const context=window.RestoNotificationContext;
@@ -153,7 +164,7 @@ export function mountExpress(main,readPlan){
   }
  });
 
- const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=2027.4',import.meta.url);
+ const style=element('link');style.rel='stylesheet';style.href=new URL('./service-v3-express.css?v=2027.4-b3',import.meta.url);
  // The regular screens remain usable while the optional stylesheet is loading.
  let styled=false;style.addEventListener('load',()=>{styled=true;update();});
  document.head.append(style);
@@ -177,7 +188,7 @@ export function mountExpress(main,readPlan){
   mobileLaunch.setAttribute('aria-expanded',String(open));
   if(open){update();$('#rmExpressTitle').focus({preventScroll:true});window.scrollTo({top:0,behavior:'instant'});}
   else{
-   window.RestoCF27Departs?.close();lastSharedRelease=null;
+   window.RestoCF27Departs?.close();lastSharedRelease=null;occupant=null;
    const target=previousFocus?.getClientRects().length?previousFocus:desktop.matches?launch:accountToggle;
    target?.focus({preventScroll:true});
    window.scrollTo({top:previousScroll,behavior:'instant'});
@@ -204,6 +215,7 @@ export function mountExpress(main,readPlan){
 
  function resetView(){
   selectedId=selectedTable=selectedPlan=passageTable=roomId=null;
+  occupant=null;
   passage=otherDates=false;handoffs.clear();search.value='';message('');
   $('[data-guests]').value='2';$('[data-guest-type]').value='external';$('[data-guest-room]').value='';
   $('[data-other-tables]').open=false;
@@ -306,20 +318,21 @@ export function mountExpress(main,readPlan){
 
  function roomName(snapshot,id){return snapshot.rooms.find(room=>room.id===id)?.name??'';}
 
- function placementPreview(snapshot,reservationId,number){
-  const plan=adapter().preview(snapshot,reservationId,number);
+ function placementPreview(snapshot,reservationId,key){
+  const tablesChosen=parseTables(key);
+  const plan=adapter().preview(snapshot,reservationId,tablesChosen.length===1?tablesChosen[0]:tablesChosen);
   if(!plan.ok)return plan;
   const row=snapshot.reservations.find(item=>item.id===reservationId);
   const affected=new Set([...row.tables,...plan.targetTables,...plan.changes.flatMap(move=>[...move.from,...move.to])]);
   const tables=snapshot.tables.filter(item=>affected.has(item.number))
    .map(({id,number,roomId,capacity})=>[id,number,roomId,capacity]);
-  const viewVersion=JSON.stringify([plan.fingerprint,plan.kind,plan.changes,plan.warnings,tables]);
+  const viewVersion=JSON.stringify([plan.fingerprint,plan.kind,plan.changes,plan.warnings,tables,plan.revision]);
   return {...plan,viewVersion};
  }
 
  function tableButton(snapshot,table,detail,kind='choose',otherRoom=false){
-  const tile=button('',kind,table.number);tile.className='rmExpressTile';
-  tile.append(element('strong',`T${table.number}`),element('small',detail));
+  const tile=button('',kind,groupKey(table));tile.className='rmExpressTile';
+  tile.append(element('strong',tableLabel(numbersOf(table))),element('small',detail));
   const room=roomName(snapshot,table.roomId);if(room)tile.append(element('small',otherRoom?`Autre salle · ${room}`:room));
   return tile;
  }
@@ -361,12 +374,12 @@ export function mountExpress(main,readPlan){
    let detail=plan.message;
    if(plan.ok){
     detail=tableStatus(snapshot,table.number).label;
-    if(row.tables.includes(table.number))detail='Prévue pour ce client';
+    if(row.tables.includes(table.number))detail=table.numbers?`Fusion prévue · ${covers(row.guests)}`:'Prévue pour ce client';
     if(plan.kind==='swap')detail=`Échange avec ${plan.changes[0].client}`;
     if(plan.kind==='chain')detail=`${plan.changes.length} déplacements à vérifier`;
    }
    const tile=tableButton(snapshot,table,detail,'choose',Boolean(fromRoom&&fromRoom!==table.roomId));
-   tile.disabled=!plan.ok||!canPreview(snapshot)||busy;tile.setAttribute('aria-pressed',String(selectedTable===table.number));
+   tile.disabled=!plan.ok||!canPreview(snapshot)||busy;tile.setAttribute('aria-pressed',String(selectedTable===groupKey(table)));
    return tile;
   }
   if(primary.length)notes.append(...primary.map(option));
@@ -383,8 +396,9 @@ export function mountExpress(main,readPlan){
   }
   selectedPlan=plan;install.hidden=false;
   const recap=plan.changes.length
-   ?plan.changes.map(move=>`${move.client} passera de T${move.from[0]} à T${move.to[0]}.`)
-   :[demo?'Confirmez la table réellement choisie en salle.':`Table proposée · T${plan.targetTables[0]}`];
+   ?[`${labelFor(row)} · ${tableLabel(row.tables)} → ${tableLabel(plan.targetTables)}.`,
+    ...plan.changes.map(move=>`${move.client} passera de T${move.from[0]} à T${move.to[0]}.`)]
+   :[demo?'Confirmez la table réellement choisie en salle.':`Table proposée · ${tableLabel(plan.targetTables)}`];
   const destination=snapshot.tables.find(table=>table.number===plan.targetTables[0]);
   const roomChange=fromRoom&&destination&&destination.roomId!==fromRoom;
   const change=$('[data-room-change]');change.hidden=!roomChange;
@@ -394,11 +408,11 @@ export function mountExpress(main,readPlan){
   const warnings=plan.warnings.filter(warning=>!demo||warning.code!=='ROOM_CHANGE').map(warning=>warning.message);
   $('[data-placement-summary]').textContent=[...recap,...warnings].join(' ');
   const confirm=$('[data-action=install]');
-  const complex=!demo&&(row.tables.length!==1||plan.changes.length>1);
+  const complex=!demo&&live.capabilities().version!==2&&(row.tables.length!==1||plan.changes.length>1);
   if(complex)install.querySelector('[data-placement-summary]').append(' Seuls le placement sur une table et la permutation simple sont disponibles ici.');
   confirm.hidden=!writesAvailable('seat')||complex;
   const verb=!demo&&plan.changes.length?(plan.kind==='swap'?'Permuter et installer':'Réorganiser et installer'):'Installer';
-  confirm.textContent=`${verb} ${row.hotelRoom||row.client} en T${plan.targetTables[0]}`;confirm.disabled=!canAct();
+  confirm.textContent=`${verb} ${row.hotelRoom||row.client} en ${tableLabel(plan.targetTables)}`;confirm.disabled=!canAct();
  }
 
  function appendOtherRooms(container,snapshot,room){
@@ -434,11 +448,13 @@ export function mountExpress(main,readPlan){
  function drawPassage(snapshot,room){
   const guests=$('[data-guests]').valueAsNumber;
   const choices=canPreviewPassage(snapshot)?adapter().suggestWalkIn(snapshot,guests).filter(table=>!roomId||table.roomId===roomId):[];
-  if(!choices.some(table=>table.number===passageTable))passageTable=null;
+  if(!choices.some(table=>groupKey(table)===passageTable))passageTable=null;
+  if(occupant&&(!canPreviewPassage(snapshot)||!writesAvailable('walkIn')||
+    live?.capabilities()?.version!==2||occupant.stamp!==passageStamp(snapshot)))occupant=null;
   const options=$('[data-passage-tables]');
   options.replaceChildren(...choices.map(table=>{
-   const tile=tableButton(snapshot,table,'Aucun client enregistré','walk-table');
-   tile.disabled=busy;tile.setAttribute('aria-pressed',String(passageTable===table.number));return tile;
+   const tile=tableButton(snapshot,table,numbersOf(table).length>1?`Fusion autorisée · ${covers(table.capacity)}`:'Aucun client enregistré','walk-table');
+   tile.disabled=busy;tile.setAttribute('aria-pressed',String(passageTable===groupKey(table)));return tile;
   }));
   if(!choices.length){
    const empty=room?`Aucune table compatible avec ce passage dans ${room.name}.`:'Aucune table compatible avec ce passage.';
@@ -448,9 +464,41 @@ export function mountExpress(main,readPlan){
   $('[data-room-field]').hidden=$('[data-guest-type]').value!=='hotel';
   const confirm=$('[data-action=install-passage]');
   $('[data-passage-readonly]').hidden=writesAvailable('walkIn');
-  confirm.hidden=!writesAvailable('walkIn')||!choices.length;
+  for(const key of ['guests','guest-type','guest-room'])$('[data-'+key+']').disabled=busy;
+  $('[data-occupant]').hidden=!occupant;
+  $('[data-action=confirm-occupant]').disabled=!canAct('walkIn');
+  confirm.hidden=!writesAvailable('walkIn')||!choices.length||Boolean(occupant);
   confirm.disabled=passageTable===null||!canAct('walkIn');
-  confirm.textContent=passageTable===null?'Installer le passage':`Installer ${covers(guests)} en T${passageTable}`;
+  confirm.textContent=passageTable===null?'Installer le passage':`Installer ${covers(guests)} en ${tableLabel(parseTables(passageTable))}`;
+ }
+
+ function passageStamp(state){
+  const chosen=state.tables.filter(t=>passageTable&&parseTables(passageTable).includes(t.number));
+  return JSON.stringify([state.scope,state.revision,state.now.date,state.service,roomId,passageTable,
+   chosen.map(t=>[t.id,t.roomId,t.capacity]),$('[data-guests]').value,$('[data-guest-type]').value,$('[data-guest-room]').value]);
+ }
+
+ function submitPassage(challenge){
+  const state=snapshot();
+  if(!passageTable||!canPreviewPassage(state)||challenge&&challenge.stamp!==passageStamp(state))return;
+  const tables=parseTables(passageTable),stamp=passageStamp(state);
+  const draft={contract:!demo&&live.capabilities().version===2?2:undefined,revision:state.revision,scope:state.scope,
+   guests:$('[data-guests]').valueAsNumber,table:tables[0],tables,type:$('[data-guest-type]').value,room:$('[data-guest-room]').value,
+   confirmation:challenge?.token};
+  occupant=null;
+  void run('walkIn',async(adapter,sameContext)=>{
+   const result=await adapter.walkIn(draft);if(!sameContext()||!open||!passage)return;
+   if(result?.roomConflict){
+    const current=snapshot();
+    if(stamp!==passageStamp(current)||!canPreviewPassage(current))return;
+    occupant={token:result.token,reservationId:result.reservationId,stamp};
+    update();$('#rmExpressOccupantTitle').focus();
+    return;
+   }
+   passage=false;passageTable=null;$('[data-guest-room]').value='';
+   const status=result?.verified===false?' Synchronisation en attente.':'';
+   message(`${demo?'Simulation · ':''}passage installé en ${tableLabel(tables)}.${status}`);
+  });
  }
 
  async function run(kind,action){
@@ -493,18 +541,20 @@ export function mountExpress(main,readPlan){
   setOpen(true,accountToggle);
  });
  search.addEventListener('input',()=>{if(!search.value.trim())otherDates=false;update();});
- $('[data-guests]').addEventListener('input',()=>{passageTable=null;update();});
- $('[data-guest-type]').addEventListener('change',()=>update());
+ $('[data-guests]').addEventListener('input',()=>{passageTable=occupant=null;update();});
+ $('[data-guest-type]').addEventListener('change',()=>{occupant=null;update();});
+ $('[data-guest-room]').addEventListener('input',()=>{occupant=null;update();});
  root.addEventListener('click',event=>{
   const target=event.target.closest('button[data-action]');if(!target||target.disabled)return;
   const {action,value}=target.dataset;
   if(action==='close'){setOpen(false);return;}
   if(action==='simulation'){void switchSource();return;}
   if(action==='room'||action==='all-rooms'){
+   occupant=null;
    roomId=value||null;
    const tables=snapshot().tables;
-   if(roomId&&tables.find(table=>table.number===selectedTable)?.roomId!==roomId)selectedTable=selectedPlan=null;
-   if(roomId&&tables.find(table=>table.number===passageTable)?.roomId!==roomId)passageTable=null;
+   if(roomId&&tables.find(table=>table.number===Number(selectedTable?.split(',')[0]))?.roomId!==roomId)selectedTable=selectedPlan=null;
+   if(roomId&&tables.find(table=>table.number===Number(passageTable?.split(',')[0]))?.roomId!==roomId)passageTable=null;
    $('[data-floor]').open=true;
    update();
    if(action==='all-rooms')$('[data-action=room]').focus();
@@ -512,7 +562,7 @@ export function mountExpress(main,readPlan){
   }
   if(action==='other-dates')otherDates=!otherDates;
   if(action==='select'){
-   selectedId=value;selectedTable=selectedPlan=null;passage=false;$('[data-other-tables]').open=false;message('');
+   selectedId=value;selectedTable=selectedPlan=occupant=null;passage=false;$('[data-other-tables]').open=false;message('');
    update();
    if(window.matchMedia('(max-width: 719px)').matches)$('[data-booking] h2')?.focus();
    return;
@@ -523,8 +573,8 @@ export function mountExpress(main,readPlan){
   }
   if(action==='choose'){
    const state=snapshot();if(!canPreview(state)||busy)return;
-   const plan=placementPreview(state,selectedId,Number(value));
-   if(plan.ok){selectedTable=Number(value);selectedPlan=plan;message('');}
+   const plan=placementPreview(state,selectedId,value);
+   if(plan.ok){selectedTable=value;selectedPlan=plan;message('');}
    else message(plan.message);
   }
   if(action==='install'&&selectedPlan){
@@ -533,23 +583,20 @@ export function mountExpress(main,readPlan){
     const result=await adapter.seat(plan);if(!sameContext())return;
     handoffs.delete(result.reservationId);selectedTable=selectedPlan=null;
     const status=result.verified===false?' Synchronisation en attente.':'';
-    message(`${demo?'Simulation · ':''}installation enregistrée en T${result.targetTables[0]}.${status}`);
+    message(`${demo?'Simulation · ':''}installation enregistrée en ${tableLabel(result.targetTables)}.${status}`);
    });return;
   }
   if(action==='passage'&&canPreviewPassage(snapshot())&&!busy){
-   passage=true;passageTable=null;message('');update();$('[data-passage] h2').focus();return;
+   passage=true;passageTable=occupant=null;message('');update();$('[data-passage] h2').focus();return;
   }
-  if(action==='cancel-passage'){passage=false;message('');$('[data-action=passage]').focus();}
-  if(action==='walk-table'&&canPreviewPassage(snapshot())&&!busy)passageTable=Number(value);
-  if(action==='install-passage'&&passageTable!==null){
-   const draft={revision:snapshot().revision,guests:$('[data-guests]').valueAsNumber,table:passageTable,
-    type:$('[data-guest-type]').value,room:$('[data-guest-room]').value};
-   void run('walkIn',async(adapter,sameContext)=>{
-    const result=await adapter.walkIn(draft);if(!sameContext())return;
-    passage=false;passageTable=null;$('[data-guest-room]').value='';
-    const status=result?.verified===false?' Synchronisation en attente.':'';
-    message(`${demo?'Simulation · ':''}passage installé en T${draft.table}.${status}`);
-   });return;
+  if(action==='cancel-passage'){passage=false;occupant=null;message('');$('[data-action=passage]').focus();}
+  if(action==='walk-table'&&canPreviewPassage(snapshot())&&!busy){passageTable=value;occupant=null;}
+  if(action==='install-passage'){submitPassage(null);return;}
+  if(action==='confirm-occupant'&&occupant){submitPassage(occupant);return;}
+  if(action==='cancel-occupant'){occupant=null;update();$('[data-action=install-passage]').focus();return;}
+  if(action==='view-occupant'&&occupant){
+   selectedId=occupant.reservationId;selectedTable=selectedPlan=occupant=null;passage=false;
+   update();$('[data-booking] h2')?.focus();return;
   }
   update();
  });

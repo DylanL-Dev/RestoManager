@@ -67,10 +67,21 @@
   return h.toString(16).padStart(8,'0');
  }
  const roomOf=(byNum,num)=>byNum.get(Number(num))?.roomId??null;
+ const groupCapacity=(numbers,byNum)=>numbers.reduce((sum,n)=>sum+byNum.get(n).capacity,0);
+
+ function validFusion(numbers,byNum,links){
+  if(numbers.length<2||numbers.length>4||numbers.some(n=>!byNum.has(n)||roomOf(byNum,n)!==roomOf(byNum,numbers[0])))return false;
+  const reached=new Set([numbers[0]]);
+  for(let i=1;i<numbers.length;i++)for(const [a,b] of links){
+   if(reached.has(a)&&numbers.includes(b))reached.add(b);
+   if(reached.has(b)&&numbers.includes(a))reached.add(a);
+  }
+  return reached.size===numbers.length;
+ }
 
  /* Cœur : calcule la réorganisation nécessaire pour installer `reservationId` sur `targetTables`. */
  function preview(input){
-  const {reservationId,targetTables,holds=[],allowRoomChange=false,guests,now=Date.now(),budget=4000,maxDepth=MAX_CHANGES,explainRoomChange=true,enforceService=true}=input||{};
+  const {reservationId,targetTables,holds=[],fusionLinks,allowRoomChange=false,guests,now=Date.now(),budget=4000,maxDepth=MAX_CHANGES,explainRoomChange=true,enforceService=true}=input||{};
   const all=normalize(input?.reservations);
   const {plan,byNum}=planIndex(input?.tablePlan);
   const target=all.find(r=>r.id===String(reservationId));
@@ -88,7 +99,8 @@
   if(wanted.length!==1&&!sameSet)return fail('FUSION_UNSUPPORTED',{reason:'target-tables'});
   if(target.tables.length!==1&&!sameSet)return fail('FUSION_UNSUPPORTED',{reason:'target-is-fusion'});
   for(const n of wanted)if(!byNum.has(n))return fail('INVALID_INPUT',{table:n});
-  const capacity=wanted.reduce((s,n)=>s+byNum.get(n).capacity,0);
+  if(fusionLinks&&wanted.length>1&&!validFusion(wanted,byNum,fusionLinks))return fail('FUSION_UNSUPPORTED');
+  const capacity=groupCapacity(wanted,byNum);
   if(capacity<target.guests||(wanted.length===1&&byNum.get(wanted[0]).capacityMin>target.guests))return fail('CAPACITY',{table:wanted[0],capacity});
   // Installer maintenant occupe la table dès maintenant : en cas d'installation anticipée ou
   // tardive, l'intervalle réel part de l'heure actuelle (fenêtre de 12 h autour du créneau).
@@ -99,7 +111,7 @@
    ?[Math.min(planned[0],nowMin),Math.max(planned[0],nowMin)+(planned[1]-planned[0])]:planned;
   for(const n of wanted){
    const h=holdOn(holds,n,span,now);
-   if(h&&!sameSet)return fail('TARGET_HELD',{table:n,team:h.team||null});
+   if(h&&(!sameSet||fusionLinks))return fail('TARGET_HELD',{table:n,team:h.team||null});
   }
   // Un client installé bloque sa table quelle que soit la date (comme le serveur).
   const seated=all.find(r=>r.id!==target.id&&r.status==='seated'&&r.tables.some(n=>wanted.includes(n)));
@@ -160,7 +172,7 @@
      if(collide.some(o=>o.id===target.id||o.status==='seated'||o.walkIn||!MOVABLE.has(o.status)||(assignment.get(o.id)||[]).length!==1||changed.has(o.id)))continue;
      if(changed.size+1+collide.length>MAX_CHANGES)continue;
      if(depth+1>=maxDepth&&collide.length)continue;
-     const key=id+'>'+t.number+'|'+[...work].sort().join(',');
+     const key=JSON.stringify([id,t.number,[...work].sort(),[...changed].sort().map(id=>[id,assignment.get(id)])]);
      if(visited.has(key))continue;visited.add(key);
      const prevWork=new Set(work);
      move(id,home,t.number);changed.add(id);
@@ -194,7 +206,7 @@
 
  /* Deux (ou `limit`) choix ordonnés pour l'accueil : prévue, directe, échange simple, chaîne. */
  function suggest(input){
-  const {reservationId,limit=2}=input||{};
+  const {reservationId,limit=2,roomId=null}=input||{};
   const all=normalize(input?.reservations);
   const target=all.find(r=>r.id===String(reservationId));
   if(!target)return fail(((input?.reservations||[]).find(r=>r&&String(r.id)===String(reservationId))||{}).status==='seated'?'ALREADY_SEATED':'NOT_FOUND');
@@ -206,10 +218,10 @@
   const choices=[];
   if(target.tables.length){
    const p=preview({...input,targetTables:target.tables});
-   if(p.ok)choices.push({...p,kind:'planned',label:'Prévue'});
+   if(p.ok&&(!roomId||roomOf(byNum,target.tables[0])===roomId))choices.push({...p,kind:'planned',label:'Prévue'});
   }
   const want=Math.max(1,Number(limit)||2);
-  const candidates=plan.filter(t=>fits(t,target.guests)&&!(target.tables.length===1&&t.number===target.tables[0]));
+  const candidates=plan.filter(t=>(!roomId||t.roomId===roomId)&&fits(t,target.guests)&&!(target.tables.length===1&&t.number===target.tables[0]));
   const tried=new Set();
   // 1er passage : installations directes et échanges simples (coût faible) ; 2e : chaînes si nécessaire.
   for(const pass of [{maxDepth:1,budget:60},{maxDepth:MAX_CHANGES,budget:300}]){
@@ -250,20 +262,55 @@
 
  /* Tables proposables pour un passage maintenant : même règle que la RPC install_walkin_group_v3
   * (aucun installé, aucune réservation sur [maintenant, maintenant + durée], aucun maintien actif). */
- function walkInTables(input){
-  const {guests,duration=90,holds=[],now=Date.now()}=input||{};
-  const n=Number(guests);
-  if(!Number.isInteger(n)||n<1)return [];
+ function availableWalkInTables(input){
+  const {duration=90,holds=[],now=Date.now()}=input||{};
   const all=normalize(input?.reservations);
   const {plan}=planIndex(input?.tablePlan);
   const start=parisMinutes(now);
   if(!Number.isFinite(start))return [];
   const span=[start,start+Math.max(1,Number(duration)||90)];
-  return plan.filter(t=>fits(t,n))
-   .filter(t=>!all.some(r=>r.tables.includes(t.number)&&(r.status==='seated'||overlaps(interval(r),span))))
-   .filter(t=>!holdOn(holds,t.number,span,now))
-   .sort((a,b)=>a.capacity-b.capacity||a.number-b.number)
+  const unavailable=new Set(all.filter(r=>r.status==='seated'||overlaps(interval(r),span)).flatMap(r=>r.tables));
+  for(const h of holds){
+   if(Number(h.expiry)>now&&overlaps(span,[parisMinutes(h.start),parisMinutes(h.end)]))unavailable.add(Number(h.number));
+  }
+  return plan.filter(t=>!unavailable.has(t.number));
+ }
+ function walkInTables(input){
+  const n=Number(input?.guests);
+  if(!Number.isInteger(n)||n<1)return [];
+  return availableWalkInTables(input).filter(t=>fits(t,n)).sort((a,b)=>a.capacity-b.capacity||a.number-b.number)
    .map(t=>({number:t.number,capacity:t.capacity,roomId:t.roomId}));
+ }
+ function walkInGroups(input){
+  const guests=Number(input?.guests);
+  if(!Number.isInteger(guests)||guests<1)return [];
+  const available=availableWalkInTables(input).sort((a,b)=>a.number-b.number);
+  const byNum=new Map(available.map(t=>[t.number,t]));
+  const neighbours=new Map(available.map(t=>[t.number,new Set()]));
+  for(const [a,b] of input.fusionLinks||[]){
+   if(a===b||!byNum.has(a)||!byNum.has(b)||roomOf(byNum,a)!==roomOf(byNum,b))continue;
+   neighbours.get(a).add(b);neighbours.get(b).add(a);
+  }
+  const groups=available.map(t=>[t.number]),seen=new Set(groups.map(g=>g.join(',')));
+  for(let i=0;i<groups.length&&groups.length<4096;i++){
+   const group=groups[i];
+   if(group.length>=4)continue;
+   for(const n of new Set(group.flatMap(t=>[...neighbours.get(t)]))){
+    if(group.includes(n)||groups.length>=4096)continue;
+    const next=[...group,n].sort((a,b)=>a-b),key=next.join(',');
+    if(!seen.has(key)){seen.add(key);groups.push(next);}
+   }
+  }
+  return groups.filter(g=>g.length===1?fits(byNum.get(g[0]),guests):groupCapacity(g,byNum)>=guests)
+   .map(g=>({numbers:g,capacity:groupCapacity(g,byNum),roomId:roomOf(byNum,g[0])}))
+   .sort((a,b)=>a.numbers.length-b.numbers.length||a.capacity-b.capacity||a.numbers[0]-b.numbers[0]);
+ }
+ function canWalkInGroup(input,numbers){
+  const {byNum}=planIndex(availableWalkInTables(input));
+  const guests=Number(input?.guests);
+  if(!Number.isInteger(guests)||guests<1||!Array.isArray(numbers)||new Set(numbers).size!==numbers.length)return false;
+  return numbers.length===1?fits(byNum.get(numbers[0]),guests):
+   validFusion(numbers,byNum,input.fusionLinks||[])&&groupCapacity(numbers,byNum)>=guests;
  }
 
  /* Ancienne API conservée (même forme de retour), désormais alignée sur preview(). */
@@ -277,7 +324,7 @@
   return {ok:true,changes:changes.filter(x=>x.from.join()!==x.to.join()),kind:p.kind,requiresConfirmation:true,notice:p.notice,fingerprint:p.fingerprint};
  }
 
- const api={simulate,preview,suggest,tableStates,walkInTables,fingerprint,MAX_CHANGES,MESSAGES};
+ const api={simulate,preview,suggest,tableStates,walkInTables,walkInGroups,canWalkInGroup,fingerprint,MAX_CHANGES,MESSAGES};
  root.RestoSmartPlacement=api;
  if(typeof module==='object'&&module.exports)module.exports=api;
 })(typeof globalThis!=='undefined'?globalThis:this);

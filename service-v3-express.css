@@ -105,6 +105,7 @@ html body #rmExpress[data-cf27] .rmExpressRoomTabs>button[data-express-free]::af
 .rmExpress summary{display:list-item;width:100%}
 .rmExpress details[open]>summary{margin-bottom:8px}
 .rmExpressConfirm{display:grid;gap:7px;padding-top:8px;border-top:1px solid var(--express-border)}
+.rmExpress .rmExpressOccupant button{min-height:44px}
 .rmExpressRoomChange{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;background:var(--express-amber);color:var(--express-amber-text)}
 .rmExpressFields label{display:grid;gap:4px;font-size:.875rem}
 .rmExpressFields :is(input,select){

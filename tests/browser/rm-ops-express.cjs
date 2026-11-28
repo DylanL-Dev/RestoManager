@@ -35,18 +35,46 @@ function makeSnapshot(tenant,change){
   if(change==='quick-release')snapshot.capabilities.quick_release=1;
   Object.assign(reservations[1],{status:releaseStatus,edit_version:releaseVersion,seated_at:iso+'T17:05:00Z',ends_at:iso+'T20:19:00Z'});
  }
- if(change==='express-live'){
+ if(['express-live','express-v2','express-v2-chain'].includes(change)){
   snapshot.capabilities.express_service=1;snapshot.revision=String(connectedService.revision);
+  if(change==='express-v2'){
+   snapshot.capabilities.express_service_v2=1;
+   snapshot.tables.push(table(5,1),table(6,1));
+   snapshot.fusionLinks=[owned({table_a:id(105),table_b:id(106)})];
+   snapshot.reservations[1].party_size=3;
+   snapshot.assignments.push(owned({reservation_id:id(215),table_id:id(105)}));
+   snapshot.fusionLinks.push(owned({table_a:id(104),table_b:id(105)}));
+  }
+  if(change==='express-v2-chain'){
+   snapshot.capabilities.express_service_v2=1;
+   snapshot.tables.find(t=>t.id===id(104)).seats=4;
+   snapshot.tables.push({...table(5,1),seats:6},{...table(6,1),seats:8});
+   snapshot.reservations[1].party_size=4;
+   snapshot.reservations.push({...makeRow(216,'Client fictif en chaîne','18:49'),party_size:6});
+   snapshot.assignments.push(owned({reservation_id:id(216),table_id:id(105)}));
+  }
   for(const [reservationId,placed] of connectedService.bookings){
    let row=snapshot.reservations.find(item=>item.id===reservationId);
    if(!row){
     row=makeRow(Number(placed.room)||237,'Passage fictif','18:44');row.id=reservationId;row.walkin_type=placed.type;
-    snapshot.reservations.push(row);snapshot.assignments.push(owned({reservation_id:reservationId,table_id:placed.table}));
+    snapshot.reservations.push(row);
    }
    row.status=placed.status;row.edit_version=id(7000+connectedService.revision);
    if(row.status==='seated')row.seated_at=iso+'T18:44:00Z';
-   snapshot.assignments.find(item=>item.reservation_id===reservationId).table_id=placed.table;
+   snapshot.assignments=snapshot.assignments.filter(item=>item.reservation_id!==reservationId);
+   snapshot.assignments.push(...(placed.tables??[placed.table]).map(table_id=>owned({reservation_id:reservationId,table_id})));
   }
+ }
+ if(change?.startsWith('b3-rush-')){
+  const open=Number(change.split('-').at(-1)),slots=open===45?15:30,activeCount=80*open/100;
+  const stations=Array.from({length:80},(_,i)=>({...table(101+i,1+i%3,i<activeCount),seats:4}));
+  const rows=Array.from({length:50},(_,i)=>{
+   const start=Number(time)+(i<slots?i%12:115+i%25)*60000;
+   return {...makeRow(300+i,'Client fictif du service','18:44'),party_size:4,
+    starts_at:new Date(start).toISOString(),ends_at:new Date(start+5400000).toISOString()};
+  });
+  return {...snapshot,revision:'310',capabilities:{...snapshot.capabilities,express_service:1,express_service_v2:1},
+   tables:stations,reservations:rows,assignments:rows.map((r,i)=>owned({reservation_id:r.id,table_id:stations[i%activeCount].id}))};
  }
  if(change!=='rush')return snapshot;
  const roomIds=new Map(rushFixture.rooms.map((room,index)=>[room.id,id(index+1)]));
@@ -70,7 +98,7 @@ export async function requireStaff(){return {user:{id:window.__opsTenant+'-user'
 export async function loadSharedService(){return window.__opsSnapshot(window.__opsSnapshotTenant||window.__opsTenant,window.__opsChange)}
 export async function subscribeSharedService(onSnapshot,onError,onConnection){const apply=async()=>onSnapshot(await loadSharedService());const reconnect=()=>{onConnection(true);return apply()};window.addEventListener('fixture:push',apply);window.addEventListener('online',reconnect);await reconnect();return ()=>{}}
 function query(){const q={then:(yes,no)=>Promise.resolve({data:[],error:null}).then(yes,no)};for(const name of ['select','eq','order','limit','range','in','is','single','maybeSingle','gte','lte'])q[name]=()=>q;return q}
-export const supabase={from:query,rpc:async(name,args)=>{if(name==='booking_draft_v3')return {data:{tables:[],holds:[],seconds:180},error:null};if(name==='quick_release_v1'&&window.__opsChange==='quick-release')return window.__opsRelease(args);if(window.__opsChange==='express-live'&&['express_seat_v1','express_walkin_v1'].includes(name))return window.__opsPlacement(name,args);await window.__opsWrite(name);throw Error('Unexpected write');},auth:{getUser:async()=>({data:{user:{id:window.__opsTenant+'-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
+export const supabase={from:query,rpc:async(name,args)=>{if(name==='booking_draft_v3')return {data:{tables:[],holds:[],seconds:180},error:null};if(name==='quick_release_v1'&&window.__opsChange==='quick-release')return window.__opsRelease(args);if(window.__opsChange==='express-live'&&['express_seat_v1','express_walkin_v1'].includes(name))return window.__opsPlacement(name,args);if(['express-v2','express-v2-chain'].includes(window.__opsChange)&&['express_seat_v2','express_walkin_v2'].includes(name))return window.__opsPlacement(name,args);await window.__opsWrite(name);throw Error('Unexpected write');},auth:{getUser:async()=>({data:{user:{id:window.__opsTenant+'-user'}}}),signOut:async()=>({error:null})},removeChannel:async()=>{},channel:()=>({on(){return this},subscribe(){return this}})};`;
 const mime={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.css':'text/css','.svg':'image/svg+xml','.png':'image/png','.json':'application/json'};
 const server=http.createServer((req,res)=>{
  const file=decodeURIComponent(new URL(req.url,'http://localhost').pathname).slice(1);
@@ -118,9 +146,18 @@ async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash='
   releaseOwner=args.p_undo?null:page;
   return {data:releaseVersion,error:null};
  });
- if(change==='express-live')await page.exposeFunction('__opsPlacement',(name,args)=>{
+ if(['express-live','express-v2','express-v2-chain'].includes(change))await page.exposeFunction('__opsPlacement',(name,args)=>{
   connectedService.calls.push([name,args]);
   if(args.p_revision!==String(connectedService.revision))return {data:null,error:{code:'40001',message:'Service modifié'}};
+  if(name==='express_walkin_v2'){
+   if(args.p_room==='214'&&!args.p_confirmation)
+    return {data:{status:'room_conflict',token:id(9001),reservation_id:id(214),revision:args.p_revision},error:null};
+   if(connectedService.loss)return {data:null,error:{message:'Failed to fetch'}};
+   const reservationId=id(8902);
+   connectedService.revision++;
+   connectedService.bookings.set(reservationId,{status:'seated',tables:args.p_tables,type:args.p_type,room:args.p_room});
+   return {data:{status:'seated',reservation_id:reservationId},error:null};
+  }
   connectedService.revision++;
   if(name==='express_walkin_v1'){
    const reservationId=id(8901);
@@ -128,7 +165,7 @@ async function newPage(context,role='fb_admin',tenant=tenantA,change=null,hash='
    return {data:reservationId,error:null};
   }
   for(const move of args.p_changes)connectedService.bookings.set(move.id,{status:move.expected_status,table:move.to_table});
-  connectedService.bookings.set(args.p_reservation_id,{status:'seated',table:args.p_table});
+  connectedService.bookings.set(args.p_reservation_id,{status:'seated',tables:args.p_tables??[args.p_table]});
   return {data:{seated_at:iso+'T18:44:00Z'},error:null};
  });
  await page.clock.install({time});await page.goto(site+'/v3-connected.html'+hash);
@@ -394,6 +431,134 @@ async function testConnectedExpressService(){
  console.log('PASS service Express habilité : permutation, installation, passage et synchronisation sur tablette, mobile et ordinateur');
 }
 
+async function testVersionedOccupantsAndFusions(){
+ const context=await newContext(834),page=await newPage(context,'fb_admin',tenantA,'express-v2');
+ const view=express(page),walk=view.getByRole('region',{name:'Passage express'});
+ const panel=walk.getByRole('group',{name:'Une réservation existe déjà pour cette chambre.'});
+ const start=async()=>{
+  await view.getByRole('button',{name:'Passage',exact:true}).click();
+  await walk.getByRole('radio',{name:'Hôtel'}).click();
+  await walk.getByLabel('Chambre (facultatif)').fill('214');
+  await walk.getByRole('button',{name:/^T16 /}).click();
+ };
+ const send=()=>walk.getByRole('button',{name:'Installer 2 couverts en T16'}).click();
+ const callCount=connectedService.calls.length;
+ await enter(page);await start();await send();
+ await panel.waitFor();
+ assert.equal(connectedService.calls.length,callCount+1);
+ assert.equal(connectedService.calls.at(-1)[1].p_confirmation,null);
+ assert.equal(await page.evaluate(()=>document.activeElement.id),'rmExpressOccupantTitle');
+ for(const button of await panel.getByRole('button').all())assert.ok((await button.boundingBox()).height>=44);
+ await validateAxe(page);
+ await panel.getByRole('button',{name:'Voir la réservation'}).click();
+ await view.getByRole('heading',{name:/Ch. 214/}).waitFor();
+ assert.equal(connectedService.calls.length,callCount+1);
+
+ await start();await send();await panel.waitFor();
+ await walk.getByLabel('Chambre (facultatif)').fill('214 ');
+ await panel.waitFor({state:'hidden'});
+ await send();await panel.waitFor();
+ connectedService.revision++;
+ await page.evaluate(()=>dispatchEvent(new Event('fixture:push')));
+ await panel.waitFor({state:'hidden'});
+ await send();await panel.waitFor();
+ await context.setOffline(true);await panel.waitFor({state:'hidden'});
+ await context.setOffline(false);await view.locator('[data-sync]').getByText(/À jour/).waitFor();
+ await walk.getByRole('button',{name:/^T16 /}).click();
+ await send();await panel.waitFor();
+ await panel.getByRole('button',{name:'Annuler'}).click();await panel.waitFor({state:'hidden'});
+ await send();await panel.waitFor();
+ const beforeConfirm=connectedService.calls.length;
+ await panel.getByRole('button',{name:'Installer un occupant distinct'}).evaluate(button=>{button.click();button.click()});
+ await view.getByText('passage installé en T16.',{exact:true}).waitFor();
+ assert.equal(connectedService.calls.length,beforeConfirm+1);
+ assert.equal(connectedService.calls.at(-1)[1].p_confirmation,id(9001));
+
+ await select(page,'215');
+ await view.locator('[data-suggestions]').getByRole('button',{name:/^T4 \+ T5 /}).click();
+ await view.getByRole('button',{name:'Installer 215 en T4 + T5'}).click();
+ await view.getByText('installation enregistrée en T4 + T5.',{exact:true}).waitFor();
+ assert.deepEqual(connectedService.calls.at(-1)[1].p_tables,[id(104),id(105)]);
+ await view.getByRole('button',{name:'Passage',exact:true}).click();
+ await walk.getByRole('radio',{name:'Extérieur'}).click();
+ await walk.getByRole('button',{name:/^T6 /}).click();
+ connectedService.loss=true;
+ const beforeLoss=connectedService.calls.length;
+ await walk.getByRole('button',{name:'Installer 2 couverts en T6'}).click();
+ await view.getByText(/Confirmation non reçue/).waitFor();
+ await page.clock.runFor(250);
+ assert.equal(connectedService.calls.length,beforeLoss+1);
+ connectedService.loss=false;
+ await context.close();
+ console.log('PASS B3 navigateur : confirmation accessible, dossier, édition, révision, connexion, annulation, double appui, fusion et réponse perdue');
+}
+
+async function testVersionedChain(){
+ connectedService.bookings.clear();
+ const context=await newContext(834),page=await newPage(context,'fb_admin',tenantA,'express-v2-chain'),view=express(page);
+ await enter(page);await select(page,'214');
+ const primary=view.locator('[data-suggestions]').getByRole('button',{name:/^T4 /});
+ if(await primary.count())await primary.click();
+ else{
+  await view.getByText('Autre table',{exact:true}).click();
+  await view.locator('[data-all-tables]').getByRole('button',{name:/^T4 /}).click();
+ }
+ const plan=await view.locator('[data-placement-summary]').innerText();
+ assert.match(plan,/T21 → T4/);
+ assert.match(plan,/Ch\. 215 passera de T4 à T5/);
+ assert.match(plan,/Ch\. 216 passera de T5 à T6/);
+ await view.getByRole('button',{name:'Réorganiser et installer 214 en T4'}).click();
+ await view.getByText('installation enregistrée en T4.',{exact:true}).waitFor();
+ const [rpc,receipt]=connectedService.calls.at(-1);
+ assert.equal(rpc,'express_seat_v2');
+ assert.deepEqual(receipt.p_changes.map(c=>[c.to_table,c.expected_version]),[[id(104),id(4214)],[id(105),id(4215)],[id(106),id(4216)]]);
+ await context.close();
+ console.log('PASS B3 navigateur : chaîne de trois dossiers affichée intégralement avant une seule écriture');
+}
+
+async function measureRush(){
+ const results=[];
+ for(const [availability,width,arrivals] of [[45,390,15],[70,1440,30]]){
+  const context=await newContext(width),page=await newPage(context,'fb_admin',tenantA,'b3-rush-'+availability);
+  await enter(page);
+  const view=express(page);
+  assert.equal(await view.locator('[data-arrivals] button').count(),arrivals);
+  const metrics=await page.evaluate(()=>{
+   const now=Date.now(),reservations=window.RestoSharedReservations;
+   const tablePlan=TableStore.get().tables;
+   const samples=[];
+   for(const row of reservations.slice(0,30)){
+    const start=performance.now();
+    window.RestoSmartPlacement.suggest({reservations,tablePlan,reservationId:row.id,limit:2,now});
+    samples.push(performance.now()-start);
+   }
+   samples.sort((a,b)=>a-b);
+   return {covers:reservations.reduce((a,r)=>a+r.guests,0),active:tablePlan.length,
+    solverMedianMs:samples[14],solverP95Ms:samples[28],solverMaxMs:samples[29]};
+  });
+  assert.equal(metrics.covers,200);
+  assert.equal(metrics.active,80*availability/100);
+  const ui=[];
+  for(const room of ['300','301','302','303','304']){
+   await view.getByRole('searchbox').fill(room);
+   const start=performance.now();
+   await view.locator('[data-arrivals]').getByRole('button',{name:new RegExp('Ch. '+room)}).click();
+   await view.getByRole('heading',{name:new RegExp('Ch. '+room)}).waitFor();
+   await view.locator('[data-suggestions] button').first().waitFor();
+   assert.equal(await view.locator('[data-suggestions] button').count(),2);
+   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   ui.push(Math.round(performance.now()-start));
+  }
+  await context.setOffline(true);
+  await view.getByText(/Dernière vue en consultation/).waitFor();
+  await context.setOffline(false);
+  await page.waitForFunction(()=>document.querySelector('#rmExpress [data-sync]').textContent.startsWith('À jour'));
+  results.push({availability,width,arrivals,...metrics,displayMs:ui});
+  await context.close();
+ }
+ console.log('PASS B3 rush Paris : '+JSON.stringify(results));
+}
+
 (async()=>{
  try{
   fs.mkdirSync(out,{recursive:true});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));origin='http://127.0.0.1:'+server.address().port;
@@ -623,6 +788,10 @@ async function testConnectedExpressService(){
   await testCoupDeFeu();
   await testPublishedSimulation();
   await testConnectedExpressService();
+  connectedService.bookings.clear();
+  await testVersionedOccupantsAndFusions();
+  await testVersionedChain();
+  await measureRush();
   assert.deepEqual(writes,[]);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  }finally{await browser?.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}
 })().catch(error=>{console.error(error);process.exitCode=1;});

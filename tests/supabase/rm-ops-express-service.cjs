@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
 
-module.exports=async function run(context,waitFor){
+module.exports=async function run(context,waitFor,advanced=false){
  const {accounts,root,sql}=context;
  const apply=file=>sql(fs.readFileSync(path.join(root,file),'utf8'));
  for(const file of ['mission2_reservation_edits.sql','mission3_validation_integration.sql','reception_right_size_recommendations.sql',
@@ -28,6 +28,7 @@ module.exports=async function run(context,waitFor){
   const {data,error}=await accounts[0].client.rpc('service_sync_state_v1');
   return !error&&data?.capabilities?.express_service===1&&data?.capabilities?.quick_release===1;
  },'Express capabilities on disposable PostgREST');
+ if(advanced)return require('./rm-ops-express-v2.cjs')(context,waitFor);
  const express=page=>page.locator('#rmExpress');
  await require('./browser-tests.cjs')({...context,webSync:async({open,passed})=>{
   const a=await open(accounts[0],false,834), b=await open(accounts[1],false,390), c=await open(accounts[3],false,1440);

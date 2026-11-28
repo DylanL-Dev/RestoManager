@@ -36,26 +36,40 @@ export function createLiveAdapter({read,placement=globalThis.RestoPlacement,sour
   capabilities:()=>placement.capabilities(),
   // Même signature que previewPlacement(snapshot, reservationId, number) de la simulation.
   preview(snapshot,reservationId,number,options={}){
-   return forDisplay(placement.preview(String(reservationId),[Number(number)],options));
+   return forDisplay(placement.preview(String(reservationId),[].concat(number).map(Number),options));
   },
   // Même forme que suggestions(snapshot,row) : {primary:[{table,plan}], entries:[{table,plan}]}.
   suggestions(snapshot,row,roomId=null){
    const tables=snapshot.tables||[];
+   const versioned=placement.capabilities().version===2;
+   if(versioned&&row.tables.length>1){
+    const members=row.tables.map(number=>tables.find(t=>t.number===number));
+    if(members.some(t=>!t)||roomId&&members[0].roomId!==roomId)return {primary:[],entries:[],message:'Vérifiez les tables de la fusion déjà affectée.'};
+    const table={...members[0],numbers:row.tables,capacity:members.reduce((sum,t)=>sum+t.capacity,0)};
+    const plan=forDisplay(placement.preview(String(row.id),row.tables));
+    const entry={table,plan};
+    return plan.ok?{primary:[entry],entries:[entry]}:{primary:[],entries:[entry],message:plan.message};
+   }
    const entries=tables.filter(table=>roomId===null||table.roomId===roomId)
     .map(table=>({table,plan:forDisplay(placement.preview(String(row.id),[table.number],{budget:200}))}));
    if(!entries.length)return {primary:[],entries};
-   const ranked=placement.suggest(String(row.id),{limit:Math.max(2,tables.length)});
+   const ranked=placement.suggest(String(row.id),versioned?{limit:2,roomId}:{limit:Math.max(2,tables.length)});
    if(!ranked?.ok)return {primary:[],entries,message:ranked?.message};
    const byNumber=new Map(entries.map(entry=>[entry.table.number,entry]));
    const choices=ranked.choices.filter(choice=>choice.targetTables.length===1)
-    .map(choice=>byNumber.get(choice.targetTables[0])).filter(entry=>entry?.plan?.ok);
+    .map(choice=>byNumber.get(choice.targetTables[0])).filter(Boolean);
+   if(versioned)for(const entry of choices){
+    if(!entry.plan.ok)entry.plan=forDisplay(placement.preview(String(row.id),[entry.table.number],{budget:300}));
+   }
    const home=tables.find(table=>row.tables?.length===1&&row.tables[0]===table.number)?.roomId;
    if(home&&roomId===null)choices.sort((a,b)=>Number(b.table.roomId===home)-Number(a.table.roomId===home));
-   return {primary:choices.slice(0,2),entries};
+   return {primary:choices.filter(entry=>entry.plan.ok).slice(0,2),entries};
   },
   seat(plan){return placement.seat(plan)},
   // Même forme que suggestWalkIn(snapshot,guests) : les objets table de l'instantané affiché.
   suggestWalkIn(snapshot,guests){
+   if(placement.capabilities().version===2)return placement.walkInGroups(Number(guests))
+    .map(group=>({...group,number:group.numbers[0]}));
    const allowed=new Set(placement.walkInTables(Number(guests)).map(table=>table.number));
    return (snapshot.tables||[]).filter(table=>allowed.has(table.number))
     .sort((a,b)=>a.capacity-b.capacity||a.number-b.number);
@@ -63,7 +77,9 @@ export function createLiveAdapter({read,placement=globalThis.RestoPlacement,sour
   // Brouillon de la simulation : {guests, table, type:'external'|'hotel', room}.
   walkIn(draft){
    const hotel=draft?.type==='hotel';
-   return placement.walkIn({guests:Number(draft?.guests),tables:[Number(draft?.table)],type:hotel?'hotel':'exterieur',name:hotel?String(draft?.room||'').trim():''});
+   return placement.walkIn({guests:Number(draft?.guests),tables:draft.tables??[Number(draft?.table)],
+    type:hotel?'hotel':'exterieur',name:hotel?String(draft?.room||'').trim():'',
+    contract:draft.contract,revision:draft.revision,scope:draft.scope,confirmation:draft.confirmation});
   }
  };
 }

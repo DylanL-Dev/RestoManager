@@ -3,7 +3,7 @@ import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {setupBookingDraft} from './booking-draft.js?v=20261117-rm016-readonly';
 import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
-import './placement-gateway.js?v=2027.4-roomguard1';
+import './placement-gateway.js?v=2027.4-b3';
 import {guardConnectedPlacement} from './placement-express-adapter.mjs?v=2027.4-service1';
 import {allowsExpressSimulation} from './service-v3-express-data.mjs?v=2027.4-devonly1';
 
@@ -236,12 +236,12 @@ if(window.RestoPlacementGateway&&window.RestoSmartPlacement){
     context.restaurantId!==window.RestoExpressSnapshotRestaurantId||!window.RestoSharedDataLoaded||
     !['ok','readonly'].includes(window.RestoSyncState))return null;
    return {reservations:window.RestoSharedReservations,tablePlan:TableStore.get().tables,
-    scope:JSON.stringify([context.restaurantId,context.userId]),revision:window.RestoServiceRevision,
+    scope:JSON.stringify([context.restaurantId,context.userId]),revision:window.RestoServiceRevision,fusionLinks:window.RestoFusionLinks,
     holds:window.RestoDraftHolds||[],duration:Number(window.RestoSharedHours?.duration)||90};
   },
   tableId:number=>window.RestoSmartPlacementTableIds instanceof Map?window.RestoSmartPlacementTableIds.get(number):null,
   isOnline:()=>navigator.onLine!==false,
-  serverFeatures:()=>({expressService:expressService()}),
+  serverFeatures:()=>({expressService:expressService(),expressServiceV2:expressService()&&window.RestoServiceCapabilities?.express_service_v2===1}),
   requireWrite,
   getRole:async()=>{
    if(window.RestoReception)return 'reception';
