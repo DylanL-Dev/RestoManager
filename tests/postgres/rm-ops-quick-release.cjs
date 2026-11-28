@@ -117,5 +117,6 @@ const last=output=>output.trim().split('\n').at(-1);
    assert.deepEqual(audit,[{actor:uid(1),venue:rid(1),action:'release',tables:numbers.map(table)},{actor:uid(1),venue:rid(1),action:'undo',tables:numbers.map(table)}]);
   }
   console.log('PASS fusions 2 et 4 tables, réservations inchangées, audit du service ouvert');
+  await require('./rm-ops-express-service.cjs')(db);
  }finally{await db.stop();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -9,6 +9,20 @@ const D='2026-11-26',NOW=Date.parse('2026-11-26T19:04:00Z');
 const r=(id,table,extra={})=>({id,client:'Ch. '+id,date:D,time:'20:00',duration:90,guests:2,status:'reserved',tables:[table],editVersion:'v1',...extra});
 const plan=[4,9,21].map(number=>({number,capacity:2,capacityMin:1,roomId:'main'}));
 
+test('Express refuses placement and walk-in if the session changes during refresh',async()=>{
+ let scope='restaurant-a:user-a';
+ const gw=createPlacementGateway({
+  engine,expressOnly:true,now:()=>NOW,getRole:async()=> 'fb_admin',tableId:n=>'t'+n,
+  getState:()=>({reservations:[r('214',21)],tablePlan:plan,holds:[],scope,revision:'42'}),
+  serverFeatures:()=>({expressService:true}),
+  refresh:async()=>{scope='restaurant-b:user-b';},
+  rpc:async()=>assert.fail('No RPC may be sent after a context change')
+ });
+ await assert.rejects(gw.seat(gw.preview('214',[21])),{code:'NOT_SYNCED'});
+ scope='restaurant-a:user-a';
+ await assert.rejects(gw.walkIn({guests:2,tables:[9],type:'exterieur'}),{code:'NOT_SYNCED'});
+});
+
 function setup({reservations,role='fb_admin',online=true,rpcImpl,onRefresh}={}){
  const server={reservations:(reservations||[r('214',21),r('215',4,{time:'20:10'})]).map(x=>({...x,tables:x.tables.slice()}))};
  let local=JSON.parse(JSON.stringify(server.reservations));

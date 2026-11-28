@@ -373,12 +373,23 @@ grant execute on function public.seat_reservation_v1(uuid,text,uuid) to authenti
 
 -- Propriétaire des fonctions : resto_service_writer (comme install_walkin_group_v3 et RM-012) ;
 -- l'appel imbriqué seat_with_release_v1 → apply_smart_placement_v4 s'exécute donc sous ce rôle.
-alter function private.rm_ops_seat_span(timestamptz,timestamptz,timestamptz) owner to resto_service_writer;
+do $ownership$
+declare
+ had_private boolean:=has_schema_privilege('resto_service_writer','private','CREATE');
+ had_public boolean:=has_schema_privilege('resto_service_writer','public','CREATE');
+begin
+ if not had_private then grant create on schema private to resto_service_writer;end if;
+ if not had_public then grant create on schema public to resto_service_writer;end if;
+ alter function private.rm_ops_seat_span(timestamptz,timestamptz,timestamptz) owner to resto_service_writer;
+ alter function public.apply_smart_placement_v4(uuid,jsonb,boolean,boolean) owner to resto_service_writer;
+ alter function public.seat_with_release_v1(uuid,text,uuid,uuid[],boolean) owner to resto_service_writer;
+ alter function public.move_seated_party_v1(uuid,uuid,uuid) owner to resto_service_writer;
+ alter function public.seat_reservation_v1(uuid,text,uuid) owner to resto_service_writer;
+ if not had_private then revoke create on schema private from resto_service_writer;end if;
+ if not had_public then revoke create on schema public from resto_service_writer;end if;
+end
+$ownership$;
 grant execute on function private.rm_ops_seat_span(timestamptz,timestamptz,timestamptz) to resto_service_writer;
-alter function public.apply_smart_placement_v4(uuid,jsonb,boolean,boolean) owner to resto_service_writer;
-alter function public.seat_with_release_v1(uuid,text,uuid,uuid[],boolean) owner to resto_service_writer;
-alter function public.move_seated_party_v1(uuid,uuid,uuid) owner to resto_service_writer;
-alter function public.seat_reservation_v1(uuid,text,uuid) owner to resto_service_writer;
 grant execute on function public.apply_smart_placement_v4(uuid,jsonb,boolean,boolean) to resto_service_writer;
 
 notify pgrst,'reload schema';

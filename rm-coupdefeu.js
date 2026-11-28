@@ -23,7 +23,7 @@
   const toMin = s => { const m = /(\d{1,2})[:h](\d{2})/.exec(s || ''); return m ? (+m[1]) * 60 + (+m[2]) : null; };
   const isSim = ex => /simulation/i.test($('.rmExpressAccess p', ex)?.textContent || '');
   // En simulation : horloge fictive de l'app ; sinon : heure de Paris
-  const refMin = ex => (isSim(ex) && toMin($('.rmExpressActions', ex)?.textContent)) ?? nowMin();
+  const refMin = ex => (isSim(ex) ? toMin($('.rmExpressActions', ex)?.textContent) : null) ?? nowMin();
   const wrap = d => (d < -720 ? d + 1440 : d > 720 ? d - 1440 : d);
   const fmtEta = d => d < -5 ? `+${-d} min` : d <= 0 ? 'Là' : d < 60 ? `${d} min` : `${Math.floor(d / 60)} h ${String(d % 60).padStart(2, '0')}`;
 
@@ -77,7 +77,7 @@
   }
 
   /* ---------- Pouls du service ---------- */
-  let pulse = null, lastBuckets = null;
+  let pulse = null;
   function buildPulse(ex) {
     if (pulse && pulse.isConnected) return pulse;
     pulse = el('section', 'cf-pulse'); pulse.setAttribute('aria-label', 'Affluence du service');
@@ -85,7 +85,7 @@
     ring.innerHTML = '<svg viewBox="0 0 54 54" aria-hidden="true"><circle class="cf-ring-bg" cx="27" cy="27" r="22"/><circle class="cf-ring-fg" cx="27" cy="27" r="22"/></svg><b></b>';
     const txt = el('div', 'cf-load-txt'); txt.append(el('b'), el('span'));
     const load = el('div', 'cf-load'); load.append(ring, txt);
-    const flow = el('div', 'cf-flow'); flow.setAttribute('aria-label', 'Couverts attendus par tranche de 10 minutes');
+    const flow = el('div', 'cf-flow'); flow.setAttribute('aria-label', 'Couverts des arrivées affichées par tranche de 10 minutes');
     ['En retard', '0–10 min', '10–20 min', '20–30 min'].forEach(l => { const s = el('div', 'cf-slot'); const bar = el('div', 'cf-bar'); bar.append(el('i'), el('b')); s.append(bar, el('span', null, l)); flow.append(s); });
     const flags = el('div', 'cf-flags');
     pulse.append(load, flow, flags);
@@ -110,18 +110,17 @@
     setText($('.cf-load-txt b', p), m ? `${cur} / ${cap} couverts` : 'Charge');
     setText($('.cf-load-txt span', p), level === 'over' ? 'Seuil dépassé' : level === 'high' ? 'Proche du seuil' : 'Charge du service');
     // Quarts d'heure à venir, à partir des arrivées affichées
-    // Pendant une recherche, la liste est filtrée : on garde les dernières valeurs du service
+    // Une recherche ne représente pas le service entier : ne conserver aucun compteur d'un autre contexte.
     const searching = !!($('.rmExpressSearch input', ex)?.value || '').trim();
-    const buckets = searching && lastBuckets ? lastBuckets : [0, 0, 0, 0];
-    if (!searching || !lastBuckets) {
+    const buckets = [0, 0, 0, 0];
+    if (!searching) {
       items.forEach(x => { if (x.d == null) return; const k = x.d < -5 ? 0 : x.d <= 10 ? 1 : x.d <= 20 ? 2 : x.d <= 30 ? 3 : -1; if (k >= 0) buckets[k] += x.cov; });
-      if (!searching) lastBuckets = buckets.slice();
     }
     const max = Math.max(1, ...buckets), peak = buckets.indexOf(Math.max(...buckets));
     $$('.cf-slot', p).forEach((s, i) => {
       const h = (buckets[i] / max).toFixed(3); const bar = $('.cf-bar', s);
       if (bar.style.getPropertyValue('--h') !== h) bar.style.setProperty('--h', h);
-      setText($('b', bar), String(buckets[i]));
+      setText($('b', bar), searching ? '—' : String(buckets[i]));
       setData(s, 'peak', buckets[i] > 0 && i === peak ? '' : null);
       setData(s, 'late', i === 0 && buckets[0] > 0 ? '' : null);
     });
@@ -132,22 +131,14 @@
     flag(flags, 'alert', 'danger', 'alert', alert && !alert.hidden && alert.textContent.trim() ? alert.textContent.trim().split('. ')[0] : '');
   }
 
-  /* ---------- Salles : places libres par salle ---------- */
-  const freeByRoom = {};
+  /* ---------- Salles : état non confirmé, compteurs fournis par le moteur ---------- */
   let slider = null;
   function rooms(ex) {
-    $$('details[data-floor] .rmExpressRoom', ex).forEach(sec => {
-      const name = ($('h3', sec)?.textContent || '').trim(); if (!name) return;
-      const tiles = $$('.rmExpressTile[data-state]', sec);
-      if (tiles.length) freeByRoom[name] = { free: tiles.filter(t => t.dataset.state === 'unknown').length, dep: tiles.filter(t => t.dataset.state === 'departure').length };
-    });
-    const total = Object.values(freeByRoom).reduce((a, b) => ({ free: a.free + b.free, dep: a.dep + b.dep }), { free: 0, dep: 0 });
     const box = $('.rmExpressRoomTabs', ex); if (!box) return;
     $$(':scope > button', box).forEach(b => {
-      const n = b.dataset.action === 'all-rooms' || !b.dataset.value ? (Object.keys(freeByRoom).length ? total : null) : freeByRoom[b.textContent.trim()];
-      // Plus de table libre mais des départs à vérifier : on l'indique, c'est la prochaine place
-      setData(b, 'cfFree', n == null ? null : n.free === 0 && n.dep ? `0 libre · ${n.dep} à libérer` : `${n.free} libre${n.free > 1 ? 's' : ''}`);
-      setData(b, 'cfTone', n == null ? null : n.free > 0 ? 'ok' : n.dep ? 'warn' : 'full');
+      // Ne pas extrapoler depuis le plan filtré ni conserver les données d'une autre salle.
+      setData(b, 'cfFree', b.dataset.expressFree || null);
+      setData(b, 'cfTone', b.dataset.expressFree ? 'neutral' : null);
     });
     if (!slider || !slider.isConnected || slider.parentElement !== box) {
       slider = el('span', 'rm-room-slider'); slider.setAttribute('aria-hidden', 'true'); box.prepend(slider); slider.dataset.first = '1';
@@ -277,16 +268,16 @@
   function floor(ex) {
     const d = $('details[data-floor]', ex); if (!d) return;
     const tiles = $$('.rmExpressTile[data-state]', d);
-    const free = tiles.filter(t => t.dataset.state === 'unknown').length;
+    const unknown = tiles.filter(t => t.dataset.state === 'unknown').length;
     const dep = tiles.filter(t => t.dataset.state === 'departure').length;
     const sum = $('summary', d);
     if (sum) {
-      setData(sum, 'rmSum', `${free} libre${free > 1 ? 's' : ''} sur ${tiles.length}${dep ? ` · ${dep} départ${dep > 1 ? 's' : ''} à vérifier` : ''}`);
+      setData(sum, 'rmSum', `${unknown} à contrôler sur ${tiles.length}${dep ? ` · ${dep} départ${dep > 1 ? 's' : ''} à vérifier` : ''}`);
       setData(sum, 'rmDep', dep ? '' : null);
     }
     if (!$('.cf-legend', d)) {
       const lg = el('div', 'cf-legend'); lg.setAttribute('aria-hidden', 'true');
-      [['Libre', 'var(--cf-accent)'], ['Prévue', 'var(--cf-info)'], ['Installée', 'var(--cf-muted)'], ['Départ à vérifier', 'var(--cf-warm)']].forEach(([l, c]) => { const s = el('span'); const i = el('i'); i.style.setProperty('--c', c); s.append(i, document.createTextNode(l)); lg.append(s); });
+      [['État non confirmé', 'var(--cf-muted)'], ['Prévue', 'var(--cf-info)'], ['Installée', 'var(--cf-muted)'], ['Départ à vérifier', 'var(--cf-warm)']].forEach(([l, c]) => { const s = el('span'); const i = el('i'); i.style.setProperty('--c', c); s.append(i, document.createTextNode(l)); lg.append(s); });
       sum?.after(lg);
     }
     if (!wasOpen) d.open = matchMedia('(min-width: 1440px)').matches; // grand écran : plan visible en 3e colonne ; sinon replié à l'ouverture
@@ -295,7 +286,7 @@
   /* ---------- Tables bientôt attendues ---------- */
   function soon(ex, ref) {
     $$('.rmExpressTile', ex).forEach(t => {
-      // « Aucun client enregistré » devient une pastille « Libre » (le texte reste pour les lecteurs d'écran)
+      // Un état inconnu reste à contrôler, jamais une disponibilité physique confirmée.
       const note = $$('small', t).find(s => /^aucun client enregistré$/i.test(s.textContent.trim()));
       if (note) setCls(note, 'cf-free-note', true);
       setData(t, 'cfFree', note ? '' : null);
@@ -354,6 +345,7 @@
     if (!ex || !ex.offsetParent) { wasOpen = false; lastTitle = null; return; }
     if (!('cf27' in ex.dataset)) ex.dataset.cf27 = '';
     setData(ex, 'rmSim', isSim(ex) ? '' : null);
+    setData(ex, 'cfSync', /^À jour/.test($('[data-sync]', ex)?.textContent || '') ? 'ok' : 'pending');
     const ref = refMin(ex);
     const items = arrivals(ex, ref);
     updatePulse(ex, items);
@@ -381,24 +373,46 @@
   const ac = new AbortController(), sig = { signal: ac.signal };
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const hm = d => d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  const hm = d => Number.isFinite(d.getTime()) ? d.toLocaleTimeString('en-GB', { timeZone: 'Europe/Paris', hour: '2-digit', minute: '2-digit' }) : '—';
   const root = () => $('#rmExpress');
 
-  /* Source des données : simulation (localStorage) ou réservations partagées de l'app */
+  /* Le contexte doit être celui de l'établissement courant, jamais la première clé locale trouvée. */
+  const simMode = ex => /^Simulation\s*·\s*données fictives/i.test($('[data-access]', ex)?.textContent || '');
+  function contextKey() {
+    const ex = root(), c = window.RestoNotificationContext;
+    if (!ex || ex.hidden || c?.role !== 'fb_admin' || !c.userId || !c.restaurantId || window.RestoReception) return null;
+    return JSON.stringify([c.userId, c.restaurantId, simMode(ex)]);
+  }
   function source() {
-    const ex = root();
-    const sim = ex && /Simulation\s*·\s*données fictives/i.test(ex.textContent);
+    const ex = root(), scope = contextKey();
+    if (!scope) return null;
+    const c = window.RestoNotificationContext, sim = simMode(ex);
     if (sim) {
       try {
-        const k = Object.keys(localStorage).find(k => /^restomanager-express-fiction-v1:[^:]+$/.test(k));
-        const s = JSON.parse(localStorage.getItem(k));
-        return { rows: s.reservations || [], now: new Date(s.clock), sim: true };
+        const key = 'restomanager-express-fiction-v1:' + c.restaurantId;
+        const saved = JSON.parse(localStorage.getItem(key));
+        const now = new Date(saved?.clock);
+        if (!Array.isArray(saved?.reservations) || !Number.isFinite(now.getTime())) return null;
+        return { rows: saved.reservations, now, sim: true, scope };
       } catch { return null; }
     }
-    const a = window.RestoSharedReservations;
-    return Array.isArray(a) ? { rows: a, now: new Date(), sim: false } : null;
+    const rows = window.RestoSharedReservations;
+    return window.RestoSharedDataLoaded === true && window.RestoExpressSnapshotRestaurantId === c.restaurantId && Array.isArray(rows)
+      ? { rows, now: new Date(), sim: false, scope } : null;
   }
-  const at = (date, time) => new Date(`${date}T${time}:00`);
+  const parisParts = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Paris',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
+  function wall(d) {
+    const p = Object.fromEntries(parisParts.formatToParts(d).map(({type,value}) => [type,value]));
+    return Date.UTC(+p.year,+p.month-1,+p.day,+p.hour,+p.minute);
+  }
+  // Convertir le jour et l'heure locale du service en instant Paris sans dépendre du fuseau de l'appareil.
+  function at(date,time) {
+    const target = Date.parse(date+'T'+time+':00Z');
+    if (!Number.isFinite(target)) return new Date(NaN);
+    let stamp = target;
+    for (let i=0;i<3;i++) stamp += target-wall(new Date(stamp));
+    return new Date(wall(new Date(stamp))===target ? stamp : NaN);
+  }
   const tablesTxt = r => (r.tables || []).map(n => 'T' + n).join(' + ');
   const who = r => [r.client || (r.walkIn ? 'Passage' : 'Client'), r.hotelRoom ? 'Ch. ' + r.hotelRoom : '', r.guests ? r.guests + ' couv.' : '']
     .filter(Boolean).join(' · ');
@@ -410,27 +424,32 @@
       const r = on.find(r => r.status === 'seated'); if (!r) return null;
       const start = r.seatedAt ? new Date(r.seatedAt) : at(r.date, r.time);
       const end = new Date(start.getTime() + (r.duration || 90) * 60000);
-      return { r, start, end, now: src.now, over: Math.round((src.now - end) / 60000), sim: src.sim };
+      return Number.isFinite(start.getTime()) ? { r, start, end, now: src.now, over: Math.round((src.now - end) / 60000), sim: src.sim, scope: src.scope } : null;
     }
-    const r = on.filter(r => !['seated', 'released', 'finished', 'cancelled', 'no_show'].includes(r.status))
-      .sort((a, b) => (a.time || '').localeCompare(b.time || ''))[0];
+    const today = new Date(wall(src.now)).toISOString().slice(0,10);
+    const r = on.filter(r => {
+      if (!['reserved','confirmed','late','arrived'].includes(r.status) || r.date !== today) return false;
+      const elapsed = (wall(src.now) - Date.parse(r.date+'T'+r.time+':00Z')) / 60000;
+      return elapsed >= 20 && elapsed < Number(r.duration || 90);
+    }).sort((a, b) => (a.time || '').localeCompare(b.time || ''))[0];
     if (!r) return null;
     const start = at(r.date, r.time);
-    return { r, start, now: src.now, over: Math.round((src.now - start) / 60000), sim: src.sim };
+    return Number.isFinite(start.getTime()) ? { r, start, now: src.now, over: Math.round((src.now - start) / 60000), sim: src.sim, scope: src.scope } : null;
   }
 
   /* Panneau */
-  let pop, lastTile;
+  let pop, lastTile, popScope;
   function close() {
     if (!pop) return;
     pop.classList.remove('cf-show');
-    const p = pop; pop = null;
+    const p = pop; pop = null; popScope = null;
     setTimeout(() => p.remove(), 180);
     lastTile?.focus({ preventScroll: true });
   }
   function open(tile) {
     close();
     lastTile = tile;
+    popScope = contextKey(); if (!popScope) return;
     const kind = tile.dataset.state;
     const num = Number((tile.querySelector('strong')?.textContent || '').replace(/\D/g, ''));
     const d = info(num, kind);
@@ -481,7 +500,7 @@
       acts.append(find);
     }
     const hook = window.RestoExpressRelease;
-    const canRelease = dep && d && (typeof hook?.release === 'function' || d.sim);
+    const canRelease = dep && d && typeof hook?.release === 'function';
     let full;
     if (canRelease) {
       full = h('button', 'cf-dep-btn cf-dep-main cf-dep-free', `Libérer ${tablesTxt(d.r)}`); full.type = 'button';
@@ -500,44 +519,57 @@
     requestAnimationFrame(() => pop?.classList.add('cf-show'));
     full.focus({ preventScroll: true });
   }
-  /* Libération sans quitter le Coup de feu.
-     L'écriture est faite par l'app (window.RestoExpressRelease, à fournir par l'intégration),
-     jamais par ce fichier. En simulation sans ce point d'entrée : aperçu visuel uniquement. */
-  let toast, toastT;
-  function release(d, tile) {
-    const hook = window.RestoExpressRelease;
+  /* La présentation n'annonce une réussite qu'après confirmation explicite de l'application. */
+  let toast, toastT, toastScope;
+  function clearToast() {
+    clearTimeout(toastT); toast?.remove(); toast = null; toastScope = null;
+  }
+  async function release(d, tile) {
+    const hook = window.RestoExpressRelease, scope = contextKey();
     const tables = (d.r.tables || []).map(Number);
     close();
-    const tiles = $$('#rmExpress .rmExpressRoom .rmExpressTile').filter(t => tables.includes(Number((t.querySelector('strong')?.textContent || '').replace(/\D/g, ''))));
-    let undo;
-    if (typeof hook?.release === 'function') {
-      Promise.resolve(hook.release({ reservationId: d.r.id, tables })).then(res => {
-        if (res && res.ok === false) return say(res.message || 'Libération impossible', null, 'err');
-        say(`${tablesTxt(d.r)} libérée`, typeof hook.undo === 'function' ? () => hook.undo({ reservationId: d.r.id, tables }) : null);
-      }, () => say('Libération impossible · réessaie', null, 'err'));
+    if (!scope || scope !== d.scope || typeof hook?.release !== 'function') {
+      if (scope) say('Le contexte du service a changé. Vérifiez le plan.', null, 'err', scope);
       return;
     }
-    tiles.forEach(t => { t.classList.add('cf-freed'); t.removeAttribute('data-cf-arm'); t.removeAttribute('role'); t.tabIndex = -1; });
-    undo = () => tiles.forEach(t => { t.classList.remove('cf-freed'); delete t.dataset.cfArm; arm(); });
-    say(`${tablesTxt(d.r)} libérée · aperçu`, undo);
+    try {
+      const result = await hook.release({ reservationId: d.r.id, tables });
+      if (contextKey() !== scope) return;
+      if (result?.ok !== true) return say(result?.message || 'Libération non confirmée. Vérifiez le plan.', null, 'err', scope);
+      say(tablesTxt(d.r)+' libérée', typeof hook.undo === 'function' ? () => hook.undo({ reservationId: d.r.id, tables }) : null, null, scope);
+    } catch (error) {
+      if (contextKey() === scope) say(error?.message || 'Libération impossible. Vérifiez le plan.', null, 'err', scope);
+    }
   }
-  function say(msg, undo, tone) {
-    clearTimeout(toastT);
-    toast?.remove();
+  function say(msg, undo, tone, scope = contextKey()) {
+    if (!scope || contextKey() !== scope) return;
+    clearToast();
+    toastScope = scope;
     toast = document.createElement('div');
     toast.className = 'cf-rel'; if (tone) toast.dataset.tone = tone;
     toast.setAttribute('role', 'status'); toast.setAttribute('aria-live', 'polite');
     const t = document.createElement('span'); t.textContent = msg; toast.append(t);
+    const tt = toast;
     if (undo) {
       const b = document.createElement('button'); b.type = 'button'; b.textContent = 'Annuler';
-      b.onclick = () => { undo(); toast.remove(); toast = null; };
-      toast.append(b);
-      const bar = document.createElement('i'); toast.append(bar);
+      b.onclick = async () => {
+        if (contextKey() !== scope || toast !== tt) return;
+        b.disabled = true; clearTimeout(toastT);
+        t.textContent = 'Annulation en cours…';
+        try {
+          const result = await undo();
+          if (contextKey() !== scope || toast !== tt) return;
+          if (result?.ok !== true) return say(result?.message || 'Annulation non confirmée. Vérifiez le plan.', null, 'err', scope);
+          say('Libération annulée.', null, null, scope);
+        } catch (error) {
+          if (contextKey() === scope && toast === tt) say(error?.message || 'Annulation impossible.', null, 'err', scope);
+        }
+      };
+      toast.append(b, document.createElement('i'));
     }
     document.body.append(toast);
-    requestAnimationFrame(() => toast?.classList.add('cf-show'));
-    const tt = toast;
-    toastT = setTimeout(() => { tt.classList.remove('cf-show'); setTimeout(() => tt.remove(), 200); if (toast === tt) toast = null; }, 8000);
+    requestAnimationFrame(() => { if (toast === tt) tt.classList.add('cf-show'); });
+    toastT = setTimeout(() => { tt.classList.remove('cf-show'); setTimeout(() => tt.remove(), 200); if (toast === tt) { toast = null; toastScope = null; } }, 8000);
   }
 
   function place(tile) {
@@ -553,8 +585,12 @@
 
   /* Tables à vérifier : rendues interactives (aucune action sans clic) */
   function arm() {
+    const scope = contextKey();
+    if (pop && popScope !== scope) close();
+    if (toast && toastScope !== scope) clearToast();
+    if (!scope) return;
     $$('#rmExpress .rmExpressRoom .rmExpressTile[data-state="departure"], #rmExpress .rmExpressRoom .rmExpressTile[data-state="check"]').forEach(t => {
-      if (t.dataset.cfArm || t.classList.contains('cf-freed')) return;
+      if (t.dataset.cfArm) return;
       t.dataset.cfArm = '1';
       t.tabIndex = 0;
       t.setAttribute('role', 'button');
@@ -599,5 +635,5 @@
   const mo = new MutationObserver(() => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; arm(); }); });
   mo.observe(document.body, { childList: true, subtree: true });
   arm();
-  window.RestoCF27Departs = { version: '2027.4', destroy: () => { ac.abort(); mo.disconnect(); close(); toast?.remove(); }, open: n => { const t = $$('#rmExpress .rmExpressTile[data-cf-arm]').find(t => t.querySelector('strong')?.textContent === 'T' + n); t && open(t); }, spotlight, close };
+  window.RestoCF27Departs = { version: '2027.4', destroy: () => { ac.abort(); mo.disconnect(); close(); clearToast(); }, open: n => { const t = $$('#rmExpress .rmExpressTile[data-cf-arm]').find(t => t.querySelector('strong')?.textContent === 'T' + n); t && open(t); }, spotlight, close };
 })();

@@ -1,7 +1,7 @@
 'use strict';
 /* RM-OPS — recette navigateur du moteur réel dans la vraie page `v3-connected.html`.
  * Serveur Supabase SIMULÉ dans le processus de test (aucun réseau externe, données fictives) :
- * il applique apply_smart_placement_v3 / change_reservation_status_v3 / install_walkin_group_v3
+ * il applique express_seat_v1 / express_walkin_v1
  * avec les mêmes garde-fous (état attendu, table d'origine, client installé) puis republie l'instantané.
  * Vérifie : RestoPlacement chargé, échange 214/215 bout en bout, double appui, Réception refusée,
  * coupure réseau, données périmées, passage via l'adaptateur Express. */
@@ -11,15 +11,15 @@ const root=path.resolve(__dirname,'../..');
 const iso='2032-11-08',clock=new Date(iso+'T18:44:00Z');
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const owned=row=>({...row,restaurant_id:'fixture-ops'});
-let rows,assignments,revision,writes;
+let rows,assignments,revision,sequence,writes;
 function reset(){
  const row=(room,table)=>({id:id(room),guest_name:room===214?'Dupont fictif':'Martin fictif',hotel_room:String(room),party_size:2,
   starts_at:iso+'T18:48:00Z',ends_at:iso+'T20:18:00Z',status:'reserved',notes:'',edit_version:id(room+1000),walkin_type:null,seated_at:null});
- rows=[row(214),row(215)];assignments=[{reservation_id:id(214),table_id:id(21)},{reservation_id:id(215),table_id:id(4)}];revision=0;writes=[];
+ rows=[row(214),row(215)];assignments=[{reservation_id:id(214),table_id:id(21)},{reservation_id:id(215),table_id:id(4)}];revision=0;sequence=0;writes=[];
 }
 const tables=[4,9,21].map(n=>({id:id(n),label:'Table '+n,seats:2,active:true,room_id:id(1)}));
-function snapshot(){
- return {revision:String(++revision),syncSequence:revision,capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1},
+function snapshot(writable){
+ return {revision:String(revision),syncSequence:++sequence,capabilities:{reservation_edits:4,booking_recovery:1,snapshot:1,...(writable?{express_service:1}:{})},
   hours:owned({lunch_enabled:true,lunch_start:'12:00:00',lunch_end:'14:00:00',dinner_enabled:true,dinner_start:'19:00:00',dinner_end:'23:00:00',duration:90,arrival_limit_percent:70}),
   rooms:[owned({id:id(1),name:'Salle principale',active:true})],tables:tables.map(owned),reservations:rows.map(owned),assignments:assignments.map(owned),holds:[],serviceClosures:[],fusionLinks:[]};
 }
@@ -29,23 +29,24 @@ const seatedOn=(table,except)=>rows.some(r=>r.id!==except&&r.status==='seated'&&
 function rpc(name,args){
  writes.push(name);
  const fail=(code,message)=>({error:{code,message,details:''}});
- if(name==='apply_smart_placement_v3'){
+ if(args.p_revision!==String(revision))return fail('40001','Le service a changé.');
+ if(name==='express_seat_v1'){
+  const target=rows.find(x=>x.id===args.p_reservation_id);
+  if(!target||target.status!==args.p_expected_status)return fail('40001','Une réservation a changé.');
+  if(!args.p_changes.length&&tableOf(target.id)[0]!==args.p_table)return fail('40001','La table a changé.');
+  if(seatedOn(args.p_table,target.id))return fail('23P01','Conflit de table détecté.');
   for(const c of args.p_changes){const r=rows.find(x=>x.id===c.id);if(!r||r.status!==c.expected_status||tableOf(c.id)[0]!==c.from_table)return fail('40001','Une réservation a changé.')}
   for(const c of args.p_changes)if(seatedOn(c.to_table,c.id))return fail('23P01','Conflit de table détecté.');
   for(const c of args.p_changes)assignments.find(a=>a.reservation_id===c.id).table_id=c.to_table;
-  Object.assign(rows.find(x=>x.id===args.p_target_reservation_id),{status:'seated',seated_at:clock.toISOString()});return {data:args.p_changes.length,error:null};
+  Object.assign(target,{status:'seated',seated_at:clock.toISOString()});revision++;
+  return {data:{seated_at:clock.toISOString()},error:null};
  }
- if(name==='change_reservation_status_v3'){
-  const r=rows.find(x=>x.id===args.p_reservation_id);if(r.status!==args.p_expected)return fail('P0001','La réservation a déjà changé.');
-  if(tableOf(r.id).some(t=>seatedOn(t,r.id)))return fail('P0001','Cette table est encore occupée.');
-  Object.assign(r,{status:args.p_status,seated_at:clock.toISOString()});return {data:null,error:null};
- }
- if(name==='install_walkin_group_v3'){
-  if(args.p_tables.some(t=>seatedOn(t)))return fail('P0001','Cette table est encore occupée.');
+ if(name==='express_walkin_v1'){
+  if(seatedOn(args.p_table))return fail('23P01','Cette table est encore occupée.');
   const wid=id(900+writes.length);
-  rows.push({id:wid,guest_name:args.p_name,hotel_room:null,party_size:args.p_guests,starts_at:clock.toISOString(),ends_at:new Date(clock.getTime()+90*60000).toISOString(),
+  rows.push({id:wid,guest_name:args.p_room||'Passage fictif',hotel_room:args.p_room,party_size:args.p_guests,starts_at:clock.toISOString(),ends_at:new Date(clock.getTime()+90*60000).toISOString(),
    status:'seated',notes:'',edit_version:id(5000+writes.length),walkin_type:args.p_type,seated_at:clock.toISOString()});
-  for(const t of args.p_tables)assignments.push({reservation_id:wid,table_id:t});return {data:wid,error:null};
+  assignments.push({reservation_id:wid,table_id:args.p_table});revision++;return {data:wid,error:null};
  }
  return fail('PGRST202','Fonction absente du serveur simulé : '+name);
 }
@@ -63,30 +64,24 @@ const server=http.createServer((req,res)=>{
  fs.readFile(path.join(root,file),(error,value)=>error?res.writeHead(404).end():res.writeHead(200,{'Content-Type':mime[path.extname(file)]||'application/octet-stream'}).end(value));
 });
 let origin,browser;const external=[],errors=[];
-async function open(role='fb_admin',{exerciseGateway=false}={}){
+async function open(role='fb_admin',{writable=false}={}){
  const context=await browser.newContext({viewport:{width:834,height:950},serviceWorkers:'block',timezoneId:'Europe/Paris'});
- await context.route('**/*',async route=>{
+ await context.route('**/*',route=>{
   const url=new URL(route.request().url());
   if(url.origin!==origin||route.request().method()!=='GET'){external.push(url.href);return route.abort();}
-  if(exerciseGateway&&url.pathname==='/placement-express-adapter.mjs'){
-   // Exercise the gateway's legacy RPC contract only with the loopback RPC fixture.
-   const response=await route.fetch(),body=await response.text();
-   assert.ok(body.includes('const EXPRESS_WRITES_ENABLED=false;'));
-   return route.fulfill({response,body:body.replace('const EXPRESS_WRITES_ENABLED=false;','const EXPRESS_WRITES_ENABLED=true;')});
-  }
   return route.continue();
  });
  await context.routeWebSocket('**/*',ws=>ws.close());
  const page=await context.newPage();page.on('pageerror',error=>errors.push(error.message));
  await page.addInitScript(r=>{window.__opsRole=r},role);
- await page.exposeFunction('__opsSnapshot',snapshot);
+ await page.exposeFunction('__opsSnapshot',()=>snapshot(writable));
  await page.exposeFunction('__opsRpc',(name,args)=>rpc(name,args));
  await page.clock.install({time:clock});await page.goto(origin+'/v3-connected.html');
  await page.waitForFunction(()=>window.RestoSharedDataLoaded===true&&window.RestoSupabaseReady===true&&!!window.RestoPlacement);
  return {context,page};
 }
 const R214=id(214),R215=id(215);
-const openWritable=(role='fb_admin')=>open(role,{exerciseGateway:true});
+const openWritable=(role='fb_admin')=>open(role,{writable:true});
 const state=()=>Object.fromEntries(rows.filter(r=>r.hotel_room).map(r=>[r.hotel_room,[r.status,tableOf(r.id).map(t=>Number(t.slice(-2)))[0]]]));
 async function test(name,fn){reset();await fn();console.log('PASS '+name)}
 
@@ -125,7 +120,7 @@ async function test(name,fn){reset();await fn();console.log('PASS '+name)}
    assert.equal(preview.kind,'swap');assert.deepEqual(preview.changes.map(c=>[c.label,c.from[0],c.to[0]]),[['Ch. 215',4,21]]);
    const [a,b]=await page.evaluate(p=>Promise.all([window.RestoPlacement.seat(p),window.RestoPlacement.seat(p)]),preview);
    assert.equal(a.ok,true);assert.deepEqual(a,b,'double appui : même résultat');
-   assert.deepEqual(writes,['apply_smart_placement_v3']);
+   assert.deepEqual(writes,['express_seat_v1']);
    assert.deepEqual(state(),{'214':['seated',4],'215':['reserved',21]});
    assert.equal(await page.evaluate(id=>window.RestoSharedReservations.find(r=>r.id===id).status,R214),'seated');
    await context.close();
@@ -169,7 +164,7 @@ async function test(name,fn){reset();await fn();console.log('PASS '+name)}
     const out=await adapter.walkIn({guests:2,table:tables[0],type:'external',room:''});
     return {tables,out};
    });
-   assert.deepEqual(result.tables,[9]);assert.equal(result.out.ok,true);assert.deepEqual(writes,['install_walkin_group_v3']);
+   assert.deepEqual(result.tables,[9]);assert.equal(result.out.ok,true);assert.deepEqual(writes,['express_walkin_v1']);
    await context.close();
   });
   assert.deepEqual(external,[],'aucune requête externe');
