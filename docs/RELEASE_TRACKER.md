@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-RELEASE-03 B2 — Préparation de l’activation serveur Coup de feu — NO-GO DEV (28/11/2026)
+
+- Suivi [#266](https://github.com/DylanL-Dev/RestoManager/issues/266) et [#284](https://github.com/DylanL-Dev/RestoManager/issues/284). Render DEV confirmé LIVE sur `c9caaea` (#290). Audit Supabase DEV en lecture seule, avec capacités d’écriture absentes. Le candidat local harmonise l’ordre des verrous Express et historique, génère l’activation et le retour en consultation et conserve les journaux. La décision d’exécution reste conditionnée à une sauvegarde restaurable, à une recette dédiée et à l’accord écrit du propriétaire. [Rapport et procédure de recette](audits/RM-RELEASE-03B2_ACTIVATION_COUP_DE_FEU_20261128.md).
+
 ### RM-RELEASE-03 B — Mode Coup de feu en service connecté — CANDIDAT DEV (28/11/2026)
 
 - Suivi [#266](https://github.com/DylanL-Dev/RestoManager/issues/266) et [#284](https://github.com/DylanL-Dev/RestoManager/issues/284). Lot établi sur DEV `374f556` et la tête corrigée de [#289](https://github.com/DylanL-Dev/RestoManager/pull/289) `6075210`. Installation, permutation et passage passent par les RPC vérifiées sous verrou d’établissement. La libération et l’annulation reprennent la proposition #286. Les tests locaux chargent les propositions sur des bases jetables. [Dossier de recette et d’activation DEV](audits/RM-RELEASE-03B_COUP_DE_FEU_20261128.md).

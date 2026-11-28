@@ -12,7 +12,8 @@ module.exports=async function run(context,waitFor){
  for(const file of ['20261112211500_weekly_schedule_dev.sql','20261112212500_weekly_hours_rls_dev.sql',
   '20261113153000_rm005_walkin_weekly_server_dev.sql','20261113164500_rm005_weekly_helper_writer_grant_dev.sql',
   '20261117083046_rm012_intelligent_closeout.sql'])await apply('supabase/migrations/'+file);
- await sql(require('../../scripts/prepare-rm-release-03b.cjs').buildExpressReleaseSql());
+ const {buildExpressReleaseSql,buildExpressRollbackSql}=require('../../scripts/prepare-rm-release-03b.cjs');
+ await sql(buildExpressReleaseSql());
  const reservationId=n=>'50000000-0000-4000-8000-'+String(n).padStart(12,'0');
  const night=Object.fromEntries(['monday','tuesday','wednesday','thursday','friday','saturday','sunday'].map(day=>[
   day,{lunch:{enabled:false,start:'12:00',end:'14:00'},dinner:{enabled:true,start:'00:00',end:'23:59'}}
@@ -86,4 +87,19 @@ module.exports=async function run(context,waitFor){
   for(const device of [a,b,c])assert.deepEqual(device.errors,[]);
   passed('Express : permutation, installation, passage, libération et annulation avec Auth, PostgREST et Realtime réels');
  }});
+ await sql(buildExpressRollbackSql());
+ await waitFor(async()=>{
+  const {data,error}=await accounts[0].client.rpc('service_sync_state_v1');
+  return !error&&data?.capabilities?.snapshot===1&&data.capabilities.express_service===undefined
+   &&data.capabilities.quick_release===undefined;
+ },'Retour en consultation sur PostgREST');
+ const denied=await accounts[0].client.rpc('express_seat_v1',{
+  p_revision:'',p_reservation_id:reservationId(1),p_expected_status:'seated',
+  p_table:'40000000-0000-4000-8000-000000000002',p_changes:[]
+ });
+ assert.match(denied.error?.code||'',/^(42501|PGRST202)$/);
+ const remained=await accounts[1].client.from('reservations').select('status').eq('id',reservationId(1)).single();
+ assert.equal(remained.error,null);
+ assert.equal(remained.data.status,'seated');
+ console.log('PASS PostgREST : retour en consultation, écritures conservées et RPC Express inaccessible');
 };
