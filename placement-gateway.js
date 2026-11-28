@@ -117,10 +117,10 @@
    if(!prev||prev.ok!==true||!Array.isArray(prev.targetTables))throw new RestoEngineError('INVALID_INPUT','Aperçu requis avant l’installation.');
    if(!isOnline())throw new RestoEngineError('OFFLINE');
    const scope=getState()?.scope;
-   if(expressOnly)requireExpressScope(scope);
    try{requireWrite()}catch(error){throw new RestoEngineError(classify(error)==='CAPABILITY_REQUIRED'?'CAPABILITY_REQUIRED':'NOT_SYNCED',null,{cause:error})}
    const role=await getRole();
    if(role!=='fb_admin')throw new RestoEngineError('FORBIDDEN');
+   if(expressOnly)requireExpressScope(scope);
    await refresh();
    const state=expressOnly?requireExpressScope(scope):null;
    if(expressOnly)requireWrite();
@@ -175,9 +175,9 @@
    if(!expressOnly&&typeof installWalkin!=='function')throw new RestoEngineError('RPC_MISSING');
    if(!isOnline())throw new RestoEngineError('OFFLINE');
    const scope=getState()?.scope;
-   if(expressOnly)requireExpressScope(scope);
    try{requireWrite()}catch(error){throw new RestoEngineError(classify(error)==='CAPABILITY_REQUIRED'?'CAPABILITY_REQUIRED':'NOT_SYNCED',null,{cause:error})}
    if(await getRole()!=='fb_admin')throw new RestoEngineError('FORBIDDEN');
+   if(expressOnly)requireExpressScope(scope);
    await refresh();
    const state=expressOnly?requireExpressScope(scope):null;
    if(expressOnly)requireWrite();
