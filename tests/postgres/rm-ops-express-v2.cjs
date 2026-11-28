@@ -13,6 +13,7 @@ const openWeek=Object.fromEntries(['monday','tuesday','wednesday','thursday','fr
 
 module.exports=async function verifyExpressV2(db){
  const runAs=sql=>db.ok('set role rm_quick_hosted_admin;'+sql+'reset role;');
+ await db.ok(fs.readFileSync(path.join(__dirname,'rm-b3-dev-four-table-fixture.sql'),'utf8'));
  await runAs(sqlFile('PROPOSAL'));
  await runAs(sqlFile('PROPOSAL'));
  const snapshot=(user=1)=>db.snapshot(user);

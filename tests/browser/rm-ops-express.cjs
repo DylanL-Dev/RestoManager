@@ -538,22 +538,30 @@ async function measureRush(){
   });
   assert.equal(metrics.covers,200);
   assert.equal(metrics.active,80*availability/100);
-  const ui=[];
+  const ui=[],render=[];
   for(const room of ['300','301','302','303','304']){
    await view.getByRole('searchbox').fill(room);
+   await page.evaluate(()=>{
+    window.__b3Paint=null;
+    document.querySelector('#rmExpress [data-arrivals]').addEventListener('click',()=>{
+     const start=performance.now();
+     requestAnimationFrame(()=>requestAnimationFrame(()=>{window.__b3Paint=performance.now()-start;}));
+    },{capture:true,once:true});
+   });
    const start=performance.now();
    await view.locator('[data-arrivals]').getByRole('button',{name:new RegExp('Ch. '+room)}).click();
    await view.getByRole('heading',{name:new RegExp('Ch. '+room)}).waitFor();
    await view.locator('[data-suggestions] button').first().waitFor();
    assert.equal(await view.locator('[data-suggestions] button').count(),2);
-   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   await page.waitForFunction(()=>Number.isFinite(window.__b3Paint));
+   render.push(await page.evaluate(()=>window.__b3Paint));
    ui.push(Math.round(performance.now()-start));
   }
   await context.setOffline(true);
   await view.getByText(/Dernière vue en consultation/).waitFor();
   await context.setOffline(false);
   await page.waitForFunction(()=>document.querySelector('#rmExpress [data-sync]').textContent.startsWith('À jour'));
-  results.push({availability,width,arrivals,...metrics,displayMs:ui});
+  results.push({availability,width,arrivals,...metrics,renderMs:render,displayMs:ui});
   await context.close();
  }
  console.log('PASS B3 rush Paris : '+JSON.stringify(results));

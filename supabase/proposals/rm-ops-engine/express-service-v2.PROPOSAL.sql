@@ -15,6 +15,12 @@ begin
  ) then
   raise exception 'Le lot B2 et le correctif chambre #292 doivent déjà être actifs.';
  end if;
+ if (select count(*) from pg_proc where oid in (
+   to_regprocedure('private.confirm_reservation(text,text,integer,timestamptz,timestamptz,uuid[],text)'),
+   to_regprocedure('public.confirm_reservation_v2(text,text,integer,timestamptz,timestamptz,uuid[],uuid,text)')
+  ) and strpos(prosrc,'cardinality(p_table_ids) not between 1 and 4')>0)<>2 then
+  raise exception 'Le contrôle natif des groupes de quatre tables doit déjà être actif.';
+ end if;
 end
 $prerequisites$;
 

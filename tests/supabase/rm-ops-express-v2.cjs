@@ -16,6 +16,7 @@ module.exports=async function verify(context,waitFor){
  assert.ok(previous.includes(old));
  await sql(previous.replace(old,"if v_room is not null and not (v_role='fb_admin' and p_notes='[RM:WALKIN_SEPARATE_OCCUPANT_V1]' and current_setting('restomanager.second_occupant_confirmed',true)='yes') and exists ("));
  await apply('express-room-conflict-v1.PROPOSAL.sql');
+ await sql(fs.readFileSync(path.join(root,'tests/postgres/rm-b3-dev-four-table-fixture.sql'),'utf8'));
  await apply('express-service-v2.PROPOSAL.sql');
  const links=[[5,6],[7,8],[2,4]];
  for(const link of links){
