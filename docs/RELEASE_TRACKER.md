@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-RELEASE-03 B2 — Doublon chambre après activation — CANDIDAT DEV (28/11/2026)
+
+- Suivi #266 et #284, base DEV `456ffa5`. Migration initiale `20261128043616` réussie ; recette hébergée : doublon chambre accepté, fixtures annulées sans résidu. Cause SQL NULL dans l’exception de deuxième occupant ; proposition corrective ciblée, contrôle par établissement, message Coup de feu vers confirmation du mode complet, tests isolés étendus. [Rapport](audits/RMOPS_ROOM_CONFLICT_20261128.md). CI à vérifier, pas de fusion, publication ni migration corrective.
+
 ### RM-RELEASE-03 B2 — Préparation de l’activation serveur Coup de feu — NO-GO DEV (28/11/2026)
 
 - Suivi [#266](https://github.com/DylanL-Dev/RestoManager/issues/266) et [#284](https://github.com/DylanL-Dev/RestoManager/issues/284). Render DEV confirmé LIVE sur `c9caaea` (#290). Audit Supabase DEV en lecture seule, avec capacités d’écriture absentes. Le candidat local harmonise l’ordre des verrous Express et historique, génère l’activation et le retour en consultation et conserve les journaux. La décision d’exécution reste conditionnée à une sauvegarde restaurable, à une recette dédiée et à l’accord écrit du propriétaire. [Rapport et procédure de recette](audits/RM-RELEASE-03B2_ACTIVATION_COUP_DE_FEU_20261128.md).
