@@ -99,5 +99,7 @@ export function liveSnapshot(source,readPlan,stamp=Date.now()){
  const service=loaded?currentService(source.ReservationEngine?.getShiftsForDate(now.date),now):null;
  const charge=fresh&&service&&tables.length?source.RestoRush?.evaluate({date:now.date,time:now.time,guests:0},reservations):null;
  return {now,service,reservations,tables,rooms,inactiveTables,loaded,fresh,updatedAt:loaded?source.RestoLastSyncAt??null:null,
+  revision:loaded?source.RestoServiceRevision??null:null,
+  scope:loaded?JSON.stringify([context.restaurantId,context.userId]):null,
   charge:charge?.limit?charge:null};
 }

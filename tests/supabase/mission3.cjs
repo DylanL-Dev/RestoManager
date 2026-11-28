@@ -73,8 +73,8 @@ async function main(){
  const day=await sql("select ((now() at time zone 'Europe/Paris')::date+1)::text;");
  const devSnapshot=process.argv.includes('--dev-snapshot');
  const context={url,anonKey,accounts,sql,day,assert,ports,root,devSnapshot};stage='Real sessions established';if(process.argv.includes('--rm015'))console.log('INFO '+stage);
- if(process.argv.includes('--express-service')){
-  await require('./rm-ops-express-service.cjs')(context,waitFor);
+ if(process.argv.includes('--express-service')||process.argv.includes('--express-service-v2')){
+  await require('./rm-ops-express-service.cjs')(context,waitFor,process.argv.includes('--express-service-v2'));
   for(const account of accounts)if(account.client){await account.client.removeAllChannels();await account.client.auth.signOut();}
   return;
  }

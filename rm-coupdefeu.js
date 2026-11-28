@@ -195,9 +195,10 @@
     let planned = null, swap = null;
     tiles.forEach((t, i) => {
       const txt = t.textContent;
-      const kind = /prévue pour ce client/i.test(txt) ? 'planned' : /échange avec/i.test(txt) ? 'swap' : 'free';
+      const kind = /prévue pour ce client|fusion prévue/i.test(txt) ? 'planned' :
+        /échange avec/i.test(txt) ? 'swap' : /déplacements à vérifier/i.test(txt) ? 'chain' : 'check';
       setData(t, 'cfKind', kind);
-      setData(t, 'cfLabel', kind === 'planned' ? 'Prévue' : kind === 'swap' ? 'Permutation' : i === 0 ? 'Libre · conseillée' : 'Libre');
+      setData(t, 'cfLabel', {planned:'Prévue',swap:'Permutation',chain:'Réorganisation',check:'À vérifier'}[kind]);
       if (i < 2 && !$('kbd', t)) { const k = el('kbd', null, String(i + 1)); k.setAttribute('aria-hidden', 'true'); t.append(k); }
       if (kind === 'planned') planned = t; if (kind === 'swap') swap = t;
     });

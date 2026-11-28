@@ -160,6 +160,7 @@ module.exports=async function expressService(db,initialSync){
  assert.equal((await db.snapshot(1)).reservations.filter(row=>row.hotel_room==='237').length,2);
  console.log('PASS garde chambre hébergée : reproduction NULL, refus sans double confirmation, établissement distinct, ACL et confirmation explicite conservées');
  console.log('PASS Express : passages hôtel et extérieur, refus concurrent, identifiant serveur et chambre unique');
+ await require('./rm-ops-express-v2.cjs')(db);
 
  const beforeRollback=await db.snapshot(1);
  const auditCounts=()=>db.ok("select (select count(*) from public.placement_events), (select count(*) from private.quick_release_audit)");

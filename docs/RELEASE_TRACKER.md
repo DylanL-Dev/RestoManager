@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-RELEASE-03 B3 — Occupants, fusions et permutations Coup de feu — CANDIDAT DEV (28/11/2026)
+
+- Suivi [#293](https://github.com/DylanL-Dev/RestoManager/issues/293), base DEV `de52ab6`. Le contrat v2 ajoute le deuxième occupant explicite, l’installation sur une fusion prévue, le passage sur une fusion autorisée et les permutations mono-table jusqu’à huit dossiers. Le lot préserve B2 et le correctif chambre #292. [Préflight, recette et retour arrière](audits/RM-RELEASE-03B3_COUP_DE_FEU_20261128.md).
+
 ### RM-RELEASE-03 B2 — Doublon chambre après activation — CANDIDAT DEV (28/11/2026)
 
 - Suivi #266 et #284, base DEV `456ffa5`. Migration initiale `20261128043616` réussie ; recette hébergée : doublon chambre accepté, fixtures annulées sans résidu. Cause SQL NULL dans l’exception de deuxième occupant ; proposition corrective ciblée, contrôle par établissement, message Coup de feu vers confirmation du mode complet, tests isolés étendus. [Rapport](audits/RMOPS_ROOM_CONFLICT_20261128.md). CI à vérifier, pas de fusion, publication ni migration corrective.
