@@ -203,6 +203,8 @@ async function testCoupDeFeu(){
 
  const context=await newContext(390);
  const first=await newPage(context),second=await newPage(context);
+ // A previously simulated establishment must never supply the active departure sheet.
+ await first.evaluate(()=>localStorage.setItem('restomanager-express-fiction-v1:fixture-other',JSON.stringify({clock:'2032-11-08T18:44:00Z',reservations:[]})));
  await simulation(first);
  const storageKey='restomanager-express-fiction-v1:'+tenantA;
  await first.waitForFunction(key=>!!localStorage.getItem(key),storageKey);
@@ -228,12 +230,16 @@ async function testCoupDeFeu(){
  await first.locator('.cf-rel').getByText('T1 libérée',{exact:true}).waitFor();
  for(const page of [first,second]){
   await floorTable(page,1).getByText('Aucun client enregistré').waitFor({state:'attached'});
+  await page.waitForFunction(()=>document.querySelector('#rmExpress .rmExpressTile[data-state="unknown"][data-cf-free]'));
+  assert.match(await floorTable(page,1).evaluate(node=>getComputedStyle(node,'::after').content),/À contrôler/);
+  assert.ok((await tabs(page).locator('button[data-express-free]').evaluateAll(nodes=>nodes.map(n=>n.dataset.expressFree))).every(text=>/à contrôler$/.test(text)));
   await express(page).getByRole('button',{name:/1 à vérifier.*voir les tables/i}).waitFor();
  }
  await departure(second).getByRole('button',{name:'Libérer T1'}).press('Enter');
  await second.locator('.cf-rel[data-tone="err"]').getByText(/plus installé sur ces tables/).waitFor();
  assert.equal(await second.evaluate(key=>JSON.parse(localStorage.getItem(key)).revision,storageKey),1);
  await first.locator('.cf-rel').getByRole('button',{name:'Annuler'}).click();
+ await first.locator('.cf-rel').getByText('Libération annulée.',{exact:true}).waitFor();
  for(const page of [first,second])await floorTable(page,1).getByText('Départ à vérifier').waitFor();
  assert.equal(await second.evaluate(key=>JSON.parse(localStorage.getItem(key)).revision,storageKey),2);
  await context.close();
@@ -262,6 +268,18 @@ async function testCoupDeFeu(){
  await floorTable(deviceA,4).getByText('Départ à vérifier').waitFor();
  await deviceB.evaluate(()=>dispatchEvent(new Event('fixture:push')));
  await floorTable(deviceB,4).getByText('Départ à vérifier').waitFor();
+ assert.equal(releaseWrites,2);
+ // Presentation contract only: no server write is made by these injected malformed replies.
+ await deviceA.evaluate(()=>Object.defineProperty(window,'RestoExpressRelease',{configurable:true,value:{release:async()=>undefined}}));
+ await openDeparture(deviceA,4);
+ await departure(deviceA).getByRole('button',{name:'Libérer T4'}).click();
+ await deviceA.locator('.cf-rel[data-tone="err"]').getByText(/Libération non confirmée/).waitFor();
+ assert.equal(releaseWrites,2);
+ await deviceA.evaluate(()=>Object.defineProperty(window,'RestoExpressRelease',{configurable:true,value:{release:async()=>({ok:true}),undo:async()=>({ok:false,message:'Annulation refusée : table réoccupée.'})}}));
+ await openDeparture(deviceA,4);
+ await departure(deviceA).getByRole('button',{name:'Libérer T4'}).click();
+ await deviceA.locator('.cf-rel').getByRole('button',{name:'Annuler'}).click();
+ await deviceA.locator('.cf-rel[data-tone="err"]').getByText('Annulation refusée : table réoccupée.').waitFor();
  assert.equal(releaseWrites,2);
  await tablet.close();await phone.close();
  console.log('PASS parcours connecté isolé : deux contextes navigateur, rejet rouge et annulation avec RPC simulée');
