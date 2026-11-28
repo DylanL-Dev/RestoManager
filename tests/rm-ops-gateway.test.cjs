@@ -151,3 +151,18 @@ test('passage : résultat incertain mais enregistré → alreadyApplied ; chambr
  await assert.rejects(c.gw.walkIn({guests:2,tables:[4],type:'hotel',name:'214'}),e=>e.code==='ROOM_CONFLICT');
  await assert.rejects(c.gw.walkIn({guests:2,tables:[4],type:'autre'}),e=>e.code==='INVALID_INPUT');
 });
+
+test('Express: ROOM_CONFLICT is explicit, never automatically retries or bypasses the guard',async()=>{
+ const calls=[];
+ const gw=createPlacementGateway({
+  engine,expressOnly:true,now:()=>NOW,getRole:async()=> 'fb_admin',tableId:n=>'t'+n,
+  getState:()=>({reservations:[],tablePlan:plan,holds:[],scope:'restaurant-a:user-a',revision:'42'}),
+  serverFeatures:()=>({expressService:true}),
+  refresh:async()=>{},
+  rpc:async(name,args)=>{calls.push({name,args});throw {code:'23P01',details:'ROOM_CONFLICT',message:'Conflit'};}
+ });
+ await assert.rejects(gw.walkIn({guests:2,tables:[4],type:'hotel',name:'237'}),e=>e.code==='ROOM_CONFLICT'&&/mode complet.*confirmez/.test(e.message));
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].name,'express_walkin_v1');
+ assert.equal(calls[0].args.p_room,'237');
+});

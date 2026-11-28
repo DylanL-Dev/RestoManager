@@ -121,8 +121,44 @@ module.exports=async function expressService(db,initialSync){
  assert.equal(installed[0].id,created);
  assert.equal((await db.snapshot(4)).reservations.some(row=>row.id===created),false);
  await db.ok(db.ctx(1,walk(await revision(),6,'hotel','237')));
- await reject(2,walk(await revision(),7,'hotel','237'),'23P01|chambre');
+ // The hosted November 28 definition differs from the November 10 fixture:
+ // its explicit second-occupant exception makes NOT(NULL) skip the guard.
+ const signature='private.confirm_reservation(text,text,integer,timestamptz,timestamptz,uuid[],text)';
+ const originalGuard='if v_room is not null and exists (';
+ const hostedGuard="if v_room is not null and not (v_role='fb_admin' and p_notes='[RM:WALKIN_SEPARATE_OCCUPANT_V1]' and current_setting('restomanager.second_occupant_confirmed',true)='yes') and exists (";
+ const legacyDefinition=await definition(signature);
+ assert.ok(legacyDefinition.includes(originalGuard));
+ await db.ok(legacyDefinition.replace(originalGuard,hostedGuard));
+ // Prove the hosted defect with a real duplicate insertion, then roll it back.
+ const repro=await db.sql(db.ctx(2,walk(await revision(),7,'hotel','237')+";do $test$begin raise exception 'ROOM_DUPLICATE_REPRODUCED';end$test$"));
+ assert.match(repro.stderr,/ROOM_DUPLICATE_REPRODUCED/);
  assert.equal((await db.snapshot(1)).reservations.filter(row=>row.hotel_room==='237').length,1);
+ const fix=fs.readFileSync(path.join(directory,'express-room-conflict-v1.PROPOSAL.sql'),'utf8');
+ const acl=()=>db.ok("select proowner::text||':'||proacl::text||':'||prosecdef::text from pg_proc where oid="+lit(signature)+"::regprocedure");
+ const beforeAcl=await acl();
+ for(let attempt=0;attempt<2;attempt++)await db.ok('set role rm_quick_hosted_admin;'+fix+'reset role;');
+ assert.equal(await acl(),beforeAcl);
+ const fixedRevision=await revision();
+ await reject(2,walk(fixedRevision,7,'hotel','237'),'23P01|chambre');
+ assert.equal(await revision(),fixedRevision);
+ assert.equal((await db.snapshot(1)).reservations.filter(row=>row.hotel_room==='237').length,1);
+ // Same room number at an unrelated venue is not a duplicate.
+ await db.ok(db.ctx(4,walk(await revision(4),9,'hotel','237')));
+ assert.equal((await db.snapshot(4)).reservations.filter(row=>row.hotel_room==='237').length,1);
+ // Verify the exact legacy confirmation contract (flag AND marker AND Restaurant).
+ // This models the existing v4 mode-complete RPC on the older fixture without modifying production.
+ const explicit=(flag,notes)=>`do $test$
+ declare stamp timestamptz:=statement_timestamp(); finish timestamptz:=stamp+interval '90 minutes'; token uuid:=gen_random_uuid();
+ begin
+  perform public.acquire_table_hold_v2(${lit(table(7))},stamp,finish,token);
+  perform set_config('restomanager.second_occupant_confirmed',${lit(flag)},true);
+  perform public.confirm_reservation_v3('237','237',2,stamp,finish,array[${lit(table(7))}]::uuid[],token,${lit(notes)});
+ end $test$`;
+ await reject(1,explicit('no','[RM:WALKIN_SEPARATE_OCCUPANT_V1]'),'23P01|chambre');
+ await reject(1,explicit('yes',null),'23P01|chambre');
+ await db.ok(db.ctx(1,explicit('yes','[RM:WALKIN_SEPARATE_OCCUPANT_V1]')));
+ assert.equal((await db.snapshot(1)).reservations.filter(row=>row.hotel_room==='237').length,2);
+ console.log('PASS garde chambre hébergée : reproduction NULL, refus sans double confirmation, établissement distinct, ACL et confirmation explicite conservées');
  console.log('PASS Express : passages hôtel et extérieur, refus concurrent, identifiant serveur et chambre unique');
 
  const beforeRollback=await db.snapshot(1);

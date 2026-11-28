@@ -3,7 +3,7 @@ import {canWrite} from './service-sync.js?v=20261108-tables-display';
 import {setupBookingDraft} from './booking-draft.js?v=20261117-rm016-readonly';
 import {encodeBookingDetails} from './reservation-details.js?v=20261108-tables-display';
 import {supabase,loadSharedService} from './supabase-service-bridge.js?v=20261109-twins1';
-import './placement-gateway.js?v=2027.4-service1';
+import './placement-gateway.js?v=2027.4-roomguard1';
 import {guardConnectedPlacement} from './placement-express-adapter.mjs?v=2027.4-service1';
 import {allowsExpressSimulation} from './service-v3-express-data.mjs?v=2027.4-devonly1';
 
