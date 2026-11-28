@@ -73,6 +73,11 @@ async function main(){
  const day=await sql("select ((now() at time zone 'Europe/Paris')::date+1)::text;");
  const devSnapshot=process.argv.includes('--dev-snapshot');
  const context={url,anonKey,accounts,sql,day,assert,ports,root,devSnapshot};stage='Real sessions established';if(process.argv.includes('--rm015'))console.log('INFO '+stage);
+ if(process.argv.includes('--express-service')){
+  await require('./rm-ops-express-service.cjs')(context,waitFor);
+  for(const account of accounts)if(account.client){await account.client.removeAllChannels();await account.client.auth.signOut();}
+  return;
+ }
  if(process.argv.includes('--rm015')){
   for(const file of ['mission2_reservation_edits.sql','mission3_validation_integration.sql','reception_right_size_recommendations.sql','platform_owner_foundation.sql','bug01_private_reports.sql'])await sql(fs.readFileSync(path.join(root,'supabase/scripts',file),'utf8'));
   await require('./rm015-bootstrap.cjs')(context);stage='RM015 schema ready';console.log('INFO '+stage);

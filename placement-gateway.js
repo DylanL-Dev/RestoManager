@@ -51,7 +51,7 @@
  }
 
  function createPlacementGateway(deps){
-  const {engine,getState,rpc,refresh,requireWrite=()=>{},getRole=async()=>null,isOnline=()=>true,tableId,now=()=>Date.now(),installWalkin,serverFeatures=()=>({})}=deps;
+  const {engine,getState,rpc,refresh,requireWrite=()=>{},getRole=async()=>null,isOnline=()=>true,tableId,now=()=>Date.now(),installWalkin,serverFeatures=()=>({}),expressOnly=false}=deps;
   const inflight=new Map();
 
   function input(extra){
@@ -61,6 +61,10 @@
   }
   function findRecord(id){return (getState()?.reservations||[]).find(r=>String(r.id)===String(id))||null}
   function seatedAsRequested(id,tables){const r=findRecord(id);return !!r&&r.status==='seated'&&sameTables(r.tables,tables)}
+  function applied(plan){
+   return seatedAsRequested(plan.reservationId,plan.targetTables)&&
+    (!expressOnly||(plan.changes||[]).every(move=>sameTables(findRecord(move.id)?.tables,move.to)));
+  }
 
   function preview(reservationId,targetTables,opts={}){
    const data=input({reservationId,targetTables,allowRoomChange:!!opts.allowRoomChange,guests:opts.guests,...(opts.budget?{budget:opts.budget}:{})});
@@ -78,7 +82,24 @@
    return data?engine.tableStates(data):[];
   }
 
-  async function write(fresh,current){
+  const uuid=n=>{const v=tableId(Number(n));if(!v)throw new RestoEngineError('NOT_SYNCED','Plan de salle non synchronisé.');return v};
+  function requireExpressScope(scope){
+   const state=getState();
+   if(!serverFeatures().expressService)throw new RestoEngineError('CAPABILITY_REQUIRED');
+   if(!state?.scope||state.scope!==scope||typeof state.revision!=='string'||!state.revision)
+    throw new RestoEngineError('NOT_SYNCED');
+   return state;
+  }
+  async function write(fresh,current,state){
+   if(expressOnly){
+    if(current.tables.length!==1||fresh.targetTables.length!==1||fresh.changes.length>1)
+     throw new RestoEngineError('INVALID_INPUT','Seuls le placement sur une table et la permutation simple sont disponibles.');
+    const moves=sameTables(current.tables,fresh.targetTables)&&!fresh.changes.length?[]:[
+     {id:current.id,from_table:uuid(current.tables[0]),to_table:uuid(fresh.targetTables[0]),expected_status:current.status},
+     ...fresh.changes.map(c=>({id:c.id,from_table:uuid(c.from[0]),to_table:uuid(c.to[0]),expected_status:c.status}))];
+    return rpc('express_seat_v1',{p_revision:state.revision,p_reservation_id:current.id,
+     p_expected_status:current.status,p_table:uuid(fresh.targetTables[0]),p_changes:moves});
+   }
    if(sameTables(current.tables,fresh.targetTables)&&!fresh.changes.length){
     // Installation sur la table déjà affectée. seat_reservation_v1 (proposé) vérifie la table sous verrou ;
     // à défaut, la RPC de statut v3 installe sur la table courante, sans contrôle : course détectée après coup.
@@ -87,7 +108,6 @@
     return rpc('change_reservation_status_v3',{p_reservation_id:current.id,p_expected:current.status,p_status:'seated'});
    }
    if(current.tables.length!==1||fresh.targetTables.length!==1)throw new RestoEngineError('FUSION_UNSUPPORTED','Fusion : réorganisation automatique non disponible.');
-   const uuid=n=>{const v=tableId(Number(n));if(!v)throw new RestoEngineError('NOT_SYNCED','Plan de salle non synchronisé.');return v};
    const p_changes=[{id:current.id,from_table:uuid(current.tables[0]),to_table:uuid(fresh.targetTables[0]),expected_status:current.status},
     ...fresh.changes.map(c=>({id:c.id,from_table:uuid(c.from[0]),to_table:uuid(c.to[0]),expected_status:c.status}))];
    return rpc('apply_smart_placement_v3',{p_target_reservation_id:current.id,p_changes});
@@ -96,29 +116,35 @@
   async function run(prev){
    if(!prev||prev.ok!==true||!Array.isArray(prev.targetTables))throw new RestoEngineError('INVALID_INPUT','Aperçu requis avant l’installation.');
    if(!isOnline())throw new RestoEngineError('OFFLINE');
+   const scope=getState()?.scope;
+   if(expressOnly)requireExpressScope(scope);
    try{requireWrite()}catch(error){throw new RestoEngineError(classify(error)==='CAPABILITY_REQUIRED'?'CAPABILITY_REQUIRED':'NOT_SYNCED',null,{cause:error})}
    const role=await getRole();
    if(role!=='fb_admin')throw new RestoEngineError('FORBIDDEN');
    await refresh();
+   const state=expressOnly?requireExpressScope(scope):null;
+   if(expressOnly)requireWrite();
    const fresh=preview(prev.reservationId,prev.targetTables,{allowRoomChange:prev.allowRoomChange});
    if(!fresh.ok){
-    if(seatedAsRequested(prev.reservationId,prev.targetTables))return done(prev,true);
+    if(applied(prev))return done(prev,true);
     throw new RestoEngineError(fresh.code,fresh.message,{refreshed:true,preview:fresh});
    }
    if(fresh.fingerprint!==prev.fingerprint||fresh.kind!==prev.kind||JSON.stringify(fresh.changes.map(c=>[c.id,c.to]))!==JSON.stringify((prev.changes||[]).map(c=>[c.id,c.to])))
     throw new RestoEngineError('STALE',null,{refreshed:true,preview:fresh});
    const current=findRecord(prev.reservationId);
    try{
-    await write(fresh,current);
+    const receipt=await write(fresh,current,state);
+    if(expressOnly&&typeof receipt?.seated_at!=='string')throw new RestoEngineError('RESULT_UNKNOWN');
    }catch(error){
     if(error instanceof RestoEngineError)throw error;
     let refreshed=false;
     try{await refresh();refreshed=true}catch(_){}
-    if(refreshed&&seatedAsRequested(prev.reservationId,prev.targetTables))return done(fresh,true);
+    if(refreshed&&(!expressOnly||getState()?.scope===scope)&&applied(fresh))return done(fresh,true);
     const code=classify(error);
     throw new RestoEngineError(code,null,{refreshed,cause:error});
    }
    try{await refresh()}catch(_){return {...done(fresh,false),verified:false}}
+   if(expressOnly&&getState()?.scope!==scope)throw new RestoEngineError('RESULT_UNKNOWN');
    if(!seatedAsRequested(prev.reservationId,prev.targetTables)){
     const now=findRecord(prev.reservationId);
     if(now?.status==='seated')throw new RestoEngineError('SEATED_ELSEWHERE',null,{refreshed:true,actualTables:now.tables.slice(),requestedTables:prev.targetTables.slice()});
@@ -146,12 +172,31 @@
   async function runWalkIn(draft){
    const guests=Number(draft?.guests),tables=(draft?.tables||[]).map(Number);
    if(!Number.isInteger(guests)||guests<1||tables.length!==1||!['hotel','exterieur'].includes(draft?.type))throw new RestoEngineError('INVALID_INPUT');
-   if(typeof installWalkin!=='function')throw new RestoEngineError('RPC_MISSING');
+   if(!expressOnly&&typeof installWalkin!=='function')throw new RestoEngineError('RPC_MISSING');
    if(!isOnline())throw new RestoEngineError('OFFLINE');
+   const scope=getState()?.scope;
+   if(expressOnly)requireExpressScope(scope);
    try{requireWrite()}catch(error){throw new RestoEngineError(classify(error)==='CAPABILITY_REQUIRED'?'CAPABILITY_REQUIRED':'NOT_SYNCED',null,{cause:error})}
    if(await getRole()!=='fb_admin')throw new RestoEngineError('FORBIDDEN');
    await refresh();
+   const state=expressOnly?requireExpressScope(scope):null;
+   if(expressOnly)requireWrite();
    if(!walkInTables(guests).some(t=>t.number===tables[0]))throw new RestoEngineError('STALE','Cette table ne peut plus accueillir le passage. Choisissez de nouveau.',{refreshed:true});
+   if(expressOnly){
+    let reservationId;
+    try{
+     reservationId=await rpc('express_walkin_v1',{p_revision:state.revision,p_table:uuid(tables[0]),p_guests:guests,
+      p_type:draft.type,p_room:draft.type==='hotel'?String(draft.name||'').trim()||null:null});
+    }catch(error){
+     try{await refresh()}catch(_){}
+     const code=/chambre/i.test(String(error?.message||''))&&String(error?.code)==='23P01'?'ROOM_CONFLICT':classify(error);
+     throw new RestoEngineError(code,null,{cause:error});
+    }
+    if(typeof reservationId!=='string'||!reservationId)throw new RestoEngineError('RESULT_UNKNOWN');
+    let verified=false;
+    try{await refresh();verified=getState()?.scope===scope&&seatedAsRequested(reservationId,tables);}catch(_){}
+    return {ok:true,reservationId,tables,verified,alreadyApplied:false};
+   }
    const before=new Set((getState()?.reservations||[]).filter(r=>r.walkIn&&r.status==='seated'&&r.tables.map(Number).includes(tables[0])).map(r=>String(r.id)));
    const created=()=>(getState()?.reservations||[]).find(r=>r.walkIn&&r.status==='seated'&&r.tables.map(Number).includes(tables[0])&&!before.has(String(r.id))&&Number(r.guests)===guests)||null;
    const name=String(draft.name||'').trim()||'Client de passage';
@@ -174,7 +219,7 @@
    inflight.set(key,promise);return promise;
   }
   function capabilities(){
-   return {version:1,seat:true,swapAndSeat:true,walkIn:typeof installWalkin==='function',swapWithoutSeat:false,releaseThenSeat:false,moveSeated:false,escortHold:false};
+   return {version:1,seat:true,swapAndSeat:true,walkIn:expressOnly||typeof installWalkin==='function',swapWithoutSeat:false,releaseThenSeat:false,moveSeated:false,escortHold:false};
   }
   return {preview,suggest,seat,tableStates,walkInTables,walkIn,capabilities,classify};
  }

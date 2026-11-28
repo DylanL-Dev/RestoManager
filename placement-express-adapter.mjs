@@ -6,16 +6,14 @@
 
 const EVENTS=['restomanager:supabase-snapshot','restomanager:connection-state','online','offline'];
 
-// Switch for the connected entry point. Keep off until the server verifies the chosen table under lock.
-const EXPRESS_WRITES_ENABLED=false;
-
-export function guardConnectedPlacement(placement){
- if(EXPRESS_WRITES_ENABLED)return placement;
+export function guardConnectedPlacement(placement,enabled=()=>false){
  const blocked=async()=>{
-  throw Object.assign(Error('Écritures Express désactivées. Utilisez le mode complet.'),{code:'EXPRESS_WRITE_DISABLED'});
+  throw Object.assign(Error('Enregistrement indisponible dans Coup de feu.'),{code:'EXPRESS_WRITE_DISABLED'});
  };
- return Object.freeze({...placement,seat:blocked,walkIn:blocked,
-  capabilities:()=>({...placement.capabilities(),seat:false,swapAndSeat:false,walkIn:false})});
+ return Object.freeze({...placement,
+  seat:plan=>enabled()?placement.seat(plan):blocked(),
+  walkIn:draft=>enabled()?placement.walkIn(draft):blocked(),
+  capabilities:()=>enabled()?placement.capabilities():{...placement.capabilities(),seat:false,swapAndSeat:false,walkIn:false}});
 }
 
 // Les déplacements affichés par l'interface utilisent `client` comme libellé (« Ch. 215 »).

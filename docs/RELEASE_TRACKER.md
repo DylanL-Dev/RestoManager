@@ -1,5 +1,9 @@
 # RestoManager — registre officiel des évolutions DEV → V3 → MAIN
 
+### RM-RELEASE-03 B — Mode Coup de feu en service connecté — CANDIDAT DEV (28/11/2026)
+
+- Suivi [#266](https://github.com/DylanL-Dev/RestoManager/issues/266) et [#284](https://github.com/DylanL-Dev/RestoManager/issues/284). Lot établi sur DEV `374f556` et la tête corrigée de [#289](https://github.com/DylanL-Dev/RestoManager/pull/289) `6075210`. Installation, permutation et passage passent par les RPC vérifiées sous verrou d’établissement. La libération et l’annulation reprennent la proposition #286. Les tests locaux chargent les propositions sur des bases jetables. [Dossier de recette et d’activation DEV](audits/RM-RELEASE-03B_COUP_DE_FEU_20261128.md).
+
 ### RM-RELEASE-03 B2 — Sécurité de présentation Coup de feu — CANDIDAT DEV (28/11/2026)
 
 - Suivi #266 et #284, base DEV `374f556` (#286 fusionnée, 17/17 workflows). Préflight SQL DEV en lecture seule : capacité non activée, définition existante inchangée. Correction de la présentation des tables à contrôler, horloge Paris, source fictive par établissement, confirmations serveur explicites et annulation, compteurs, version PWA. [Rapport et recette](audits/RMOPS_CF27_SAFETY_20261128.md). Tests du nouveau candidat à confirmer ; aucune migration, fusion ou publication autorisée pour ce candidat.
