@@ -1,5 +1,5 @@
 // UI regression adapter only: this is deliberately not an Auth/RLS/Realtime test.
-export async function requireStaff(){return {user:{id:'fictional-'+window.__mission3Role},profile:{active:true,role:window.__mission3Role,display_name:'Équipe fictive',restaurant_id:'fictional-restaurant'}}}
+export async function requireStaff(){await window.__mission3WaitForAuth?.();return {user:{id:'fictional-'+window.__mission3Role},profile:{active:true,role:window.__mission3Role,display_name:'Équipe fictive',restaurant_id:'fictional-restaurant'}}}
 export async function loadSharedService(){return window.__mission3Snapshot()}
 export async function subscribeSharedService(onSnapshot,onError,onConnection){
  const apply=async()=>{try{onConnection(true);onSnapshot(await loadSharedService())}catch(error){onError(error)}};

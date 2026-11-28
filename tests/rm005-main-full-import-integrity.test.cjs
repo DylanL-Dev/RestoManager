@@ -8,7 +8,14 @@ const html=fs.readFileSync(path.join(root,'v3-connected.html'),'utf8');
 const script=(name)=>fs.readFileSync(path.join(root,name),'utf8');
 
 test('RM-005 MAIN: every JS/CSS runtime dependency exists and loads once',()=>{
- const files=[...html.matchAll(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)].map(m=>m[1].split('?')[0]);
+ // A modulepreload is a fetch hint, not a second executable import.
+ // Check it independently, and continue rejecting duplicate loaded runtime assets.
+ const preloads=[...html.matchAll(/<link rel="modulepreload" href="([^"]+)">/g)];
+ assert.equal(preloads.length,1,'Only the reviewed auth module is preloaded');
+ assert.equal(preloads[0][1],'v3-connected-auth.js?v=20261128-rmrelease03a');
+ assert.equal([...html.matchAll(/<script type="module" src="([^"]+)"><\/script>/g)].filter(m=>m[1]===preloads[0][1]).length,1,'Preloaded module must be executed once with the exact same version');
+ const runtimeHtml=html.replace(preloads[0][0],'');
+ const files=[...runtimeHtml.matchAll(/(?:src|href)="([^"]+\.(?:js|css)(?:\?[^"]*)?)"/g)].map(m=>m[1].split('?')[0]);
  assert.ok(files.length>=54,'RM-005 must load the complete set of modules');
  assert.equal(new Set(files).size,files.length,'No duplicate runtime assets');
  for(const file of files){
