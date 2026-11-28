@@ -391,8 +391,9 @@
       try {
         const key = 'restomanager-express-fiction-v1:' + c.restaurantId;
         const saved = JSON.parse(localStorage.getItem(key));
-        if (!Array.isArray(saved?.reservations)) return null;
-        return { rows: saved.reservations, now: new Date(saved.clock), sim: true, scope };
+        const now = new Date(saved?.clock);
+        if (!Array.isArray(saved?.reservations) || !Number.isFinite(now.getTime())) return null;
+        return { rows: saved.reservations, now, sim: true, scope };
       } catch { return null; }
     }
     const rows = window.RestoSharedReservations;
