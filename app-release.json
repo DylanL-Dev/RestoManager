@@ -1,8 +1,20 @@
 {
   "schema": 1,
   "channel": "main",
-  "currentVersion": "2026.11.26-rmrelease02-main",
+  "currentVersion": "2026.11.28-rmrelease03a-main",
   "releases": [
+    {
+      "version": "2026.11.28-rmrelease03a-main",
+      "date": "2026-11-28",
+      "title": "Un accueil plus fluide et une interface 2027",
+      "changes": [
+        "L’écran de vérification de session adopte une animation de chargement, avec un indicateur d’attente et une transition vers le service.",
+        "Les cartes, notifications et tableaux de bord Restaurant et Réception gagnent en lisibilité, avec des animations adaptées aux petits écrans et au mouvement réduit.",
+        "Les compteurs distinguent les clients attendus, installés et servis sans modifier les chiffres natifs."
+      ],
+      "impact": "Mise à jour graphique uniquement. Aucun changement de droits, de réservation, de connexion ou de base de données. Le Mode Coup de feu n’est pas inclus dans cette livraison.",
+      "requiresReload": true
+    },
     {
       "version": "2026.11.26-rmrelease02-main",
       "date": "2026-11-26",
