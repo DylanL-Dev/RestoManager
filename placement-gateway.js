@@ -41,6 +41,7 @@
   if(detail==='FORBIDDEN'||code==='42501')return 'FORBIDDEN';
   if(code==='PGRST202'||code==='42883')return 'RPC_MISSING';
   if(code==='40001'||code==='RM001'||detail==='STALE_VERSION')return 'STALE';
+  if(detail==='ROOM_CONFLICT')return 'ROOM_CONFLICT';
   if(code==='23P01'||detail==='TABLE_CONFLICT')return /maintenue/i.test(msg)?'TARGET_HELD':'CONFLICT';
   if(detail==='HOLD_CONFLICT')return 'TARGET_HELD';
   if(/encore occupée/i.test(msg))return 'TARGET_OCCUPIED';
@@ -190,7 +191,7 @@
     }catch(error){
      try{await refresh()}catch(_){}
      const code=/chambre/i.test(String(error?.message||''))&&String(error?.code)==='23P01'?'ROOM_CONFLICT':classify(error);
-     throw new RestoEngineError(code,null,{cause:error});
+     throw new RestoEngineError(code,code==='ROOM_CONFLICT'?'Cette chambre possède déjà une réservation. Pour installer un deuxième occupant distinct, ouvrez le mode complet et confirmez ce choix.':null,{cause:error});
     }
     if(typeof reservationId!=='string'||!reservationId)throw new RestoEngineError('RESULT_UNKNOWN');
     let verified=false;
